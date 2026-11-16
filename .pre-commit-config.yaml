@@ -1,0 +1,28 @@
+---
+minimum_pre_commit_version: '3.0.0'
+
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.0
+    hooks:
+      - id: gitleaks
+        stages: [pre-commit]
+
+  - repo: local
+    hooks:
+      - id: propario-repo-policy
+        name: propario repo policy (no personal data, no databases)
+        entry: scripts/check-repo-policy.sh
+        stages: [pre-commit]
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      # Before anything leaves the machine: format, types, unit tests, the end-to-end story.
+      - id: propario-verify
+        name: propario verify (format, types, tests)
+        entry: npm run verify
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]

@@ -1,0 +1,55 @@
+/** A small set of hand-drawn line glyphs (no icon library). */
+const paths = {
+  plus: 'M8 3v10M3 8h10',
+  more: 'M3.5 8h.01M8 8h.01M12.5 8h.01',
+  close: 'M4 4l8 8M12 4l-8 8',
+  chevronLeft: 'M10 3L5 8l5 5',
+  chevronRight: 'M6 3l5 5-5 5',
+  up: 'M4 10l4-4 4 4',
+  down: 'M4 6l4 4 4-4',
+  search: 'M7 12A5 5 0 1 0 7 2a5 5 0 0 0 0 10zM10.6 10.6L14 14',
+  out: 'M9 3h4v4M13 3L7.5 8.5M11 9.5V13H3V5h3.5',
+  panel: 'M2.5 3h11v10h-11zM9.5 3v10',
+  columns: 'M2.5 3h11v10h-11zM6.2 3v10M9.8 3v10',
+  trash: 'M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.5h5.8l.6-8.5',
+  copy: 'M5.5 5.5h7v7h-7zM3.5 10.5v-7h7',
+  download: 'M8 2.5v8M4.5 7L8 10.5 11.5 7M3 13.5h10',
+  upload: 'M8 10.5v-8M4.5 6L8 2.5 11.5 6M3 13.5h10',
+  check: 'M3 8.5l3.2 3L13 4.5',
+  cross: 'M4.5 4.5l7 7M11.5 4.5l-7 7',
+  archive: 'M2.5 3.5h11v3h-11zM3.5 6.5v6h9v-6M6.5 9h3',
+  edit: 'M10.5 3l2.5 2.5L6 12.5H3.5V10z',
+  flag: 'M4 14V2.5M4 3h7.5l-1.5 2.5L11.5 8H4',
+  share:
+    'M5.5 7.5a2.2 2.2 0 1 0 0-4.4 2.2 2.2 0 0 0 0 4.4zM1.8 13.5c.3-2.2 1.8-3.6 3.7-3.6s3.4 1.4 3.7 3.6M10.8 7.4a1.9 1.9 0 1 0 0-3.8M11.8 9.9c1.3.4 2.2 1.7 2.4 3.6',
+  image: 'M2.5 3.5h11v9h-11zM2.5 10.5l3.2-3 2.6 2.4 1.9-1.6 3.3 2.9M10.2 6.2h.01',
+}
+
+export type GlyphName = keyof typeof paths | 'star'
+
+export function Glyph({ name, title }: { name: GlyphName; title?: string }) {
+  if (name === 'star') {
+    return (
+      <svg className="glyph" viewBox="0 0 16 16" aria-hidden={title ? undefined : true} role={title ? 'img' : undefined}>
+        {title && <title>{title}</title>}
+        <path d="M8 1.8l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.6l-3.8 2 .7-4.3-3.1-3 4.3-.6z" fill="currentColor" />
+      </svg>
+    )
+  }
+  return (
+    <svg
+      className="glyph"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={name === 'more' ? 2.6 : 1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden={title ? undefined : true}
+      role={title ? 'img' : undefined}
+    >
+      {title && <title>{title}</title>}
+      <path d={paths[name]} />
+    </svg>
+  )
+}

@@ -1,0 +1,15 @@
+name: Idea
+description: Suggest an improvement.
+labels: [idea]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Which problem does it solve?
+      description: Describe the situation first; the solution can follow. Propario stays small on purpose (see CONTRIBUTING.md).
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you suggest?

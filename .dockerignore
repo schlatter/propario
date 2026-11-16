@@ -1,0 +1,17 @@
+.git
+.github
+node_modules
+dist
+data
+private
+e2e
+test-results
+playwright-report
+*.xlsx
+*.xls
+*.db
+propario-*.json
+produktvergleich-*.json
+.env
+.env.*
+!.env.example

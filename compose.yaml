@@ -1,0 +1,44 @@
+# Runs Propario on this machine: http://localhost:8080
+#
+#   echo "DATA_KEY=$(openssl rand -base64 32)" >> .env   # once; keep a copy apart from backups
+#   docker compose up -d
+#   docker compose logs app     # shows the one-time setup link for the first account
+#
+# Behind a reverse proxy, set ORIGIN to the public https address (see README).
+services:
+  app:
+    build: .
+    image: propario
+    restart: unless-stopped
+    environment:
+      # Passkeys are bound to this address. Set it once and keep it.
+      ORIGIN: ${ORIGIN:-http://localhost:8080}
+      # Encrypts all comparisons and images at rest. Lose it and the data cannot be read.
+      DATA_KEY: ${DATA_KEY:?Set DATA_KEY, see compose.yaml}
+      # Only behind a reverse proxy you trust: the header that carries the visitor's address.
+      ADDRESS_HEADER: ${ADDRESS_HEADER:-}
+      XFF_DEPTH: ${XFF_DEPTH:-1}
+      # "off" stops the server from fetching product pages for images.
+      PROPARIO_IMAGE_FETCH: ${PROPARIO_IMAGE_FETCH:-on}
+    volumes:
+      - data:/data
+    ports:
+      - '127.0.0.1:8080:8080'
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 200
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+
+volumes:
+  data:
