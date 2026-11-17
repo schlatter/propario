@@ -6,6 +6,9 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- A calmer, more compact comparison page: name and category sit in the top bar next to
+  Propario, the stage is a small menu next to the tabs, "+ Product" opens the quick entry,
+  export moved into the ⋯ menu, and the navigation is a row you show with the menu button.
 - Excel import fetches the product pictures right away, where the shops allow it.
 - Swipe mode: go through a comparison one product at a time – like it or not. Everyone votes
   for themselves; the votes appear as a column in the table.

@@ -1,11 +1,11 @@
 import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { addProduct, reorder, setProductValue, updateProduct, updateProject } from '../../db/repo'
+import { reorder, setProductValue, updateProduct, updateProject } from '../../db/repo'
 import type { Candidate, Product, PropertyDef, TableView } from '../../db/types'
 import { avgStars, compareKeys, formatValue, productName, sortKey } from '../../domain/display'
-import { coerceValue, hostOf, isTyped, looksLikeUrl, normalizeUrl, parseNumber, safeHref } from '../../domain/values'
+import { coerceValue, hostOf, isTyped, parseNumber, safeHref } from '../../domain/values'
 import { useI18n } from '../../i18n'
-import { ImageError, loadImages, loadProductImage, missingImages, productImage } from '../../images'
+import { ImageError, loadImages, missingImages, productImage } from '../../images'
 import { useToast } from '../../ui/Dialog'
 import { Glyph } from '../../ui/Glyph'
 import { CheckStrip, Stars, Verdict } from '../../ui/Marks'
@@ -13,6 +13,7 @@ import { Menu } from '../../ui/Menu'
 import { Thumb } from '../../ui/Thumb'
 import { useUsers } from '../../users'
 import { EditableCell } from './EditableCell'
+import { QuickAdd } from './QuickAdd'
 import type { ProjectData } from './useProjectData'
 
 interface Col {
@@ -337,29 +338,6 @@ export function ProductTable({
 
   const widthOf = (id: string, fallback: number) => widths[id] ?? view.columnWidths[id] ?? fallback
 
-  // ---- quick add ----
-  const [quick, setQuick] = useState('')
-  const quickRef = useRef<HTMLInputElement>(null)
-  const knownBrands = [...new Set(products.map((p) => p.brand.trim()).filter(Boolean))]
-  const quickAdd = async () => {
-    const text = quick.trim()
-    if (!text) return
-    let created: Product
-    if (looksLikeUrl(text)) {
-      const url = normalizeUrl(text)
-      created = await addProduct(project.id, { url, retailer: hostOf(url) })
-      onOpen(created.id)
-      // Fetch the product image in the background; failures are shown in the drawer, not here.
-      void loadProductImage(created).catch(() => {})
-    } else {
-      const brand = knownBrands.find((b) => text.toLowerCase().startsWith(`${b.toLowerCase()} `))
-      created = await addProduct(project.id, brand ? { brand, model: text.slice(brand.length).trim() } : { model: text })
-    }
-    setQuick('')
-    if (project.status === 'research' && products.length >= 1) void updateProject(project.id, { status: 'comparing' })
-    quickRef.current?.focus()
-  }
-
   const allSelected = rows.length > 0 && rows.every((r) => selection.has(r.id))
 
   // ---- moving rows (drag the handle, or arrow keys on it) ----
@@ -398,26 +376,6 @@ export function ProductTable({
 
   return (
     <>
-      <form
-        className="quick-add"
-        onSubmit={(e) => {
-          e.preventDefault()
-          void quickAdd()
-        }}
-      >
-        <Glyph name="plus" />
-        <input
-          ref={quickRef}
-          value={quick}
-          onChange={(e) => setQuick(e.target.value)}
-          placeholder={m.project.addPlaceholder}
-          aria-label={m.project.addPlaceholder}
-        />
-        <button className="btn primary sm" type="submit" disabled={!quick.trim()}>
-          {m.common.add}
-        </button>
-      </form>
-
       <div className="toolbar" style={{ marginBottom: 12 }}>
         <label className="search">
           <Glyph name="search" />
@@ -471,7 +429,10 @@ export function ProductTable({
       </div>
 
       {products.length === 0 ? (
-        <div className="empty">{m.project.emptyProducts}</div>
+        <div className="empty stack">
+          <p>{m.project.emptyProducts}</p>
+          <QuickAdd data={data} onOpen={onOpen} inline />
+        </div>
       ) : (
         <div className="table-wrap">
           <table className="grid">

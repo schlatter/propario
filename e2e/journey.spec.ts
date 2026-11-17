@@ -32,6 +32,13 @@ async function passkeyDevice(context: BrowserContext, page: Page): Promise<void>
   })
 }
 
+/** The main navigation is a collapsible row; open it when needed. */
+async function go(page: Page, name: string): Promise<void> {
+  const toggle = page.getByRole('button', { name: 'Menu' })
+  if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click()
+  await page.getByRole('navigation', { name: 'Menu' }).getByRole('link', { name, exact: true }).click()
+}
+
 async function accessible(page: Page, name: string): Promise<void> {
   for (const scheme of ['light', 'dark'] as const) {
     await page.emulateMedia({ colorScheme: scheme })
@@ -80,7 +87,7 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await page.getByRole('button', { name: 'Create' }).click()
   await expect(page.getByLabel('Name')).toHaveValue('Kitchen cabinet')
 
-  await page.getByPlaceholder(/Add product/).fill('Arvika')
+  await page.getByPlaceholder(/shop link/).fill('Arvika')
   await page.keyboard.press('Enter')
   await expect(page.getByRole('button', { name: 'Arvika', exact: true })).toBeVisible()
   await accessible(page, 'comparison')
@@ -96,7 +103,8 @@ test('Ada keeps a comparison with a product and its picture', async () => {
 
 test('Ada moves rows and decides by swiping', async () => {
   const { page } = ada
-  await page.getByPlaceholder(/Add product/).fill('Borre')
+  await page.getByRole('button', { name: 'Add product' }).click()
+  await page.getByPlaceholder(/shop link/).fill('Borre')
   await page.keyboard.press('Enter')
   const names = () => page.locator('table.grid tbody .name-model').allTextContents()
   await expect.poll(names).toEqual(['Arvika', 'Borre'])
@@ -130,7 +138,7 @@ test('Ada moves rows and decides by swiping', async () => {
 
 test('Ada invites Grace, who joins and sees nothing that is not hers', async ({ browser }) => {
   const { page } = ada
-  await page.getByRole('link', { name: 'Settings' }).click()
+  await go(page, 'Settings')
   await accessible(page, 'settings')
   await page.getByLabel('For whom (optional)').fill('Grace')
   await page.getByRole('button', { name: 'Create invitation' }).click()
@@ -160,7 +168,7 @@ test('Ada invites Grace, who joins and sees nothing that is not hers', async ({ 
 
 test('shared read-only, Grace sees the comparison and its picture, but may not change it', async () => {
   const { page } = ada
-  await page.getByRole('link', { name: 'Comparisons' }).click()
+  await go(page, 'Comparisons')
   await page.getByRole('link', { name: 'Kitchen cabinet' }).click()
   await page.getByRole('button', { name: 'Share comparison' }).click()
   await accessible(page, 'share dialog')
@@ -177,7 +185,7 @@ test('shared read-only, Grace sees the comparison and its picture, but may not c
 })
 
 test('the recovery key gets Ada back in exactly once', async ({ browser }) => {
-  await ada.page.getByRole('link', { name: 'Settings' }).click()
+  await go(ada.page, 'Settings')
   await ada.page.getByRole('button', { name: 'Sign out', exact: true }).click()
   await expect(ada.page.getByRole('heading', { name: 'Sign in' })).toBeVisible()
 

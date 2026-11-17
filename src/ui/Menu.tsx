@@ -6,12 +6,14 @@ export function Menu({
   trigger,
   children,
   className = 'icon-btn',
+  listClassName = '',
   scroll,
 }: {
   label: string
   trigger: ReactNode
   children: (close: () => void) => ReactNode
   className?: string
+  listClassName?: string
   scroll?: boolean
 }) {
   const [open, setOpen] = useState(false)
@@ -55,7 +57,7 @@ export function Menu({
         {trigger}
       </button>
       {open && (
-        <div className={`menu-list${scroll ? ' scroll' : ''}`} id={id} onClick={(e) => e.stopPropagation()}>
+        <div className={`menu-list${scroll ? ' scroll' : ''}${listClassName ? ` ${listClassName}` : ''}`} id={id} onClick={(e) => e.stopPropagation()}>
           {children(() => setOpen(false))}
         </div>
       )}

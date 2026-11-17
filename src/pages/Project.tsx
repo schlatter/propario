@@ -17,6 +17,9 @@ import { ProductTable } from './project/ProductTable'
 import { RequirementsTab } from './project/RequirementsTab'
 import { useProjectData } from './project/useProjectData'
 import { ShareDialog } from './project/ShareDialog'
+import { QuickAdd } from './project/QuickAdd'
+import { ProjectDialog } from './Home'
+import { InTopbar } from '../ui/Topbar'
 import { rolesOf } from '../sync'
 
 const STAGES: ProjectStatus[] = ['research', 'comparing', 'decided', 'purchased', 'archived']
@@ -34,6 +37,7 @@ export function ProjectPage() {
   const navigate = useNavigate()
   const [selection, setSelection] = useState<Set<string>>(new Set())
   const [sharing, setSharing] = useState(false)
+  const [editing, setEditing] = useState(false)
   const role = useLiveQuery(async () => (await rolesOf())[id ?? ''], [id])
 
   if (data === undefined) return <main aria-busy="true" />
@@ -60,57 +64,62 @@ export function ProjectPage() {
   const stageIndex = STAGES.indexOf(project.status)
 
   return (
-    <main className="wide">
-      <Link to="/" className="crumb">
-        <Glyph name="chevronLeft" /> {m.nav.comparisons}
-      </Link>
-      <div className="project-head">
-        <div style={{ minWidth: 0 }}>
+    <main className="wide project-page">
+      <InTopbar>
+        <div className="topbar-title">
+          <span className="topbar-sep" aria-hidden="true">
+            /
+          </span>
           <h1 className="sr-only">{project.name}</h1>
           <CommitInput
             className="title-input"
             aria-label={m.field.name}
             value={project.name}
+            size={Math.max(6, project.name.length + 1)}
             onCommit={(v) => v.trim() && updateProject(project.id, { name: v.trim() })}
           />
+          <span className="topbar-dot" aria-hidden="true">
+            ·
+          </span>
           <CommitInput
             className="cat-input"
             aria-label={m.field.category}
             placeholder={m.field.category}
             value={project.category}
+            size={Math.max(8, project.category.length + 1)}
             onCommit={(v) => updateProject(project.id, { category: v.trim() })}
           />
         </div>
-        <div className="actions">
+        <div className="topbar-actions">
           {role === 'viewer' && <span className="role-badge">{m.share.readOnly}</span>}
           {products.length > 0 && role !== 'viewer' && (
-            <Link className="btn sm primary" to={`/p/${project.id}/swipe`} title={m.swipe.openHint}>
-              <Glyph name="star" /> {m.swipe.open}
+            <Link className="btn sm primary" to={`/p/${project.id}/swipe`} title={m.swipe.openHint} aria-label={m.swipe.open}>
+              <Glyph name="star" /> <span className="hide-narrow">{m.swipe.open}</span>
             </Link>
           )}
           {role === 'owner' && (
-            <button type="button" className="btn sm" onClick={() => setSharing(true)}>
-              <Glyph name="share" /> {m.share.title}
+            <button type="button" className="btn sm" onClick={() => setSharing(true)} title={m.share.title} aria-label={m.share.title}>
+              <Glyph name="share" /> <span className="hide-narrow">{m.share.title}</span>
             </button>
           )}
-          <Menu
-            label={m.project.exportMenu}
-            trigger={
-              <>
-                <Glyph name="download" /> <span>{m.project.exportMenu}</span>
-              </>
-            }
-            className="btn sm"
-          >
+          <Menu label={m.common.more} trigger={<Glyph name="more" />}>
             {(close) => (
               <>
+                <button
+                  onClick={() => {
+                    close()
+                    setEditing(true)
+                  }}
+                >
+                  <Glyph name="edit" /> {m.project.editDetails}
+                </button>
                 <button
                   onClick={() => {
                     close()
                     void exportProjectExcel(project.id, m)
                   }}
                 >
-                  {m.common.exportExcel}
+                  <Glyph name="download" /> {m.common.exportExcel}
                 </button>
                 <button
                   onClick={() => {
@@ -118,14 +127,9 @@ export function ProjectPage() {
                     void exportProjectJson(project.id)
                   }}
                 >
-                  {m.common.exportJson}
+                  <Glyph name="download" /> {m.common.exportJson}
                 </button>
-              </>
-            )}
-          </Menu>
-          <Menu label={m.common.more} trigger={<Glyph name="more" />}>
-            {(close) => (
-              <>
+                <hr />
                 <button
                   onClick={async () => {
                     close()
@@ -170,19 +174,7 @@ export function ProjectPage() {
             )}
           </Menu>
         </div>
-        <div className="stage-select" role="group" aria-label={m.project.stage} style={{ gridColumn: '1 / -1', justifySelf: 'start' }}>
-          {STAGES.map((s, i) => (
-            <button
-              key={s}
-              aria-pressed={project.status === s}
-              className={i < stageIndex && project.status !== 'archived' ? 'done' : ''}
-              onClick={() => updateProject(project.id, { status: s })}
-            >
-              {m.status[s]}
-            </button>
-          ))}
-        </div>
-      </div>
+      </InTopbar>
 
       {decision && (
         <div className={`decision-bar${decision.purchase.status === 'purchased' ? ' purchased' : ''}`}>
@@ -204,15 +196,49 @@ export function ProjectPage() {
         </div>
       )}
 
-      <div className="tabs" role="tablist">
-        {(['products', 'requirements', 'fields', 'notes'] as Tab[]).map((t) => (
-          <button key={t} role="tab" aria-selected={tab === t} onClick={() => setParam('tab', t === 'products' ? null : t)}>
-            {m.project.tabs[t]}
-            {t === 'products' && <span className="badge">{products.length}</span>}
-            {t === 'requirements' && <span className="badge">{data.requirements.length}</span>}
-            {t === 'fields' && <span className="badge">{data.properties.length}</span>}
-          </button>
-        ))}
+      <div className="tabbar">
+        <div className="tabs" role="tablist">
+          {(['products', 'requirements', 'fields', 'notes'] as Tab[]).map((t) => (
+            <button key={t} role="tab" aria-selected={tab === t} onClick={() => setParam('tab', t === 'products' ? null : t)}>
+              {m.project.tabs[t]}
+              {t === 'products' && <span className="badge">{products.length}</span>}
+              {t === 'requirements' && <span className="badge">{data.requirements.length}</span>}
+              {t === 'fields' && <span className="badge">{data.properties.length}</span>}
+            </button>
+          ))}
+        </div>
+        <div className="tabbar-actions">
+          <Menu
+            label={`${m.project.stage}: ${m.status[project.status]}`}
+            className="stage-trigger"
+            trigger={
+              <>
+                <span className="stage-dot" data-status={project.status} aria-hidden="true" />
+                <span>{m.status[project.status]}</span>
+                <Glyph name="down" />
+              </>
+            }
+          >
+            {(close) =>
+              STAGES.map((st, i) => (
+                <button
+                  key={st}
+                  aria-pressed={project.status === st}
+                  className={`stage-option${i < stageIndex && project.status !== 'archived' ? ' done' : ''}`}
+                  onClick={() => {
+                    close()
+                    void updateProject(project.id, { status: st })
+                  }}
+                >
+                  <span className="stage-dot" data-status={st} aria-hidden="true" />
+                  {m.status[st]}
+                  {project.status === st && <Glyph name="check" />}
+                </button>
+              ))
+            }
+          </Menu>
+          {tab === 'products' && role !== 'viewer' && products.length > 0 && <QuickAdd data={data} onOpen={(pid) => setParam('product', pid)} />}
+        </div>
       </div>
 
       <div role="tabpanel">
@@ -224,6 +250,7 @@ export function ProjectPage() {
 
       <ProductDrawer data={data} productId={openProductId} onClose={() => setParam('product', null)} />
       <ShareDialog projectId={project.id} open={sharing} onClose={() => setSharing(false)} />
+      <ProjectDialog open={editing} project={project} categories={[]} onClose={() => setEditing(false)} />
     </main>
   )
 }
