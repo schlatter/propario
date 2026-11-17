@@ -234,51 +234,6 @@ textarea {
   height: 18px;
   background: var(--signal);
 }
-.nav {
-  display: flex;
-  gap: 4px;
-  height: 100%;
-  overflow-x: auto;
-}
-.nav a {
-  display: flex;
-  align-items: center;
-  padding: 0 10px;
-  text-decoration: none;
-  color: var(--muted);
-  font-weight: 550;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-}
-.nav a:hover {
-  color: var(--ink);
-}
-.nav a[aria-current='page'] {
-  color: var(--ink);
-  border-bottom-color: var(--ink);
-}
-.lang {
-  margin-left: auto;
-  flex: none;
-  display: flex;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  overflow: hidden;
-}
-.lang button {
-  border: 0;
-  background: none;
-  padding: 3px 10px;
-  font-size: 12px;
-  font-weight: 650;
-  letter-spacing: 0.04em;
-  color: var(--muted);
-  cursor: pointer;
-}
-.lang button[aria-pressed='true'] {
-  background: var(--ink);
-  color: var(--bg);
-}
 main {
   flex: 1;
   width: 100%;
@@ -2586,18 +2541,33 @@ table.map {
   align-items: center;
   gap: 6px;
 }
-.navbar {
-  position: sticky;
-  top: 52px;
-  z-index: 19;
+.menu-list.nav-menu {
+  left: 0;
+  right: auto;
+  min-width: 240px;
+}
+.nav-menu nav {
+  display: grid;
+  gap: 2px;
+}
+.nav-menu a {
   display: flex;
   align-items: center;
-  gap: 16px;
-  height: 42px;
-  padding: 0 var(--gutter);
-  background: color-mix(in srgb, var(--bg) 92%, transparent);
-  backdrop-filter: saturate(1.4) blur(10px);
-  border-bottom: 1px solid var(--line);
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 6px;
+  color: var(--ink-2);
+  font-weight: 550;
+  text-decoration: none;
+}
+.nav-menu a:hover {
+  background: var(--sunken);
+  color: var(--ink);
+}
+.nav-menu a[aria-current='page'] {
+  color: var(--ink);
+  font-weight: 700;
+  box-shadow: inset 3px 0 0 var(--signal);
 }
 
 /* ---------- Comparison: tab row with stage and adding ---------- */
@@ -2694,4 +2664,42 @@ main.project-page {
     justify-content: space-between;
     padding: 6px 0 0;
   }
+}
+
+/* ---------- Moving columns ---------- */
+.th-sort.movable {
+  cursor: grab;
+  touch-action: pan-y;
+}
+.grid th.col-dragging {
+  opacity: 0.5;
+}
+.grid th.col-drop-before {
+  box-shadow: inset 2px 0 0 var(--focus);
+}
+.grid th.col-drop-after {
+  box-shadow: inset -2px 0 0 var(--focus);
+}
+.col-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.col-row label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.col-row label:hover {
+  background: var(--sunken);
+}
+.col-row .icon-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
 }

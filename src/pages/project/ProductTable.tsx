@@ -308,8 +308,43 @@ export function ProductTable({
     }
   }, [m, fmt, properties, data, minPrice, onOpen, users])
 
-  const visibleCols = columns.filter((c) => !view.hiddenColumns.includes(c.id) && (!c.optional || products.some((p) => c.has!(p))))
-  const hideableCols = columns.filter((c) => !c.optional || products.some((p) => c.has!(p)))
+  // Column order chosen by dragging headers (or the arrows in the Columns menu).
+  const ordered = useMemo(() => {
+    const order = view.columnOrder ?? []
+    const rank = (id: string) => {
+      const i = order.indexOf(id)
+      return i < 0 ? order.length : i
+    }
+    return columns
+      .map((c, i) => ({ c, i }))
+      .sort((a, b) => rank(a.c.id) - rank(b.c.id) || a.i - b.i)
+      .map((x) => x.c)
+  }, [columns, view.columnOrder])
+  const visibleCols = ordered.filter((c) => !view.hiddenColumns.includes(c.id) && (!c.optional || products.some((p) => c.has!(p))))
+  const hideableCols = ordered.filter((c) => !c.optional || products.some((p) => c.has!(p)))
+
+  const moveColumn = (id: string, targetId: string, after: boolean) => {
+    if (id === targetId) return
+    const ids = ordered.map((c) => c.id).filter((x) => x !== id)
+    ids.splice(ids.indexOf(targetId) + (after ? 1 : 0), 0, id)
+    void saveView({ columnOrder: ids })
+  }
+  const moveColumnBy = (id: string, step: -1 | 1, among: Col[] = visibleCols) => {
+    const i = among.findIndex((c) => c.id === id)
+    const target = among[i + step]
+    if (target) moveColumn(id, target.id, step === 1)
+  }
+  const [colDrag, setColDrag] = useState<{ id: string; target: string | null; after: boolean } | null>(null)
+  const headRef = useRef<HTMLTableRowElement>(null)
+  const colDragOver = (clientX: number, id: string) => {
+    const ths = [...(headRef.current?.querySelectorAll<HTMLTableCellElement>('th[data-col]') ?? [])]
+    for (const th of ths) {
+      const r = th.getBoundingClientRect()
+      if (clientX < r.left + r.width / 2) return setColDrag({ id, target: th.dataset.col!, after: false })
+    }
+    const last = ths[ths.length - 1]
+    if (last) setColDrag({ id, target: last.dataset.col!, after: true })
+  }
 
   // ---- filter & sort ----
   const q = filter.trim().toLowerCase()
@@ -410,19 +445,41 @@ export function ProductTable({
           scroll
         >
           {() =>
-            hideableCols.map((c) => (
-              <label key={c.id}>
-                <input
-                  type="checkbox"
-                  checked={!view.hiddenColumns.includes(c.id)}
-                  onChange={(e) =>
-                    saveView({
-                      hiddenColumns: e.target.checked ? view.hiddenColumns.filter((x) => x !== c.id) : [...view.hiddenColumns, c.id],
-                    })
-                  }
-                />
-                {c.label}
-              </label>
+            hideableCols.map((c, i) => (
+              <div className="col-row" key={c.id}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={!view.hiddenColumns.includes(c.id)}
+                    onChange={(e) =>
+                      saveView({
+                        hiddenColumns: e.target.checked ? view.hiddenColumns.filter((x) => x !== c.id) : [...view.hiddenColumns, c.id],
+                      })
+                    }
+                  />
+                  {c.label}
+                </label>
+                <button
+                  type="button"
+                  className="icon-btn sm"
+                  disabled={i === 0}
+                  aria-label={`${m.reorder.up}: ${c.label}`}
+                  title={m.reorder.up}
+                  onClick={() => moveColumnBy(c.id, -1, hideableCols)}
+                >
+                  <Glyph name="up" />
+                </button>
+                <button
+                  type="button"
+                  className="icon-btn sm"
+                  disabled={i === hideableCols.length - 1}
+                  aria-label={`${m.reorder.down}: ${c.label}`}
+                  title={m.reorder.down}
+                  onClick={() => moveColumnBy(c.id, 1, hideableCols)}
+                >
+                  <Glyph name="down" />
+                </button>
+              </div>
             ))
           }
         </Menu>
@@ -444,7 +501,7 @@ export function ProductTable({
               ))}
             </colgroup>
             <thead>
-              <tr>
+              <tr ref={headRef}>
                 <th className="sticky col-sel">
                   <span className="cell-sel">
                     <input
@@ -477,6 +534,17 @@ export function ProductTable({
                     onResize={(w) => setWidths((s) => ({ ...s, [c.id]: w }))}
                     onResizeEnd={(w) => saveView({ columnWidths: { ...view.columnWidths, [c.id]: w } })}
                     align={c.align}
+                    move={{
+                      dragging: colDrag?.id === c.id && !!colDrag.target,
+                      drop: colDrag?.target === c.id && colDrag.id !== c.id ? (colDrag.after ? 'after' : 'before') : null,
+                      onDrag: (x) => colDragOver(x, c.id),
+                      onDrop: () => {
+                        if (colDrag?.target) moveColumn(colDrag.id, colDrag.target, colDrag.after)
+                        setColDrag(null)
+                      },
+                      onCancel: () => setColDrag(null),
+                      onKey: (step) => moveColumnBy(c.id, step),
+                    }}
                   />
                 ))}
               </tr>
@@ -630,6 +698,7 @@ function HeaderCell({
   onResize,
   onResizeEnd,
   align,
+  move,
 }: {
   id: string
   label: string
@@ -641,18 +710,59 @@ function HeaderCell({
   onResize: (w: number) => void
   onResizeEnd: (w: number) => void
   align?: 'right' | 'center'
+  /** Columns that can move: drag the header sideways, or Alt+←/→ on it. */
+  move?: {
+    dragging: boolean
+    drop: 'before' | 'after' | null
+    onDrag: (clientX: number) => void
+    onDrop: () => void
+    onCancel: () => void
+    onKey: (step: -1 | 1) => void
+  }
 }) {
   const { m } = useI18n()
   const [active, setActive] = useState(false)
+  // A press becomes a drag only after a few pixels; a plain click still sorts.
+  const press = useRef<{ x: number; dragged: boolean } | null>(null)
   const dir = sort?.column === id ? sort.dir : null
+  const cls = [className, move?.dragging && 'col-dragging', move?.drop && `col-drop-${move.drop}`].filter(Boolean).join(' ')
   return (
-    <th className={className} aria-sort={dir === 'asc' ? 'ascending' : dir === 'desc' ? 'descending' : 'none'}>
+    <th className={cls} data-col={move ? id : undefined} aria-sort={dir === 'asc' ? 'ascending' : dir === 'desc' ? 'descending' : 'none'}>
       <div className="th-inner">
         <button
           type="button"
-          className="th-sort"
-          onClick={() => onSort(id)}
-          title={m.project.sortBy(label)}
+          className={`th-sort${move ? ' movable' : ''}`}
+          onClick={() => {
+            if (press.current?.dragged) return
+            onSort(id)
+          }}
+          onPointerDown={(e) => {
+            if (!move || e.button !== 0) return
+            press.current = { x: e.clientX, dragged: false }
+            e.currentTarget.setPointerCapture(e.pointerId)
+          }}
+          onPointerMove={(e) => {
+            if (!move || !press.current) return
+            if (!press.current.dragged && Math.abs(e.clientX - press.current.x) < 6) return
+            press.current.dragged = true
+            move.onDrag(e.clientX)
+          }}
+          onPointerUp={() => {
+            if (move && press.current?.dragged) move.onDrop()
+            // Keep the flag until the click that follows this pointerup has been ignored.
+            setTimeout(() => (press.current = null), 0)
+          }}
+          onPointerCancel={() => {
+            press.current = null
+            move?.onCancel()
+          }}
+          onKeyDown={(e) => {
+            if (!move || !e.altKey || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return
+            e.preventDefault()
+            move.onKey(e.key === 'ArrowLeft' ? -1 : 1)
+          }}
+          aria-keyshortcuts={move ? 'Alt+ArrowLeft Alt+ArrowRight' : undefined}
+          title={move ? `${m.project.sortBy(label)} · ${m.reorder.columnHint}` : m.project.sortBy(label)}
           style={align === 'right' ? { justifyContent: 'flex-end' } : undefined}
         >
           <span>

@@ -123,6 +123,22 @@ test('Ada moves rows and decides by swiping', async () => {
   await page.mouse.up()
   await expect.poll(names).toEqual(['Arvika', 'Borre'])
 
+  // Columns move by dragging their header, or with Alt+arrow keys on it.
+  const heads = () => page.locator('table.grid thead th[data-col] .th-sort > span:first-child').allTextContents()
+  const [first, second] = await heads()
+  await page.locator('table.grid thead th[data-col] .th-sort').first().focus()
+  await page.keyboard.press('Alt+ArrowRight')
+  await expect.poll(async () => (await heads()).slice(0, 2)).toEqual([second, first])
+  await page.setViewportSize({ width: 1280, height: 800 })
+  const a = (await page.locator('table.grid thead th[data-col]').nth(1).boundingBox())!
+  const b = (await page.locator('table.grid thead th[data-col]').nth(0).boundingBox())!
+  await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(b.x + 4, b.y + b.height / 2, { steps: 8 })
+  await page.mouse.up()
+  await expect.poll(async () => (await heads()).slice(0, 2)).toEqual([first, second])
+  await page.setViewportSize({ width: 390, height: 844 })
+
   await page.getByRole('link', { name: 'Swipe' }).click()
   await expect(page.getByRole('heading', { name: 'Like it or not?' })).toBeVisible()
   await accessible(page, 'swipe')

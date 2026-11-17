@@ -524,6 +524,9 @@ export const de: Messages = {
     votes: (likes: string, dislikes: string) => [likes && `Gefällt: ${likes}`, dislikes && `Eher nicht: ${dislikes}`].filter(Boolean).join(' · '),
   },
   reorder: {
+    columnHint: 'zum Verschieben seitlich ziehen oder Alt+←/→',
+    up: 'Nach oben',
+    down: 'Nach unten',
     handle: (name: string) => `${name} verschieben`,
     hint: 'Ziehen zum Verschieben, oder Pfeiltasten',
     sorted: 'Sortierung aufheben, um Zeilen zu verschieben',

@@ -37,6 +37,8 @@ export interface Condition {
 export interface TableView {
   hiddenColumns: string[]
   columnWidths: Record<string, number>
+  /** Column ids in the order chosen by dragging; columns not listed keep their default place at the end. */
+  columnOrder?: string[]
   sort?: { column: string; dir: 'asc' | 'desc' }
   hideExcluded: boolean
 }

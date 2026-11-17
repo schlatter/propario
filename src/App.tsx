@@ -1,12 +1,13 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { BrowserRouter, NavLink, Navigate, Route, Routes, Link, useLocation } from 'react-router-dom'
 import { ApiError } from './api'
-import { I18nProvider, LOCALE_NAMES, LOCALES, useI18n, type Locale } from './i18n'
+import { I18nProvider, useI18n } from './i18n'
 import { SessionProvider, useSession } from './session'
 import { ConfirmProvider, ToastProvider, useToast } from './ui/Dialog'
 import { JoinPage, SignInPage } from './pages/Auth'
 import { UpdateNotice, WhatsNew } from './ui/Updates'
 import { Glyph } from './ui/Glyph'
+import { Menu } from './ui/Menu'
 import { TopbarSlot } from './ui/Topbar'
 import { HomePage } from './pages/Home'
 import { ProjectPage } from './pages/Project'
@@ -65,50 +66,37 @@ function SaveErrors() {
   return null
 }
 
-const NAV_KEY = 'pv.nav'
-function readNavOpen(): boolean {
-  try {
-    return localStorage.getItem(NAV_KEY) === 'open'
-  } catch {
-    return false
-  }
-}
-
 /**
- * One slim bar: menu toggle, Propario mark, and whatever the page puts into the slot (on a
- * comparison: its name, category and actions). The navigation is a second, collapsible row;
- * collapsed by default so the comparison gets the room. The choice is remembered per device.
+ * One slim bar: the menu (a vertical list of the sections), the Propario mark, and whatever the
+ * page puts into the slot (on a comparison: its name, category and actions). The language is
+ * chosen in Settings.
  */
 function Shell() {
-  const { m, locale, setLocale } = useI18n()
+  const { m } = useI18n()
   const [slot, setSlot] = useState<HTMLElement | null>(null)
-  const [navOpen, setNavOpen] = useState(readNavOpen)
-  const toggleNav = () => {
-    setNavOpen((o) => {
-      try {
-        localStorage.setItem(NAV_KEY, o ? 'closed' : 'open')
-      } catch {
-        /* storage unavailable */
-      }
-      return !o
-    })
-  }
   return (
     <div className="shell">
       <SaveErrors />
       <WhatsNew />
       <header className="topbar">
-        <button
-          type="button"
-          className="icon-btn nav-toggle"
-          aria-expanded={navOpen}
-          aria-controls="main-nav"
-          aria-label={m.nav.menu}
-          title={m.nav.menu}
-          onClick={toggleNav}
-        >
-          <Glyph name="menu" />
-        </button>
+        <Menu label={m.nav.menu} className="icon-btn nav-toggle" listClassName="nav-menu" trigger={<Glyph name="menu" />}>
+          {(close) => (
+            <nav aria-label={m.nav.menu}>
+              <NavLink to="/" end onClick={close}>
+                {m.nav.comparisons}
+              </NavLink>
+              <NavLink to="/import" onClick={close}>
+                {m.nav.import}
+              </NavLink>
+              <NavLink to="/backup" onClick={close}>
+                {m.nav.backup}
+              </NavLink>
+              <NavLink to="/settings" onClick={close}>
+                {m.nav.settings}
+              </NavLink>
+            </nav>
+          )}
+        </Menu>
         <Link to="/" className="brand" aria-label={m.app.name}>
           <span className="brand-mark" aria-hidden="true">
             <i />
@@ -119,25 +107,6 @@ function Shell() {
         </Link>
         <div className="topbar-slot" ref={setSlot} />
       </header>
-      {navOpen && (
-        <div className="navbar" id="main-nav">
-          <nav className="nav" aria-label={m.nav.menu}>
-            <NavLink to="/" end>
-              {m.nav.comparisons}
-            </NavLink>
-            <NavLink to="/import">{m.nav.import}</NavLink>
-            <NavLink to="/backup">{m.nav.backup}</NavLink>
-            <NavLink to="/settings">{m.nav.settings}</NavLink>
-          </nav>
-          <div className="lang" role="group" aria-label={m.nav.language}>
-            {(Object.keys(LOCALES) as Locale[]).map((l) => (
-              <button key={l} type="button" aria-pressed={locale === l} onClick={() => setLocale(l)} title={LOCALE_NAMES[l]} lang={l}>
-                {l.toUpperCase()}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
       <UpdateNotice />
       <TopbarSlot.Provider value={slot}>
         <Routes>

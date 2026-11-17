@@ -514,6 +514,9 @@ export const en = {
     votes: (likes: string, dislikes: string) => [likes && `Like: ${likes}`, dislikes && `Not for us: ${dislikes}`].filter(Boolean).join(' · '),
   },
   reorder: {
+    columnHint: 'drag sideways or Alt+←/→ to move',
+    up: 'Move up',
+    down: 'Move down',
     handle: (name: string) => `Move ${name}`,
     hint: 'Drag to move, or use the arrow keys',
     sorted: 'Clear the sorting to move rows',
