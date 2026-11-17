@@ -214,6 +214,7 @@ export const en = {
     avgRating: 'Rating',
   },
   product: {
+    openPage: 'Open product page',
     title: 'Product',
     basics: 'Basics',
     assessment: 'Assessment',

@@ -6,6 +6,10 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- Clicking a product's name opens its details; the shop page opens with the ↗ button next to
+  it, in a new tab.
+- Tall product pictures stay inside their box in the details and on swipe cards instead of
+  covering the text below.
 - A calmer, more compact comparison page: name and category sit in the top bar next to
   Propario, the stage is a small menu next to the tabs, "+ Product" opens the quick entry,
   export moved into the ⋯ menu, and the menu button opens the sections as a list. The language

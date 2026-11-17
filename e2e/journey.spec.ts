@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright'
-import { expect, test, type BrowserContext, type Page } from '@playwright/test'
+import { deflateSync } from 'node:zlib'
+import { expect, test, type BrowserContext, type Locator, type Page } from '@playwright/test'
 
 /**
  * One story, told in order, through the real UI with real WebAuthn ceremonies (Chromium's
@@ -14,8 +15,45 @@ import { expect, test, type BrowserContext, type Page } from '@playwright/test'
  */
 test.describe.configure({ mode: 'serial' })
 
-// A valid 2×2 PNG, so the browser can really decode and re-encode it.
-const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP8z8DAwMDAxMDAwMDAAAANHQEDasKb6QAAAABJRU5ErkJggg==', 'base64')
+/** A real PNG of the given size (solid grey), to check that tall pictures stay inside their boxes. */
+function png(width: number, height: number): Buffer {
+  const crcTable = Array.from({ length: 256 }, (_, n) => {
+    let c = n
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1
+    return c >>> 0
+  })
+  const crc = (b: Buffer) => {
+    let c = 0xffffffff
+    for (const x of b) c = crcTable[(c ^ x) & 0xff] ^ (c >>> 8)
+    return (c ^ 0xffffffff) >>> 0
+  }
+  const chunk = (type: string, data: Buffer) => {
+    const len = Buffer.alloc(4)
+    len.writeUInt32BE(data.length)
+    const body = Buffer.concat([Buffer.from(type), data])
+    const sum = Buffer.alloc(4)
+    sum.writeUInt32BE(crc(body))
+    return Buffer.concat([len, body, sum])
+  }
+  const header = Buffer.alloc(13)
+  header.writeUInt32BE(width, 0)
+  header.writeUInt32BE(height, 4)
+  header.set([8, 0, 0, 0, 0], 8) // 8-bit greyscale
+  const rows = Buffer.alloc((width + 1) * height, 0x88)
+  for (let y = 0; y < height; y++) rows[y * (width + 1)] = 0
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    chunk('IHDR', header),
+    chunk('IDAT', deflateSync(rows)),
+    chunk('IEND', Buffer.alloc(0)),
+  ])
+}
+
+async function inside(img: Locator, box: Locator): Promise<void> {
+  const [a, b] = [(await img.boundingBox())!, (await box.boundingBox())!]
+  expect(a.y + a.height, 'picture bottom').toBeLessThanOrEqual(b.y + b.height + 1)
+  expect(a.x + a.width, 'picture right').toBeLessThanOrEqual(b.x + b.width + 1)
+}
 
 async function passkeyDevice(context: BrowserContext, page: Page): Promise<void> {
   const cdp = await context.newCDPSession(page)
@@ -92,11 +130,13 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await expect(page.getByRole('button', { name: 'Arvika', exact: true })).toBeVisible()
   await accessible(page, 'comparison')
 
-  await page.getByRole('button', { name: 'Details: Arvika' }).first().click()
-  await page.locator('.pimg input[type=file]').setInputFiles({ name: 'cabinet.png', mimeType: 'image/png', buffer: PNG })
+  await page.getByRole('button', { name: 'Arvika', exact: true }).click()
+  // A tall cabinet: 200×1400 px. It must fit its box, not cover the text below.
+  await page.locator('.pimg input[type=file]').setInputFiles({ name: 'cabinet.png', mimeType: 'image/png', buffer: png(200, 1400) })
   const picture = page.locator('.pimg-drop img')
   await expect(picture).toHaveAttribute('src', /^\/api\/images\/[0-9a-f-]{36}$/)
   await expect.poll(() => picture.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0)
+  await inside(picture, page.locator('.pimg-drop'))
   await accessible(page, 'product details')
   await page.keyboard.press('Escape')
 })
@@ -142,6 +182,11 @@ test('Ada moves rows and decides by swiping', async () => {
   await page.getByRole('link', { name: 'Swipe' }).click()
   await expect(page.getByRole('heading', { name: 'Like it or not?' })).toBeVisible()
   await accessible(page, 'swipe')
+  const card = page.locator('.swipe-media img')
+  if (await card.count()) {
+    await expect.poll(() => card.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0)
+    await inside(card, page.locator('.swipe-media'))
+  }
   await page.keyboard.press('ArrowRight')
   await expect(page.getByText('1 of 2 decided')).toBeVisible()
   await page.getByRole('button', { name: 'Not for us' }).click()

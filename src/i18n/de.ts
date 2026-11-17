@@ -216,6 +216,7 @@ export const de: Messages = {
     avgRating: 'Bewertung',
   },
   product: {
+    openPage: 'Produktseite öffnen',
     title: 'Produkt',
     basics: 'Grunddaten',
     assessment: 'Einschätzung',

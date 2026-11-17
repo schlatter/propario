@@ -781,6 +781,7 @@ svg.glyph {
   position: relative;
 }
 .card-media img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: contain;
@@ -1328,16 +1329,22 @@ table.grid {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* The name opens the product details; the shop page has its own button next to it. */
 .name-model {
+  display: inline;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--line-strong);
+  background: none;
+  font: inherit;
   font-weight: 650;
   line-height: 1.3;
+  color: inherit;
+  text-align: left;
   overflow-wrap: anywhere;
+  cursor: pointer;
 }
-a.name-model {
-  text-decoration: none;
-  border-bottom: 1px solid var(--line-strong);
-}
-a.name-model:hover {
+.name-model:hover {
   border-bottom-color: var(--ink);
 }
 .name-tools {
@@ -2076,7 +2083,10 @@ table.map {
   width: 168px;
   height: 168px;
   display: grid;
+  /* One cell exactly the size of the box: a tall image must not grow the row past it. */
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
   place-items: center;
+  overflow: hidden;
   padding: 8px;
   background: #fff;
   border: 1px solid var(--line);
@@ -2095,6 +2105,8 @@ table.map {
 .pimg-drop img {
   width: 100%;
   height: 100%;
+  min-width: 0;
+  min-height: 0;
   object-fit: contain;
 }
 .pimg-hint {
@@ -2361,7 +2373,9 @@ table.map {
 .swipe-media {
   height: clamp(150px, 30vh, 280px);
   display: grid;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
   place-items: center;
+  overflow: hidden;
   padding: 16px;
   background: #fff;
   border-bottom: 1px solid var(--line);
@@ -2369,6 +2383,8 @@ table.map {
 .swipe-media img {
   width: 100%;
   height: 100%;
+  min-width: 0;
+  min-height: 0;
   object-fit: contain;
   pointer-events: none;
 }

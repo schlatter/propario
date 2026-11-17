@@ -616,20 +616,9 @@ export function ProductTable({
                         )}
                         <div className="name-main">
                           {p.brand && <div className="name-brand">{p.brand}</div>}
-                          {href ? (
-                            <a className="name-model" href={href} target="_blank" rel="noopener noreferrer" title={m.common.openLink}>
-                              {p.model || p.brand || hostOf(p.url) || m.product.unnamed}
-                            </a>
-                          ) : (
-                            <button
-                              type="button"
-                              className="name-model"
-                              style={{ border: 0, background: 'none', padding: 0, textAlign: 'left', cursor: 'pointer' }}
-                              onClick={() => onOpen(p.id)}
-                            >
-                              {p.model || (p.brand ? '' : m.product.unnamed)}
-                            </button>
-                          )}
+                          <button type="button" className="name-model" onClick={() => onOpen(p.id)} title={m.project.details}>
+                            {p.model || (p.brand ? '' : hostOf(p.url) || m.product.unnamed)}
+                          </button>
                         </div>
                         <div className="name-tools">
                           <button
@@ -642,15 +631,18 @@ export function ProductTable({
                           >
                             <Glyph name="star" />
                           </button>
-                          <button
-                            type="button"
-                            className="icon-btn sm"
-                            aria-label={`${m.project.details}: ${productName(p, m.product.unnamed)}`}
-                            title={m.project.details}
-                            onClick={() => onOpen(p.id)}
-                          >
-                            <Glyph name="panel" />
-                          </button>
+                          {href && (
+                            <a
+                              className="icon-btn sm"
+                              href={href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              aria-label={`${m.product.openPage}: ${productName(p, m.product.unnamed)}`}
+                              title={`${m.product.openPage} (${p.retailer || hostOf(p.url)})`}
+                            >
+                              <Glyph name="out" />
+                            </a>
+                          )}
                         </div>
                       </div>
                     </td>
