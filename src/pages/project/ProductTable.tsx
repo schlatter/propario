@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { addProduct, setProductValue, updateProduct, updateProject } from '../../db/repo'
+import { addProduct, reorder, setProductValue, updateProduct, updateProject } from '../../db/repo'
 import type { Candidate, Product, PropertyDef, TableView } from '../../db/types'
 import { avgStars, compareKeys, formatValue, productName, sortKey } from '../../domain/display'
 import { coerceValue, hostOf, isTyped, looksLikeUrl, normalizeUrl, parseNumber, safeHref } from '../../domain/values'
@@ -11,6 +11,7 @@ import { Glyph } from '../../ui/Glyph'
 import { CheckStrip, Stars, Verdict } from '../../ui/Marks'
 import { Menu } from '../../ui/Menu'
 import { Thumb } from '../../ui/Thumb'
+import { useUsers } from '../../users'
 import { EditableCell } from './EditableCell'
 import type { ProjectData } from './useProjectData'
 
@@ -46,6 +47,7 @@ export function ProductTable({
   const [onlyEligible, setOnlyEligible] = useState(false)
   const [widths, setWidths] = useState<Record<string, number>>({})
   const toast = useToast()
+  const users = useUsers()
 
   // ---- product images ----
   const showThumbs = products.some((p) => productImage(p))
@@ -149,6 +151,43 @@ export function ProductTable({
         ),
       })
     }
+    cols.push({
+      id: 'votes',
+      label: m.swipe.column,
+      width: 110,
+      optional: true,
+      has: (p) => Object.keys(p.votes ?? {}).length > 0,
+      sort: (p) => {
+        const v = Object.values(p.votes ?? {})
+        return v.length ? v.filter((x) => x === 'like').length - v.filter((x) => x === 'dislike').length : null
+      },
+      render: (p) => {
+        const entries = Object.entries(p.votes ?? {})
+        const names = (vote: string) =>
+          entries
+            .filter(([, v]) => v === vote)
+            .map(([id]) => users.get(id) ?? '?')
+            .join(', ')
+        const likes = entries.filter(([, v]) => v === 'like').length
+        const dislikes = entries.length - likes
+        if (!entries.length) return null
+        return (
+          <span className="votes" title={m.swipe.votes(names('like'), names('dislike'))}>
+            {likes > 0 && (
+              <span className="vote like">
+                <Glyph name="star" /> {likes}
+              </span>
+            )}
+            {dislikes > 0 && (
+              <span className="vote dislike">
+                <Glyph name="cross" /> {dislikes}
+              </span>
+            )}
+            <span className="sr-only">{m.swipe.votes(names('like'), names('dislike'))}</span>
+          </span>
+        )
+      },
+    })
     cols.push({
       id: 'rating',
       label: m.project.avgRating,
@@ -266,7 +305,7 @@ export function ProductTable({
         render: (p) => <PropertyCell prop={prop} product={p} />,
       }
     }
-  }, [m, fmt, properties, data, minPrice, onOpen])
+  }, [m, fmt, properties, data, minPrice, onOpen, users])
 
   const visibleCols = columns.filter((c) => !view.hiddenColumns.includes(c.id) && (!c.optional || products.some((p) => c.has!(p))))
   const hideableCols = columns.filter((c) => !c.optional || products.some((p) => c.has!(p)))
@@ -322,6 +361,40 @@ export function ProductTable({
   }
 
   const allSelected = rows.length > 0 && rows.every((r) => selection.has(r.id))
+
+  // ---- moving rows (drag the handle, or arrow keys on it) ----
+  // The table order is the stored order; while a column sorts the table, rows cannot be moved.
+  const canMove = !view.sort
+  const tbodyRef = useRef<HTMLTableSectionElement>(null)
+  const [drag, setDrag] = useState<{ id: string; target: string | null; after: boolean } | null>(null)
+  const moveTo = (id: string, targetId: string, after: boolean) => {
+    if (id === targetId) return
+    const moving = products.find((p) => p.id === id)
+    if (!moving) return
+    const list = products.filter((p) => p.id !== id)
+    const idx = list.findIndex((p) => p.id === targetId) + (after ? 1 : 0)
+    list.splice(idx, 0, moving)
+    void reorder('products', list)
+  }
+  const dragOver = (clientY: number) => {
+    if (!drag || !tbodyRef.current) return
+    const trs = [...tbodyRef.current.querySelectorAll<HTMLTableRowElement>('tr[data-id]')]
+    if (clientY < 48) window.scrollBy(0, -12)
+    else if (clientY > window.innerHeight - 48) window.scrollBy(0, 12)
+    for (const tr of trs) {
+      const r = tr.getBoundingClientRect()
+      if (clientY < r.top + r.height / 2) return setDrag({ ...drag, target: tr.dataset.id!, after: false })
+    }
+    const last = trs[trs.length - 1]
+    if (last) setDrag({ ...drag, target: last.dataset.id!, after: true })
+  }
+  const moveByKey = (p: Product, key: string) => {
+    const i = rows.findIndex((r) => r.id === p.id)
+    if (key === 'ArrowUp' && i > 0) moveTo(p.id, rows[i - 1].id, false)
+    else if (key === 'ArrowDown' && i < rows.length - 1) moveTo(p.id, rows[i + 1].id, true)
+    else return false
+    return true
+  }
 
   return (
     <>
@@ -403,7 +476,7 @@ export function ProductTable({
         <div className="table-wrap">
           <table className="grid">
             <colgroup>
-              <col style={{ width: 40 }} />
+              <col style={{ width: 64 }} />
               <col style={{ width: widthOf('name', showThumbs ? 300 : 260) }} />
               {visibleCols.map((c) => (
                 <col key={c.id} style={{ width: widthOf(c.id, c.width) }} />
@@ -447,7 +520,7 @@ export function ProductTable({
                 ))}
               </tr>
             </thead>
-            <tbody>
+            <tbody ref={tbodyRef}>
               {rows.map((p) => {
                 const href = safeHref(p.url)
                 const cls = [
@@ -455,13 +528,40 @@ export function ProductTable({
                   p.candidate === 'favorite' && 'is-fav',
                   p.candidate === 'excluded' && 'is-excluded',
                   project.decisionProductId === p.id && 'is-decision',
+                  drag?.id === p.id && 'is-dragging',
+                  drag && drag.target === p.id && drag.target !== drag.id && (drag.after ? 'drop-after' : 'drop-before'),
                 ]
                   .filter(Boolean)
                   .join(' ')
                 return (
-                  <tr key={p.id} className={cls}>
+                  <tr key={p.id} className={cls} data-id={p.id}>
                     <td className="sticky col-sel">
                       <span className="cell-sel">
+                        <button
+                          type="button"
+                          className="grip"
+                          disabled={!canMove}
+                          aria-label={m.reorder.handle(productName(p, m.product.unnamed))}
+                          title={canMove ? m.reorder.hint : m.reorder.sorted}
+                          aria-keyshortcuts="ArrowUp ArrowDown"
+                          onPointerDown={(e) => {
+                            if (!canMove || e.button !== 0) return
+                            e.preventDefault()
+                            e.currentTarget.setPointerCapture(e.pointerId)
+                            setDrag({ id: p.id, target: null, after: false })
+                          }}
+                          onPointerMove={(e) => dragOver(e.clientY)}
+                          onPointerUp={() => {
+                            if (drag?.target) moveTo(drag.id, drag.target, drag.after)
+                            setDrag(null)
+                          }}
+                          onPointerCancel={() => setDrag(null)}
+                          onKeyDown={(e) => {
+                            if (canMove && moveByKey(p, e.key)) e.preventDefault()
+                          }}
+                        >
+                          <Glyph name="grip" />
+                        </button>
                         <input
                           type="checkbox"
                           aria-label={`${m.project.selectRow}: ${productName(p, m.product.unnamed)}`}

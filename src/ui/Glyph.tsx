@@ -20,6 +20,7 @@ const paths = {
   archive: 'M2.5 3.5h11v3h-11zM3.5 6.5v6h9v-6M6.5 9h3',
   edit: 'M10.5 3l2.5 2.5L6 12.5H3.5V10z',
   flag: 'M4 14V2.5M4 3h7.5l-1.5 2.5L11.5 8H4',
+  grip: 'M6 4h.01M10 4h.01M6 8h.01M10 8h.01M6 12h.01M10 12h.01',
   share:
     'M5.5 7.5a2.2 2.2 0 1 0 0-4.4 2.2 2.2 0 0 0 0 4.4zM1.8 13.5c.3-2.2 1.8-3.6 3.7-3.6s3.4 1.4 3.7 3.6M10.8 7.4a1.9 1.9 0 1 0 0-3.8M11.8 9.9c1.3.4 2.2 1.7 2.4 3.6',
   image: 'M2.5 3.5h11v9h-11zM2.5 10.5l3.2-3 2.6 2.4 1.9-1.6 3.3 2.9M10.2 6.2h.01',
@@ -42,7 +43,7 @@ export function Glyph({ name, title }: { name: GlyphName; title?: string }) {
       viewBox="0 0 16 16"
       fill="none"
       stroke="currentColor"
-      strokeWidth={name === 'more' ? 2.6 : 1.5}
+      strokeWidth={name === 'more' || name === 'grip' ? 2.6 : 1.5}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden={title ? undefined : true}

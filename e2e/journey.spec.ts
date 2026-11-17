@@ -94,6 +94,40 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await page.keyboard.press('Escape')
 })
 
+test('Ada moves rows and decides by swiping', async () => {
+  const { page } = ada
+  await page.getByPlaceholder(/Add product/).fill('Borre')
+  await page.keyboard.press('Enter')
+  const names = () => page.locator('table.grid tbody .name-model').allTextContents()
+  await expect.poll(names).toEqual(['Arvika', 'Borre'])
+
+  // The handle moves a row with the keyboard as well as by dragging.
+  await page.getByRole('button', { name: 'Move Borre' }).focus()
+  await page.keyboard.press('ArrowUp')
+  await expect.poll(names).toEqual(['Borre', 'Arvika'])
+  const handle = page.getByRole('button', { name: 'Move Borre' })
+  const target = page.locator('table.grid tbody tr').nth(1)
+  const from = (await handle.boundingBox())!
+  const to = (await target.boundingBox())!
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(from.x + from.width / 2, to.y + to.height - 4, { steps: 8 })
+  await page.mouse.up()
+  await expect.poll(names).toEqual(['Arvika', 'Borre'])
+
+  await page.getByRole('link', { name: 'Swipe' }).click()
+  await expect(page.getByRole('heading', { name: 'Like it or not?' })).toBeVisible()
+  await accessible(page, 'swipe')
+  await page.keyboard.press('ArrowRight')
+  await expect(page.getByText('1 of 2 decided')).toBeVisible()
+  await page.getByRole('button', { name: 'Not for us' }).click()
+  await expect(page.getByRole('heading', { name: 'All decided' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Arvika' })).toBeVisible()
+  await page.getByRole('link', { name: 'Back to the table' }).click()
+  await expect(page.locator('.vote.like')).toHaveCount(1)
+  await expect(page.locator('.vote.dislike')).toHaveCount(1)
+})
+
 test('Ada invites Grace, who joins and sees nothing that is not hers', async ({ browser }) => {
   const { page } = ada
   await page.getByRole('link', { name: 'Settings' }).click()

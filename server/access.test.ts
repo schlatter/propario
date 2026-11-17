@@ -195,6 +195,20 @@ describe('changes and sync', () => {
     expect(delta.records.map((r) => r.kind)).toEqual(['projects'])
   })
 
+  it('votes: everyone casts only their own, and votes of two people merge', () => {
+    const { project, product } = seedProject(ada)
+    setMember(db, ada, project.id, grace, 'editor')
+    const vote = (who: string, votes: Record<string, string | null>) =>
+      applyChanges(db, who, [{ op: 'patch', kind: 'products', id: product.id, projectId: project.id, patch: { votes } }])
+    vote(ada, { [ada]: 'like' })
+    vote(grace, { [grace]: 'dislike' })
+    expect(() => vote(grace, { [ada]: 'dislike' })).toThrow('own vote only')
+    expect(() => vote(ada, { [ada]: 'maybe' })).toThrow('like or dislike')
+    expect(sync(db, ada, 0).records.find((r) => r.kind === 'products')!.data).toMatchObject({ votes: { [ada]: 'like', [grace]: 'dislike' } })
+    vote(ada, { [ada]: null })
+    expect((sync(db, ada, 0).records.find((r) => r.kind === 'products')!.data as { votes: object }).votes).toEqual({ [grace]: 'dislike' })
+  })
+
   it('keeps record contents encrypted at rest', () => {
     seedProject(ada)
     const rows = db.prepare('SELECT data FROM records').all() as { data: string }[]

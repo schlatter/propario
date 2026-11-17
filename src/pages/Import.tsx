@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { db } from '../db/db'
+import { ImageError, loadImages, missingImages, type ImageErrorCode } from '../images'
 import { insertBundle, uniqueProjectName } from '../db/repo'
 import { PRIORITIES, PROPERTY_TYPES, type Priority, type PropertyType } from '../db/types'
 import { OP_SYMBOL } from '../domain/requirements'
@@ -40,6 +41,8 @@ export function ImportPage() {
   const [busy, setBusy] = useState(false)
   const [current, setCurrent] = useState<string>('')
   const [results, setResults] = useState<Result[]>([])
+  // Pictures are fetched right after the import, from each product's link (or image column).
+  const [images, setImages] = useState<{ done: number; total: number; loaded?: number; failed?: number; error?: ImageErrorCode } | null>(null)
   const [over, setOver] = useState(false)
 
   const load = async (file: File) => {
@@ -71,8 +74,23 @@ export function ImportPage() {
       }
       setResults(out)
       setStep('done')
+      setBusy(false)
+      await loadImportedImages(out.map((r) => r.id))
     } finally {
       setBusy(false)
+    }
+  }
+
+  const loadImportedImages = async (projectIds: string[]) => {
+    const products = (await Promise.all(projectIds.map((id) => db.products.where('projectId').equals(id).toArray()))).flat()
+    const missing = missingImages(products)
+    if (!missing.length) return
+    setImages({ done: 0, total: missing.length })
+    try {
+      const r = await loadImages(missing, (done, total) => setImages({ done, total }))
+      setImages({ done: missing.length, total: missing.length, loaded: r.loaded, failed: r.failed.length })
+    } catch (e) {
+      setImages({ done: 0, total: missing.length, error: e instanceof ImageError ? e.code : 'failed' })
     }
   }
 
@@ -156,6 +174,15 @@ export function ImportPage() {
               </li>
             ))}
           </ul>
+          {images && (
+            <p role="status" className="muted">
+              {images.error
+                ? m.image.error[images.error]
+                : images.loaded === undefined
+                  ? m.image.loading(images.done, images.total)
+                  : m.image.bulkResult(images.loaded, images.failed ?? 0)}
+            </p>
+          )}
           <div className="row">
             <Link to="/" className="btn primary">
               {m.importer.goHome}
@@ -165,6 +192,7 @@ export function ImportPage() {
               onClick={() => {
                 setDraft(null)
                 setResults([])
+                setImages(null)
                 setStep('choose')
               }}
             >

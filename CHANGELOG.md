@@ -6,6 +6,11 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- Excel import fetches the product pictures right away, where the shops allow it.
+- Swipe mode: go through a comparison one product at a time – like it or not. Everyone votes
+  for themselves; the votes appear as a column in the table.
+- Move rows in the product table by dragging the handle (or with the arrow keys on it).
+
 ## 0.2.0 — 2026-11-16
 
 - Renamed to **Propario**.

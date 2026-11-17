@@ -41,6 +41,7 @@ export function makeProduct(projectId: string, p: Partial<Product> = {}): Produc
     favoriteRank: null,
     exclusionReason: '',
     ratings: [],
+    votes: {},
     overall: '',
     pros: '',
     cons: '',
@@ -96,6 +97,7 @@ export function normalizeProduct(p: Partial<Product> & { id: string; projectId: 
     values: p.values ?? {},
     checks: p.checks ?? {},
     ratings: p.ratings ?? [],
+    votes: p.votes ?? {},
     links: p.links ?? [],
     extra: p.extra ?? {},
   }

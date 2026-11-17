@@ -224,3 +224,8 @@ export async function uniqueProjectName(name: string, database: AppDB = db): Pro
   while (names.has(`${name} (${i})`)) i++
   return `${name} (${i})`
 }
+
+/** Swipe mode: the signed-in person's verdict on a product (null takes it back). Only one's own vote merges. */
+export async function setVote(product: Product, userId: string, vote: 'like' | 'dislike' | null) {
+  await commit([patch('products', product, { votes: { [userId]: vote } })])
+}

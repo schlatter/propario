@@ -16,6 +16,8 @@ export type PropertyValue = string | number | boolean | null
 
 export type Candidate = 'open' | 'favorite' | 'excluded'
 
+export type Vote = 'like' | 'dislike'
+
 export type PurchaseStatus = 'none' | 'ordered' | 'purchased'
 
 export type Priority = 'must' | 'important' | 'wish' | 'bonus' | 'exclusion' | 'avoid' | 'info'
@@ -103,6 +105,8 @@ export interface Product {
   favoriteRank: number | null
   exclusionReason: string
   ratings: Rating[]
+  /** Swipe mode: each account's quick verdict, keyed by account id. */
+  votes: Record<string, Vote>
   overall: string
   pros: string
   cons: string

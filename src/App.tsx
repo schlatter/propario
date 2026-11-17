@@ -9,6 +9,7 @@ import { UpdateNotice, WhatsNew } from './ui/Updates'
 import { HomePage } from './pages/Home'
 import { ProjectPage } from './pages/Project'
 import { ComparePage } from './pages/Compare'
+import { SwipePage } from './pages/Swipe'
 import { BackupPage } from './pages/Backup'
 import { SettingsPage } from './pages/Settings'
 
@@ -98,6 +99,7 @@ function Shell() {
         <Route path="/" element={<HomePage />} />
         <Route path="/p/:id" element={<ProjectPage />} />
         <Route path="/p/:id/compare" element={<ComparePage />} />
+        <Route path="/p/:id/swipe" element={<SwipePage />} />
         <Route
           path="/import"
           element={

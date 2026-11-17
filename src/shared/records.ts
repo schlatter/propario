@@ -27,7 +27,7 @@ export type Change =
   | { op: 'delete'; kind: Kind; id: string; projectId: string }
 
 /** Fields merged per key instead of replaced as a whole. */
-const DEEP = new Set(['values', 'checks'])
+const DEEP = new Set(['values', 'checks', 'votes'])
 
 export function applyPatch<T extends object>(record: T, patch: Record<string, unknown>): T {
   const next = { ...record } as Record<string, unknown>
@@ -90,6 +90,8 @@ export function checkFields(kind: Kind, fields: Record<string, unknown>): string
     if (URL_FIELDS.has(key) && value !== '' && !/^https?:\/\//i.test(String(value))) return `field ${key} must be an http(s) link`
     if (key === 'image' && value !== '' && !IMAGE_PATH.test(String(value))) return 'field image must point to this server'
     if (key === 'links' && !(value as unknown[]).every((l) => typeof l === 'string' && /^https?:\/\//i.test(l))) return 'links must be http(s)'
+    if (key === 'votes' && !Object.entries(value as object).every(([k, v]) => UUID.test(k) && (v === 'like' || v === 'dislike')))
+      return 'votes must be like or dislike per account'
     if (!checkStrings(value)) return `field ${key} is too large or too deep`
   }
   if (JSON.stringify(fields).length > MAX_JSON) return 'record too large'

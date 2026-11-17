@@ -115,6 +115,8 @@ export function applyChanges(db: DB, userId: string, changes: unknown): number {
         }
       } else if (c.op === 'patch') {
         requireRole(db, c.projectId, userId, 'edit')
+        // Each person casts only their own vote.
+        if (c.patch.votes && Object.keys(c.patch.votes as object).some((k) => k !== userId)) throw new AccessError('own vote only', 403)
         const current = readRecord(db, c.kind, c.id)
         if (!current || current.projectId !== c.projectId) throw new AccessError('not found')
         writeRecord(db, c.kind, applyPatch(current.record, c.patch), c.projectId, seq)

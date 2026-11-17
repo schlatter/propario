@@ -83,6 +83,11 @@ export function ProjectPage() {
         </div>
         <div className="actions">
           {role === 'viewer' && <span className="role-badge">{m.share.readOnly}</span>}
+          {products.length > 0 && role !== 'viewer' && (
+            <Link className="btn sm primary" to={`/p/${project.id}/swipe`} title={m.swipe.openHint}>
+              <Glyph name="star" /> {m.swipe.open}
+            </Link>
+          )}
           {role === 'owner' && (
             <button type="button" className="btn sm" onClick={() => setSharing(true)}>
               <Glyph name="share" /> {m.share.title}
