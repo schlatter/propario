@@ -325,6 +325,8 @@ export const de: Messages = {
   },
   filter: {
     quick: 'Schnellfilter',
+    toggle: 'Filter',
+    toggleActive: (n) => `Filter · ${n}`,
     fav: 'Favoriten',
     new: 'Neu',
     mine: 'Von mir gefunden',

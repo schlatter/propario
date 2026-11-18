@@ -3097,3 +3097,56 @@ main.project-page {
 .grid tbody tr.is-excluded.is-selected td {
   background: var(--selected);
 }
+
+/* Phones: quick filters fold away; the fixed selection and product columns get narrow, so the
+   other columns stay in view in portrait. */
+.filter-toggle {
+  display: none;
+}
+@media (max-width: 600px) {
+  .filter-toggle {
+    display: inline-flex;
+  }
+  .filter-chips:not(.open) {
+    display: none;
+  }
+  .grid col.c-sel {
+    width: 36px !important;
+  }
+  .grid .col-sel {
+    width: 36px;
+  }
+  .grid .col-name {
+    left: 36px;
+  }
+  .grid col.c-name {
+    width: 136px !important;
+  }
+  .cell-sel .grip {
+    display: none;
+  }
+  .name-cell {
+    gap: 4px;
+    padding: 6px 4px;
+  }
+  .name-cell .thumb {
+    width: 28px;
+    height: 28px;
+  }
+  .name-tools a.icon-btn {
+    display: none;
+  }
+  .name-model {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: left;
+  }
+  .grid col[data-col='candidate'] {
+    width: 96px !important;
+  }
+  /* Search, filter and columns share one line. */
+  .toolbar .search {
+    flex: 1 1 120px;
+    min-width: 0;
+  }
+}

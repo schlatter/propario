@@ -323,6 +323,8 @@ export const en = {
   },
   filter: {
     quick: 'Quick filters',
+    toggle: 'Filter',
+    toggleActive: (n: number) => `Filter · ${n}`,
     fav: 'Favourites',
     new: 'New',
     mine: 'Found by me',

@@ -91,12 +91,15 @@ export function ProductTable({
   const onlyEligible = chips.has('eligible')
   const query = params.get('q') ?? ''
   const [advanced, setAdvanced] = useState(!!query)
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const session = useSession()
   const me = session.state.status === 'signed-in' ? session.state.user.name : ''
   const fields = useMemo(() => queryFields(properties, (p) => data.summaries.get(p.id), me), [properties, data.summaries, me])
   const compiled = useMemo(() => compileQuery<Product>(query, fields), [query, fields])
   /** Columns filtered by their requirements' verdict (the values themselves stay as they are). */
   const [reqFilter, setReqFilter] = useState<Record<string, 'pass' | 'fail'>>({})
+  /** How many filters narrow the table now (shown on the folded filter button). */
+  const activeFilters = chips.size + (view.hideExcluded ? 1 : 0) + (query.trim() ? 1 : 0) + Object.keys(reqFilter).length
   const byColumn = useMemo(() => requirementsByColumn(data.rules), [data.rules])
   const tableRef = useRef<HTMLTableElement>(null)
   const [widths, setWidths] = useState<Record<string, number>>({})
@@ -626,7 +629,17 @@ export function ProductTable({
           <span className="sr-only">{m.project.filterPlaceholder}</span>
           <input className="input" type="search" placeholder={m.project.filterPlaceholder} value={filter} onChange={(e) => setFilter(e.target.value)} />
         </label>
-        <div className="chips filter-chips" role="group" aria-label={m.filter.quick}>
+        {/* On phones the quick filters fold away behind one button that counts the active ones. */}
+        <button
+          type="button"
+          className="btn sm filter-toggle"
+          aria-expanded={filtersOpen}
+          aria-controls="filter-chips"
+          onClick={() => setFiltersOpen(!filtersOpen)}
+        >
+          <Glyph name="search" /> {activeFilters ? m.filter.toggleActive(activeFilters) : m.filter.toggle}
+        </button>
+        <div id="filter-chips" className={`chips filter-chips${filtersOpen ? ' open' : ''}`} role="group" aria-label={m.filter.quick}>
           <button type="button" className="chip toggle" aria-pressed={chips.has('fav')} onClick={() => toggleChip('fav')}>
             {m.filter.fav}
           </button>
@@ -776,8 +789,8 @@ export function ProductTable({
         <div className="table-wrap">
           <table className="grid" ref={tableRef}>
             <colgroup>
-              <col style={{ width: 64 }} />
-              <col data-col="name" style={{ width: widthOf('name', showThumbs ? 300 : 260) }} />
+              <col className="c-sel" style={{ width: 64 }} />
+              <col className="c-name" data-col="name" style={{ width: widthOf('name', showThumbs ? 300 : 260) }} />
               {visibleCols.map((c) => (
                 <col key={c.id} data-col={c.id} style={{ width: widthOf(c.id, c.width) }} />
               ))}

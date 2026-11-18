@@ -63,6 +63,8 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
         className={`pimg-drop${over ? ' over' : ''}${src ? ' zoomable' : ' empty'}`}
         tabIndex={0}
         onPointerEnter={(e) => src && e.pointerType === 'mouse' && setZoom(true)}
+        // Also when the picture appears under a resting pointer (e.g. right after opening the details).
+        onPointerMove={(e) => src && e.pointerType === 'mouse' && !zoom && setZoom(true)}
         onPointerLeave={() => setZoom(false)}
         onPointerUp={(e) => src && e.pointerType !== 'mouse' && setZoom((z) => !z)}
         onFocus={(e) => src && e.currentTarget.matches(':focus-visible') && setZoom(true)}
