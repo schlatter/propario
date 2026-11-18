@@ -39,9 +39,10 @@ candidates, their pictures, your ratings and the final decision.
   device PIN). New people join only with an invitation.
 - No tracking, no analytics, no third-party scripts or fonts. Pages show pictures from this
   server only, so no shop learns who is looking.
-- No crawling. A product page is read once when you ask for its picture: its preview image and
-  what it states about the product (GTIN, part number, euro price; Open Graph, schema.org),
-  nothing else; no disguised client, no getting past bot walls.
+- No crawling. A product page is read once when you add it by link or ask for its picture: its
+  preview image and what it states about the product (name, brand, category, GTIN, part
+  number, euro price, data sheet; schema.org, Open Graph, data-sheet tables), nothing else; no
+  disguised client, no getting past bot walls. It fills only empty fields.
 - Links to other sites (price comparisons, tests) are built in your browser and open there
   directly; this server never contacts them.
 

@@ -1,22 +1,9 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { de } from './de'
-import { en, type Messages } from './en'
+import { type Messages } from './en'
+import { initialLocale, LOCALES, STORAGE_KEY, type Locale } from './active'
 
-export const LOCALES = { en, de } as const
-export type Locale = keyof typeof LOCALES
+export { LOCALES, type Locale }
 export const LOCALE_NAMES: Record<Locale, string> = { en: 'English', de: 'Deutsch' }
-
-const STORAGE_KEY = 'pv.locale'
-
-function initialLocale(): Locale {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY)
-    if (saved && saved in LOCALES) return saved as Locale
-  } catch {
-    /* storage unavailable */
-  }
-  return navigator.language?.toLowerCase().startsWith('de') ? 'de' : 'en'
-}
 
 interface I18n {
   locale: Locale

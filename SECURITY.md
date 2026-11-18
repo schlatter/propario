@@ -57,9 +57,11 @@ happens.** Every change is measured against this list; `npm run verify` checks m
 - Fetching a product page is guarded against SSRF: http(s) on ports 80/443, public addresses
   only, checked at connection time (DNS rebinding) and after every redirect, time and size
   limits, no cookies, SVG refused, signed-in users only.
-- Facts read from a product page (GTIN, part number, price) are untrusted: only a GTIN with a
-  valid check digit, a short plain part number and a euro amount pass, on the server and again
-  in the browser (`src/shared/product-facts.ts`). They fill only empty fields.
+- Facts read from a product page (GTIN, part number, price, name, brand, category, colour,
+  description, data sheet) are untrusted: only a GTIN with a valid check digit, a short plain
+  part number, a euro amount and bounded single-line text pass, on the server and again in the
+  browser (`src/shared/product-facts.ts`); the header carrying them is capped at about 6 KB.
+  They fill only empty fields and are shown as plain text.
 - Offers and outside ratings are checked entry by entry: exactly the known fields, numbers,
   http(s) links, ISO dates, at most 50 entries per product (`checkItems` in `src/shared/records.ts`).
 - Links to other sites are built from a fixed list in the code (`src/domain/lookup.ts`) with

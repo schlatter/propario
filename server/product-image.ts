@@ -26,11 +26,27 @@ const MAX_REDIRECTS = 5
 export class ImageFetchError extends Error {
   code: string
   status: number
+  /** What the page said about the product, when it was read but no picture came of it. */
+  facts?: ProductFacts
   constructor(code: string, status = 502) {
     super(code)
     this.code = code
     this.status = status
   }
+}
+
+/**
+ * Facts for the `X-Product-Facts` header: base64url JSON, at most about 6 KB. Table specs go
+ * first when it is too long, then the description – structured data is the most reliable.
+ */
+export function encodeFacts(facts: ProductFacts): string {
+  const enc = (f: ProductFacts) => Buffer.from(JSON.stringify(f)).toString('base64url')
+  let f: ProductFacts = facts
+  let out = enc(f)
+  if (out.length > 6000) f = { ...f, specs: f.specs?.filter((s) => !s.table) }
+  if ((out = enc(f)).length > 6000) f = { ...f, description: undefined }
+  while ((out = enc(f)).length > 6000 && f.specs?.length) f = { ...f, specs: f.specs.slice(0, -5) }
+  return out
 }
 
 const blocked = new net.BlockList()
@@ -274,7 +290,33 @@ export function extractImageCandidates(html: string, pageUrl: string): string[] 
 
 const GTIN_KEYS = ['gtin13', 'gtin', 'gtin14', 'gtin12', 'gtin8']
 
-function ldFacts(node: any, raw: Record<string, unknown>, depth = 0): void {
+/** UN/CEFACT unit codes schema.org uses in QuantitativeValue. */
+const UNIT_CODES: Record<string, string> = { CMT: 'cm', MMT: 'mm', MTR: 'm', KGM: 'kg', GRM: 'g', LTR: 'l', INH: 'inch' }
+
+/** Text of a schema.org value: a string or number, `{ name }`, or the first of a list. */
+function ldText(v: any): string {
+  if (Array.isArray(v)) return v.length ? ldText(v[0]) : ''
+  if (typeof v === 'string' || typeof v === 'number') return decodeEntities(stripTags(String(v)))
+  if (v && typeof v === 'object') return ldText(v.name ?? v['@value'] ?? '')
+  return ''
+}
+
+/** A QuantitativeValue (`{ value, unitCode }`) or a plain "60 cm" as a spec. */
+function ldQuantity(name: string, v: any): { name: string; value: string; unit?: string } | null {
+  if (v === undefined || v === null || v === '') return null
+  if (typeof v === 'object' && !Array.isArray(v)) {
+    const value = ldText(v.value)
+    if (!value) return null
+    const unit = UNIT_CODES[String(v.unitCode ?? '').toUpperCase()] ?? ldText(v.unitText)
+    return { name, value, ...(unit ? { unit } : {}) }
+  }
+  const value = ldText(v)
+  return value ? { name, value } : null
+}
+
+const stripTags = (s: string) => s.replace(/<[^>]*>/g, ' ')
+
+function ldFacts(node: any, raw: Record<string, any>, depth = 0): void {
   if (!node || depth > 8 || typeof node !== 'object') return
   if (Array.isArray(node)) {
     for (const n of node) ldFacts(n, raw, depth + 1)
@@ -288,13 +330,60 @@ function ldFacts(node: any, raw: Record<string, unknown>, depth = 0): void {
       if (raw.price !== undefined || !offer || typeof offer !== 'object') continue
       if (String(offer.priceCurrency ?? '').toUpperCase() === 'EUR') raw.price = offer.price ?? offer.lowPrice
     }
+    for (const key of ['name', 'brand', 'category', 'color', 'description'] as const) {
+      const t = ldText(node[key])
+      if (t && raw[key] === undefined) raw[key] = t
+    }
+    const specs: any[] = (raw.specs ??= [])
+    for (const [key, label] of [
+      ['width', 'Width'],
+      ['height', 'Height'],
+      ['depth', 'Depth'],
+      ['weight', 'Weight'],
+    ] as const) {
+      const q = ldQuantity(label, node[key])
+      if (q) specs.push(q)
+    }
+    const material = ldText(node.material)
+    if (material) specs.push({ name: 'Material', value: material })
+    for (const p of ([] as any[]).concat(node.additionalProperty || [])) {
+      if (!p || typeof p !== 'object') continue
+      const q = ldQuantity(ldText(p.name), p)
+      if (q && q.name) specs.push(q)
+    }
   }
-  for (const key of ['@graph', 'mainEntity', 'itemListElement', 'item']) if (node[key]) ldFacts(node[key], raw, depth + 1)
+  if (type.some((t) => /^breadcrumblist$/i.test(t)) && Array.isArray(node.itemListElement)) {
+    raw.crumbs ??= [...node.itemListElement]
+      .sort((x: any, y: any) => Number(x?.position ?? 0) - Number(y?.position ?? 0))
+      .map((x: any) => ldText(x?.name ?? x?.item?.name ?? ''))
+      .filter(Boolean)
+  }
+  for (const key of ['@graph', 'mainEntity', 'itemListElement', 'item', 'hasVariant']) if (node[key]) ldFacts(node[key], raw, depth + 1)
 }
 
-/** What a page states about its product (JSON-LD first, then microdata); only well-formed values. */
+/** Label – value pairs of data-sheet tables (`<th>/<td>` or two cells) and definition lists. */
+export function tableSpecs(html: string): { name: string; value: string; table: true }[] {
+  const out: { name: string; value: string; table: true }[] = []
+  const text = (s: string) => decodeEntities(stripTags(s)).replace(/\s+/g, ' ').trim()
+  const push = (name: string, value: string) => {
+    const n = text(name).replace(/:$/, '')
+    const v = text(value)
+    if (n && v && n.length <= 80 && v.length <= 200 && out.length < 120) out.push({ name: n, value: v, table: true })
+  }
+  for (const row of html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)) {
+    const cells = [...row[1].matchAll(/<(th|td)\b[^>]*>([\s\S]*?)<\/\1>/gi)].map((c) => c[2])
+    if (cells.length === 2) push(cells[0], cells[1])
+  }
+  for (const m of html.matchAll(/<dt\b[^>]*>([\s\S]*?)<\/dt>\s*<dd\b[^>]*>([\s\S]*?)<\/dd>/gi)) push(m[1], m[2])
+  return out
+}
+
+/**
+ * What a page states about its product: JSON-LD first, then microdata and Open Graph, the
+ * breadcrumb as the kind of product, and data-sheet tables. Only well-formed values survive.
+ */
 export function extractProductFacts(html: string): ProductFacts {
-  const raw: Record<string, unknown> = {}
+  const raw: Record<string, any> = {}
   for (const m of html.matchAll(/<script\b[^>]*type\s*=\s*["']?application\/ld\+json["']?[^>]*>([\s\S]*?)<\/script>/gi)) {
     try {
       ldFacts(JSON.parse(m[1].trim()), raw)
@@ -302,14 +391,25 @@ export function extractProductFacts(html: string): ProductFacts {
       /* broken JSON-LD is common; ignore */
     }
   }
-  const micro: Record<string, string> = {}
+  const meta: Record<string, string> = {}
   for (const m of html.matchAll(/<meta\b[^>]*>/gi)) {
     const a = attrs(m[0])
-    if (a.itemprop && a.content && !(a.itemprop.toLowerCase() in micro)) micro[a.itemprop.toLowerCase()] = a.content
+    const key = (a.itemprop || a.property || a.name || '').toLowerCase()
+    if (key && a.content && !(key in meta)) meta[key] = a.content
   }
-  raw.gtin ??= GTIN_KEYS.map((k) => micro[k]).find((v) => v !== undefined)
-  raw.mpn ??= micro.mpn
-  if (raw.price === undefined && (micro.pricecurrency ?? '').toUpperCase() === 'EUR') raw.price = micro.price
+  raw.gtin ??= GTIN_KEYS.map((k) => meta[k]).find((v) => v !== undefined)
+  raw.mpn ??= meta.mpn
+  if (raw.price === undefined && (meta.pricecurrency ?? meta['product:price:currency'] ?? '').toUpperCase() === 'EUR')
+    raw.price = meta.price ?? meta['product:price:amount']
+  raw.name ??= meta.name ?? meta['og:title']
+  raw.brand ??= meta.brand ?? meta['product:brand'] ?? meta['og:brand']
+  raw.color ??= meta.color ?? meta['product:color']
+  raw.description ??= meta.description ?? meta['og:description']
+  // The breadcrumb's last step that is not the product itself names its kind ("Kleiderschränke").
+  const crumbs: string[] = raw.crumbs ?? []
+  const own = String(raw.name ?? '').toLowerCase()
+  raw.category ??= meta.category ?? meta['product:category'] ?? [...crumbs].reverse().find((c) => c.toLowerCase() !== own && !own.startsWith(c.toLowerCase()))
+  raw.specs = [...(raw.specs ?? []), ...tableSpecs(html)]
   return cleanFacts(raw)
 }
 
@@ -350,8 +450,9 @@ export async function fetchProductImage(
   const html = page.body.toString('utf8')
   const facts = extractProductFacts(html)
   const candidates = extractImageCandidates(html, page.url).slice(0, 3)
-  if (!candidates.length) throw new ImageFetchError('no-image', 422)
-  let lastError: ImageFetchError = new ImageFetchError('no-image', 422)
+  const noImage = () => Object.assign(new ImageFetchError('no-image', 422), { facts })
+  if (!candidates.length) throw noImage()
+  let lastError: ImageFetchError = noImage()
   for (const c of candidates) {
     try {
       const img = await get(c, { accept: 'image/avif,image/webp,image/png,image/jpeg,image/*;q=0.8', maxBytes: MAX_IMAGE, userAgent, allowPrivate, deadline })
@@ -365,5 +466,6 @@ export async function fetchProductImage(
       if (lastError.code === 'timeout') break
     }
   }
+  lastError.facts = facts
   throw lastError
 }

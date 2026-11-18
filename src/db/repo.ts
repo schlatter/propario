@@ -11,6 +11,9 @@ import { commit, setLocalRole } from '../sync'
 import { rehostImages } from '../images'
 import { todayIso } from '../domain/values'
 import { priceFromOffers } from '../domain/offers'
+import { DIMENSION_UNIT, planFacts } from '../domain/page-import'
+import { activeMessages } from '../i18n/active'
+import type { ProductFacts } from '../shared/product-facts.ts'
 
 /** All records belonging to one project. Used for duplicate, export and import. */
 export interface ProjectBundle {
@@ -128,7 +131,9 @@ async function nextOrder(table: 'products' | 'properties' | 'requirements', proj
 // ---------- products ----------
 
 export async function addProduct(projectId: string, data: Partial<Product> = {}): Promise<Product> {
-  const product = makeProduct(projectId, { ...data, order: await nextOrder('products', projectId) })
+  // Whoever adds a product found it, unless someone else is named.
+  const me = (await db.meta.get('me'))?.value as { name?: string } | undefined
+  const product = makeProduct(projectId, { foundBy: me?.name ?? '', ...data, order: await nextOrder('products', projectId) })
   await commit([{ op: 'create', kind: 'products', record: product }])
   return product
 }
@@ -149,6 +154,32 @@ function changeList(product: Product, change: (current: Product) => Partial<Prod
   const run = listQueue.then(async () => {
     const current = (await db.products.get(product.id)) ?? product
     await updateProduct(current, change(current))
+  })
+  listQueue = run.catch(() => {})
+  return run
+}
+
+/**
+ * Fills a product's empty fields from what its shop page says (src/domain/page-import.ts) and
+ * creates width/height/depth/weight fields the comparison lacks. Runs in the same queue as the
+ * list edits, so several products loading at once create each field only once.
+ * Returns what was filled: product field keys and field names.
+ */
+export function takeFacts(product: Product, facts: ProductFacts): Promise<string[]> {
+  const run = listQueue.then(async () => {
+    const p = (await db.products.get(product.id)) ?? product
+    const properties = await db.properties.where('projectId').equals(p.projectId).sortBy('order')
+    const plan = planFacts(p, facts, properties)
+    const values = { ...(plan.patch.values ?? {}) }
+    const names = activeMessages().pageImport
+    for (const c of plan.create) {
+      const prop = await addProperty(p.projectId, { name: names[c.dimension], type: 'number', unit: DIMENSION_UNIT[c.dimension] })
+      values[prop.id] = c.value
+      plan.filled.push(prop.name)
+    }
+    const patch = { ...plan.patch, ...(Object.keys(values).length ? { values } : {}) }
+    if (Object.keys(patch).length) await updateProduct(p, patch)
+    return plan.filled
   })
   listQueue = run.catch(() => {})
   return run

@@ -48,3 +48,9 @@ export function compareKeys(a: number | string | null, b: number | string | null
   if (typeof a === 'number' && typeof b === 'number') return (a - b) * dir
   return String(a).localeCompare(String(b), undefined, { numeric: true }) * dir
 }
+
+/** "brand", "Breite" → "Brand, Breite": product field keys in the interface language, field names as they are. */
+export function filledLabels(filled: string[], m: Messages): string {
+  const fields = m.field as Record<string, string>
+  return filled.map((k) => fields[k] ?? k).join(', ')
+}

@@ -6,6 +6,7 @@ import { useI18n } from '../../i18n'
 import { ImageError, imageFromTransfer, loadProductImage, productImage, setProductImageFromBlob, type ImageErrorCode } from '../../images'
 import type { ProductFacts } from '../../shared/product-facts.ts'
 import { Glyph } from '../../ui/Glyph'
+import { filledLabels } from '../../domain/display'
 
 /** Image block in the product drawer: load from link, pick a file, paste or drop, remove. */
 export function ProductImage({ product: p, name }: { product: Product; name: string }) {
@@ -16,19 +17,25 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
   const [over, setOver] = useState(false)
   /** The price the shop page states, offered when it differs from the product's price. */
   const [pagePrice, setPagePrice] = useState<number | null>(null)
+  /** What the last page read filled in, to say so. */
+  const [filled, setFilled] = useState<string[] | null>(null)
   const src = productImage(p)
   const stored = !!p.image
   const link = safeHref(p.url)
 
-  const run = async (job: () => Promise<ProductFacts | void>) => {
+  const run = async (job: () => Promise<{ facts: ProductFacts; filled: string[] } | void>) => {
     setBusy(true)
     setError(null)
     setPagePrice(null)
+    setFilled(null)
     try {
-      const facts = await job()
-      if (facts?.price !== undefined && facts.price !== p.price) setPagePrice(facts.price)
+      const got = await job()
+      if (got) setFilled(got.filled)
+      // An empty price was filled already; a different one is only offered.
+      if (got && got.facts.price !== undefined && p.price !== null && got.facts.price !== p.price) setPagePrice(got.facts.price)
     } catch (e) {
       setError(e instanceof ImageError ? e.code : 'failed')
+      if (e instanceof ImageError && e.filled) setFilled(e.filled)
     } finally {
       setBusy(false)
     }
@@ -93,6 +100,11 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
           />
         </div>
         <p className="muted small">{m.image.pasteHint}</p>
+        {filled && (
+          <p className="small" role="status">
+            {filled.length ? m.pageImport.filled(filledLabels(filled, m)) : m.pageImport.nothing}
+          </p>
+        )}
         {pagePrice !== null && (
           <p className="small row" role="status">
             {m.image.pagePrice(fmt.money(pagePrice))}

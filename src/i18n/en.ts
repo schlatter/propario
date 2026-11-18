@@ -291,6 +291,14 @@ export const en = {
     column: 'Tests & reviews',
     sources: (n: number) => `${n} ${n === 1 ? 'source' : 'sources'}`,
   },
+  pageImport: {
+    width: 'Width',
+    height: 'Height',
+    depth: 'Depth',
+    weight: 'Weight',
+    filled: (list: string) => `Taken from the shop page: ${list}`,
+    nothing: 'The shop page names nothing that is still empty here.',
+  },
   lookup: {
     title: 'Check elsewhere',
     geizhals: 'Geizhals',

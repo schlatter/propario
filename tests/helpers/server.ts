@@ -32,6 +32,7 @@ export function testServer() {
       async use() {
         useCache(cache)
         useTransport(transportFor(id))
+        await cache.meta.put({ key: 'me', value: { id, name, isAdmin } })
       },
       async refresh() {
         await this.use()

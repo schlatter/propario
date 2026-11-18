@@ -6,6 +6,13 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- **More from the shop page:** adding a product by link now also takes its name, brand, kind
+  of product (category or breadcrumb), colour, description and data sheet. Lines go into the
+  comparison's fields of the same meaning, with units converted (600 mm → 60 cm); width,
+  height, depth and weight get their own field when there is none yet; other data-sheet lines
+  are kept under "Imported extras". Only empty fields are filled, and Propario says what it took.
+  This also works when the page has no usable picture.
+- New products name whoever added them under "Found by".
 ## 0.3.0 — 2026-11-18
 
 - **Check elsewhere:** each product links to Geizhals, idealo, Amazon and Stiftung Warentest,

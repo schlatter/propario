@@ -5,7 +5,7 @@ import type { DB } from './db.ts'
 import type { Config } from './env.ts'
 import { newToken } from './crypto.ts'
 import { allow } from './ratelimit.ts'
-import { fetchProductImage, ImageFetchError } from './product-image.ts'
+import { encodeFacts, fetchProductImage, ImageFetchError } from './product-image.ts'
 import { AccessError, applyChanges, listMembers, readImage, saveImage, setMember, sync, MAX_IMAGE_BYTES } from './store.ts'
 import * as users from './users.ts'
 import * as webauthn from './webauthn.ts'
@@ -329,13 +329,14 @@ export function createApp(db: DB, config: Config, version: string | null = null)
           'Content-Type': img.contentType,
           'Cache-Control': 'private, no-store',
           'X-Image-Source': encodeURI(img.source),
-          // Checked facts only (digits, a short part number, a number), percent-encoded JSON.
-          'X-Product-Facts': encodeURIComponent(JSON.stringify(img.facts)),
+          // Checked, size-limited facts (src/shared/product-facts.ts) as base64url JSON.
+          'X-Product-Facts': encodeFacts(img.facts),
         })
         return void res.end(img.body)
       } catch (e) {
         const err = e instanceof ImageFetchError ? e : new ImageFetchError('failed', 502)
-        return send(res, err.status, { error: err.code })
+        // The page may have been read although no picture came of it; its facts still help.
+        return send(res, err.status, err.facts ? { error: err.code, facts: err.facts } : { error: err.code })
       }
     }
 

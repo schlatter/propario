@@ -138,6 +138,9 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await expect.poll(() => picture.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0)
   await inside(picture, page.locator('.pimg-drop'))
 
+  // Whoever adds a product found it.
+  await expect(page.getByRole('combobox', { name: 'Found by' })).toHaveValue('Ada')
+
   // Price with its date, the GTIN, and links to look the product up elsewhere (no tracking codes).
   await page.getByLabel('Price', { exact: true }).fill('249')
   await page.getByLabel('GTIN / EAN').fill('4006381 333931')

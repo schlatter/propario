@@ -1,9 +1,10 @@
 import { useRef, useState } from 'react'
-import { db } from '../../db/db'
-import { addProduct, updateProduct, updateProject } from '../../db/repo'
+import { addProduct, updateProject } from '../../db/repo'
+import { filledLabels } from '../../domain/display'
 import { hostOf, looksLikeUrl, normalizeUrl } from '../../domain/values'
 import { useI18n } from '../../i18n'
-import { loadProductImage } from '../../images'
+import { ImageError, loadProductImage } from '../../images'
+import { useToast } from '../../ui/Dialog'
 import { Glyph } from '../../ui/Glyph'
 import { Menu } from '../../ui/Menu'
 import type { ProjectData } from './useProjectData'
@@ -47,6 +48,7 @@ function QuickAddForm({ data, onOpen, autoFocus }: { data: ProjectData; onOpen: 
   const [text, setText] = useState('')
   const [added, setAdded] = useState('')
   const ref = useRef<HTMLInputElement>(null)
+  const toast = useToast()
   const knownBrands = [...new Set(products.map((p) => p.brand.trim()).filter(Boolean))]
 
   const submit = async () => {
@@ -55,14 +57,12 @@ function QuickAddForm({ data, onOpen, autoFocus }: { data: ProjectData; onOpen: 
     if (looksLikeUrl(value)) {
       const url = normalizeUrl(value)
       const created = await addProduct(project.id, { url, retailer: hostOf(url) })
-      // The picture comes in the background; failures show in the product details. A new
-      // product takes the shop's price as long as nobody has entered one in the meantime.
+      // Picture and page data come in the background and fill only empty fields; image
+      // failures show in the product details.
+      const tell = (filled: string[] | undefined) => filled?.length && toast(m.pageImport.filled(filledLabels(filled, m)))
       void loadProductImage(created)
-        .then(async (facts) => {
-          const now = await db.products.get(created.id)
-          if (now && now.price === null && facts.price !== undefined) await updateProduct(now, { price: facts.price })
-        })
-        .catch(() => {})
+        .then((r) => tell(r.filled))
+        .catch((e) => tell(e instanceof ImageError ? e.filled : undefined))
       setText('')
       onOpen(created.id)
     } else {

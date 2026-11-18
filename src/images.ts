@@ -4,7 +4,7 @@
  * (/api/images). Pages only ever show images from this server, so no shop learns who looks.
  */
 import { api } from './api'
-import { updateProduct } from './db/repo'
+import { takeFacts, updateProduct } from './db/repo'
 import type { Product } from './db/types'
 import { safeHref } from './domain/values'
 import { cleanFacts, type ProductFacts } from './shared/product-facts.ts'
@@ -18,9 +18,14 @@ export type ImageErrorCode =
 
 export class ImageError extends Error {
   code: ImageErrorCode
-  constructor(code: ImageErrorCode) {
+  /** Facts of a page that was read although no picture came of it. */
+  facts?: ProductFacts
+  /** What was taken from those facts (set by loadProductImage). */
+  filled?: string[]
+  constructor(code: ImageErrorCode, facts?: ProductFacts) {
     super(code)
     this.code = code
+    this.facts = facts
   }
 }
 
@@ -45,9 +50,9 @@ export async function fetchRemoteImage(url: string, signal?: AbortSignal): Promi
     return { blob: await res.blob(), source: decodeURI(res.headers.get('x-image-source') ?? url), facts: readFacts(res.headers.get('x-product-facts')) }
   }
   if (type.includes('json')) {
-    const body = (await res.json().catch(() => ({}))) as { error?: string }
+    const body = (await res.json().catch(() => ({}))) as { error?: string; facts?: unknown }
     const code = KNOWN.find((c) => c === body.error)
-    if (code) throw new ImageError(code)
+    if (code) throw new ImageError(code, body.facts ? cleanFacts(body.facts) : undefined)
     if (body.error === 'disabled') throw new ImageError('unavailable')
     throw new ImageError('failed')
   }
@@ -55,10 +60,12 @@ export async function fetchRemoteImage(url: string, signal?: AbortSignal): Promi
   throw new ImageError('unavailable')
 }
 
-/** The product facts the server found on the page; checked again here, dropped when unreadable. */
+/** The product facts the server found on the page (base64url JSON); checked again here, dropped when unreadable. */
 function readFacts(header: string | null): ProductFacts {
   try {
-    return header ? cleanFacts(JSON.parse(decodeURIComponent(header))) : {}
+    if (!header) return {}
+    const bin = atob(header.replace(/-/g, '+').replace(/_/g, '/'))
+    return cleanFacts(JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, (c) => c.charCodeAt(0)))))
   } catch {
     return {}
   }
@@ -134,21 +141,23 @@ export async function uploadImage(projectId: string, blob: Blob): Promise<string
 
 /**
  * Download, shrink and store the image for one product. `from` defaults to the image URL, then
- * the product link. GTIN and part number from the page fill only empty fields, never overwrite;
- * the facts are returned so the caller can offer the page's price.
+ * the product link. What the page says about the product fills its empty fields (see
+ * src/domain/page-import.ts) – also when the page has no usable picture. Returns the facts and
+ * what was taken from them; on failure the ImageError carries the same.
  */
-export async function loadProductImage(p: Product, from?: string, signal?: AbortSignal): Promise<ProductFacts> {
+export async function loadProductImage(p: Product, from?: string, signal?: AbortSignal): Promise<{ facts: ProductFacts; filled: string[] }> {
   const target = from ?? (safeHref(p.imageUrl) || safeHref(p.url))
   if (!target) throw new ImageError('invalid-url')
-  const { blob, source, facts } = await fetchRemoteImage(target, signal)
-  const image = await uploadImage(p.projectId, await shrinkImage(blob))
-  await updateProduct(p, {
-    image,
-    imageUrl: p.imageUrl || source,
-    ...(!p.gtin && facts.gtin ? { gtin: facts.gtin } : {}),
-    ...(!p.mpn && facts.mpn ? { mpn: facts.mpn } : {}),
-  })
-  return facts
+  let got: Awaited<ReturnType<typeof fetchRemoteImage>>
+  try {
+    got = await fetchRemoteImage(target, signal)
+  } catch (e) {
+    if (e instanceof ImageError && e.facts) e.filled = await takeFacts(p, e.facts)
+    throw e
+  }
+  const image = await uploadImage(p.projectId, await shrinkImage(got.blob))
+  await updateProduct(p, { image, imageUrl: p.imageUrl || got.source })
+  return { facts: got.facts, filled: await takeFacts(p, got.facts) }
 }
 
 /** Store an image the user picked, pasted or dropped. */

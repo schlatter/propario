@@ -293,6 +293,14 @@ export const de: Messages = {
     column: 'Tests & Erfahrungen',
     sources: (n) => `${n} ${n === 1 ? 'Quelle' : 'Quellen'}`,
   },
+  pageImport: {
+    width: 'Breite',
+    height: 'Höhe',
+    depth: 'Tiefe',
+    weight: 'Gewicht',
+    filled: (list) => `Von der Shopseite übernommen: ${list}`,
+    nothing: 'Die Shopseite nennt nichts, was hier noch leer ist.',
+  },
   lookup: {
     title: 'Woanders prüfen',
     geizhals: 'Geizhals',

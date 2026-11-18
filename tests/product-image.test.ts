@@ -2,7 +2,7 @@
 import http from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { checkUrl, extractImageCandidates, extractProductFacts, fetchProductImage, isForbiddenAddress } from '../server/product-image.ts'
+import { checkUrl, encodeFacts, extractImageCandidates, extractProductFacts, fetchProductImage, isForbiddenAddress } from '../server/product-image.ts'
 
 // 1×1 PNG
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64')
@@ -41,13 +41,59 @@ describe('extractProductFacts', () => {
     const html = `<script type="application/ld+json">{"@graph":[{"@type":"WebPage"},
       {"@type":"Product","name":"Waschmaschine","gtin13":"4006381333931","mpn":"WAX32M40",
        "offers":{"@type":"Offer","price":"849.00","priceCurrency":"EUR"}}]}</script>`
-    expect(extractProductFacts(html)).toEqual({ gtin: '4006381333931', mpn: 'WAX32M40', price: 849 })
+    expect(extractProductFacts(html)).toEqual({ gtin: '4006381333931', mpn: 'WAX32M40', price: 849, name: 'Waschmaschine' })
   })
 
   it('falls back to microdata and drops prices in other currencies and malformed values', () => {
     const html = `<meta itemprop="gtin13" content="4006381333931"><meta itemprop="sku" content="ignored">
       <script type="application/ld+json">{"@type":"Product","mpn":"<b>x</b>","offers":[{"price":99,"priceCurrency":"USD"}]}</script>`
     expect(extractProductFacts(html)).toEqual({ gtin: '4006381333931' })
+  })
+
+  it('reads name, brand, category, colour and the data sheet from JSON-LD', () => {
+    const html = `<script type="application/ld+json">[
+      {"@type":"BreadcrumbList","itemListElement":[
+        {"@type":"ListItem","position":2,"name":"Kleiderschränke"},{"@type":"ListItem","position":1,"name":"Möbel"},
+        {"@type":"ListItem","position":3,"item":{"name":"Arvika 2-türig"}}]},
+      {"@type":"Product","name":"Arvika 2-türig","brand":{"@type":"Brand","name":"Nordhaus"},"color":"Eiche",
+       "description":"<p>Ein <b>schöner</b> Schrank.</p>",
+       "width":{"@type":"QuantitativeValue","value":600,"unitCode":"MMT"},
+       "additionalProperty":[{"@type":"PropertyValue","name":"Höhe","value":"180","unitText":"cm"},{"name":"Türen","value":2}]}
+    ]</script>`
+    expect(extractProductFacts(html)).toEqual({
+      name: 'Arvika 2-türig',
+      brand: 'Nordhaus',
+      category: 'Kleiderschränke',
+      color: 'Eiche',
+      description: 'Ein schöner Schrank.',
+      specs: [
+        { name: 'Width', value: '600', unit: 'mm' },
+        { name: 'Höhe', value: '180', unit: 'cm' },
+        { name: 'Türen', value: '2' },
+      ],
+    })
+  })
+
+  it('falls back to Open Graph and reads data-sheet tables as less certain lines', () => {
+    const html = `<meta property="og:title" content="Arvika &amp; Co"><meta property="product:brand" content="Nordhaus">
+      <table><tr><th>Breite:</th><td>60&nbsp;cm</td></tr><tr><td>Tiefe</td><td><span>55</span> cm</td></tr>
+      <tr><td>a</td><td>b</td><td>c</td></tr></table><dl><dt>Farbe</dt><dd>Weiß</dd></dl>`
+    expect(extractProductFacts(html)).toEqual({
+      name: 'Arvika & Co',
+      brand: 'Nordhaus',
+      specs: [
+        { name: 'Breite', value: '60 cm', table: true },
+        { name: 'Tiefe', value: '55 cm', table: true },
+        { name: 'Farbe', value: 'Weiß', table: true },
+      ],
+    })
+  })
+
+  it('keeps the facts header small, dropping table lines first', () => {
+    const specs = Array.from({ length: 60 }, (_, i) => ({ name: `Zeile ${i}`, value: 'ä'.repeat(150), table: true }))
+    const encoded = encodeFacts({ name: 'Arvika', specs: [{ name: 'Breite', value: '60' }, ...specs] })
+    expect(encoded.length).toBeLessThanOrEqual(6000)
+    expect(JSON.parse(Buffer.from(encoded, 'base64url').toString())).toEqual({ name: 'Arvika', specs: [{ name: 'Breite', value: '60' }] })
   })
 
   it('finds nothing on pages without product data', () => {
@@ -88,6 +134,9 @@ describe('fetchProductImage against a local test shop', () => {
       } else if (req.url === '/forbidden') {
         res.writeHead(403)
         res.end()
+      } else if (req.url === '/facts-only') {
+        res.writeHead(200, { 'content-type': 'text/html' })
+        res.end('<html><head><meta property="og:title" content="Arvika"></head></html>')
       } else if (req.url === '/plain') {
         res.writeHead(200, { 'content-type': 'text/html' })
         res.end('<html></html>')
@@ -109,6 +158,9 @@ describe('fetchProductImage against a local test shop', () => {
   })
   it('returns the facts of the page it read for the picture', async () => {
     expect((await fetchProductImage(`${base}/moved`, { allowPrivate: true })).facts).toEqual({ gtin: '4006381333931' })
+  })
+  it('keeps the facts of a page that has no picture', async () => {
+    await expect(fetchProductImage(`${base}/facts-only`, { allowPrivate: true })).rejects.toMatchObject({ code: 'no-image', facts: { name: 'Arvika' } })
   })
   it('passes direct image URLs through', async () => {
     expect((await fetchProductImage(`${base}/img.png`, { allowPrivate: true })).source).toBe(`${base}/img.png`)
