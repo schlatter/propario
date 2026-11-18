@@ -1,9 +1,12 @@
 import { useMemo, useRef, useState, type ReactNode } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { reorder, setProductValue, updateProduct, updateProject } from '../../db/repo'
 import type { Candidate, Product, PropertyDef, Requirement, TableView } from '../../db/types'
 import { avgStars, compareKeys, formatValue, isNew, productName, sortKey } from '../../domain/display'
 import { cellCheck, OP_SYMBOL, requirementsByColumn, WEIGHT } from '../../domain/requirements'
+import { compileQuery } from '../../domain/query'
+import { queryFields } from '../../domain/query-fields'
+import { useSession } from '../../session'
 import { reviewSummary } from '../../domain/reviews'
 import { coerceValue, daysSince, hostOf, isTyped, parseNumber, safeHref, STALE_DAYS } from '../../domain/values'
 import { useI18n } from '../../i18n'
@@ -31,6 +34,12 @@ interface Col {
   align?: 'right' | 'center'
 }
 
+/** Appends a field to a query, quoted when it has spaces or signs: `… AND "Offene Mitte" `. */
+function addClause(query: string, name: string): string {
+  const field = /^[\p{L}\p{N}_.-]+$/u.test(name) ? name : `"${name.replace(/"/g, '')}"`
+  return `${query.trim() ? `${query.trim()} AND ` : ''}${field} `
+}
+
 /** Narrowest and widest width a column gets from double-clicking its edge. */
 const MIN_COL = 60
 const MAX_FIT = 360
@@ -51,7 +60,33 @@ export function ProductTable({
   const { project, products, properties } = data
   const view = project.tableView
   const [filter, setFilter] = useState('')
-  const [onlyEligible, setOnlyEligible] = useState(false)
+  // Filters live in the address, so a filtered view can be reloaded and shared:
+  // `chips` are the quick toggles, `q` the advanced query (src/domain/query.ts).
+  const [params, setParams] = useSearchParams()
+  const setParam = (key: string, value: string) =>
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        if (value) next.set(key, value)
+        else next.delete(key)
+        return next
+      },
+      { replace: true },
+    )
+  const chips = new Set((params.get('chips') ?? '').split(',').filter(Boolean))
+  const toggleChip = (c: string) => {
+    const next = new Set(chips)
+    if (next.has(c)) next.delete(c)
+    else next.add(c)
+    setParam('chips', [...next].join(','))
+  }
+  const onlyEligible = chips.has('eligible')
+  const query = params.get('q') ?? ''
+  const [advanced, setAdvanced] = useState(!!query)
+  const session = useSession()
+  const me = session.state.status === 'signed-in' ? session.state.user.name : ''
+  const fields = useMemo(() => queryFields(properties, (p) => data.summaries.get(p.id), me), [properties, data.summaries, me])
+  const compiled = useMemo(() => compileQuery<Product>(query, fields), [query, fields])
   /** Columns filtered by their requirements' verdict (the values themselves stay as they are). */
   const [reqFilter, setReqFilter] = useState<Record<string, 'pass' | 'fail'>>({})
   const byColumn = useMemo(() => requirementsByColumn(data.requirements), [data.requirements])
@@ -419,6 +454,10 @@ export function ProductTable({
   let rows = products.filter((p) => {
     if (view.hideExcluded && p.candidate === 'excluded') return false
     if (onlyEligible && (data.summaries.get(p.id)?.blocked || p.candidate === 'excluded')) return false
+    if (chips.has('fav') && p.candidate !== 'favorite') return false
+    if (chips.has('new') && !isNew(p.createdAt)) return false
+    if (chips.has('mine') && (!me || p.foundBy !== me)) return false
+    if (compiled.ok && !compiled.test(p)) return false
     for (const [col, want] of Object.entries(reqFilter)) {
       const reqs = byColumn.get(col)
       if (reqs && cellCheck(reqs, p, data.propMap) !== want) return false
@@ -523,16 +562,37 @@ export function ProductTable({
           <span className="sr-only">{m.project.filterPlaceholder}</span>
           <input className="input" type="search" placeholder={m.project.filterPlaceholder} value={filter} onChange={(e) => setFilter(e.target.value)} />
         </label>
-        <label className="check">
-          <input type="checkbox" checked={view.hideExcluded} onChange={(e) => saveView({ hideExcluded: e.target.checked })} />
-          {m.project.hideExcluded}
-        </label>
-        {data.checkable.length > 0 && (
-          <label className="check">
-            <input type="checkbox" checked={onlyEligible} onChange={(e) => setOnlyEligible(e.target.checked)} />
-            {m.project.onlyEligible}
-          </label>
-        )}
+        <div className="chips filter-chips" role="group" aria-label={m.filter.quick}>
+          <button type="button" className="chip toggle" aria-pressed={chips.has('fav')} onClick={() => toggleChip('fav')}>
+            {m.filter.fav}
+          </button>
+          <button type="button" className="chip toggle" aria-pressed={chips.has('new')} onClick={() => toggleChip('new')}>
+            {m.filter.new}
+          </button>
+          {me && (
+            <button type="button" className="chip toggle" aria-pressed={chips.has('mine')} onClick={() => toggleChip('mine')}>
+              {m.filter.mine}
+            </button>
+          )}
+          {data.checkable.length > 0 && (
+            <button type="button" className="chip toggle" aria-pressed={onlyEligible} onClick={() => toggleChip('eligible')}>
+              {m.project.onlyEligible}
+            </button>
+          )}
+          <button type="button" className="chip toggle" aria-pressed={view.hideExcluded} onClick={() => saveView({ hideExcluded: !view.hideExcluded })}>
+            {m.project.hideExcluded}
+          </button>
+          <button
+            type="button"
+            className="chip toggle advanced"
+            aria-expanded={advanced}
+            aria-controls="advanced-filter"
+            onClick={() => setAdvanced(!advanced)}
+          >
+            {m.filter.advanced}
+            {query && !advanced ? ' •' : ''}
+          </button>
+        </div>
         <span className="spacer" />
         {(missing.length > 0 || imgProgress) && (
           <button type="button" className="btn sm" onClick={loadAllImages} disabled={!!imgProgress} aria-live="polite" title={m.image.loadAllHint}>
@@ -590,6 +650,58 @@ export function ProductTable({
           }
         </Menu>
       </div>
+
+      {advanced && (
+        <div id="advanced-filter" className="advanced-filter">
+          <label className="sr-only" htmlFor="filter-query">
+            {m.filter.queryLabel}
+          </label>
+          <input
+            id="filter-query"
+            className="input mono"
+            value={query}
+            onChange={(e) => setParam('q', e.target.value)}
+            placeholder={m.filter.placeholder}
+            spellCheck={false}
+            autoComplete="off"
+            maxLength={500}
+            aria-invalid={!compiled.ok || undefined}
+            aria-describedby="filter-status"
+          />
+          <p id="filter-status" className={`small ${compiled.ok ? 'muted' : 'filter-error'}`} role="status">
+            {!compiled.ok
+              ? m.filter.error(compiled.error.code, compiled.error.text, compiled.error.at + 1)
+              : query.trim()
+                ? m.filter.matches(rows.length, products.length)
+                : m.filter.hint}
+          </p>
+          <details className="filter-help">
+            <summary>{m.filter.helpTitle}</summary>
+            <p className="small">{m.filter.helpSyntax}</p>
+            {properties.length > 0 && (
+              <>
+                <p className="small muted">{m.filter.ownFields}</p>
+                <div className="chips">
+                  {properties.map((prop) => (
+                    <button key={prop.id} type="button" className="chip" onClick={() => setParam('q', addClause(query, prop.name))}>
+                      {prop.name}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+            <p className="small muted">{m.filter.builtIn}</p>
+            <p className="small muted">{m.filter.examplesTitle}</p>
+            <div className="chips">
+              {m.filter.examples.map((ex) => (
+                <button key={ex} type="button" className="chip mono" onClick={() => setParam('q', ex)}>
+                  {ex}
+                </button>
+              ))}
+            </div>
+          </details>
+        </div>
+      )}
 
       {products.length === 0 ? (
         <div className="empty stack">

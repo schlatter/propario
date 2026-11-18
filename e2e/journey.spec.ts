@@ -196,6 +196,23 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await expect(page.getByRole('button', { name: 'Arvika', exact: true })).toBeVisible()
   await accessible(page, 'comparison with rules')
 
+  // Quick filters toggle; the advanced query filters by any field and says what went wrong.
+  await page.getByRole('button', { name: 'Favourites' }).click()
+  await expect(page.getByRole('button', { name: 'Arvika', exact: true })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Favourites' }).click()
+  await page.getByRole('button', { name: 'Advanced' }).click()
+  const queryBox = page.getByLabel('Filter query')
+  await queryBox.fill('Price < 250 AND Found by = Ada')
+  await expect(page.getByText('1 of 1 products match')).toBeVisible()
+  await expect(page).toHaveURL(/q=Price/)
+  await queryBox.fill('Price > 250')
+  await expect(page.getByRole('button', { name: 'Arvika', exact: true })).toHaveCount(0)
+  await queryBox.fill('Depth < 40')
+  await expect(page.getByText(/No field called “Depth”/)).toBeVisible()
+  await accessible(page, 'advanced filter')
+  await queryBox.fill('')
+  await page.getByRole('button', { name: 'Advanced' }).click()
+
   // Double-click on a column's edge: as narrow as the header and values allow, nothing cut off.
   const col = page.locator('col[data-col="retailer"]')
   const before = await col.evaluate((c: HTMLElement) => parseFloat(c.style.width))

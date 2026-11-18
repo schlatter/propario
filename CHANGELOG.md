@@ -6,6 +6,15 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- **Filters:** quick chips (favourites, new, found by me, only eligible, hide excluded) and an
+  advanced query for any field, in the spirit of Jira's JQL: `Width <= 90 AND (Colour ~ green OR
+  Price < 800)`, with AND/OR/NOT, brackets, comparisons, "contains", IS EMPTY – in English or
+  German. Mistakes are explained with their position. The filter is part of the address, so a
+  filtered view can be reloaded and shared.
+- Shop pages: more is read without guessing – pages in older encodings, product data written on
+  the page itself (microdata), dimensions named in the description ("Breite von 130 cm"), titles
+  without the shop name or "online kaufen". Pages that contradict themselves (two different
+  widths) get no dimension rather than a wrong one; cookie and template tables are ignored.
 - **Requirements in their column:** a rule such as "Depth ≤ 40" tints the depth cells green or
   red with a quiet ✓ or ✕ in front of the value; the column header shows the rule and filters
   by it (all → met → not met). Values stay as they are for sorting and filtering.

@@ -374,6 +374,8 @@ export function tableSpecs(html: string): { name: string; value: string; table: 
   const push = (name: string, value: string) => {
     const n = text(name).replace(/:$/, '')
     const v = cut(text(value))
+    // Unrendered templates ("${ item.id }"), header rows ("Eigenschaft | Wert") are not data.
+    if (/\$\{|\{\{/.test(n + v) || /^(wert|value|werte|values|beschreibung|description)$/i.test(v)) return
     if (n && v && n.length <= 80 && out.length < 120) out.push({ name: n, value: v, table: true })
   }
   const pair = (name: string, value: string) => {
@@ -390,6 +392,65 @@ export function tableSpecs(html: string): { name: string; value: string; table: 
     if (cells.length === 2) pair(cells[0], cells[1])
   }
   for (const m of html.matchAll(/<dt\b[^>]*>([\s\S]*?)<\/dt>\s*<dd\b[^>]*>([\s\S]*?)<\/dd>/gi)) pair(m[1], m[2])
+  return out
+}
+
+/** "Arvika | Shop GmbH" or "Arvika - Shop" (site name from og:site_name) → "Arvika". */
+export function stripSiteName(title: string, site?: string): string {
+  let t = decodeEntities(title).trim()
+  if (site) {
+    const s = decodeEntities(site).trim().toLowerCase()
+    for (const sep of [' | ', ' - ', ' – ', ' · ']) if (s && t.toLowerCase().endsWith(`${sep}${s}`)) t = t.slice(0, -(sep.length + s.length)).trim()
+  }
+  // A pipe almost never belongs to a product name; what follows it is the shop.
+  const pipe = t.indexOf(' | ')
+  if (pipe > 0) t = t.slice(0, pipe).trim()
+  // Search-engine tails: "… günstig online kaufen", "… jetzt bestellen".
+  return t.replace(/\s+(jetzt\s+)?(günstig\s+)?(online\s+)?(kaufen|bestellen|shoppen)(\s+bei\s+.*)?$/i, '').trim()
+}
+
+/**
+ * Microdata written on visible elements (`<span itemprop="brand">Nordhaus</span>`), read only
+ * inside the part of the page that declares itself a Product – breadcrumbs carry "name" too.
+ */
+function microdataText(html: string): Record<string, string> {
+  const start = html.search(/itemtype=["']https?:\/\/schema\.org\/Product["']/i)
+  if (start < 0) return {}
+  const scope = html.slice(start, start + 400_000)
+  const out: Record<string, string> = {}
+  for (const m of scope.matchAll(/<(\w+)\b[^>]*\bitemprop=["'](\w+)["'][^>]*>([\s\S]{0,2000}?)<\/\1>/gi)) {
+    const key = m[2].toLowerCase()
+    // A machine value in `content` ("1234.50") wins over the shown text ("1.234,50 €").
+    const content = attrs(m[0].slice(0, m[0].indexOf('>') + 1)).content
+    const text = (content ?? decodeEntities(stripTags(m[3]))).replace(/\s+/g, ' ').trim()
+    if (text && !(key in out)) out[key] = text
+  }
+  return out
+}
+
+/**
+ * The visible text of the page part that declares itself a Product (bounded), for dimensions
+ * named in running text. Short descriptions often carry no itemprop of their own. Different
+ * values further down (size variants, recommendations) make the dimension contradictory, and
+ * a contradictory dimension is left empty (src/domain/page-import.ts).
+ */
+function productText(html: string): string {
+  const start = html.search(/itemtype=["']https?:\/\/schema\.org\/Product["']/i)
+  return start < 0 ? '' : decodeEntities(stripTags(html.slice(start, start + 60_000).replace(/<(script|style)\b[\s\S]*?<\/\1>/gi, ' '))).replace(/\s+/g, ' ')
+}
+
+/**
+ * Dimensions named in running text: "eine Gesamtbreite von 130 cm, eine Höhe von 196 cm".
+ * Only a named dimension with one number and a unit counts; "39-43 cm" does not.
+ */
+export function proseDimensions(text: string): { name: string; value: string; unit: string; table: true }[] {
+  const out: { name: string; value: string; unit: string; table: true }[] = []
+  const re = /\b(gesamt)?(breite|höhe|hoehe|tiefe|gewicht)\s*(?:von|:|beträgt|betraegt)?\s*(?:ca\.?\s*)?(\d+(?:[.,]\d+)?)\s*(mm|cm|m|kg|g)\b(?!\s*[-–])/gi
+  for (const m of text.matchAll(re)) {
+    const name = m[2].charAt(0).toUpperCase() + m[2].slice(1).toLowerCase()
+    // Every mention counts (also repeated ones): differing values must show as a contradiction.
+    if (!out.some((s) => s.name === name && s.value === m[3])) out.push({ name, value: m[3], unit: m[4].toLowerCase(), table: true })
+  }
   return out
 }
 
@@ -412,19 +473,24 @@ export function extractProductFacts(html: string): ProductFacts {
     const key = (a.itemprop || a.property || a.name || '').toLowerCase()
     if (key && a.content && !(key in meta)) meta[key] = a.content
   }
+  const micro = microdataText(html)
+  for (const [k, v] of Object.entries(micro)) if (!(k in meta)) meta[k] = v
   raw.gtin ??= GTIN_KEYS.map((k) => meta[k]).find((v) => v !== undefined)
   raw.mpn ??= meta.mpn
   if (raw.price === undefined && (meta.pricecurrency ?? meta['product:price:currency'] ?? '').toUpperCase() === 'EUR')
     raw.price = meta.price ?? meta['product:price:amount']
-  raw.name ??= meta.name ?? meta['og:title']
-  raw.brand ??= meta.brand ?? meta['product:brand'] ?? meta['og:brand']
+  // The page title before a generic itemprop "name" (often a breadcrumb step such as "Startseite"),
+  // without the shop's name appended ("Regal Arvika | Shop GmbH").
+  raw.name ??= stripSiteName(meta['og:title'] ?? meta.name ?? '', meta['og:site_name'])
+  // "Hersteller: Nordhaus" → "Nordhaus"
+  raw.brand ??= (meta.brand ?? meta['product:brand'] ?? meta['og:brand'])?.replace(/^(hersteller|marke|brand|manufacturer)\s*:\s*/i, '')
   raw.color ??= meta.color ?? meta['product:color']
   raw.description ??= meta.description ?? meta['og:description']
   // The breadcrumb's last step that is not the product itself names its kind ("Kleiderschränke").
   const crumbs: string[] = raw.crumbs ?? []
   const own = String(raw.name ?? '').toLowerCase()
   raw.category ??= meta.category ?? meta['product:category'] ?? [...crumbs].reverse().find((c) => c.toLowerCase() !== own && !own.startsWith(c.toLowerCase()))
-  raw.specs = [...(raw.specs ?? []), ...tableSpecs(html)]
+  raw.specs = [...(raw.specs ?? []), ...tableSpecs(html), ...proseDimensions(`${stripTags(String(raw.description ?? ''))} ${productText(html)}`)]
   return cleanFacts(raw)
 }
 
@@ -434,6 +500,39 @@ export interface FetchOptions {
   userAgent?: string
   allowPrivate?: boolean
   timeoutMs?: number
+}
+
+/**
+ * Page text in its declared encoding (header, then `<meta charset>`), UTF-8 otherwise. Shops
+ * still serve ISO-8859-1; read as UTF-8 their umlauts become "�".
+ */
+export function decodeHtml(body: Buffer, contentType: string): string {
+  const head = body.subarray(0, 4096).toString('latin1')
+  const declared = contentType.match(/charset=["']?([\w-]+)/i)?.[1] ?? head.match(/<meta[^>]+charset=["']?([\w-]+)/i)?.[1] ?? 'utf-8'
+  try {
+    return new TextDecoder(declared.toLowerCase()).decode(body)
+  } catch {
+    return new TextDecoder('utf-8').decode(body)
+  }
+}
+
+/**
+ * Only the HTML of a product page, through the same guarded client (for checks such as
+ * scripts/check-shop-pages.ts). Same limits, same refusal of bot walls.
+ */
+export async function fetchProductPage(url: string, opts: FetchOptions = {}): Promise<string> {
+  const allowPrivate = !!opts.allowPrivate
+  checkUrl(url, allowPrivate)
+  const page = await get(url, {
+    accept: 'text/html,application/xhtml+xml',
+    maxBytes: MAX_HTML,
+    userAgent: opts.userAgent || 'Mozilla/5.0 (compatible; Propario; product image preview)',
+    allowPrivate,
+    deadline: Date.now() + (opts.timeoutMs || TIMEOUT_MS),
+  })
+  if (page.status >= 400) throw statusError(page.status)
+  if (!page.type.includes('html')) throw new ImageFetchError('no-image', 422)
+  return decodeHtml(page.body, page.type)
 }
 
 /** The main image of a product page (or a direct image URL). */
@@ -462,7 +561,7 @@ export async function fetchProductImage(
   if (isImage(page.type)) return { body: page.body, contentType: page.type.split(';')[0], source: page.url, facts: {} }
   if (!page.type.includes('html')) throw new ImageFetchError('no-image', 422)
 
-  const html = page.body.toString('utf8')
+  const html = decodeHtml(page.body, page.type)
   const facts = extractProductFacts(html)
   const candidates = extractImageCandidates(html, page.url).slice(0, 3)
   const noImage = () => Object.assign(new ImageFetchError('no-image', 422), { facts })

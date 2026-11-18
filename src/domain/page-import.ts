@@ -13,9 +13,9 @@
  *   the shop rather than the product (shipping, payment, manufacturer address, notes).
  */
 import type { Product, PropertyDef, PropertyValue } from '../db/types'
-import { norm, splitUnit } from '../import/normalize'
+import { norm, splitUnit } from '../import/normalize.ts'
 import type { ProductFacts, Spec } from '../shared/product-facts.ts'
-import { coerceValue, parseNumber } from './values'
+import { coerceValue, parseNumber } from './values.ts'
 
 export type Dimension = 'width' | 'height' | 'depth' | 'weight'
 type Group = Dimension | 'color' | 'material'
@@ -72,7 +72,9 @@ const NUM = String.raw`(\d+(?:[.,]\d+)?)`
  */
 export function splitDimensions(spec: Spec): Spec[] {
   const text = `${spec.name} ${spec.value}`
-  const unit = (spec.unit || spec.value.match(/(mm|cm|m)\s*$/i)?.[1] || '').toLowerCase()
+  // The unit: given with the line, at the end of the value, or in its name ("Stellfläche in cm").
+  const unit = (spec.unit || spec.value.match(/(mm|cm|m)\s*$/i)?.[1] || splitUnit(spec.name).unit || '').toLowerCase()
+  if (!(unit in LENGTH)) return []
   if (!unit) return []
   const labelled = [...spec.value.matchAll(new RegExp(String.raw`\b([BHTWD])\s*:?\s*${NUM}`, 'gi'))]
   if (labelled.length >= 2) return labelled.map((m) => ({ name: LETTER[m[1].toLowerCase()], value: m[2], unit })).filter((s) => s.name)
@@ -88,7 +90,7 @@ export function splitDimensions(spec: Spec): Spec[] {
 
 /** Data-sheet lines about the shop rather than the product: never kept as extras. */
 const NOT_PRODUCT =
-  /versand|liefer|zahlung|zahlart|preis|kontakt|hersteller|garantie|rückgabe|ruckgabe|retoure|widerruf|hinweis|bewertung|service|shipping|delivery|payment|price|contact|manufacturer|warranty|return|review/i
+  /versand|liefer|zahlung|zahlart|preis|kontakt|hersteller|garantie|rückgabe|ruckgabe|retoure|widerruf|hinweis|bewertung|service|shipping|delivery|payment|price|contact|manufacturer|warranty|return|review|cookie|zweck|anbieter|datenschutz|laufzeit|speicherdauer|purpose|provider|privacy|expiry|artikelnr|sku/i
 
 const COMBINED = /^(maße|masse|abmessungen|abmessung|dimensions|dimension|größe|groesse|size|maße b x h x t|außenmaße|aussenmasse)$/
 
@@ -137,6 +139,18 @@ export function planFacts(p: Product, facts: ProductFacts, properties: PropertyD
   if (!facts.color && color) take('variant', color)
   if (facts.color) specs.push({ name: 'color', value: facts.color })
 
+  // Width, height, depth and weight as each line states them. A page that contradicts itself
+  // ("Höhe 900 mm" next to "90x38,4x190 (BxTxH)") gets no value at all: nothing is better than wrong.
+  const stated = new Map<Dimension, number[]>()
+  for (const s of specs) {
+    const key = meaning(s.name) as Dimension
+    if (!DIMENSIONS.includes(key)) continue
+    const q = quantity(s)
+    const v = q && convert(q.n, q.unit, DIMENSION_UNIT[key])
+    if (v !== null && v !== undefined && v > 0) stated.set(key, [...(stated.get(key) ?? []), v])
+  }
+  const contradicted = new Set([...stated].filter(([, vs]) => vs.some((v) => Math.abs(v - vs[0]) > Math.max(0.5, vs[0] * 0.02))).map(([d]) => d))
+
   const values: Record<string, PropertyValue> = {}
   const done = new Set<string>() // meanings already served, first line wins
   const created = new Map<Dimension, number>()
@@ -144,6 +158,9 @@ export function planFacts(p: Product, facts: ProductFacts, properties: PropertyD
   for (const s of specs) {
     const key = meaning(s.name)
     if (done.has(key)) continue
+    if (contradicted.has(key as Dimension)) continue
+    // A dimension of 0 is a placeholder, not a value.
+    if (DIMENSIONS.includes(key as Dimension) && !((quantity(s)?.n ?? 0) > 0)) continue
     const prop = properties.find((x) => meaning(x.name) === key)
     if (prop) {
       done.add(key)

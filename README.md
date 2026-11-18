@@ -147,6 +147,14 @@ src/i18n/      en.ts (source) and de.ts – TypeScript enforces complete transla
 e2e/           the end-to-end story (Playwright, virtual passkeys, axe)
 ```
 
+Check the shop-page import against your own data, without any AI: one page per shop, the
+app's own guarded client, compared with the values your products hold (never commit backup or
+report):
+
+```sh
+node --disable-warning=ExperimentalWarning scripts/check-shop-pages.ts /path/to/propario-backup.json
+```
+
 Optional check against your own workbooks (never commit them):
 
 ```sh

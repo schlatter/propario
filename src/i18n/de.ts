@@ -301,6 +301,37 @@ export const de: Messages = {
     column: 'Tests & Erfahrungen',
     sources: (n) => `${n} ${n === 1 ? 'Quelle' : 'Quellen'}`,
   },
+  filter: {
+    quick: 'Schnellfilter',
+    fav: 'Favoriten',
+    new: 'Neu',
+    mine: 'Von mir gefunden',
+    advanced: 'Erweitert',
+    queryLabel: 'Filterabfrage',
+    placeholder: 'z. B. Breite <= 90 UND (Farbe ~ grün ODER Preis < 800)',
+    hint: 'Nach jedem Feld filtern: Breite <= 90 UND NICHT Auswahl = ausgeschlossen',
+    matches: (n, total) => `${n} von ${total} Produkten passen`,
+    error: (code, text, pos) =>
+      code === 'unknown-field'
+        ? `Kein Feld „${text}“ (Stelle ${pos}). Feldnamen mit Leerzeichen brauchen Anführungszeichen.`
+        : code === 'bad-value'
+          ? `„${text}“ passt nicht zu diesem Feld (Stelle ${pos}).`
+          : code === 'unclosed'
+            ? `Eine Klammer oder ein Anführungszeichen ist nicht geschlossen (Stelle ${pos}).`
+            : code === 'end'
+              ? 'Die Abfrage hört zu früh auf – es fehlt ein Wert oder Feld.'
+              : code === 'too-long'
+                ? 'Die Abfrage ist zu lang (höchstens 500 Zeichen).'
+                : `Unerwartetes „${text}“ an Stelle ${pos}.`,
+    helpTitle: 'Felder und Beispiele',
+    helpSyntax:
+      'Vergleichen mit = != < <= > >=, ~ (enthält), !~ (enthält nicht), IST LEER / IST NICHT LEER. Verknüpfen mit UND, ODER, NICHT und Klammern. Namen und Werte mit Leerzeichen in Anführungszeichen: "Offene Mitte" = ja. Englische Wörter gehen auch (AND, OR, NOT, IS EMPTY).',
+    ownFields: 'Felder dieses Vergleichs (klicken zum Einfügen):',
+    builtIn:
+      'Immer da: Name, Marke, Modell, Produktart, Variante, Preis, Händler, Gefunden von, Funddatum, Neu, Mein, Auswahl (offen / Favorit / ausgeschlossen), Geeignet, Eignung, Bewertung, Gekauft, Beschreibung, Kommentar, GTIN, MPN.',
+    examplesTitle: 'Beispiele (klicken zum Übernehmen):',
+    examples: ['Preis < 800 UND NICHT Auswahl = ausgeschlossen', 'Auswahl = Favorit ODER Neu = ja', 'Marke IST LEER', 'Eignung >= 70 UND Geeignet = ja'],
+  },
   pageImport: {
     width: 'Breite',
     height: 'Höhe',

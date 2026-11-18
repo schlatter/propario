@@ -299,6 +299,37 @@ export const en = {
     column: 'Tests & reviews',
     sources: (n: number) => `${n} ${n === 1 ? 'source' : 'sources'}`,
   },
+  filter: {
+    quick: 'Quick filters',
+    fav: 'Favourites',
+    new: 'New',
+    mine: 'Found by me',
+    advanced: 'Advanced',
+    queryLabel: 'Filter query',
+    placeholder: 'e.g. Width <= 90 AND (Colour ~ green OR Price < 800)',
+    hint: 'Filter by any field: Width <= 90 AND NOT Selection = excluded',
+    matches: (n: number, total: number) => `${n} of ${total} products match`,
+    error: (code: string, text: string, pos: number) =>
+      code === 'unknown-field'
+        ? `No field called “${text}” (position ${pos}). Field names with spaces need quotes.`
+        : code === 'bad-value'
+          ? `“${text}” does not fit this field (position ${pos}).`
+          : code === 'unclosed'
+            ? `A bracket or quote is not closed (position ${pos}).`
+            : code === 'end'
+              ? 'The query stops too early – a value or field is missing.'
+              : code === 'too-long'
+                ? 'The query is too long (at most 500 characters).'
+                : `Unexpected “${text}” at position ${pos}.`,
+    helpTitle: 'Fields and examples',
+    helpSyntax:
+      'Compare with = != < <= > >=, ~ (contains), !~ (does not contain), IS EMPTY / IS NOT EMPTY. Combine with AND, OR, NOT and brackets. Quote names and values with spaces: "Open middle" = yes. German words work too (UND, ODER, NICHT, IST LEER).',
+    ownFields: 'This comparison’s fields (click to add):',
+    builtIn:
+      'Always there: Name, Brand, Model, Type, Variant, Price, Retailer, Found by, Found on, New, Mine, Selection (open / favourite / excluded), Eligible, Fit, Rating, Purchased, Description, Comments, GTIN, MPN.',
+    examplesTitle: 'Examples (click to use):',
+    examples: ['Price < 800 AND NOT Selection = excluded', 'Selection = favourite OR New = yes', 'Brand IS EMPTY', 'Fit >= 70 AND Eligible = yes'],
+  },
   pageImport: {
     width: 'Width',
     height: 'Height',

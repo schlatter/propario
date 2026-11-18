@@ -107,6 +107,41 @@ describe('extractProductFacts', () => {
     expect(specs[3].value.endsWith(' …')).toBe(true)
   })
 
+  it('copes with real-world page quirks: encoding, shop name in the title, templates, dimensions as colour', async () => {
+    const { decodeHtml, stripSiteName } = await import('../server/product-image.ts')
+    expect(decodeHtml(Buffer.from('<p>Für Küche</p>', 'latin1'), 'text/html; charset=ISO-8859-1')).toBe('<p>Für Küche</p>')
+    expect(decodeHtml(Buffer.from('<meta charset="iso-8859-1"><p>Größe</p>', 'latin1'), 'text/html')).toContain('Größe')
+    expect(decodeHtml(Buffer.from('<p>Größe</p>'), 'text/html')).toBe('<p>Größe</p>')
+    expect(stripSiteName('Buffet Arvika – Beispielshop', 'Beispielshop')).toBe('Buffet Arvika')
+    expect(stripSiteName('Buffetschrank Arvika | Beispiel GmbH & Co. KG')).toBe('Buffetschrank Arvika')
+
+    const html = `<meta itemprop="name" content="Startseite"><meta property="og:title" content="Regal Arvika | Shop">
+      <meta itemprop="color" content="B 131 cm/ H 190 cm/ T 45 cm">
+      <table><tr><th>Eigenschaft</th><td>Wert</td></tr><tr><th>\${ item.id }</th><td>\${ item.value }</td></tr>
+      <tr><th>Material</th><td>Kiefer</td></tr></table>`
+    expect(extractProductFacts(html)).toEqual({ name: 'Regal Arvika', specs: [{ name: 'Material', value: 'Kiefer', table: true }] })
+  })
+
+  it('reads microdata on visible elements inside the product only, and dimensions named in the text', () => {
+    // Structure as seen on a furniture shop (2026-11), values invented.
+    const html = `<ol itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement"><span itemprop="name">Startseite</span></li></ol>
+      <div itemscope itemtype="https://schema.org/Product"><h1 itemprop="name">Buffet Arvika weiß</h1>
+      <div itemprop="brand"><span>Hersteller: Nordhaus</span></div><meta name="description" content="Kurz und ohne Maße"><span itemprop="price" content="499.00">499,00 €</span><meta itemprop="priceCurrency" content="EUR">
+      <div itemprop="description"><div class="box"><h3>Details</h3></div><p>Es hat eine Gesamtbreite von 130 cm, eine Höhe von 196 cm und eine Tiefe von 39-43 cm.</p></div></div>`
+    const f = extractProductFacts(html)
+    expect(f).toMatchObject({ name: 'Buffet Arvika weiß', brand: 'Nordhaus', price: 499 })
+    expect(f.specs).toEqual([
+      { name: 'Breite', value: '130', unit: 'cm', table: true },
+      { name: 'Höhe', value: '196', unit: 'cm', table: true },
+    ])
+  })
+
+  it('cuts search-engine tails off titles', async () => {
+    const { stripSiteName } = await import('../server/product-image.ts')
+    expect(stripSiteName('Vitrine Arvika in Grau günstig online kaufen')).toBe('Vitrine Arvika in Grau')
+    expect(stripSiteName('Sofa Bo jetzt online bestellen bei Beispiel')).toBe('Sofa Bo')
+  })
+
   it('keeps the facts header small, dropping table lines first', () => {
     const specs = Array.from({ length: 60 }, (_, i) => ({ name: `Zeile ${i}`, value: 'ä'.repeat(150), table: true }))
     const encoded = encodeFacts({ name: 'Arvika', specs: [{ name: 'Breite', value: '60' }, ...specs] })

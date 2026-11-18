@@ -66,6 +66,8 @@ export function cleanFacts(raw: unknown): ProductFacts {
   if (Number.isFinite(price) && price > 0 && price < 10_000_000) out.price = Math.round(price * 100) / 100
   for (const key of ['name', 'brand', 'category', 'color'] as const) {
     const t = plain(r[key], FACT_LIMITS[key])
+    // Some shops put the dimensions into the colour ("B 131 cm/ H 190 cm").
+    if (key === 'color' && /\d\s*(mm|cm|m)\b/i.test(t)) continue
     if (t) out[key] = t
   }
   // A description may be longer than allowed; it is cut at a word, not dropped.

@@ -2936,3 +2936,50 @@ main.project-page {
   color: var(--ink-2);
   font-variant-numeric: tabular-nums;
 }
+
+/* Filters: quick chips that toggle, and the advanced query below the toolbar. */
+.chip.toggle {
+  border-style: solid;
+  min-height: 32px;
+}
+.chip.toggle[aria-pressed='true'],
+.chip.toggle[aria-expanded='true'] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--surface);
+}
+.advanced-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: -4px 0 14px;
+}
+.input.mono,
+.chip.mono {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+}
+.advanced-filter .input[aria-invalid='true'] {
+  border-color: var(--fail);
+}
+.filter-error {
+  color: var(--fail);
+  margin: 0;
+}
+.advanced-filter #filter-status {
+  margin: 0;
+}
+.filter-help summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.filter-help[open] {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+@media (pointer: coarse) {
+  .chip.toggle {
+    min-height: 44px;
+  }
+}

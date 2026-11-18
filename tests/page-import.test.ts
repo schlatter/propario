@@ -90,6 +90,43 @@ describe('planFacts: what a shop page fills in', () => {
     expect(plan.patch.extra).toEqual({ Abmessungen: 'H/B/T ca. 190/60/40 cm', 'Fach links': 'H/B/T ca. 40/20/30 cm', Finish: 'gewachst' })
   })
 
+  it('leaves out dimensions the page contradicts, placeholders of 0 and shop or cookie lines', () => {
+    // Patterns seen on real shop pages (2026-11), values invented.
+    const plan = planFacts(
+      makeProduct('p'),
+      {
+        specs: [
+          { name: 'Breite', value: '384', unit: 'mm', table: true },
+          { name: 'Höhe', value: '900', unit: 'mm', table: true },
+          { name: 'Stellfläche in cm', value: '90x38,4x190 (BxTxH)', table: true },
+          { name: 'Gewicht', value: '0', unit: 'kg' },
+          { name: 'Zweck', value: 'Speichert die Cookie-Einstellungen', table: true },
+          { name: 'Anbieter', value: 'Werbefirma GmbH', table: true },
+          { name: 'Holzart', value: 'Kiefer', table: true },
+        ],
+      },
+      [],
+    )
+    // Width and height disagree within the page: none. Depth is stated once (38,4 from the combined line): kept.
+    expect(plan.create).toEqual([{ dimension: 'depth', value: 38.4 }])
+    expect(plan.patch.extra).toEqual({ 'Stellfläche in cm': '90x38,4x190 (BxTxH)', Holzart: 'Kiefer' })
+  })
+
+  it('leaves a dimension out when the page names two different values (e.g. a size variant)', () => {
+    const plan = planFacts(
+      makeProduct('p'),
+      {
+        specs: [
+          { name: 'Breite', value: '130', unit: 'cm', table: true },
+          { name: 'Höhe', value: '196', unit: 'cm', table: true },
+          { name: 'Breite', value: '100', unit: 'cm', table: true },
+        ],
+      },
+      [],
+    )
+    expect(plan.create).toEqual([{ dimension: 'height', value: 196 }])
+  })
+
   it('does not guess: unlabelled dimensions, unknown units and odd values stay out', () => {
     const [width] = props()
     const plan = planFacts(
