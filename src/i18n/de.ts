@@ -310,6 +310,15 @@ export const de: Messages = {
     under: (amount) => `${amount} unter Budget`,
     over: (amount) => `${amount} über Budget`,
     at: 'genau im Budget',
+    belowMin: (amount) => `${amount} unter dem Mindestbudget`,
+    title: 'Budget',
+    max: 'Höchstens',
+    min: 'Mindestens (optional)',
+    ownPriceRule: (labels) =>
+      `Deine eigene Preisregel (${labels.map((l) => `„${l}“`).join(', ')}) ist neben dem Budget wahrscheinlich doppelt – lösche sie dann.`,
+    maxHint: 'Preis ≤ diesem Betrag. Meist ein Muss.',
+    minHint: 'Preis ≥ diesem Betrag – wenn sehr billig ein Warnzeichen ist.',
+    minAboveMax: 'Das Minimum liegt über dem Maximum – kein Produkt kann beides erfüllen.',
   },
   priceRef: {
     reference: 'Preisreferenz',

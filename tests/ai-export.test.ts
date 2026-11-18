@@ -18,7 +18,7 @@ describe('copy for my AI', () => {
         condition: { target: { kind: 'property', propertyId: depth.id }, op: 'lte', value: 40 },
       }),
     ]
-    const rules = withBudget(project, reqs, 'Budget ≤ €500')
+    const rules = withBudget(project, reqs, { max: 'Budget ≤ €500', min: 'Budget ≥ €0' })
     const a = makeProduct(project.id, {
       brand: 'Nordhaus',
       model: 'Arvika',

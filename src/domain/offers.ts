@@ -36,16 +36,19 @@ export function priceFromOffers(offers: Offer[]): Partial<Pick<Product, 'price' 
 export type PriceHint =
   | { kind: 'reference' }
   | { kind: 'vsReference'; diff: number }
-  | { kind: 'underBudget' | 'overBudget'; diff: number }
+  | { kind: 'underBudget' | 'overBudget' | 'belowMin'; diff: number }
   | { kind: 'atBudget' }
   | { kind: 'cheapest' }
   | { kind: 'vsCheapest'; diff: number }
   | null
 
-export function priceHint(p: Product, products: Product[], project: Pick<Project, 'budget' | 'priceReference'>): PriceHint {
+export function priceHint(p: Product, products: Product[], project: Pick<Project, 'budget' | 'budgetMin' | 'priceReference'>): PriceHint {
   if (p.price === null) return null
   const ref = project.priceReference ? products.find((x) => x.id === project.priceReference && x.price !== null) : undefined
   if (ref) return ref.id === p.id ? { kind: 'reference' } : { kind: 'vsReference', diff: round(p.price - ref.price!) }
+  // Below a minimum budget says more than how far below the maximum it is.
+  if (project.budgetMin !== null && project.budgetMin !== undefined && p.price < project.budgetMin)
+    return { kind: 'belowMin', diff: round(project.budgetMin - p.price) }
   if (project.budget !== null && project.budget !== undefined) {
     const diff = round(p.price - project.budget)
     return diff === 0 ? { kind: 'atBudget' } : diff < 0 ? { kind: 'underBudget', diff: -diff } : { kind: 'overBudget', diff }

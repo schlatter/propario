@@ -57,8 +57,14 @@ export interface Project {
   notes: string
   imageUrl: string
   decisionProductId: string | null
-  /** Most the price may be; a must criterion for every product (null = no budget). Absent before 0.5. */
+  /** Most the price may be (null = no budget). Absent before 0.5. */
   budget?: number | null
+  /** How the maximum counts; must unless chosen otherwise. Absent before 0.7. */
+  budgetPriority?: Priority
+  /** Least the price should be (null = none). Absent before 0.7. */
+  budgetMin?: number | null
+  /** How the minimum counts; important unless chosen otherwise. Absent before 0.7. */
+  budgetMinPriority?: Priority
   /** Product whose price the others are measured against ('' = budget or cheapest). Absent before 0.5. */
   priceReference?: string
   tableView: TableView

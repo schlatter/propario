@@ -37,7 +37,10 @@ export function useProjectData(id: string | undefined): ProjectData | null | und
     if (raw === undefined) return undefined
     if (raw === null) return null
     const propMap = new Map(raw.properties.map((p) => [p.id, p]))
-    const rules = withBudget(raw.project, raw.requirements, `${m.budget.label} ≤ ${fmt.money(raw.project.budget ?? 0)}`)
+    const rules = withBudget(raw.project, raw.requirements, {
+      max: `${m.budget.label} ≤ ${fmt.money(raw.project.budget ?? 0)}`,
+      min: `${m.budget.label} ≥ ${fmt.money(raw.project.budgetMin ?? 0)}`,
+    })
     const checkable = rules.filter((r) => CHECKABLE.includes(r.priority))
     const summaries = new Map(raw.products.map((p) => [p.id, summarize(rules, p, propMap)]))
     const results = (p: Product) =>

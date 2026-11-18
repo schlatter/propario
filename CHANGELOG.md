@@ -6,6 +6,10 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- **Budget, like a requirement:** at most and – optionally – at least, each with its own
+  priority (at most is a must unless chosen otherwise, at least is important). Both count in the
+  checks, the must count and the fit like any rule; the price says "€46 below the minimum". A
+  hint points at an own price rule that the budget probably duplicates.
 ## 0.6.0 — 2026-11-18
 
 - **Install as an app:** a web app manifest, app icons (also maskable and monochrome for

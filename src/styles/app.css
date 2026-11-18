@@ -3210,3 +3210,14 @@ main.project-page {
 .card-new:hover {
   background: color-mix(in srgb, var(--new) 15%, transparent);
 }
+
+/* Budget lines in the requirements: like a requirement, with an amount instead of a text. */
+.req.budget .req-label-static {
+  font-weight: 650;
+}
+.req.budget .rule .input {
+  width: 120px;
+}
+.req.budget p {
+  margin: 4px 0 0;
+}

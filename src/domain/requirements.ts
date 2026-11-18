@@ -176,25 +176,35 @@ export function splitByWeight(items: { result: CheckResult; blocking: boolean }[
   return { must: part(true), other: part(false) }
 }
 
-/** The id of the rule a comparison's budget stands for (never stored as a requirement). */
+/** The ids of the rules a comparison's budget stands for (never stored as requirements). */
 export const BUDGET_RULE = 'budget'
+export const BUDGET_MIN_RULE = 'budget-min'
 
 /**
- * The comparison's rules: its requirements, and its budget as a must criterion "price ≤ budget"
- * in front – measurable and relevant for almost every purchase, so it needs no rule of its own.
+ * The comparison's rules: its budget in front – "price ≤ maximum" (must unless chosen otherwise)
+ * and, when set, "price ≥ minimum" (important unless chosen otherwise) – then its requirements.
+ * Measurable and relevant for almost every purchase, so it needs no rule of its own.
  */
-export function withBudget(project: Pick<Project, 'id' | 'budget'>, requirements: Requirement[], label: string): Requirement[] {
-  if (project.budget === null || project.budget === undefined) return requirements
-  const rule: Requirement = {
-    id: BUDGET_RULE,
+export function withBudget(
+  project: Pick<Project, 'id' | 'budget' | 'budgetPriority' | 'budgetMin' | 'budgetMinPriority'>,
+  requirements: Requirement[],
+  labels: { max: string; min: string },
+): Requirement[] {
+  const rule = (id: string, label: string, priority: Priority, op: 'lte' | 'gte', value: number, order: number): Requirement => ({
+    id,
     projectId: project.id,
     category: '',
     label,
     description: '',
-    priority: 'must',
-    condition: { target: { kind: 'price' }, op: 'lte', value: project.budget },
-    order: -1,
+    priority,
+    condition: { target: { kind: 'price' }, op, value },
+    order,
     updatedAt: '',
-  }
-  return [rule, ...requirements]
+  })
+  const out: Requirement[] = []
+  if (project.budget !== null && project.budget !== undefined)
+    out.push(rule(BUDGET_RULE, labels.max, project.budgetPriority ?? 'must', 'lte', project.budget, -2))
+  if (project.budgetMin !== null && project.budgetMin !== undefined)
+    out.push(rule(BUDGET_MIN_RULE, labels.min, project.budgetMinPriority ?? 'important', 'gte', project.budgetMin, -1))
+  return [...out, ...requirements]
 }

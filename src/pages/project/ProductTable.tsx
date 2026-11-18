@@ -1030,6 +1030,8 @@ function priceNote(hint: PriceHint, m: Messages, fmt: Formatters): { text: strin
       return { text: m.budget.at, tone: 'best' }
     case 'overBudget':
       return { text: m.budget.over(fmt.money(hint.diff)), tone: 'over' }
+    case 'belowMin':
+      return { text: m.budget.belowMin(fmt.money(hint.diff)), tone: 'over' }
     case 'cheapest':
       return { text: m.project.cheapest, tone: 'best' }
     case 'vsCheapest':

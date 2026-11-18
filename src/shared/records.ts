@@ -8,7 +8,7 @@
  * deeper (per custom field / per requirement); `null` there removes the entry.
  */
 import { makeProduct, makeProject, makeProperty, makeRequirement } from '../db/factories.ts'
-import { EXCLUSION_CATEGORIES, type Product, type Project, type PropertyDef, type Requirement } from '../db/types.ts'
+import { EXCLUSION_CATEGORIES, PRIORITIES, type Product, type Project, type PropertyDef, type Requirement } from '../db/types.ts'
 import { UUID } from './ids.ts'
 import { SCALE_RANGE } from './review-scales.ts'
 
@@ -55,7 +55,14 @@ const TEMPLATES: Record<Kind, Record<string, unknown>> = {
 }
 
 /** Fields that are null by default, with the type they have when set. */
-const NULLABLE: Record<string, string> = { budget: 'number', price: 'number', favoriteRank: 'number', decisionProductId: 'string', condition: 'object' }
+const NULLABLE: Record<string, string> = {
+  budget: 'number',
+  budgetMin: 'number',
+  price: 'number',
+  favoriteRank: 'number',
+  decisionProductId: 'string',
+  condition: 'object',
+}
 const URL_FIELDS = new Set(['url', 'imageUrl'])
 const MAX_STRING = 50_000
 const MAX_JSON = 512 * 1024
@@ -126,7 +133,8 @@ export function checkFields(kind: Kind, fields: Record<string, unknown>): string
     if (URL_FIELDS.has(key) && value !== '' && !/^https?:\/\//i.test(String(value))) return `field ${key} must be an http(s) link`
     if (key === 'image' && value !== '' && !IMAGE_PATH.test(String(value))) return 'field image must point to this server'
     if (key === 'better' && !['', 'lower', 'higher'].includes(String(value))) return 'field better must be lower or higher'
-    if (key === 'budget' && value !== null && (value as number) < 0) return 'field budget cannot be negative'
+    if ((key === 'budget' || key === 'budgetMin') && value !== null && (value as number) < 0) return `field ${key} cannot be negative`
+    if ((key === 'budgetPriority' || key === 'budgetMinPriority') && !(PRIORITIES as unknown[]).includes(value)) return `field ${key} is not a priority`
     if (key === 'priceReference' && value !== '' && !UUID.test(String(value))) return 'field priceReference must be a product id'
     if (key === 'exclusionCategory' && value !== '' && !(EXCLUSION_CATEGORIES as unknown[]).includes(value)) return 'field exclusionCategory is unknown'
     if (key === 'gtin' && value !== '' && !/^\d{1,14}$/.test(String(value))) return 'field gtin must be up to 14 digits'

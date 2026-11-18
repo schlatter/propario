@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { addRequirement, deleteRequirement, reorder, updateProduct, updateProject, updateRequirement } from '../../db/repo'
 import { PRIORITIES, type Condition, type ConditionOp, type Priority, type Requirement } from '../../db/types'
 import { productName } from '../../domain/display'
@@ -7,7 +7,7 @@ import { parseNumber } from '../../domain/values'
 import { useI18n } from '../../i18n'
 import { useConfirm } from '../../ui/Dialog'
 import { Glyph } from '../../ui/Glyph'
-import { CommitInput, CommitTextarea, Field } from '../../ui/inputs'
+import { CommitInput, CommitTextarea } from '../../ui/inputs'
 import { CheckMark } from '../../ui/Marks'
 import type { ProjectData } from './useProjectData'
 
@@ -38,25 +38,42 @@ export function RequirementsTab({ data, onOpen }: { data: ProjectData; onOpen: (
     void reorder('requirements', list)
   }
 
+  /** The comparison's own rules on the price (e.g. a "Budget" imported from Excel). */
+  const priceRules = requirements.filter(
+    (r) => r.condition?.target.kind === 'price' && (r.condition.op === 'lte' || r.condition.op === 'lt' || r.condition.op === 'gte' || r.condition.op === 'gt'),
+  )
+
   return (
     <div className="stack" style={{ gap: 20 }}>
-      <div className="budget-row">
-        <Field label={m.budget.input}>
-          <CommitInput
-            className="input"
-            inputMode="decimal"
-            value={project.budget !== null && project.budget !== undefined ? String(project.budget) : ''}
-            aria-describedby="budget-hint"
-            onCommit={(v) => {
-              const n = parseNumber(v)
-              void updateProject(project.id, { budget: n !== null && n >= 0 ? n : null })
-            }}
-          />
-        </Field>
-        <p id="budget-hint" className="muted small">
-          {m.budget.hint}
-        </p>
-      </div>
+      <section className="req-group" aria-labelledby="budget-title">
+        <h3 id="budget-title">{m.budget.title}</h3>
+        <BudgetRow
+          label={m.budget.max}
+          sign="≤"
+          hint={m.budget.maxHint}
+          value={project.budget ?? null}
+          priority={project.budgetPriority ?? 'must'}
+          onValue={(n) => updateProject(project.id, { budget: n })}
+          onPriority={(p) => updateProject(project.id, { budgetPriority: p })}
+        />
+        <BudgetRow
+          label={m.budget.min}
+          sign="≥"
+          hint={m.budget.minHint}
+          value={project.budgetMin ?? null}
+          priority={project.budgetMinPriority ?? 'important'}
+          onValue={(n) => updateProject(project.id, { budgetMin: n })}
+          onPriority={(p) => updateProject(project.id, { budgetMinPriority: p })}
+        />
+        {(project.budget != null || project.budgetMin != null) && priceRules.length > 0 && (
+          <p className="small muted">{m.budget.ownPriceRule(priceRules.map((r) => r.label))}</p>
+        )}
+        {project.budget != null && project.budgetMin != null && project.budgetMin > project.budget && (
+          <p className="small filter-error" role="alert">
+            {m.budget.minAboveMax}
+          </p>
+        )}
+      </section>
       <form
         className="quick-add"
         onSubmit={async (e) => {
@@ -116,6 +133,72 @@ export function RequirementsTab({ data, onOpen }: { data: ProjectData; onOpen: (
           {data.products.length > 0 && data.checkable.length > 0 && <Matrix data={data} onOpen={onOpen} />}
         </>
       )}
+    </div>
+  )
+}
+
+/** One budget line, laid out like a requirement: its priority, an amount and what it means. */
+function BudgetRow({
+  label,
+  sign,
+  hint,
+  value,
+  priority,
+  onValue,
+  onPriority,
+}: {
+  label: string
+  sign: '≤' | '≥'
+  hint: string
+  value: number | null
+  priority: Priority
+  onValue: (n: number | null) => void
+  onPriority: (p: Priority) => void
+}) {
+  const { m } = useI18n()
+  const id = useId()
+  return (
+    <div className="req budget">
+      <div className="prio-col">
+        <select
+          className="select"
+          value={priority}
+          onChange={(e) => onPriority(e.target.value as Priority)}
+          aria-label={`${m.field.priority}: ${label}`}
+          title={m.priorityHint[priority]}
+        >
+          {PRIORITIES.map((p) => (
+            <option key={p} value={p}>
+              {m.priority[p]}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="req-main">
+        <label className="budget-line" htmlFor={id}>
+          <span className="req-label-static">{label}</span>
+        </label>
+        <div className="rule">
+          <span className="muted">
+            {m.field.price} {sign}
+          </span>
+          <CommitInput
+            id={id}
+            className="input"
+            inputMode="decimal"
+            value={value !== null ? String(value) : ''}
+            aria-describedby={`${id}-hint`}
+            onCommit={(v) => {
+              const n = parseNumber(v)
+              onValue(n !== null && n >= 0 ? n : null)
+            }}
+          />
+          <span className="muted">€</span>
+        </div>
+        <p id={`${id}-hint`} className="muted small">
+          {hint}
+        </p>
+      </div>
     </div>
   )
 }

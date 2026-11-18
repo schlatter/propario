@@ -252,8 +252,20 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await expect(page.getByRole('button', { name: 'Arvika', exact: true })).toBeVisible()
   // The budget is a must for every product; the price says how far it is from it.
   await page.getByRole('tab', { name: /Requirements/ }).click()
-  await page.getByLabel('Budget (€)').fill('300')
-  await page.getByLabel('Budget (€)').press('Tab')
+  await page.getByLabel('At most', { exact: true }).fill('300')
+  await page.getByLabel('At most', { exact: true }).press('Tab')
+  await expect(page.getByRole('combobox', { name: 'Priority: At most' })).toHaveValue('must')
+  // An optional minimum with its own priority; as a must it blocks a product that is too cheap.
+  await page.getByLabel('At least (optional)', { exact: true }).fill('250')
+  await page.getByLabel('At least (optional)', { exact: true }).press('Tab')
+  await page.getByRole('combobox', { name: 'Priority: At least (optional)' }).selectOption('must')
+  await expect(page.getByText(/Your own price rule \(“Budget”\)/)).toBeVisible()
+  await accessible(page, 'budget')
+  await page.getByRole('tab', { name: /Products/ }).click()
+  await expect(page.getByText('€46 below the minimum')).toBeVisible()
+  await page.getByRole('tab', { name: /Requirements/ }).click()
+  await page.getByLabel('At least (optional)', { exact: true }).fill('')
+  await page.getByLabel('At least (optional)', { exact: true }).press('Tab')
   await page.getByRole('tab', { name: /Products/ }).click()
   await expect(page.getByText('€96 under budget')).toBeVisible()
   // A product can be the price reference instead.

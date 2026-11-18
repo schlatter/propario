@@ -41,10 +41,23 @@ describe('budget and price reference', () => {
   const c = makeProduct('p', { price: 1000, candidate: 'excluded' })
 
   it('the budget is a must criterion for every product', () => {
-    const rules = withBudget(project, [], 'Budget')
+    const rules = withBudget(project, [], { max: 'Budget', min: 'Minimum' })
     expect(summarize(rules, a, new Map())).toMatchObject({ blocked: false, qualified: true })
     expect(summarize(rules, b, new Map())).toMatchObject({ blocked: true })
-    expect(withBudget(makeProject(), [], 'Budget')).toEqual([])
+    expect(withBudget(makeProject(), [], { max: 'Budget', min: 'Minimum' })).toEqual([])
+  })
+
+  it('a minimum budget and the chosen priorities count like any rule', () => {
+    const p = makeProject({ budget: 1000, budgetPriority: 'wish', budgetMin: 300, budgetMinPriority: 'must' })
+    const rules = withBudget(p, [], { max: 'Budget', min: 'Minimum' })
+    expect(rules.map((r) => [r.priority, r.condition?.op, r.condition?.value])).toEqual([
+      ['wish', 'lte', 1000],
+      ['must', 'gte', 300],
+    ])
+    // Too cheap is now the blocker; too expensive only costs fit.
+    expect(summarize(rules, makeProduct('p', { price: 200 }), new Map())).toMatchObject({ blocked: true })
+    expect(summarize(rules, makeProduct('p', { price: 1200 }), new Map())).toMatchObject({ blocked: false, fit: 0 })
+    expect(priceHint(makeProduct('p', { price: 200 }), [], p)).toEqual({ kind: 'belowMin', diff: 100 })
   })
 
   it('prices are measured against the reference product, else the budget, else the cheapest', () => {
