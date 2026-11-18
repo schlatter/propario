@@ -11,6 +11,23 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.3.0',
+    notes: {
+      en: [
+        'Check elsewhere: price comparisons, Amazon and Stiftung Warentest – without tracking.',
+        'Offers from several shops; the cheapest becomes the price.',
+        'Ratings from tests and reviews, and a weighted fit per product.',
+        'Swipe mode: decide one product at a time.',
+      ],
+      de: [
+        'Woanders prüfen: Preisvergleiche, Amazon und Stiftung Warentest – ohne Tracking.',
+        'Angebote mehrerer Shops; das günstigste wird zum Preis.',
+        'Bewertungen aus Tests und Erfahrungen, dazu eine gewichtete Eignung.',
+        'Swipe-Modus: Produkt für Produkt entscheiden.',
+      ],
+    },
+  },
+  {
     version: '0.2.0',
     notes: {
       en: [
