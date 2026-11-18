@@ -105,7 +105,11 @@ export interface FactPlan {
 
 const empty = (v: PropertyValue | undefined) => v === undefined || v === null || v === ''
 
-export function planFacts(p: Product, facts: ProductFacts, properties: PropertyDef[]): FactPlan {
+/**
+ * `refreshPrice`: on an explicit update the shop's current price replaces an older one – prices
+ * change, and keeping them current is what updating is for. Everything else stays as entered.
+ */
+export function planFacts(p: Product, facts: ProductFacts, properties: PropertyDef[], opts: { refreshPrice?: boolean } = {}): FactPlan {
   const patch: Partial<Product> = {}
   const filled: string[] = []
   const take = <K extends keyof Product>(key: K, value: Product[K] | undefined) => {
@@ -119,6 +123,10 @@ export function planFacts(p: Product, facts: ProductFacts, properties: PropertyD
   take('gtin', facts.gtin)
   take('mpn', facts.mpn)
   take('price', facts.price)
+  if (opts.refreshPrice && facts.price !== undefined && p.price !== null && p.price !== undefined && Math.abs(facts.price - p.price) >= 0.01) {
+    patch.price = facts.price
+    filled.push('price')
+  }
   take('brand', facts.brand)
   // The model is the page's product name without a leading brand ("Nordhaus Arvika 2" → "Arvika 2").
   const brand = (p.brand || facts.brand || '').trim()

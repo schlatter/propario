@@ -99,7 +99,7 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
       <div className="pimg-side">
         <div className="pimg-actions">
           {link && (
-            <button type="button" className="btn sm" disabled={busy} onClick={() => run(() => loadProductImage(p, safeHref(p.imageUrl) ?? link))}>
+            <button type="button" className="btn sm" disabled={busy} onClick={() => run(() => loadProductImage(p, link))}>
               <Glyph name="download" /> {stored ? m.image.reload : m.image.fromLink}
             </button>
           )}

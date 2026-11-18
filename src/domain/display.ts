@@ -1,7 +1,9 @@
 import type { Product, PropertyDef, PropertyValue } from '../db/types'
 import type { Formatters } from '../i18n'
 import type { Messages } from '../i18n/en'
-import { isTyped } from './values'
+import { hostOf, isTyped } from './values'
+import type { FactPlan } from './page-import'
+import { DIMENSION_UNIT } from './page-import'
 
 export function productName(p: Pick<Product, 'brand' | 'model'>, fallback: string): string {
   const brand = p.brand.trim()
@@ -68,3 +70,29 @@ export function filledLabels(filled: string[], m: Messages): string {
 export function exclusionText(p: Pick<Product, 'exclusionReason' | 'exclusionCategory'>, m: Messages): string {
   return [p.exclusionCategory ? m.exclusion.categories[p.exclusionCategory] : '', p.exclusionReason].filter(Boolean).join(' · ')
 }
+
+/**
+ * What an update from the shop page would change, one line each, for asking before it happens:
+ * "Price: €989 → €949", "Breite: 66 cm", "3 more data-sheet lines".
+ */
+export function describePlan(p: Product, plan: FactPlan, properties: PropertyDef[], m: Messages, fmt: Formatters): string[] {
+  const fields = m.field as Record<string, string>
+  const lines: string[] = []
+  for (const [key, to] of Object.entries(plan.patch)) {
+    if (key === 'values' || key === 'extra' || key === 'priceDate') continue
+    if (key === 'price') lines.push(`${fields.price}: ${p.price !== null && p.price !== undefined ? `${fmt.money(p.price)} → ` : ''}${fmt.money(to as number)}`)
+    else if (key === 'description') lines.push(fields.description)
+    else lines.push(`${fields[key] ?? key}: ${String(to)}`)
+  }
+  for (const [id, v] of Object.entries(plan.patch.values ?? {})) {
+    const prop = properties.find((x) => x.id === id)
+    if (prop) lines.push(`${prop.name}: ${formatValue(prop, v, m, fmt)}`)
+  }
+  for (const c of plan.create) lines.push(`${m.pageImport[c.dimension]}: ${fmt.number(c.value)} ${DIMENSION_UNIT[c.dimension]} (${m.pageUpdate.newField})`)
+  const extras = Object.keys(plan.patch.extra ?? {}).filter((k) => !(k in (p.extra ?? {}))).length
+  if (extras) lines.push(m.pageUpdate.extras(extras))
+  return lines
+}
+
+/** The name to show and announce: brand and model, else the shop's address, else "Unnamed product". */
+export const displayName = (p: Pick<Product, 'brand' | 'model' | 'url'>, m: Messages) => productName(p, hostOf(p.url ?? '') || m.product.unnamed)

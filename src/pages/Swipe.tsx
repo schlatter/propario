@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { setVote } from '../db/repo'
 import type { Product, Vote } from '../db/types'
-import { formatValue, productName } from '../domain/display'
+import { displayName, formatValue } from '../domain/display'
 import { safeHref, hostOf } from '../domain/values'
 import { useI18n } from '../i18n'
 import { productImage } from '../images'
@@ -172,7 +172,7 @@ function Card({ product: p, data, leaving, onVote }: { product: Product; data: P
         start.current = null
         setDx(0)
       }}
-      aria-label={productName(p, m.product.unnamed)}
+      aria-label={displayName(p, m)}
     >
       {hint && (
         <span className={`swipe-stamp ${hint}`} aria-hidden="true">
@@ -184,7 +184,7 @@ function Card({ product: p, data, leaving, onVote }: { product: Product; data: P
       </div>
       <div className="swipe-body">
         {p.brand && <div className="muted small">{p.brand}</div>}
-        <h2>{p.model || productName(p, m.product.unnamed)}</h2>
+        <h2>{p.model || displayName(p, m)}</h2>
         <div className="row" style={{ gap: 12 }}>
           {p.price !== null && <b className="swipe-price">{fmt.money(p.price)}</b>}
           {href && (
@@ -232,7 +232,7 @@ function Done({ data }: { data: ProjectData }) {
           <ul className="plain-list" style={{ minWidth: 260 }}>
             {shared.map((p) => (
               <li key={p.id}>
-                <Link to={`/p/${data.project.id}?product=${p.id}`}>{productName(p, m.product.unnamed)}</Link>
+                <Link to={`/p/${data.project.id}?product=${p.id}`}>{displayName(p, m)}</Link>
               </li>
             ))}
           </ul>

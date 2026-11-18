@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import type { Product } from '../db/types'
-import { avgStars, exclusionText, formatValue, productName } from '../domain/display'
+import { avgStars, displayName, exclusionText, formatValue } from '../domain/display'
 import { evaluate, WEIGHT } from '../domain/requirements'
 import { reviewSummary } from '../domain/reviews'
 import { hostOf, safeHref } from '../domain/values'
@@ -191,10 +191,10 @@ export function ComparePage() {
                       <span className="head-name" style={{ flex: 1 }}>
                         {href ? (
                           <a href={href} target="_blank" rel="noopener noreferrer">
-                            {p.model || productName(p, m.product.unnamed)}
+                            {p.model || displayName(p, m)}
                           </a>
                         ) : (
-                          p.model || productName(p, m.product.unnamed)
+                          p.model || displayName(p, m)
                         )}
                       </span>
                       <button

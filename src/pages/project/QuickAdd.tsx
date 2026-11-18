@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { addProduct, updateProject } from '../../db/repo'
-import { filledLabels } from '../../domain/display'
+import { filledLabels, productName } from '../../domain/display'
+import { sameLink } from '../../domain/links'
 import { hostOf, looksLikeUrl, normalizeUrl } from '../../domain/values'
 import { useI18n } from '../../i18n'
 import { ImageError, loadProductImage } from '../../images'
@@ -8,6 +9,7 @@ import { useToast } from '../../ui/Dialog'
 import { Glyph } from '../../ui/Glyph'
 import { Menu } from '../../ui/Menu'
 import type { ProjectData } from './useProjectData'
+import { usePageUpdate } from './usePageUpdate'
 
 /**
  * Adding a product: type a name ("Brand Model" is split when the brand is known) or paste a
@@ -49,6 +51,7 @@ function QuickAddForm({ data, onOpen, autoFocus }: { data: ProjectData; onOpen: 
   const [added, setAdded] = useState('')
   const ref = useRef<HTMLInputElement>(null)
   const toast = useToast()
+  const pageUpdate = usePageUpdate(data.properties)
   const knownBrands = [...new Set(products.map((p) => p.brand.trim()).filter(Boolean))]
 
   const submit = async () => {
@@ -56,6 +59,15 @@ function QuickAddForm({ data, onOpen, autoFocus }: { data: ProjectData; onOpen: 
     if (!value) return
     if (looksLikeUrl(value)) {
       const url = normalizeUrl(value)
+      // The same page again: no second entry – offer what the page adds to the existing one.
+      const existing = products.find((x) => sameLink(x.url, url))
+      if (existing) {
+        setText('')
+        onOpen(existing.id)
+        const name = productName(existing, hostOf(url))
+        void pageUpdate(existing, { title: m.pageUpdate.duplicateTitle(name), text: m.pageUpdate.duplicateText })
+        return
+      }
       const created = await addProduct(project.id, { url, retailer: hostOf(url) })
       // Picture and page data come in the background and fill only empty fields; image
       // failures show in the product details.

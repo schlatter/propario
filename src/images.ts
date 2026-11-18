@@ -160,6 +160,33 @@ export async function loadProductImage(p: Product, from?: string, signal?: Abort
   return { facts: got.facts, filled: await takeFacts(p, got.facts) }
 }
 
+/**
+ * Reads a product's shop page – always the page, never just the picture file – and returns what
+ * it says, with its picture when there is one. A page without a usable picture still has facts.
+ */
+export async function readProductPage(url: string, signal?: AbortSignal): Promise<{ facts: ProductFacts; blob?: Blob; source?: string }> {
+  try {
+    return await fetchRemoteImage(url, signal)
+  } catch (e) {
+    if (e instanceof ImageError && e.facts) return { facts: e.facts }
+    throw e
+  }
+}
+
+/**
+ * Takes a page read into the product: the picture only when it has none yet, empty fields
+ * filled, and – as this is an update someone asked for – a changed price. Returns what was taken.
+ */
+export async function applyProductPage(p: Product, page: { facts: ProductFacts; blob?: Blob; source?: string }): Promise<string[]> {
+  const filled: string[] = []
+  if (!p.image && page.blob) {
+    const image = await uploadImage(p.projectId, await shrinkImage(page.blob))
+    await updateProduct(p, { image, imageUrl: p.imageUrl || page.source || '' })
+    filled.push('image')
+  }
+  return [...filled, ...(await takeFacts(p, page.facts, { refreshPrice: true }))]
+}
+
 /** Store an image the user picked, pasted or dropped. */
 export async function setProductImageFromBlob(p: Product, blob: Blob): Promise<void> {
   await updateProduct(p, { image: await uploadImage(p.projectId, await shrinkImage(blob)) })

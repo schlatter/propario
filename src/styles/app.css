@@ -1539,6 +1539,17 @@ textarea.cell-editor {
   border-color: transparent;
   color: var(--bg);
 }
+/* Secondary actions on the selection: outlined, so "Compare" stays the one to press. */
+.compare-bar .btn.outline {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--bg) 45%, transparent);
+  color: var(--bg);
+}
+.compare-bar {
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: calc(100% - 32px);
+}
 
 /* ---------- requirements ---------- */
 .req-group h3 {
@@ -2988,4 +2999,14 @@ main.project-page {
 
 .pimg-drop.zoomable {
   cursor: zoom-in;
+}
+
+.confirm-list {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  max-height: 40vh;
+  overflow: auto;
+}
+.confirm-list li {
+  margin: 2px 0;
 }

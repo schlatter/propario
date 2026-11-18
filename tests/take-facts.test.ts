@@ -41,6 +41,14 @@ describe('adding a product and taking its shop page', () => {
     expect(pb!.values[width[0].id]).toBe(60)
   })
 
+  it('an update someone asks for refreshes the price through the server, and nothing else entered', async () => {
+    const project = await createProject({ name: 'Schrank' })
+    const p = await addProduct(project.id, { model: 'Mein Name', price: 989, url: 'https://shop.example/a' })
+    const filled = await takeFacts(p, { name: 'Shop Name', price: 949 }, { refreshPrice: true })
+    expect(filled).toEqual(['price'])
+    expect(await db.products.get(p.id)).toMatchObject({ model: 'Mein Name', price: 949 })
+  })
+
   it('leaves values someone entered in the meantime alone', async () => {
     const project = await createProject({ name: 'Schrank' })
     const stale = await addProduct(project.id, {})

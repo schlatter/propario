@@ -242,7 +242,9 @@ export function ProjectPage() {
       </div>
 
       <div role="tabpanel">
-        {tab === 'products' && <ProductTable data={data} selection={selection} setSelection={setSelection} onOpen={(pid) => setParam('product', pid)} />}
+        {tab === 'products' && (
+          <ProductTable data={data} selection={selection} setSelection={setSelection} onOpen={(pid) => setParam('product', pid)} canEdit={role !== 'viewer'} />
+        )}
         {tab === 'requirements' && <RequirementsTab data={data} onOpen={(pid) => setParam('product', pid)} />}
         {tab === 'fields' && <FieldsTab data={data} />}
         {tab === 'notes' && <NotesTab project={project} />}

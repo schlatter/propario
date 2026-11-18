@@ -1,6 +1,7 @@
+import { useState } from 'react'
 import { deleteProduct, duplicateProduct, setDecision, updateProduct, updateProject } from '../../db/repo'
 import { EXCLUSION_CATEGORIES, type Candidate, type ExclusionCategory, type Product, type PurchaseStatus, type Rating } from '../../db/types'
-import { productName } from '../../domain/display'
+import { displayName } from '../../domain/display'
 import { lookupLinks } from '../../domain/lookup'
 import { evaluate, OP_SYMBOL } from '../../domain/requirements'
 import { daysSince, hostOf, normalizeUrl, parseNumber, safeHref, STALE_DAYS } from '../../domain/values'
@@ -14,6 +15,7 @@ import { CheckMark, PriorityTag, Stars } from '../../ui/Marks'
 import { PropertyCell } from './ProductTable'
 import { ProductImage } from './ProductImage'
 import { OffersSection, ReviewsSection } from './SourcesSections'
+import { usePageUpdate } from './usePageUpdate'
 import { withPurchaseDate } from '../../domain/purchase'
 import { loadProductImage } from '../../images'
 import type { ProjectData } from './useProjectData'
@@ -35,7 +37,9 @@ function DrawerContent({ data, product: p, onClose }: { data: ProjectData; produ
   const isDecision = project.decisionProductId === p.id
   const href = safeHref(p.url)
   const set = (patch: Partial<Product>) => updateProduct(p, patch)
-  const name = productName(p, m.product.unnamed)
+  const name = displayName(p, m)
+  const pageUpdate = usePageUpdate(data.properties)
+  const [updating, setUpdating] = useState(false)
   const lookups = lookupLinks(p)
   const priceAge = p.price !== null ? daysSince(p.priceDate) : null
   const gtinInvalid = !!p.gtin && !isValidGtin(p.gtin)
@@ -69,6 +73,25 @@ function DrawerContent({ data, product: p, onClose }: { data: ProjectData; produ
             <a className="btn sm" href={href} target="_blank" rel="noopener noreferrer">
               <Glyph name="out" /> {hostOf(p.url) || m.common.openLink}
             </a>
+          )}
+          {href && (
+            <button
+              type="button"
+              className="btn sm"
+              disabled={updating}
+              title={m.pageUpdate.hint}
+              aria-busy={updating}
+              onClick={async () => {
+                setUpdating(true)
+                try {
+                  await pageUpdate(p)
+                } finally {
+                  setUpdating(false)
+                }
+              }}
+            >
+              <Glyph name="download" /> {updating ? m.image.working : m.pageUpdate.button}
+            </button>
           )}
           <span className="spacer" />
           <button

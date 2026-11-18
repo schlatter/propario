@@ -190,6 +190,29 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await accessible(page, 'product details')
   await page.keyboard.press('Escape')
 
+  // The same link again – in another spelling – makes no second entry; the existing one opens.
+  const countRows = () => page.locator('table.grid tbody tr').count()
+  const addLink = async (url: string) => {
+    await page.getByRole('button', { name: 'Add product' }).click()
+    await page.getByPlaceholder(/shop link/).fill(url)
+    await page.keyboard.press('Enter')
+    await expect(page.locator('dialog.drawer')).toBeVisible()
+    await page.locator('dialog.drawer').getByRole('button', { name: 'Close' }).click()
+    await expect(page.locator('dialog.drawer')).toBeHidden()
+  }
+  await addLink('https://shop.example/regal-1.html')
+  await expect.poll(countRows).toBe(2)
+  await addLink('https://www.shop.example/regal-1.html/?utm_source=mail')
+  await expect.poll(countRows).toBe(2)
+
+  // Selected products can be deleted – after asking twice.
+  await page.getByRole('checkbox', { name: 'Select for comparison: shop.example' }).check()
+  await page.getByRole('button', { name: 'Delete', exact: true }).click()
+  await page.getByRole('button', { name: 'Delete', exact: true }).last().click()
+  await expect(page.getByRole('heading', { name: 'Really delete?' })).toBeVisible()
+  await page.getByRole('button', { name: 'Delete for good' }).click()
+  await expect.poll(countRows).toBe(1)
+
   // A rule on the price shows in the price column itself; its header filters by the verdict.
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.getByRole('tab', { name: /Requirements/ }).click()

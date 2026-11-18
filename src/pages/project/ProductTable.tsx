@@ -1,8 +1,8 @@
 import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { reorder, setProductValue, updateProduct, updateProject } from '../../db/repo'
+import { deleteProduct, reorder, setProductValue, updateProduct, updateProject } from '../../db/repo'
 import type { Candidate, Product, PropertyDef, Requirement, TableView } from '../../db/types'
-import { avgStars, compareKeys, exclusionText, formatValue, isNew, productName, sortKey } from '../../domain/display'
+import { avgStars, compareKeys, displayName, exclusionText, formatValue, isNew, productName, sortKey } from '../../domain/display'
 import { cellCheck, OP_SYMBOL, requirementsByColumn, WEIGHT } from '../../domain/requirements'
 import { compileQuery } from '../../domain/query'
 import { queryFields } from '../../domain/query-fields'
@@ -10,8 +10,8 @@ import { useSession } from '../../session'
 import { reviewSummary } from '../../domain/reviews'
 import { coerceValue, daysSince, hostOf, isTyped, parseNumber, safeHref, STALE_DAYS } from '../../domain/values'
 import { useI18n } from '../../i18n'
-import { ImageError, loadImages, missingImages, productImage } from '../../images'
-import { useToast } from '../../ui/Dialog'
+import { applyProductPage, ImageError, loadImages, missingImages, productImage, readProductPage } from '../../images'
+import { useConfirm, useToast } from '../../ui/Dialog'
 import { Glyph } from '../../ui/Glyph'
 import { CheckMark, RequirementBars, Stars } from '../../ui/Marks'
 import { Menu } from '../../ui/Menu'
@@ -49,11 +49,14 @@ export function ProductTable({
   selection,
   setSelection,
   onOpen,
+  canEdit = true,
 }: {
   data: ProjectData
   selection: Set<string>
   setSelection: (s: Set<string>) => void
   onOpen: (id: string) => void
+  /** Viewers can select and compare, but not update or delete. */
+  canEdit?: boolean
 }) {
   const { m, fmt } = useI18n()
   const navigate = useNavigate()
@@ -113,6 +116,42 @@ export function ProductTable({
     } finally {
       setImgProgress(null)
     }
+  }
+
+  // ---- acting on the selected products ----
+  const confirm = useConfirm()
+  const [bulk, setBulk] = useState<{ done: number; total: number } | null>(null)
+  const selected = products.filter((p) => selection.has(p.id))
+  /** One shop page after the other – no burst of requests to a shop. */
+  const bulkUpdate = async () => {
+    const withLink = selected.filter((p) => safeHref(p.url))
+    if (!withLink.length) return toast(m.bulk.noLinks)
+    let ok = 0
+    let prices = 0
+    let failed = 0
+    setBulk({ done: 0, total: withLink.length })
+    for (const [i, p] of withLink.entries()) {
+      try {
+        const filled = await applyProductPage(p, await readProductPage(p.url))
+        ok++
+        if (p.price !== null && filled.includes('price')) prices++
+      } catch {
+        failed++
+      }
+      setBulk({ done: i + 1, total: withLink.length })
+    }
+    setBulk(null)
+    toast(m.bulk.updated(ok, prices, failed))
+  }
+  /** Deleting several products asks twice; the second time it names them. */
+  const bulkDelete = async () => {
+    const n = selected.length
+    if (!(await confirm({ title: m.bulk.deleteTitle(n), text: m.bulk.deleteText, confirmLabel: m.bulk.delete, danger: true }))) return
+    const names = selected.map((p) => displayName(p, m)).join(', ')
+    if (!(await confirm({ title: m.bulk.deleteAgainTitle, text: m.bulk.deleteAgainText(names), confirmLabel: m.bulk.deleteFinal, danger: true }))) return
+    for (const p of selected) await deleteProduct(p)
+    setSelection(new Set())
+    toast(m.bulk.deleted(n))
   }
 
   const saveView = (patch: Partial<TableView>) => updateProject(project.id, { tableView: { ...view, ...patch } })
@@ -815,7 +854,7 @@ export function ProductTable({
                           type="button"
                           className="grip"
                           disabled={!canMove}
-                          aria-label={m.reorder.handle(productName(p, m.product.unnamed))}
+                          aria-label={m.reorder.handle(displayName(p, m))}
                           title={canMove ? m.reorder.hint : m.reorder.sorted}
                           aria-keyshortcuts="ArrowUp ArrowDown"
                           onPointerDown={(e) => {
@@ -838,7 +877,7 @@ export function ProductTable({
                         </button>
                         <input
                           type="checkbox"
-                          aria-label={`${m.project.selectRow}: ${productName(p, m.product.unnamed)}`}
+                          aria-label={`${m.project.selectRow}: ${displayName(p, m)}`}
                           checked={selection.has(p.id)}
                           onChange={() => {
                             const next = new Set(selection)
@@ -854,9 +893,9 @@ export function ProductTable({
                         {showThumbs && (
                           <Thumb
                             src={productImage(p)}
-                            alt={productName(p, m.product.unnamed)}
+                            alt={displayName(p, m)}
                             onClick={() => onOpen(p.id)}
-                            label={`${m.project.details}: ${productName(p, m.product.unnamed)}`}
+                            label={`${m.project.details}: ${displayName(p, m)}`}
                           />
                         )}
                         <div className="name-main">
@@ -882,7 +921,7 @@ export function ProductTable({
                               href={href}
                               target="_blank"
                               rel="noopener noreferrer"
-                              aria-label={`${m.product.openPage}: ${productName(p, m.product.unnamed)}`}
+                              aria-label={`${m.product.openPage}: ${displayName(p, m)}`}
                               title={`${m.product.openPage} (${p.retailer || hostOf(p.url)})`}
                             >
                               <Glyph name="out" />
@@ -933,6 +972,16 @@ export function ProductTable({
           <button className="btn sm" disabled={selection.size < 2} onClick={() => navigate(`/p/${project.id}/compare?ids=${[...selection].join(',')}`)}>
             {m.project.compare(selection.size)}
           </button>
+          {canEdit && (
+            <>
+              <button className="btn sm outline" disabled={!!bulk} onClick={bulkUpdate} aria-live="polite" title={m.pageUpdate.hint}>
+                <Glyph name="download" /> {bulk ? m.bulk.updating(bulk.done, bulk.total) : m.bulk.update}
+              </button>
+              <button className="btn sm outline" disabled={!!bulk} onClick={bulkDelete}>
+                <Glyph name="trash" /> {m.bulk.delete}
+              </button>
+            </>
+          )}
         </div>
       )}
     </>

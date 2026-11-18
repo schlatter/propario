@@ -165,11 +165,11 @@ function changeList(product: Product, change: (current: Product) => Partial<Prod
  * list edits, so several products loading at once create each field only once.
  * Returns what was filled: product field keys and field names.
  */
-export function takeFacts(product: Product, facts: ProductFacts): Promise<string[]> {
+export function takeFacts(product: Product, facts: ProductFacts, opts: { refreshPrice?: boolean } = {}): Promise<string[]> {
   const run = listQueue.then(async () => {
     const p = (await db.products.get(product.id)) ?? product
     const properties = await db.properties.where('projectId').equals(p.projectId).sortBy('order')
-    const plan = planFacts(p, facts, properties)
+    const plan = planFacts(p, facts, properties, opts)
     const values = { ...(plan.patch.values ?? {}) }
     const names = activeMessages().pageImport
     for (const c of plan.create) {

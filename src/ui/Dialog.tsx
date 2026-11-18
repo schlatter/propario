@@ -44,7 +44,10 @@ export function Modal({
 interface ConfirmOptions {
   title: string
   text?: string
+  /** A list shown below the text, e.g. what an update would change. */
+  items?: string[]
   confirmLabel?: string
+  cancelLabel?: string
   danger?: boolean
 }
 
@@ -66,10 +69,21 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
         {state && (
           <div className="dialog" role="alertdialog" aria-describedby={state.text ? 'confirm-text' : undefined}>
             <h2 id="confirm-title">{state.title}</h2>
-            {state.text && <p id="confirm-text">{state.text}</p>}
+            {(state.text || state.items) && (
+              <div id="confirm-text">
+                {state.text && <p>{state.text}</p>}
+                {state.items && (
+                  <ul className="confirm-list">
+                    {state.items.map((x, i) => (
+                      <li key={i}>{x}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
             <div className="dialog-actions">
               <button className="btn" onClick={() => done(false)} autoFocus>
-                {m.common.cancel}
+                {state.cancelLabel ?? m.common.cancel}
               </button>
               <button className={`btn ${state.danger ? 'danger' : 'primary'}`} onClick={() => done(true)}>
                 {state.confirmLabel ?? m.common.confirm}
