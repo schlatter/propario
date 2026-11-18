@@ -6,36 +6,33 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
-- The product picture in the details grows on hover, keyboard focus or tap (Escape closes it).
-- Excluding a product asks for a kind of reason – looks, size, price, brand, shop, quality,
-  other – plus optional details; the reason can be filtered by (`Reason = size`).
-- A column with a requirement rule shows just `*` in its header; the rule is in the tooltip,
-  and a click still filters by it. Saves width.
+## 0.4.0 — 2026-11-18
+
+- **More from the shop page, without AI:** adding a product by link also takes its name, brand,
+  kind of product, colour, description and data sheet – from structured data, microdata,
+  data-sheet tables and dimensions named in the text. Lines go into the comparison's fields of
+  the same meaning, units converted (600 mm → 60 cm); width, height, depth and weight get their
+  own field when there is none yet; other lines are kept under "Imported extras". Only empty
+  fields are filled, and Propario says what it took. Pages that contradict themselves get no
+  dimension rather than a wrong one.
 - **Filters:** quick chips (favourites, new, found by me, only eligible, hide excluded) and an
-  advanced query for any field, in the spirit of Jira's JQL: `Width <= 90 AND (Colour ~ green OR
-  Price < 800)`, with AND/OR/NOT, brackets, comparisons, "contains", IS EMPTY – in English or
-  German. Mistakes are explained with their position. The filter is part of the address, so a
-  filtered view can be reloaded and shared.
-- Shop pages: more is read without guessing – pages in older encodings, product data written on
-  the page itself (microdata), dimensions named in the description ("Breite von 130 cm"), titles
-  without the shop name or "online kaufen". Pages that contradict themselves (two different
-  widths) get no dimension rather than a wrong one; cookie and template tables are ignored.
+  advanced query for any field in the spirit of Jira's JQL – `Width <= 90 AND (Colour ~ green
+  OR Price < 800)` – in English or German, with explained mistakes. The filter is part of the
+  address, so a filtered view can be reloaded and shared.
 - **Requirements in their column:** a rule such as "Depth ≤ 40" tints the depth cells green or
-  red with a quiet ✓ or ✕ in front of the value; the column header shows the rule and filters
-  by it (all → met → not met). Values stay as they are for sorting and filtering.
+  red with a quiet ✓ or ✕; the header shows `*`, the rule as tooltip, and filters by it on
+  click. Values stay as they are for sorting and filtering.
+- The requirements column shows two bars, must criteria above the others, each with its count.
 - Yes/no fields show ✓ and ✕ instead of words.
-- The requirements column shows two bars, must criteria above the others, each with its count
-  ("Must 2/2", "Other 0/31").
+- **Exclusion reasons** as a choice – looks, size, price, brand, shop, quality, other – plus
+  optional details; filterable (`Reason = size`).
+- **Found by** is filled in with whoever adds a product; a **Found on** column shows when;
+  entries of the last three days get a blue stripe. Favourites are dark green.
 - Double-click a column's edge to fit its width to header and values.
-- Fixed: number cells told screen readers the bare number instead of what is shown ("38 cm");
-  a unit typed for one number field no longer sticks to the next field of another type.
-- **More from the shop page:** adding a product by link now also takes its name, brand, kind
-  of product (category or breadcrumb), colour, description and data sheet. Lines go into the
-  comparison's fields of the same meaning, with units converted (600 mm → 60 cm); width,
-  height, depth and weight get their own field when there is none yet; other data-sheet lines
-  are kept under "Imported extras". Only empty fields are filled, and Propario says what it took.
-  This also works when the page has no usable picture.
-- New products name whoever added them under "Found by".
+- The product picture in the details grows on hover, keyboard focus or tap.
+- Fixed: number cells told screen readers the bare number instead of what is shown; a unit
+  typed for one number field no longer sticks to the next field of another type.
+
 ## 0.3.0 — 2026-11-18
 
 - **Check elsewhere:** each product links to Geizhals, idealo, Amazon and Stiftung Warentest,

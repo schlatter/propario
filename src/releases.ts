@@ -11,6 +11,23 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.4.0',
+    notes: {
+      en: [
+        'Add by link: name, brand, dimensions and data sheet come from the shop page.',
+        'Filters: quick chips, and an advanced query for any field.',
+        'Requirements show right in their column – green or red.',
+        'Exclusion reasons, “found on” and a larger picture in the details.',
+      ],
+      de: [
+        'Per Link hinzufügen: Name, Marke, Maße und Datenblatt kommen von der Shopseite.',
+        'Filter: Schnellfilter-Chips und eine erweiterte Abfrage über jedes Feld.',
+        'Anforderungen erscheinen direkt in ihrer Spalte – grün oder rot.',
+        'Ausschlussgründe, Funddatum und ein größeres Bild in den Details.',
+      ],
+    },
+  },
+  {
     version: '0.3.0',
     notes: {
       en: [
