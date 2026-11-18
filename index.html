@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <!-- Installable as an app (Android: "Install app"; iOS: "Add to Home Screen"); the small
+         service worker (src/service-worker.js) keeps only versioned app files, never pages or data. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f3f3f0" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#111315" />
     <title>Propario</title>
   </head>
   <body>

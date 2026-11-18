@@ -133,6 +133,15 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await expect(page.locator('tr.is-new').getByText(new Date().toLocaleDateString('en-GB'))).toBeVisible()
   await accessible(page, 'comparison')
 
+  // Installable app: a service worker that shows a friendly page without a connection.
+  expect(await page.evaluate(() => navigator.serviceWorker.ready.then((r) => !!r.active))).toBe(true)
+  await page.context().setOffline(true)
+  await page.reload()
+  await expect(page.getByRole('heading', { name: 'Propario ist gerade nicht erreichbar' })).toBeVisible()
+  await page.context().setOffline(false)
+  await page.reload()
+  await expect(page.getByRole('button', { name: 'Arvika', exact: true })).toBeVisible()
+
   await page.getByRole('button', { name: 'Arvika', exact: true }).click()
   // A tall cabinet: 200×1400 px. It must fit its box, not cover the text below.
   await page.locator('.pimg input[type=file]').setInputFiles({ name: 'cabinet.png', mimeType: 'image/png', buffer: png(200, 1400) })
@@ -317,6 +326,15 @@ test('Ada moves rows and decides by swiping', async () => {
   await page.mouse.up()
   await expect.poll(async () => (await heads()).slice(0, 2)).toEqual([first, second])
   await page.setViewportSize({ width: 390, height: 844 })
+
+  // On a phone the quick filters fold away, and the fixed columns leave room for the others.
+  await expect(page.getByRole('button', { name: 'Favourites' })).toBeHidden()
+  await page.getByRole('button', { name: /^Filter/ }).click()
+  await expect(page.getByRole('button', { name: 'Favourites' })).toBeVisible()
+  await page.getByRole('button', { name: /^Filter/ }).click()
+  const nameWidth = await page.locator('table.grid thead th.col-name').evaluate((th) => th.getBoundingClientRect().width)
+  expect(nameWidth).toBeLessThanOrEqual(140)
+  await accessible(page, 'table on a phone')
 
   await page.getByRole('link', { name: 'Swipe' }).click()
   await expect(page.getByRole('heading', { name: 'Like it or not?' })).toBeVisible()

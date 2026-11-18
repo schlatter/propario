@@ -6,6 +6,18 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- **Install as an app:** Propario has a web app manifest, app icons (also maskable and
+  monochrome for Android) and a small service worker, so Android offers
+  "Install app" and iOS "Add to Home Screen". The worker keeps only the app's versioned files –
+  never pages, data or pictures – and shows a friendly page when the server cannot be reached,
+  e.g. outside the VPN.
+- **Phones:** the quick filters fold away behind one "Filter" button that counts the active
+  filters; the fixed selection and product columns and the selection column are narrower, so
+  more columns stay in view in portrait; search, filter and columns share one line.
+- The selection opens as a small menu of coloured pills – open grey, favourite green, excluded
+  red; excluded rows get a faint red wash.
+- The picture in the details also grows when it appears under a resting mouse pointer.
+
 ## 0.5.0 — 2026-11-18
 
 - **Budget:** every comparison has one (Requirements tab). It counts as a must criterion for

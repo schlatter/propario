@@ -22,13 +22,19 @@ function buildId(): string {
 const build = buildId()
 const version = build ? `${pkg.version}+${build}` : pkg.version
 
-/** Writes dist/version.json, which the server reports so open pages notice an update. */
+/**
+ * Writes dist/version.json, which the server reports so open pages notice an update, and
+ * dist/sw.js (src/service-worker.js) with the version in its cache name, so each release clears
+ * the files of the one before.
+ */
 function versionFile(): Plugin {
   return {
     name: 'propario-version',
     apply: 'build',
     generateBundle() {
       this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ version }) + '\n' })
+      const worker = readFileSync(new URL('./src/service-worker.js', import.meta.url), 'utf8').replaceAll('__VERSION__', version)
+      this.emitFile({ type: 'asset', fileName: 'sw.js', source: worker })
     },
   }
 }

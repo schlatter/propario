@@ -13,3 +13,9 @@ createRoot(document.getElementById('root')!).render(
     <App />
   </StrictMode>,
 )
+
+// Installable app and a friendly page when offline (src/service-worker.js). Only for the built
+// app: in development it would get between the code and the browser.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => void navigator.serviceWorker.register('/sw.js').catch(() => {}))
+}

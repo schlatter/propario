@@ -21,6 +21,8 @@ happens.** Every change is measured against this list; `npm run verify` checks m
   first use; sign-in challenges after 5 minutes. Expired rows are purged hourly; images no
   product refers to are removed after an hour.
 - No analytics, no tracking, no third-party scripts, fonts or images.
+- The service worker (`src/service-worker.js`) caches only versioned app files (`/assets/*`) and
+  an offline page – never pages, API answers or pictures; each release clears the one before.
 - People can download everything they can see and delete their account themselves; deletion
   takes the comparisons they own along.
 
