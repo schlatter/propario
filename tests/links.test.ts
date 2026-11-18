@@ -37,3 +37,13 @@ describe('a link shared from another app', () => {
     expect(sharedLink({ text: 'javascript:alert(1) und nichts sonst' })).toBeNull()
   })
 })
+
+describe('a field asked for by a requirement', () => {
+  it('takes name, unit, direction and limit from its words', async () => {
+    const { fieldFromRequirement } = await import('../src/import/normalize')
+    expect(fieldFromRequirement('Maximale Tiefe 40 cm')).toEqual({ name: 'Tiefe', unit: 'cm', op: 'lte', value: 40 })
+    expect(fieldFromRequirement('Mindestens 4 Einlegeböden')).toEqual({ name: 'Einlegeböden', unit: '', op: 'gte', value: 4 })
+    expect(fieldFromRequirement('Gewicht', 'höchstens 30,5 kg')).toEqual({ name: 'Gewicht', unit: 'kg', op: 'lte', value: 30.5 })
+    expect(fieldFromRequirement('Offene Mitte')).toEqual({ name: 'Offene Mitte', unit: '' })
+  })
+})

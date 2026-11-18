@@ -3125,7 +3125,8 @@ main.project-page {
    show a frame only on hover or while edited. It fills the width; on phones it scrolls sideways. */
 table.grid.req-table {
   width: 100%;
-  min-width: 860px;
+  /* The fixed columns plus room for the details; narrower screens scroll sideways. */
+  min-width: 1180px;
 }
 .req-table td,
 .req-table th {
@@ -3226,4 +3227,73 @@ textarea.cell-input:focus {
 }
 .cell-select.prio-info {
   color: var(--muted);
+}
+
+/* Requirements: weight column, moving rows, the price rules that belong in the budget. */
+.req-table td.weight-cell {
+  padding: 0 10px;
+  font-size: 12px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.req-table .row-actions .grip {
+  cursor: grab;
+}
+.req-table tr.is-dragging td {
+  opacity: 0.5;
+}
+.req-table tr.drop-before td {
+  box-shadow: inset 0 2px 0 var(--focus);
+}
+.req-table tr.drop-after td {
+  box-shadow: inset 0 -2px 0 var(--focus);
+}
+.price-rules {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.price-rules p {
+  margin: 0;
+  flex-basis: 100%;
+}
+/* Phones: priority and requirement stay in view, narrow, like the products' fixed columns. */
+@media (max-width: 600px) {
+  table.grid.req-table {
+    min-width: 1060px;
+  }
+  .req-table col:nth-child(1) {
+    width: 86px !important;
+  }
+  .req-table col:nth-child(2) {
+    width: 140px !important;
+  }
+  .req-table tbody tr:not(.group) > :nth-child(1),
+  .req-table thead th:nth-child(1) {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+  }
+  .req-table tbody tr:not(.group) > :nth-child(2),
+  .req-table thead th:nth-child(2) {
+    position: sticky;
+    left: 86px;
+    z-index: 2;
+    box-shadow:
+      1px 0 0 var(--line),
+      6px 0 8px -6px rgb(0 0 0 / 0.12);
+  }
+  .req-table thead th:nth-child(1),
+  .req-table thead th:nth-child(2) {
+    z-index: 4;
+  }
+  .req-table tr.group th {
+    position: sticky;
+    left: 0;
+  }
+  .req-table .cell-select {
+    padding: 8px 4px;
+  }
 }

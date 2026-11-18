@@ -9,7 +9,7 @@ import type { Condition, ConditionOp, Priority, Product, PropertyDef, PropertyTy
 import type { ProjectBundle } from '../db/repo'
 import { coerceValue, dateToIso, looksLikeUrl, normalizeUrl, parseBoolean, parseDate, parseLeadingNumber, parseNumber } from '../domain/values'
 import { normalizeGtin } from '../shared/product-facts.ts'
-import { isUnit, nameTokens, norm, splitUnit, suggestCategory } from './normalize'
+import { GTE, isUnit, LTE, nameTokens, norm, splitUnit, suggestCategory } from './normalize'
 import { priorityFor, productTargetFor, reqTargetFor, sectionKind, SINGLE_TARGETS, type FieldTarget, type ReqTarget } from './synonyms'
 
 // ---------- grid ----------
@@ -688,9 +688,6 @@ function requirementFromRow(texts: string[], category: string): DraftRequirement
   }
   return newReq(category, first.replace(/:$/, '').trim(), rest.join(' · '), 'important')
 }
-
-const LTE = /(^|\s)(max|maximal\w*|höchstens|bis|unter|kleiner|weniger|at most|up to|below|under|≤)(\s|\.|:|$)/i
-const GTE = /(^|\s)(min|mind|minimal\w*|mindestens|ab|über|größer|mehr als|at least|above|over|≥)(\s|\.|:|$)/i
 
 /**
  * Derives a checkable rule from a requirement such as "Maximale Tiefe – Maximal 40 cm"

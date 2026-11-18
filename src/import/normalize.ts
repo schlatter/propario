@@ -101,3 +101,22 @@ export function suggestCategory(name: string): string {
   for (const [re, cat] of CATEGORY_HINTS) if (re.test(name)) return cat
   return ''
 }
+
+/** Words that make a requirement a limit: "max. 40 cm" is at most, "mindestens 4" at least. */
+export const LTE = /(^|\s)(max|maximal\w*|höchstens|bis|unter|kleiner|weniger|at most|up to|below|under|≤)(\s|\.|:|$)/i
+export const GTE = /(^|\s)(min|mind|minimal\w*|mindestens|ab|über|größer|mehr als|at least|above|over|≥)(\s|\.|:|$)/i
+
+/**
+ * A number field a requirement asks about, read from its words: "Maximale Tiefe 40 cm" →
+ * field "Tiefe" in cm, rule ≤ 40. Only the name is sure; unit, direction and limit are taken
+ * when the text states them.
+ */
+export function fieldFromRequirement(label: string, description = ''): { name: string; unit: string; op?: 'lte' | 'gte'; value?: number } {
+  const tokens = nameTokens(label)
+  const name = tokens.length ? tokens.map((t) => t.charAt(0).toUpperCase() + t.slice(1)).join(' ') : label.trim()
+  const text = `${label} ${description}`
+  const op = LTE.test(label) || (!GTE.test(label) && LTE.test(description)) ? 'lte' : GTE.test(text) ? 'gte' : undefined
+  const m = text.match(/(\d+(?:[.,]\d+)?)\s*(cm|mm|m|kg|g|l|w|kw|zoll|db)?(?![\w])/i)
+  const value = m ? Number(m[1].replace(',', '.')) : undefined
+  return { name, unit: (m?.[2] ?? '').toLowerCase(), ...(op ? { op } : {}), ...(value !== undefined && Number.isFinite(value) ? { value } : {}) }
+}

@@ -268,6 +268,16 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await page.getByLabel('At least (optional)', { exact: true }).press('Tab')
   await page.getByRole('tab', { name: /Products/ }).click()
   await expect(page.getByText('€96 under budget')).toBeVisible()
+  // An own price rule moves into the budget with one click (after a question), and is gone.
+  await page.getByRole('tab', { name: /Requirements/ }).click()
+  await page.getByRole('button', { name: 'Take “Budget” into the budget' }).click()
+  await page.getByRole('button', { name: 'Take into budget' }).click()
+  await expect(page.getByLabel('At most', { exact: true })).toHaveValue('250')
+  await expect(page.getByRole('button', { name: /Take “Budget”/ })).toHaveCount(0)
+  await page.getByLabel('At most', { exact: true }).fill('300')
+  await page.getByLabel('At most', { exact: true }).press('Tab')
+  await page.getByRole('tab', { name: /Products/ }).click()
+  await expect(page.getByText('€96 under budget')).toBeVisible()
   // A product can be the price reference instead.
   await page.getByRole('button', { name: 'Arvika', exact: true }).click()
   await page.getByRole('button', { name: 'Use as price reference' }).click()
@@ -419,6 +429,27 @@ test('Ada moves rows and decides by swiping', async () => {
   const copied = await page.evaluate(() => navigator.clipboard.readText())
   expect(copied).toContain('# Kitchen cabinet')
   expect(copied).toContain('### Arvika')
+
+  // Requirements: a missing field is created from the requirement's words, weights are shown,
+  // and a row moves into another group with the keyboard on its handle.
+  await page.goto(page.url().replace(/\?.*$/, '') + '?tab=requirements')
+  const addReq = async (label: string, category: string) => {
+    await page.locator('form.quick-add input[aria-label="Requirement"]').fill(label)
+    await page.locator('form.quick-add input[aria-label="Category"]').fill(category)
+    await page.locator('form.quick-add select[aria-label="Priority"]').selectOption('wish')
+    await page.getByRole('button', { name: 'Add requirement' }).click()
+    await expect(page.getByRole('textbox', { name: 'Requirement', exact: true }).last()).toHaveValue(label)
+  }
+  await addReq('Maximale Tiefe 40 cm', 'Size')
+  await page.getByRole('button', { name: '+ New field “Tiefe” (cm)' }).click()
+  await expect(page.getByLabel('Value: Maximale Tiefe 40 cm')).toHaveValue('40')
+  await expect(page.getByRole('tab', { name: /Fields 1/ })).toBeVisible()
+  await addReq('Soft close', 'Comfort')
+  await expect(page.locator('tr:has(input[value="Soft close"]) .weight-cell')).toHaveText('2 · 50 %')
+  await page.getByRole('button', { name: 'Move Soft close' }).focus()
+  await page.keyboard.press('ArrowUp')
+  await expect(page.getByLabel('Category: Soft close')).toHaveValue('Size')
+  await accessible(page, 'requirements table')
 
   // The start page points at what is new.
   await page.goto('/')

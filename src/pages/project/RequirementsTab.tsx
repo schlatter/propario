@@ -1,8 +1,9 @@
-import { useState } from 'react'
-import { addRequirement, deleteRequirement, reorder, updateProduct, updateProject, updateRequirement } from '../../db/repo'
+import { useRef, useState } from 'react'
+import { addProperty, addRequirement, deleteRequirement, reorder, updateProduct, updateProject, updateRequirement } from '../../db/repo'
 import { PRIORITIES, type Condition, type ConditionOp, type Priority, type Requirement } from '../../db/types'
 import { productName } from '../../domain/display'
-import { evaluate } from '../../domain/requirements'
+import { BLOCKING, evaluate, WEIGHT } from '../../domain/requirements'
+import { fieldFromRequirement } from '../../import/normalize'
 import { parseNumber } from '../../domain/values'
 import { useI18n } from '../../i18n'
 import { useConfirm } from '../../ui/Dialog'
@@ -10,6 +11,9 @@ import { Glyph } from '../../ui/Glyph'
 import { CommitInput, CommitTextarea } from '../../ui/inputs'
 import { CheckMark } from '../../ui/Marks'
 import type { ProjectData } from './useProjectData'
+
+/** Target option that creates the field a requirement asks about. */
+const NEW_FIELD = '__new-field'
 
 const NUMERIC_OPS: ConditionOp[] = ['lte', 'lt', 'gte', 'gt', 'eq', 'neq']
 const TEXT_OPS: ConditionOp[] = ['contains', 'eq', 'neq']
@@ -29,13 +33,69 @@ export function RequirementsTab({ data, onOpen }: { data: ProjectData; onOpen: (
     groups.set(r.category, list)
   }
   const categories = [...new Set(requirements.map((r) => r.category).filter(Boolean))]
-  const move = (r: Requirement, delta: number) => {
-    const list = [...requirements]
-    const i = list.findIndex((x) => x.id === r.id)
-    const j = i + delta
-    if (j < 0 || j >= list.length) return
-    ;[list[i], list[j]] = [list[j], list[i]]
-    void reorder('requirements', list)
+  const confirm = useConfirm()
+  const { fmt } = useI18n()
+
+  // ---- moving rows: drag the handle (or arrow keys on it), also into another group ----
+  /** The rows as shown: grouped by category, in their stored order within each group. */
+  const ordered = [...groups.values()].flat()
+  const tbodyRef = useRef<HTMLTableSectionElement>(null)
+  const [drag, setDrag] = useState<{ id: string; target: string | null; after: boolean } | null>(null)
+  const moveTo = async (id: string, targetId: string, after: boolean) => {
+    const moving = ordered.find((r) => r.id === id)
+    const target = ordered.find((r) => r.id === targetId)
+    if (!moving || !target || id === targetId) return
+    const list = ordered.filter((r) => r.id !== id)
+    list.splice(list.findIndex((r) => r.id === targetId) + (after ? 1 : 0), 0, moving)
+    // Dropped among another group's rows, it joins that group.
+    if (moving.category !== target.category) await updateRequirement(moving, { category: target.category })
+    await reorder('requirements', list)
+  }
+  const moveBy = (r: Requirement, delta: -1 | 1) => {
+    const i = ordered.findIndex((x) => x.id === r.id)
+    const target = ordered[i + delta]
+    if (target) void moveTo(r.id, target.id, delta === 1)
+  }
+  const dragOver = (clientY: number) => {
+    if (!drag || !tbodyRef.current) return
+    const rows = [...tbodyRef.current.querySelectorAll<HTMLTableRowElement>('tr[data-id]')]
+    for (const tr of rows) {
+      const box = tr.getBoundingClientRect()
+      if (clientY < box.top + box.height / 2) return setDrag({ ...drag, target: tr.dataset.id!, after: false })
+    }
+    const last = rows[rows.length - 1]
+    if (last) setDrag({ ...drag, target: last.dataset.id!, after: true })
+  }
+  const dragProps = (r: Requirement): DragProps => ({
+    dragging: drag?.id === r.id,
+    drop: drag && drag.target === r.id && drag.target !== drag.id ? (drag.after ? 'after' : 'before') : null,
+    onStart: () => setDrag({ id: r.id, target: null, after: false }),
+    onMove: dragOver,
+    onEnd: () => {
+      if (drag?.target) void moveTo(drag.id, drag.target, drag.after)
+      setDrag(null)
+    },
+    onCancel: () => setDrag(null),
+    onKey: (delta) => moveBy(r, delta),
+  })
+
+  /** Sum of the soft weights, to show each requirement's share of the fit. */
+  const totalWeight = data.rules.reduce((n, r) => n + (WEIGHT[r.priority] ?? 0), 0)
+
+  /** An own price rule becomes the budget's maximum (≤) or minimum (≥), with its priority. */
+  const takeIntoBudget = async (r: Requirement) => {
+    const c = r.condition!
+    const value = typeof c.value === 'number' ? c.value : parseNumber(String(c.value ?? ''))
+    if (value === null) return
+    const max = c.op === 'lte' || c.op === 'lt'
+    const ok = await confirm({
+      title: m.budget.takeTitle(r.label),
+      text: m.budget.takeText(max ? m.budget.max : m.budget.min, fmt.money(value), m.priority[r.priority]),
+      confirmLabel: m.budget.take,
+    })
+    if (!ok) return
+    await updateProject(project.id, max ? { budget: value, budgetPriority: r.priority } : { budgetMin: value, budgetMinPriority: r.priority })
+    await deleteRequirement(r)
   }
 
   /** The comparison's own rules on the price (e.g. a "Budget" imported from Excel). */
@@ -92,16 +152,20 @@ export function RequirementsTab({ data, onOpen }: { data: ProjectData; onOpen: (
           <colgroup>
             <col style={{ width: 112 }} />
             <col style={{ width: 240 }} />
+            <col style={{ width: 84 }} />
             <col style={{ width: 330 }} />
             <col style={{ width: 130 }} />
             {/* Details take the rest of the width. */}
             <col />
-            <col style={{ width: 100 }} />
+            <col style={{ width: 84 }} />
           </colgroup>
           <thead>
             <tr>
               <th scope="col">{m.field.priority}</th>
               <th scope="col">{m.field.requirement}</th>
+              <th scope="col" title={m.check.fitHint}>
+                {m.requirements.weight}
+              </th>
               <th scope="col">{m.requirements.ruleColumn}</th>
               <th scope="col">{m.field.category}</th>
               <th scope="col">{m.field.description}</th>
@@ -110,9 +174,9 @@ export function RequirementsTab({ data, onOpen }: { data: ProjectData; onOpen: (
               </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody ref={tbodyRef}>
             <tr className="group">
-              <th colSpan={6} scope="colgroup">
+              <th colSpan={7} scope="colgroup">
                 {m.budget.title}
               </th>
             </tr>
@@ -122,6 +186,7 @@ export function RequirementsTab({ data, onOpen }: { data: ProjectData; onOpen: (
               hint={m.budget.maxHint}
               value={project.budget ?? null}
               priority={project.budgetPriority ?? 'must'}
+              totalWeight={totalWeight}
               onValue={(n) => updateProject(project.id, { budget: n })}
               onPriority={(p) => updateProject(project.id, { budgetPriority: p })}
             />
@@ -131,22 +196,32 @@ export function RequirementsTab({ data, onOpen }: { data: ProjectData; onOpen: (
               hint={m.budget.minHint}
               value={project.budgetMin ?? null}
               priority={project.budgetMinPriority ?? 'important'}
+              totalWeight={totalWeight}
               onValue={(n) => updateProject(project.id, { budgetMin: n })}
               onPriority={(p) => updateProject(project.id, { budgetMinPriority: p })}
             />
             {[...groups.entries()].map(([cat, list]) => [
               <tr className="group" key={`g-${cat}`}>
-                <th colSpan={6} scope="colgroup">
+                <th colSpan={7} scope="colgroup">
                   {cat || m.requirements.general}
                 </th>
               </tr>,
-              ...list.map((r) => <RequirementRow key={r.id} req={r} data={data} onMove={(d) => move(r, d)} />),
+              ...list.map((r) => <RequirementRow key={r.id} req={r} data={data} totalWeight={totalWeight} drag={dragProps(r)} />),
             ])}
           </tbody>
         </table>
       </div>
-      {(project.budget != null || project.budgetMin != null) && priceRules.length > 0 && (
-        <p className="small muted">{m.budget.ownPriceRule(priceRules.map((r) => r.label))}</p>
+      {priceRules.length > 0 && (
+        <div className="price-rules">
+          <p className="small muted">
+            {project.budget != null || project.budgetMin != null ? m.budget.ownPriceRule(priceRules.map((r) => r.label)) : m.budget.ownPriceRuleNoBudget}
+          </p>
+          {priceRules.map((r) => (
+            <button key={r.id} type="button" className="btn sm" onClick={() => takeIntoBudget(r)}>
+              {m.budget.takeButton(r.label)}
+            </button>
+          ))}
+        </div>
       )}
       {project.budget != null && project.budgetMin != null && project.budgetMin > project.budget && (
         <p className="small filter-error" role="alert">
@@ -166,6 +241,7 @@ function BudgetRow({
   hint,
   value,
   priority,
+  totalWeight,
   onValue,
   onPriority,
 }: {
@@ -174,6 +250,7 @@ function BudgetRow({
   hint: string
   value: number | null
   priority: Priority
+  totalWeight: number
   onValue: (n: number | null) => void
   onPriority: (p: Priority) => void
 }) {
@@ -186,6 +263,7 @@ function BudgetRow({
       <th scope="row" className="req-static">
         {label}
       </th>
+      <WeightCell priority={priority} total={totalWeight} />
       <td>
         <span className="rule-cell">
           <span className="muted">
@@ -231,7 +309,29 @@ function PrioritySelect({ value, onChange, label }: { value: Priority; onChange:
   )
 }
 
-function RequirementRow({ req, data, onMove }: { req: Requirement; data: ProjectData; onMove: (delta: number) => void }) {
+/** How much a requirement counts: must and exclusion filter; the others carry a share of the fit. */
+function WeightCell({ priority, total }: { priority: Priority; total: number }) {
+  const { m } = useI18n()
+  const w = WEIGHT[priority]
+  const text = BLOCKING.includes(priority) ? m.requirements.weightFilter : !w ? '–' : total ? `${w} · ${Math.round((100 * w) / total)} %` : String(w)
+  return (
+    <td className="weight-cell" title={m.check.fitHint}>
+      {text}
+    </td>
+  )
+}
+
+interface DragProps {
+  dragging: boolean
+  drop: 'before' | 'after' | null
+  onStart: () => void
+  onMove: (clientY: number) => void
+  onEnd: () => void
+  onCancel: () => void
+  onKey: (delta: -1 | 1) => void
+}
+
+function RequirementRow({ req, data, totalWeight, drag }: { req: Requirement; data: ProjectData; totalWeight: number; drag: DragProps }) {
   const { m } = useI18n()
   const confirm = useConfirm()
   const set = (patch: Partial<Requirement>) => updateRequirement(req, patch)
@@ -256,18 +356,32 @@ function RequirementRow({ req, data, onMove }: { req: Requirement; data: Project
     return set({ condition: { target, op, value: c?.value ?? '' } })
   }
 
+  // A field this requirement asks about but the comparison lacks ("Maximale Tiefe 40 cm" → Tiefe, cm).
+  const wanted = fieldFromRequirement(req.label, req.description)
+  const hasWanted = data.properties.some((p) => p.name.toLowerCase() === wanted.name.toLowerCase())
+  const createField = async () => {
+    const field = await addProperty(req.projectId, { name: wanted.name, type: 'number', unit: wanted.unit })
+    await set({ condition: { target: { kind: 'property', propertyId: field.id }, op: wanted.op ?? 'lte', value: wanted.value ?? '' } })
+  }
+
   return (
-    <tr>
+    <tr data-id={req.id} className={[drag.dragging && 'is-dragging', drag.drop && `drop-${drag.drop}`].filter(Boolean).join(' ') || undefined}>
       <td>
         <PrioritySelect value={req.priority} onChange={(p) => set({ priority: p })} label={named(m.field.priority)} />
       </td>
       <td>
         <CommitInput className="cell-input strong" value={req.label} onCommit={(v) => v.trim() && set({ label: v.trim() })} aria-label={m.field.requirement} />
       </td>
+      <WeightCell priority={req.priority} total={totalWeight} />
       <td>
         {req.priority === 'info' ? null : c ? (
           <span className="rule-cell">
-            <select className="cell-select" value={targetKey} onChange={(e) => setTarget(e.target.value)} aria-label={named(m.requirements.ruleTarget)}>
+            <select
+              className="cell-select"
+              value={targetKey}
+              onChange={(e) => (e.target.value === NEW_FIELD ? void createField() : setTarget(e.target.value))}
+              aria-label={named(m.requirements.ruleTarget)}
+            >
               <option value="price">{m.field.price}</option>
               {ruleProps.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -275,6 +389,7 @@ function RequirementRow({ req, data, onMove }: { req: Requirement; data: Project
                   {p.unit ? ` (${p.unit})` : ''}
                 </option>
               ))}
+              {!hasWanted && <option value={NEW_FIELD}>{m.requirements.newField(wanted.name, wanted.unit)}</option>}
             </select>
             <select
               className="cell-select"
@@ -316,6 +431,11 @@ function RequirementRow({ req, data, onMove }: { req: Requirement; data: Project
             <button className="link-btn small" onClick={() => setTarget(ruleProps.find((p) => p.type === 'number')?.id ?? 'price')}>
               + {m.requirements.addRule}
             </button>
+            {!hasWanted && wanted.value !== undefined && (
+              <button className="link-btn small" onClick={() => createField()}>
+                + {m.requirements.newField(wanted.name, wanted.unit)}
+              </button>
+            )}
           </span>
         )}
       </td>
@@ -341,11 +461,28 @@ function RequirementRow({ req, data, onMove }: { req: Requirement; data: Project
       </td>
       <td>
         <span className="row-actions">
-          <button className="icon-btn sm" onClick={() => onMove(-1)} aria-label={named(m.common.moveUp)} title={m.common.moveUp}>
-            <Glyph name="up" />
-          </button>
-          <button className="icon-btn sm" onClick={() => onMove(1)} aria-label={named(m.common.moveDown)} title={m.common.moveDown}>
-            <Glyph name="down" />
+          <button
+            type="button"
+            className="grip"
+            aria-label={m.reorder.handle(req.label)}
+            title={m.reorder.requirementHint}
+            aria-keyshortcuts="ArrowUp ArrowDown"
+            onPointerDown={(e) => {
+              if (e.button !== 0) return
+              e.preventDefault()
+              e.currentTarget.setPointerCapture(e.pointerId)
+              drag.onStart()
+            }}
+            onPointerMove={(e) => drag.onMove(e.clientY)}
+            onPointerUp={drag.onEnd}
+            onPointerCancel={drag.onCancel}
+            onKeyDown={(e) => {
+              if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return
+              e.preventDefault()
+              drag.onKey(e.key === 'ArrowUp' ? -1 : 1)
+            }}
+          >
+            <Glyph name="grip" />
           </button>
           <button
             className="icon-btn sm"
