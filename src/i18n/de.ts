@@ -301,6 +301,12 @@ export const de: Messages = {
     column: 'Tests & Erfahrungen',
     sources: (n) => `${n} ${n === 1 ? 'Quelle' : 'Quellen'}`,
   },
+  exclusion: {
+    category: 'Grund',
+    none: '— auswählen —',
+    details: 'Details (optional)',
+    categories: { looks: 'Optik', size: 'Maße', price: 'Preis', brand: 'Marke', shop: 'Shop', quality: 'Qualität', other: 'Sonstiges' },
+  },
   filter: {
     quick: 'Schnellfilter',
     fav: 'Favoriten',
@@ -328,7 +334,7 @@ export const de: Messages = {
       'Vergleichen mit = != < <= > >=, ~ (enthält), !~ (enthält nicht), IST LEER / IST NICHT LEER. Verknüpfen mit UND, ODER, NICHT und Klammern. Namen und Werte mit Leerzeichen in Anführungszeichen: "Offene Mitte" = ja. Englische Wörter gehen auch (AND, OR, NOT, IS EMPTY).',
     ownFields: 'Felder dieses Vergleichs (klicken zum Einfügen):',
     builtIn:
-      'Immer da: Name, Marke, Modell, Produktart, Variante, Preis, Händler, Gefunden von, Funddatum, Neu, Mein, Auswahl (offen / Favorit / ausgeschlossen), Geeignet, Eignung, Bewertung, Gekauft, Beschreibung, Kommentar, GTIN, MPN.',
+      'Immer da: Name, Marke, Modell, Produktart, Variante, Preis, Händler, Gefunden von, Funddatum, Neu, Mein, Auswahl (offen / Favorit / ausgeschlossen), Grund (Optik / Maße / Preis / Marke / Shop / Qualität / Sonstiges), Geeignet, Eignung, Bewertung, Gekauft, Beschreibung, Kommentar, GTIN, MPN.',
     examplesTitle: 'Beispiele (klicken zum Übernehmen):',
     examples: ['Preis < 800 UND NICHT Auswahl = ausgeschlossen', 'Auswahl = Favorit ODER Neu = ja', 'Marke IST LEER', 'Eignung >= 70 UND Geeignet = ja'],
   },

@@ -45,6 +45,7 @@ export function makeProduct(projectId: string, p: Partial<Product> = {}): Produc
     candidate: 'open',
     favoriteRank: null,
     exclusionReason: '',
+    exclusionCategory: '',
     ratings: [],
     votes: {},
     overall: '',

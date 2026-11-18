@@ -141,6 +141,20 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await expect.poll(() => picture.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0)
   await inside(picture, page.locator('.pimg-drop'))
 
+  // The picture grows on hover; Escape closes the large view, not the details.
+  await page.locator('.pimg-drop').hover()
+  await expect(page.locator('dialog .thumb-preview img')).toBeVisible()
+  await page.mouse.move(0, 0)
+  await expect(page.locator('.thumb-preview')).toHaveCount(0)
+
+  // Excluding asks for a kind of reason (filterable) and optional details.
+  await page.getByRole('button', { name: 'Excluded', exact: true }).click()
+  await page.getByRole('combobox', { name: 'Reason', exact: true }).selectOption('size')
+  await page.getByLabel('Details (optional)').fill('too deep')
+  await page.getByLabel('Details (optional)').press('Tab')
+  await page.getByRole('button', { name: 'Open', exact: true }).click()
+  await expect(page.getByRole('combobox', { name: 'Reason', exact: true })).toHaveValue('size')
+
   // Whoever adds a product found it.
   await expect(page.getByRole('combobox', { name: 'Found by' })).toHaveValue('Ada')
 

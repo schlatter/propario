@@ -43,6 +43,12 @@ describe('advanced filter', () => {
     expect(run('Eignung >= 80')).toHaveLength(3)
   })
 
+  it('filters by the kind of exclusion reason in either language', () => {
+    const out = [makeProduct('p', { model: 'Dora', candidate: 'excluded', exclusionCategory: 'size' }), ...products]
+    const c = compileQuery<Product>('Grund = Maße OR Reason = looks', fields)
+    expect(c.ok && out.filter(c.test).map((p) => p.model)).toEqual(['Dora'])
+  })
+
   it('treats missing values as in JQL: only IS EMPTY matches them', () => {
     expect(run('Farbe IST LEER')).toEqual(['Cleo'])
     expect(run('Farbe IS NOT EMPTY')).toEqual(['Arvika', 'Bo'])

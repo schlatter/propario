@@ -299,6 +299,12 @@ export const en = {
     column: 'Tests & reviews',
     sources: (n: number) => `${n} ${n === 1 ? 'source' : 'sources'}`,
   },
+  exclusion: {
+    category: 'Reason',
+    none: '— choose —',
+    details: 'Details (optional)',
+    categories: { looks: 'Looks', size: 'Size', price: 'Price', brand: 'Brand', shop: 'Shop', quality: 'Quality', other: 'Other' },
+  },
   filter: {
     quick: 'Quick filters',
     fav: 'Favourites',
@@ -326,7 +332,7 @@ export const en = {
       'Compare with = != < <= > >=, ~ (contains), !~ (does not contain), IS EMPTY / IS NOT EMPTY. Combine with AND, OR, NOT and brackets. Quote names and values with spaces: "Open middle" = yes. German words work too (UND, ODER, NICHT, IST LEER).',
     ownFields: 'This comparison’s fields (click to add):',
     builtIn:
-      'Always there: Name, Brand, Model, Type, Variant, Price, Retailer, Found by, Found on, New, Mine, Selection (open / favourite / excluded), Eligible, Fit, Rating, Purchased, Description, Comments, GTIN, MPN.',
+      'Always there: Name, Brand, Model, Type, Variant, Price, Retailer, Found by, Found on, New, Mine, Selection (open / favourite / excluded), Reason (looks / size / price / brand / shop / quality / other), Eligible, Fit, Rating, Purchased, Description, Comments, GTIN, MPN.',
     examplesTitle: 'Examples (click to use):',
     examples: ['Price < 800 AND NOT Selection = excluded', 'Selection = favourite OR New = yes', 'Brand IS EMPTY', 'Fit >= 70 AND Eligible = yes'],
   },

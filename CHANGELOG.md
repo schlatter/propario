@@ -6,6 +6,11 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- The product picture in the details grows on hover, keyboard focus or tap (Escape closes it).
+- Excluding a product asks for a kind of reason – looks, size, price, brand, shop, quality,
+  other – plus optional details; the reason can be filtered by (`Reason = size`).
+- A column with a requirement rule shows just `*` in its header; the rule is in the tooltip,
+  and a click still filters by it. Saves width.
 - **Filters:** quick chips (favourites, new, found by me, only eligible, hide excluded) and an
   advanced query for any field, in the spirit of Jira's JQL: `Width <= 90 AND (Colour ~ green OR
   Price < 800)`, with AND/OR/NOT, brackets, comparisons, "contains", IS EMPTY – in English or

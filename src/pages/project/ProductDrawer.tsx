@@ -1,5 +1,5 @@
 import { deleteProduct, duplicateProduct, setDecision, updateProduct, updateProject } from '../../db/repo'
-import type { Candidate, Product, PurchaseStatus, Rating } from '../../db/types'
+import { EXCLUSION_CATEGORIES, type Candidate, type ExclusionCategory, type Product, type PurchaseStatus, type Rating } from '../../db/types'
 import { productName } from '../../domain/display'
 import { lookupLinks } from '../../domain/lookup'
 import { evaluate, OP_SYMBOL } from '../../domain/requirements'
@@ -85,9 +85,7 @@ function DrawerContent({ data, product: p, onClose }: { data: ProjectData; produ
       <div className="drawer-body">
         {p.candidate === 'excluded' && (
           <div className="section">
-            <Field label={m.field.exclusionReason}>
-              <CommitInput className="input" value={p.exclusionReason} onCommit={(v) => set({ exclusionReason: v })} autoFocus />
-            </Field>
+            <ExclusionFields product={p} autoFocus />
           </div>
         )}
 
@@ -326,11 +324,7 @@ function DrawerContent({ data, product: p, onClose }: { data: ProjectData; produ
             <Field label={m.field.notes}>
               <CommitTextarea className="textarea" value={p.notes} onCommit={(v) => set({ notes: v })} />
             </Field>
-            {p.candidate !== 'excluded' && p.exclusionReason && (
-              <Field label={m.field.exclusionReason}>
-                <CommitInput className="input" value={p.exclusionReason} onCommit={(v) => set({ exclusionReason: v })} />
-              </Field>
-            )}
+            {p.candidate !== 'excluded' && (p.exclusionReason || p.exclusionCategory) && <ExclusionFields product={p} />}
           </div>
         </div>
 
@@ -468,6 +462,33 @@ function DrawerContent({ data, product: p, onClose }: { data: ProjectData; produ
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+/** Why a product is out: a kind of reason to filter by, and optional details in own words. */
+function ExclusionFields({ product: p, autoFocus }: { product: Product; autoFocus?: boolean }) {
+  const { m } = useI18n()
+  return (
+    <div className="grid-2">
+      <Field label={m.exclusion.category}>
+        <select
+          className="select"
+          value={p.exclusionCategory ?? ''}
+          autoFocus={autoFocus}
+          onChange={(e) => updateProduct(p, { exclusionCategory: e.target.value as ExclusionCategory | '' })}
+        >
+          <option value="">{m.exclusion.none}</option>
+          {EXCLUSION_CATEGORIES.map((c) => (
+            <option key={c} value={c}>
+              {m.exclusion.categories[c]}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <Field label={m.exclusion.details}>
+        <CommitInput className="input" value={p.exclusionReason} onCommit={(v) => updateProduct(p, { exclusionReason: v })} />
+      </Field>
     </div>
   )
 }

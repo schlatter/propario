@@ -63,3 +63,8 @@ export function filledLabels(filled: string[], m: Messages): string {
   const fields = m.field as Record<string, string>
   return filled.map((k) => fields[k] ?? k).join(', ')
 }
+
+/** "Optik · zu dunkel": the kind of reason and the details, whichever are there. */
+export function exclusionText(p: Pick<Product, 'exclusionReason' | 'exclusionCategory'>, m: Messages): string {
+  return [p.exclusionCategory ? m.exclusion.categories[p.exclusionCategory] : '', p.exclusionReason].filter(Boolean).join(' · ')
+}

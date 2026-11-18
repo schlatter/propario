@@ -18,6 +18,10 @@ export type Candidate = 'open' | 'favorite' | 'excluded'
 
 export type Vote = 'like' | 'dislike'
 
+/** Why a product was excluded, as a choice (filterable); details go into `exclusionReason`. */
+export type ExclusionCategory = 'looks' | 'size' | 'price' | 'brand' | 'shop' | 'quality' | 'other'
+export const EXCLUSION_CATEGORIES: ExclusionCategory[] = ['looks', 'size', 'price', 'brand', 'shop', 'quality', 'other']
+
 export type PurchaseStatus = 'none' | 'ordered' | 'purchased'
 
 export type Priority = 'must' | 'important' | 'wish' | 'bonus' | 'exclusion' | 'avoid' | 'info'
@@ -149,6 +153,8 @@ export interface Product {
   candidate: Candidate
   favoriteRank: number | null
   exclusionReason: string
+  /** Kind of reason ('' when none chosen). Absent in records from before 0.3. */
+  exclusionCategory?: ExclusionCategory | ''
   ratings: Rating[]
   /** Swipe mode: each account's quick verdict, keyed by account id. */
   votes: Record<string, Vote>

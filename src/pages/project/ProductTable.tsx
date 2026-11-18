@@ -2,7 +2,7 @@ import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { reorder, setProductValue, updateProduct, updateProject } from '../../db/repo'
 import type { Candidate, Product, PropertyDef, Requirement, TableView } from '../../db/types'
-import { avgStars, compareKeys, formatValue, isNew, productName, sortKey } from '../../domain/display'
+import { avgStars, compareKeys, exclusionText, formatValue, isNew, productName, sortKey } from '../../domain/display'
 import { cellCheck, OP_SYMBOL, requirementsByColumn, WEIGHT } from '../../domain/requirements'
 import { compileQuery } from '../../domain/query'
 import { queryFields } from '../../domain/query-fields'
@@ -310,15 +310,24 @@ export function ProductTable({
         true,
         false,
       ),
-      textCol(
-        'exclusionReason',
-        m.field.exclusionReason,
-        200,
-        (p) => p.exclusionReason,
-        (p, v) => updateProduct(p, { exclusionReason: v }),
-        true,
-        true,
-      ),
+      {
+        id: 'exclusionReason',
+        label: m.field.exclusionReason,
+        width: 200,
+        optional: true,
+        has: (p) => !!(p.exclusionReason || p.exclusionCategory),
+        sort: (p) => exclusionText(p, m).toLowerCase() || null,
+        render: (p) => (
+          <EditableCell
+            kind="text"
+            label={m.field.exclusionReason}
+            value={p.exclusionReason}
+            className="wrap"
+            display={exclusionText(p, m)}
+            onCommit={(v) => updateProduct(p, { exclusionReason: v })}
+          />
+        ),
+      },
       textCol(
         'productType',
         m.field.productType,
@@ -463,7 +472,9 @@ export function ProductTable({
       if (reqs && cellCheck(reqs, p, data.propMap) !== want) return false
     }
     if (!q) return true
-    const hay = [p.brand, p.model, p.retailer, p.comments, p.productType, p.variant, ...Object.values(p.values).map(String)].join(' ').toLowerCase()
+    const hay = [p.brand, p.model, p.retailer, p.comments, p.productType, p.variant, exclusionText(p, m), ...Object.values(p.values).map(String)]
+      .join(' ')
+      .toLowerCase()
     return hay.includes(q)
   })
   if (view.sort) {
@@ -1029,8 +1040,8 @@ function HeaderCell({
             aria-label={m.check.filterRule(check.rule, check.labels, check.filter)}
             title={m.check.filterRule(check.rule, check.labels, check.filter)}
           >
-            {check.rule}
-            {check.filter === 'pass' ? ' ✓' : check.filter === 'fail' ? ' ✕' : ''}
+            {/* Just a mark to save width; the rule itself is in the tooltip and the accessible name. */}
+            <span aria-hidden="true">*{check.filter === 'pass' ? '✓' : check.filter === 'fail' ? '✕' : ''}</span>
           </button>
         )}
         <span

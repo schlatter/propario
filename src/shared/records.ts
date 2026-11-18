@@ -8,7 +8,7 @@
  * deeper (per custom field / per requirement); `null` there removes the entry.
  */
 import { makeProduct, makeProject, makeProperty, makeRequirement } from '../db/factories.ts'
-import type { Product, Project, PropertyDef, Requirement } from '../db/types'
+import { EXCLUSION_CATEGORIES, type Product, type Project, type PropertyDef, type Requirement } from '../db/types.ts'
 import { UUID } from './ids.ts'
 import { SCALE_RANGE } from './review-scales.ts'
 
@@ -125,6 +125,7 @@ export function checkFields(kind: Kind, fields: Record<string, unknown>): string
     if ((key === 'id' || key === 'projectId') && !UUID.test(String(value))) return `field ${key} must be a UUID`
     if (URL_FIELDS.has(key) && value !== '' && !/^https?:\/\//i.test(String(value))) return `field ${key} must be an http(s) link`
     if (key === 'image' && value !== '' && !IMAGE_PATH.test(String(value))) return 'field image must point to this server'
+    if (key === 'exclusionCategory' && value !== '' && !(EXCLUSION_CATEGORIES as unknown[]).includes(value)) return 'field exclusionCategory is unknown'
     if (key === 'gtin' && value !== '' && !/^\d{1,14}$/.test(String(value))) return 'field gtin must be up to 14 digits'
     if (key === 'mpn' && String(value).length > 64) return 'field mpn is too long'
     if (key === 'priceDate' && value !== '' && !/^\d{4}-\d{2}-\d{2}$/.test(String(value))) return 'field priceDate must be yyyy-mm-dd'

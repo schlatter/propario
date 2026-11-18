@@ -39,7 +39,11 @@ export function Thumb({ src, alt, onClick, label }: { src: string | null; alt: s
   )
 }
 
-function Preview({ anchor, src, alt }: { anchor: HTMLElement; src: string; alt: string }) {
+/**
+ * Large image next to `anchor`, kept inside the viewport. Rendered into an open <dialog> when the
+ * anchor sits in one (the drawer), since a modal dialog lies above everything outside it.
+ */
+export function Preview({ anchor, src, alt, size = 300 }: { anchor: HTMLElement; src: string; alt: string; size?: number }) {
   const box = useRef<HTMLDivElement>(null)
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null)
 
@@ -57,10 +61,15 @@ function Preview({ anchor, src, alt }: { anchor: HTMLElement; src: string; alt: 
   }, [anchor])
 
   return createPortal(
-    <div ref={box} className="thumb-preview" role="presentation" style={pos ? { left: pos.left, top: pos.top } : { visibility: 'hidden' }}>
+    <div
+      ref={box}
+      className="thumb-preview"
+      role="presentation"
+      style={{ ...(pos ? { left: pos.left, top: pos.top } : { visibility: 'hidden' }), ['--preview' as string]: `${size}px` }}
+    >
       <img src={src} alt={alt} referrerPolicy="no-referrer" />
       {alt && <span className="thumb-caption">{alt}</span>}
     </div>,
-    document.body,
+    anchor.closest('dialog') ?? document.body,
   )
 }

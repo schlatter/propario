@@ -3,6 +3,7 @@ import type { ProjectBundle } from '../db/repo'
 import type { PropertyDef } from '../db/types'
 import { evaluate, OP_SYMBOL } from '../domain/requirements'
 import type { Messages } from '../i18n/en'
+import { exclusionText } from '../domain/display'
 
 /** Rule as text, readable by humans and by the importer ("Tiefe (cm) ≤ 40"). */
 export function ruleText(b: ProjectBundle, m: Messages, reqIndex: number): string {
@@ -67,7 +68,7 @@ export function bundleToWorkbook(b: ProjectBundle, m: Messages): XLSX.WorkBook {
       p.url,
       p.variant,
       m.candidate[p.candidate],
-      p.exclusionReason,
+      exclusionText(p, m),
       p.foundBy,
       ...b.properties.map((prop) => {
         const v = p.values[prop.id]

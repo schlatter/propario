@@ -2088,7 +2088,7 @@ table.map {
 .thumb-preview {
   position: fixed;
   z-index: 60;
-  width: 320px;
+  width: calc(var(--preview, 300px) + 20px);
   padding: 10px 10px 0;
   background: #fff;
   border: 1px solid var(--line-strong);
@@ -2099,8 +2099,8 @@ table.map {
 }
 .thumb-preview img {
   display: block;
-  width: 300px;
-  height: 300px;
+  width: var(--preview, 300px);
+  height: var(--preview, 300px);
   object-fit: contain;
 }
 .thumb-caption {
@@ -2863,14 +2863,16 @@ main.project-page {
 }
 .th-rule {
   flex: none;
-  border: 1px solid var(--line-strong);
-  background: var(--surface);
+  min-width: 18px;
+  border: 0;
+  background: none;
   color: var(--ink-2);
-  border-radius: 999px;
-  padding: 1px 7px;
+  border-radius: 4px;
+  padding: 0 3px;
   font: inherit;
-  font-size: 11px;
-  font-weight: 650;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.4;
   white-space: nowrap;
   cursor: pointer;
 }
@@ -2982,4 +2984,8 @@ main.project-page {
   .chip.toggle {
     min-height: 44px;
   }
+}
+
+.pimg-drop.zoomable {
+  cursor: zoom-in;
 }

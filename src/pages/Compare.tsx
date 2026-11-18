@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import type { Product } from '../db/types'
-import { avgStars, formatValue, productName } from '../domain/display'
+import { avgStars, exclusionText, formatValue, productName } from '../domain/display'
 import { evaluate, WEIGHT } from '../domain/requirements'
 import { reviewSummary } from '../domain/reviews'
 import { hostOf, safeHref } from '../domain/values'
@@ -142,7 +142,7 @@ export function ComparePage() {
         simple('pros', m.field.pros, (p) => p.pros),
         simple('cons', m.field.cons, (p) => p.cons),
         simple('comments', m.field.comments, (p) => p.comments),
-        simple('exclusionReason', m.field.exclusionReason, (p) => p.exclusionReason),
+        simple('exclusionReason', m.field.exclusionReason, (p) => exclusionText(p, m)),
       ],
     },
   ]
