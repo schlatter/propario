@@ -11,6 +11,21 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.4.1',
+    notes: {
+      en: [
+        'New in the details: “Update from shop page” – shows what is new and asks first.',
+        'The same link twice makes no second entry.',
+        'Selected products: update them from their shop pages or delete them.',
+      ],
+      de: [
+        'Neu in den Details: „Von der Shopseite aktualisieren“ – zeigt, was neu ist, und fragt vorher.',
+        'Derselbe Link zweimal ergibt keinen zweiten Eintrag.',
+        'Markierte Produkte: von den Shopseiten aktualisieren oder löschen.',
+      ],
+    },
+  },
+  {
     version: '0.4.0',
     notes: {
       en: [

@@ -6,6 +6,21 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+## 0.4.1 — 2026-11-18
+
+- **Update from the shop page:** a clear button in the product details reads the product page
+  again, shows what it would add – empty fields, a changed price, a missing picture – and takes
+  it after a yes. Before, "Load again" only fetched the picture file, never the page, so later
+  improvements of the import could not reach existing products.
+- **No duplicates:** adding a link that is already in the comparison (also with www, a trailing
+  slash or tracking parameters) makes no second entry; the existing one opens and Propario offers
+  what the page adds.
+- **Selected products** can be updated from their shop pages in one go (one page after the other,
+  with a summary of changed prices) or deleted – after asking twice.
+- The picture buttons say what they do: "Load picture from shop page", "Choose picture file".
+- Products known only by their link are named by the shop's address everywhere, also for screen
+  readers.
+
 ## 0.4.0 — 2026-11-18
 
 - **More from the shop page, without AI:** adding a product by link also takes its name, brand,
