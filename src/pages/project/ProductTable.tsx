@@ -4,6 +4,7 @@ import { reorder, setProductValue, updateProduct, updateProject } from '../../db
 import type { Candidate, Product, PropertyDef, TableView } from '../../db/types'
 import { avgStars, compareKeys, formatValue, productName, sortKey } from '../../domain/display'
 import { WEIGHT } from '../../domain/requirements'
+import { reviewSummary } from '../../domain/reviews'
 import { coerceValue, daysSince, hostOf, isTyped, parseNumber, safeHref, STALE_DAYS } from '../../domain/values'
 import { useI18n } from '../../i18n'
 import { ImageError, loadImages, missingImages, productImage } from '../../images'
@@ -184,6 +185,25 @@ export function ProductTable({
         },
       })
     }
+    cols.push({
+      id: 'reviews',
+      label: m.review.column,
+      width: 120,
+      align: 'right',
+      optional: true,
+      has: (p) => reviewSummary(p.reviews, 'product').sources > 0,
+      sort: (p) => reviewSummary(p.reviews, 'product').score,
+      render: (p) => {
+        const s = reviewSummary(p.reviews, 'product')
+        if (!s.sources) return null
+        return (
+          <button type="button" className="cell fit-cell" onClick={() => onOpen(p.id)}>
+            <span>{s.score}/100</span>
+            <span className="muted small">{m.review.sources(s.sources)}</span>
+          </button>
+        )
+      },
+    })
     cols.push({
       id: 'votes',
       label: m.swipe.column,

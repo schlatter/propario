@@ -13,6 +13,7 @@ import { Field } from '../ui/inputs'
 import { Stage } from '../ui/Marks'
 import { Menu } from '../ui/Menu'
 import { productName } from '../domain/display'
+import { openReturns } from '../domain/purchase'
 
 export function HomePage() {
   const { m } = useI18n()
@@ -151,6 +152,7 @@ function ProjectCard({ project, items, hits, onEdit }: { project: Project; items
   const image = productImage(decision) || productImage(favorite) || items.map(productImage).find(Boolean)
   const pick = decision ?? favorite
   const archived = project.status === 'archived'
+  const returns = openReturns(items)
 
   return (
     <article className={`card${archived ? ' archived' : ''}`}>
@@ -176,6 +178,12 @@ function ProjectCard({ project, items, hits, onEdit }: { project: Project; items
           {project.category && <span className="card-meta">· {project.category}</span>}
         </div>
         {hits > 0 && <span className="card-hits">{m.home.matchesIn(hits)}</span>}
+        {returns.length > 0 && (
+          <span className="card-return">
+            <span className="warn-dot" aria-hidden="true" />
+            {m.home.returnUntil(fmt.date(returns[0].until))}
+          </span>
+        )}
         <div className="card-pick">
           {pick ? (
             <>

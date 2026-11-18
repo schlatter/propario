@@ -3,6 +3,7 @@ import { Link, useParams, useSearchParams } from 'react-router-dom'
 import type { Product } from '../db/types'
 import { avgStars, formatValue, productName } from '../domain/display'
 import { evaluate, WEIGHT } from '../domain/requirements'
+import { reviewSummary } from '../domain/reviews'
 import { hostOf, safeHref } from '../domain/values'
 import { useI18n } from '../i18n'
 import { productImage } from '../images'
@@ -65,6 +66,13 @@ export function ComparePage() {
           cells: products.map((p) => (p.price !== null ? <span className={p.price === minPrice ? 'best' : ''}>{fmt.money(p.price)}</span> : p.priceNote)),
         },
         simple('retailer', m.field.retailer, (p) => p.retailer),
+        simple('reviews', m.review.column, (p) =>
+          (['product', 'shop'] as const)
+            .map((about) => ({ about, s: reviewSummary(p.reviews, about) }))
+            .filter(({ s }) => s.sources > 0)
+            .map(({ about, s }) => m.review.summary(m.review.about[about], s.score!, s.sources))
+            .join(' · '),
+        ),
         simple('candidate', m.field.candidate, (p) => m.candidate[p.candidate]),
         {
           key: 'rating',

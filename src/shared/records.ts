@@ -10,6 +10,7 @@
 import { makeProduct, makeProject, makeProperty, makeRequirement } from '../db/factories.ts'
 import type { Product, Project, PropertyDef, Requirement } from '../db/types'
 import { UUID } from './ids.ts'
+import { SCALE_RANGE } from '../domain/reviews.ts'
 
 export const KINDS = ['projects', 'products', 'properties', 'requirements'] as const
 export type Kind = (typeof KINDS)[number]
@@ -61,6 +62,41 @@ const MAX_JSON = 512 * 1024
 
 export const IMAGE_PATH = /^\/api\/images\/[0-9a-f-]{36}$/
 
+/** Shapes of the list entries inside a product: field → type ('number?' = number or null). */
+const ITEM_SHAPES: Record<string, Record<string, string>> = {
+  offers: { id: 'string', shop: 'string', price: 'number?', shipping: 'number?', date: 'string', url: 'string' },
+  reviews: { id: 'string', source: 'string', about: 'string', value: 'number?', scale: 'string', count: 'number?', date: 'string', url: 'string' },
+}
+const MAX_ITEMS = 50
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
+
+/** Checks the entries of `offers` or `reviews`: exactly the known fields, right types, sane values. */
+function checkItems(key: string, list: unknown[]): string | null {
+  const shape = ITEM_SHAPES[key]
+  if (list.length > MAX_ITEMS) return `${key}: at most ${MAX_ITEMS} entries`
+  for (const item of list) {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) return `${key}: entries must be objects`
+    const it = item as Record<string, unknown>
+    if (Object.keys(it).length !== Object.keys(shape).length) return `${key}: unexpected fields`
+    for (const [f, type] of Object.entries(shape)) {
+      const v = it[f]
+      const ok = type === 'number?' ? v === null || (typeof v === 'number' && Number.isFinite(v)) : typeof v === type
+      if (!ok) return `${key}.${f} must be ${type === 'number?' ? 'a number or null' : type}`
+      if (typeof v === 'string' && v.length > 500) return `${key}.${f} is too long`
+    }
+    if (!UUID.test(String(it.id))) return `${key}.id must be a UUID`
+    if (it.url !== '' && !/^https?:\/\//i.test(String(it.url))) return `${key}.url must be an http(s) link`
+    if (it.date !== '' && !ISO_DATE.test(String(it.date))) return `${key}.date must be yyyy-mm-dd`
+    if (key === 'offers' && ((it.price as number) < 0 || (it.shipping as number) < 0)) return 'offers: prices cannot be negative'
+    if (key === 'reviews') {
+      if (!Object.hasOwn(SCALE_RANGE, String(it.scale))) return 'reviews.scale is unknown'
+      if (it.about !== 'product' && it.about !== 'shop') return 'reviews.about must be product or shop'
+      if (it.count !== null && (!Number.isInteger(it.count) || (it.count as number) < 0)) return 'reviews.count must be a whole number'
+    }
+  }
+  return null
+}
+
 function kindOfValue(v: unknown) {
   return v === null ? 'null' : Array.isArray(v) ? 'array' : typeof v
 }
@@ -93,6 +129,16 @@ export function checkFields(kind: Kind, fields: Record<string, unknown>): string
     if (key === 'mpn' && String(value).length > 64) return 'field mpn is too long'
     if (key === 'priceDate' && value !== '' && !/^\d{4}-\d{2}-\d{2}$/.test(String(value))) return 'field priceDate must be yyyy-mm-dd'
     if (key === 'links' && !(value as unknown[]).every((l) => typeof l === 'string' && /^https?:\/\//i.test(l))) return 'links must be http(s)'
+    if (key in ITEM_SHAPES) {
+      const err = checkItems(key, value as unknown[])
+      if (err) return err
+    }
+    if (key === 'purchase') {
+      for (const d of ['returnUntil', 'warrantyUntil']) {
+        const v = (value as Record<string, unknown>)[d]
+        if (v !== undefined && (typeof v !== 'string' || (v !== '' && !ISO_DATE.test(v)))) return `purchase.${d} must be yyyy-mm-dd`
+      }
+    }
     if (key === 'votes' && !Object.entries(value as object).every(([k, v]) => UUID.test(k) && (v === 'like' || v === 'dislike')))
       return 'votes must be like or dislike per account'
     if (!checkStrings(value)) return `field ${key} is too large or too deep`

@@ -32,6 +32,8 @@ export function makeProduct(projectId: string, p: Partial<Product> = {}): Produc
     priceDate: '',
     gtin: '',
     mpn: '',
+    offers: [],
+    reviews: [],
     retailer: '',
     url: '',
     imageUrl: '',
@@ -49,7 +51,7 @@ export function makeProduct(projectId: string, p: Partial<Product> = {}): Produc
     pros: '',
     cons: '',
     notes: '',
-    purchase: { status: 'none', date: '', price: null, retailer: '', note: '' },
+    purchase: { status: 'none', date: '', price: null, retailer: '', note: '', returnUntil: '', warrantyUntil: '' },
     values: {},
     checks: {},
     links: [],
@@ -103,6 +105,8 @@ export function normalizeProduct(p: Partial<Product> & { id: string; projectId: 
     votes: p.votes ?? {},
     links: p.links ?? [],
     extra: p.extra ?? {},
+    offers: p.offers ?? [],
+    reviews: p.reviews ?? [],
   }
 }
 

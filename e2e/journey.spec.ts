@@ -146,6 +146,27 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await expect(page.getByLabel('GTIN / EAN')).toHaveValue('4006381333931')
   await expect(page.getByRole('link', { name: 'Geizhals' })).toHaveAttribute('href', 'https://geizhals.de/?fs=4006381333931')
   await expect(page.getByRole('link', { name: 'Stiftung Warentest' })).toHaveAttribute('rel', 'noopener noreferrer')
+  await expect(page.getByRole('link', { name: 'Amazon' })).toHaveAttribute('href', 'https://www.amazon.de/s?k=4006381333931')
+
+  // Offers: the first one starts from the product's price; a cheaper total becomes the price.
+  await page.getByRole('button', { name: '+ Offer' }).click()
+  await expect(page.getByLabel('Price, offer 1')).toHaveValue('249')
+  await page.getByRole('button', { name: '+ Offer' }).click()
+  await page.getByLabel('Shop, offer 2').fill('Shop B')
+  await page.getByLabel('Price, offer 2').fill('199')
+  await page.getByLabel('Shipping, offer 2').fill('5')
+  await page.getByLabel('Shipping, offer 2').press('Tab')
+  await expect(page.getByText('Best €204')).toBeVisible()
+  await expect(page.getByLabel('Price', { exact: true })).toHaveValue('204')
+
+  // An outside rating: a known source brings its scale, the value is converted to 0–100.
+  await page.getByRole('button', { name: '+ Source' }).click()
+  await page.getByLabel('Source, entry 1').fill('Amazon')
+  await page.getByLabel('Source, entry 1').press('Tab')
+  await expect(page.getByLabel('Scale, source 1')).toHaveValue('stars5')
+  await page.getByLabel('Rating, source 1').fill('4.5')
+  await page.getByLabel('Rating, source 1').press('Tab')
+  await expect(page.getByText('Product: 90/100 from 1 source')).toBeVisible()
   await accessible(page, 'product details')
   await page.keyboard.press('Escape')
 })

@@ -83,6 +83,39 @@ export interface Purchase {
   price: number | null
   retailer: string
   note: string
+  /** Last day to send it back, ISO date ('' when unknown). Absent in records from before 0.3. */
+  returnUntil?: string
+  /** End of the statutory warranty or a manufacturer guarantee, ISO date. Absent before 0.3. */
+  warrantyUntil?: string
+}
+
+/** One shop's offer for a product. The cheapest total (price + shipping) becomes the product's price. */
+export interface Offer {
+  id: string
+  shop: string
+  price: number | null
+  shipping: number | null
+  /** When the offer was seen, ISO date. */
+  date: string
+  url: string
+}
+
+/** How a source rates: 1–5 stars (higher is better), a German school grade 0.5–5.5 (lower is better), or 0–100 %. */
+export type ReviewScale = 'stars5' | 'grade' | 'percent'
+export const REVIEW_SCALES: ReviewScale[] = ['stars5', 'grade', 'percent']
+
+/** A rating from a source outside Propario, entered by hand (Stiftung Warentest, Amazon, Trustpilot …). */
+export interface Review {
+  id: string
+  source: string
+  /** Product reviews and shop reviews are shown apart and never averaged together. */
+  about: 'product' | 'shop'
+  value: number | null
+  scale: ReviewScale
+  /** Number of reviews behind the value, when the source says. */
+  count: number | null
+  date: string
+  url: string
 }
 
 export interface Product {
@@ -100,6 +133,10 @@ export interface Product {
   gtin: string
   /** Manufacturer part number ('' when unknown). */
   mpn: string
+  /** Offers from several shops. Absent in records from before 0.3 – read with `?? []`. */
+  offers: Offer[]
+  /** Ratings from outside sources. Absent in records from before 0.3 – read with `?? []`. */
+  reviews: Review[]
   retailer: string
   url: string
   imageUrl: string

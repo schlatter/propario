@@ -8,7 +8,7 @@ import type { Product } from '../db/types'
 import { isValidGtin } from '../shared/product-facts.ts'
 import { hostOf } from './values'
 
-export type LookupId = 'geizhals' | 'idealo' | 'warentest' | 'trustpilot'
+export type LookupId = 'geizhals' | 'idealo' | 'amazon' | 'warentest' | 'trustpilot'
 
 export interface LookupLink {
   id: LookupId
@@ -29,6 +29,8 @@ export function lookupLinks(p: Pick<Product, 'brand' | 'model' | 'gtin' | 'url'>
   if (exact) {
     links.push({ id: 'geizhals', href: `https://geizhals.de/?fs=${q(exact)}` })
     links.push({ id: 'idealo', href: `https://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q=${q(exact)}` })
+    // Many customer reviews; a plain search link, no partner tag.
+    links.push({ id: 'amazon', href: `https://www.amazon.de/s?k=${q(exact)}` })
   }
   if (name) links.push({ id: 'warentest', href: `https://www.test.de/suche/?q=${q(name)}` })
   const shop = hostOf(p.url ?? '')

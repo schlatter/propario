@@ -64,6 +64,16 @@ export const STALE_DAYS = 7
 /** Today in local time, ISO `yyyy-mm-dd`. */
 export const todayIso = () => dateToIso(new Date())
 
+/** An ISO date moved by whole days, months or years ('' stays ''). End of month is clamped (31.01. + 1 month = 28./29.02.). */
+export function shiftDate(iso: string, { days = 0, months = 0, years = 0 }: { days?: number; months?: number; years?: number }): string {
+  const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (!m) return ''
+  const y = +m[1] + years
+  const mo = +m[2] - 1 + months
+  const last = new Date(y, mo + 1, 0).getDate()
+  return dateToIso(new Date(y, mo, Math.min(+m[3], last) + days))
+}
+
 /** Whole days between an ISO date and `now` (local calendar days); null when there is no date. */
 export function daysSince(iso: string | undefined, now = new Date()): number | null {
   const m = iso?.match(/^(\d{4})-(\d{2})-(\d{2})$/)

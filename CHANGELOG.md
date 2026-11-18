@@ -6,6 +6,16 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- **Offers:** note several shops per product with price, shipping, date and link. The cheapest
+  total becomes the product's price, its date and shop – so requirements on the price, sorting
+  and "cheapest" keep working.
+- **Tests & reviews:** ratings from Stiftung Warentest, ÖKO-TEST, Amazon, idealo, Trustpilot or
+  any other source, entered by hand. Stars, school grades and percentages are converted to
+  0–100 and shown per source and as a plain average; product and shop ratings stay apart. A
+  sortable column and a row in the side-by-side view.
+- **Amazon** joins the "Check elsewhere" links (search by GTIN or name, no partner tag).
+- **Return and warranty dates** for bought products, suggested from the purchase date (14 days,
+  2 years) and editable; open return deadlines show on the start page.
 - **Check elsewhere:** each product links to Geizhals, idealo and Stiftung Warentest, and its
   shop to Trustpilot. Searches use the GTIN when known, otherwise brand and model. The links go
   straight to those sites; Propario fetches nothing and adds no tracking or affiliate codes.

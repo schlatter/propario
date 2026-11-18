@@ -18,8 +18,11 @@ candidates, their pictures, your ratings and the final decision.
 - **Pictures**: paste a shop link and Propario fetches the product picture once and keeps a
   small copy. A thumbnail sits in front of each name and grows on hover. Shops that refuse
   automated access are respected; paste or drop the picture instead.
-- **Check elsewhere**: links to price comparisons (Geizhals, idealo), Stiftung Warentest and
-  the shop on Trustpilot – by GTIN when known. No tracking or affiliate codes.
+- **Check elsewhere**: links to price comparisons (Geizhals, idealo), Amazon, Stiftung Warentest
+  and the shop on Trustpilot – by GTIN when known. No tracking or affiliate codes.
+- **Offers and outside ratings**: several shops per product (the cheapest total is the price),
+  and ratings from tests and reviews, converted to one scale; product and shop kept apart.
+  Entered by hand – Propario fetches no prices or ratings.
 - **Fit**: requirements weighted by priority, prices with the date they were seen.
 - **Side by side**: selected products next to each other, differences highlighted.
 - **Decide together**: favourites, exclusion reasons, star ratings and notes per person, pros and

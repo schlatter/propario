@@ -5,11 +5,12 @@
  */
 import { db, newId, nowIso, type AppDB } from './db'
 import { makeProduct, makeProject, makeProperty, makeRequirement } from './factories'
-import type { Product, Project, PropertyDef, Requirement } from './types'
+import type { Offer, Product, Project, PropertyDef, Requirement, Review } from './types'
 import { sanitize, type Change } from '../shared/records.ts'
 import { commit, setLocalRole } from '../sync'
 import { rehostImages } from '../images'
 import { todayIso } from '../domain/values'
+import { priceFromOffers } from '../domain/offers'
 
 /** All records belonging to one project. Used for duplicate, export and import. */
 export interface ProjectBundle {
@@ -139,6 +140,32 @@ export async function updateProduct(product: Product, fields: Partial<Product>) 
   await commit([patch('products', product, fields)])
 }
 
+/**
+ * List fields (offers, reviews) are stored as a whole. Edits of them run one after another and
+ * each starts from the current record, so quick edits of several entries do not undo each other.
+ */
+let listQueue: Promise<unknown> = Promise.resolve()
+function changeList(product: Product, change: (current: Product) => Partial<Product>): Promise<void> {
+  const run = listQueue.then(async () => {
+    const current = (await db.products.get(product.id)) ?? product
+    await updateProduct(current, change(current))
+  })
+  listQueue = run.catch(() => {})
+  return run
+}
+
+/** Changes a product's offers; the cheapest one becomes its price (see src/domain/offers.ts). */
+export function changeOffers(product: Product, fn: (offers: Offer[]) => Offer[]) {
+  return changeList(product, (p) => {
+    const offers = fn(p.offers ?? [])
+    return { offers, ...priceFromOffers(offers) }
+  })
+}
+
+export function changeReviews(product: Product, fn: (reviews: Review[]) => Review[]) {
+  return changeList(product, (p) => ({ reviews: fn(p.reviews ?? []) }))
+}
+
 /** Changes one custom value only, so two people editing different fields of a product do not collide. */
 export async function setProductValue(product: Product, propertyId: string, value: Product['values'][string]) {
   await commit([patch('products', product, { values: { [propertyId]: value === '' ? null : value } })])
@@ -146,7 +173,7 @@ export async function setProductValue(product: Product, propertyId: string, valu
 
 export async function duplicateProduct(product: Product): Promise<Product> {
   const { id: _id, createdAt: _c, updatedAt: _u, order: _o, ...rest } = product
-  return addProduct(product.projectId, { ...rest, purchase: { status: 'none', date: '', price: null, retailer: '', note: '' } })
+  return addProduct(product.projectId, { ...rest, purchase: makeProduct(product.projectId).purchase })
 }
 
 export async function deleteProduct(product: Product) {

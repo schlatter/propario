@@ -27,6 +27,7 @@ describe('lookup links', () => {
     const links = Object.fromEntries(lookupLinks(p).map((l) => [l.id, l.href]))
     expect(links.geizhals).toBe('https://geizhals.de/?fs=4006381333931')
     expect(links.idealo).toBe('https://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q=4006381333931')
+    expect(links.amazon).toBe('https://www.amazon.de/s?k=4006381333931')
     expect(links.warentest).toBe('https://www.test.de/suche/?q=Bosch%20Serie%206%20WAX32M40')
     expect(links.trustpilot).toBe('https://de.trustpilot.com/review/shop.example')
   })

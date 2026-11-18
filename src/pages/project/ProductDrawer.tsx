@@ -13,6 +13,8 @@ import { CommitInput, CommitTextarea, Field } from '../../ui/inputs'
 import { CheckMark, PriorityTag, Stars } from '../../ui/Marks'
 import { PropertyCell } from './ProductTable'
 import { ProductImage } from './ProductImage'
+import { OffersSection, ReviewsSection } from './SourcesSections'
+import { withPurchaseDate } from '../../domain/purchase'
 import { loadProductImage } from '../../images'
 import type { ProjectData } from './useProjectData'
 
@@ -208,6 +210,9 @@ function DrawerContent({ data, product: p, onClose }: { data: ProjectData; produ
           </div>
         )}
 
+        <OffersSection product={p} />
+        <ReviewsSection product={p} />
+
         <div className="section">
           <h3>{m.product.properties}</h3>
           {data.properties.length === 0 ? (
@@ -358,7 +363,7 @@ function DrawerContent({ data, product: p, onClose }: { data: ProjectData; produ
             {p.purchase.status !== 'none' && (
               <div className="grid-2">
                 <Field label={m.field.purchaseDate}>
-                  <CommitInput className="input" type="date" value={p.purchase.date} onCommit={(v) => set({ purchase: { ...p.purchase, date: v } })} />
+                  <CommitInput className="input" type="date" value={p.purchase.date} onCommit={(v) => set({ purchase: withPurchaseDate(p.purchase, v) })} />
                 </Field>
                 <Field label={m.field.purchasePrice}>
                   <CommitInput
@@ -374,7 +379,30 @@ function DrawerContent({ data, product: p, onClose }: { data: ProjectData; produ
                 <Field label={m.field.purchaseNote}>
                   <CommitInput className="input" value={p.purchase.note} onCommit={(v) => set({ purchase: { ...p.purchase, note: v } })} />
                 </Field>
+                <Field label={m.field.returnUntil}>
+                  <CommitInput
+                    className="input"
+                    type="date"
+                    value={p.purchase.returnUntil ?? ''}
+                    aria-describedby="purchase-dates"
+                    onCommit={(v) => set({ purchase: { ...p.purchase, returnUntil: v } })}
+                  />
+                </Field>
+                <Field label={m.field.warrantyUntil}>
+                  <CommitInput
+                    className="input"
+                    type="date"
+                    value={p.purchase.warrantyUntil ?? ''}
+                    aria-describedby="purchase-dates"
+                    onCommit={(v) => set({ purchase: { ...p.purchase, warrantyUntil: v } })}
+                  />
+                </Field>
               </div>
+            )}
+            {p.purchase.status !== 'none' && (
+              <p id="purchase-dates" className="muted small">
+                {m.product.purchaseDatesHint}
+              </p>
             )}
             {p.purchase.status === 'purchased' && p.purchase.price !== null && p.price !== null && p.purchase.price !== p.price && (
               <p className="muted small">

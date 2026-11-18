@@ -11,9 +11,11 @@ import {
   duplicateProject,
   loadBundle,
   setDecision,
+  changeOffers,
   setProductValue,
   updateProduct,
 } from '../src/db/repo'
+import { newId } from '../src/shared/ids'
 import { setMember } from '../server/store.ts'
 import { testServer } from './helpers/server'
 
@@ -93,6 +95,66 @@ describe('backup', () => {
     const [a, b] = await Promise.all([loadBundle(project.id), loadBundle(id)])
     expect(b!.products[0].id).not.toBe(a!.products[0].id)
     expect(b!.products).toHaveLength(1)
+  })
+
+  it('keeps offers, outside ratings and purchase dates through the server and a backup', async () => {
+    const { project, product } = await seed()
+    const stored = (await db.products.get(product.id))!
+    await changeOffers(stored, () => [
+      { id: newId(), shop: 'Shop A', price: 489, shipping: 19, date: '2026-11-10', url: 'https://a.example/p' },
+      { id: newId(), shop: 'Shop B', price: 499, shipping: 0, date: '2026-11-12', url: '' },
+    ])
+    let p = (await db.products.get(product.id))!
+    // The cheapest total becomes the product's price, its date and shop.
+    expect(p).toMatchObject({ price: 499, priceDate: '2026-11-12', retailer: 'Shop B' })
+    await updateProduct(p, {
+      reviews: [{ id: newId(), source: 'Amazon', about: 'product', value: 4.4, scale: 'stars5', count: 812, date: '2026-11-12', url: '' }],
+      purchase: { ...p.purchase, status: 'purchased', date: '2026-11-13', returnUntil: '2026-11-27', warrantyUntil: '2028-11-13' },
+    })
+
+    const file = parseBackup(JSON.stringify(await exportProject(project.id)))
+    if (!file.ok) throw new Error('parse failed')
+    await deleteProject(project.id)
+    await restoreReplace(file.file)
+    p = (await db.products.toArray())[0]
+    expect(p.offers.map((o) => o.shop)).toEqual(['Shop A', 'Shop B'])
+    expect(p.reviews[0]).toMatchObject({ source: 'Amazon', value: 4.4, count: 812 })
+    expect(p.purchase).toMatchObject({ returnUntil: '2026-11-27', warrantyUntil: '2028-11-13' })
+  })
+
+  it('quick edits of several offers do not undo each other', async () => {
+    const { product } = await seed()
+    const stale = (await db.products.get(product.id))!
+    const a = newId()
+    const b = newId()
+    // Three edits fired at once from the same (stale) render, as when tabbing through fields.
+    await Promise.all([
+      changeOffers(stale, (l) => [...l, { id: a, shop: 'A', price: null, shipping: null, date: '', url: '' }]),
+      changeOffers(stale, (l) => [...l, { id: b, shop: 'B', price: null, shipping: null, date: '', url: '' }]),
+      changeOffers(stale, (l) => l.map((o) => (o.id === a ? { ...o, price: 10 } : o))),
+    ])
+    const p = (await db.products.get(product.id))!
+    expect(p.offers.map((o) => [o.shop, o.price])).toEqual([
+      ['A', 10],
+      ['B', null],
+    ])
+    expect(p.price).toBe(10)
+  })
+
+  it('restores backups from before offers and ratings existed', async () => {
+    const { project } = await seed()
+    const file = (await exportProject(project.id))!
+    for (const p of file.products as unknown as Record<string, unknown>[]) {
+      delete p.offers
+      delete p.reviews
+      delete p.gtin
+    }
+    const parsed = parseBackup(JSON.stringify(file))
+    if (!parsed.ok) throw new Error('parse failed')
+    await deleteProject(project.id)
+    await restoreReplace(parsed.file)
+    const p = (await db.products.toArray())[0]
+    expect(p).toMatchObject({ offers: [], reviews: [], model: 'Arvika' })
   })
 
   it('rejects foreign or newer files', () => {

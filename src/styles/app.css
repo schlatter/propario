@@ -2760,3 +2760,55 @@ main.project-page {
   opacity: 0.3;
   cursor: default;
 }
+
+/* Offers and outside ratings in the product details: one small card per entry; fields wrap. */
+.entry {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  margin-bottom: 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
+  gap: 8px;
+  align-items: end;
+}
+.mini {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.mini > span {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.entry .input.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.mini.wide {
+  grid-column: span 2;
+}
+.entry-end {
+  grid-column: span 2;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+}
+.review-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0 0 8px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.card-return {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--ink-2);
+}

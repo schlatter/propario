@@ -60,6 +60,8 @@ happens.** Every change is measured against this list; `npm run verify` checks m
 - Facts read from a product page (GTIN, part number, price) are untrusted: only a GTIN with a
   valid check digit, a short plain part number and a euro amount pass, on the server and again
   in the browser (`src/shared/product-facts.ts`). They fill only empty fields.
+- Offers and outside ratings are checked entry by entry: exactly the known fields, numbers,
+  http(s) links, ISO dates, at most 50 entries per product (`checkItems` in `src/shared/records.ts`).
 - Links to other sites are built from a fixed list in the code (`src/domain/lookup.ts`) with
   encoded search terms, open with `noopener noreferrer`, and carry no tracking parameters.
 - Errors show a reference, never a stack trace; the log has the details.
