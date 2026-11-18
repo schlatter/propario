@@ -11,6 +11,23 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.5.0',
+    notes: {
+      en: [
+        'Every comparison has a budget – a must for every product.',
+        'Prices are shown against the budget or a reference product of your choice.',
+        'Side by side: best values green, worst red, with the distance to the best.',
+        'Excluded products in italics; more products join the side-by-side view.',
+      ],
+      de: [
+        'Jeder Vergleich hat ein Budget – ein Muss für jedes Produkt.',
+        'Preise erscheinen im Verhältnis zum Budget oder zu einem Referenzprodukt deiner Wahl.',
+        'Gegenüberstellung: beste Werte grün, schlechteste rot, mit Abstand zum besten.',
+        'Ausgeschlossene kursiv; weitere Produkte lassen sich zur Gegenüberstellung hinzufügen.',
+      ],
+    },
+  },
+  {
     version: '0.4.1',
     notes: {
       en: [

@@ -6,6 +6,23 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+## 0.5.0 — 2026-11-18
+
+- **Budget:** every comparison has one (Requirements tab). It counts as a must criterion for
+  every product – price ≤ budget – with tinted price cells, filters and the must count, without
+  writing a rule.
+- **Price reference:** the price column no longer just measures against the cheapest product. It
+  says "€50 under budget" or "€120 over budget", or – once a product is chosen as price reference
+  in its details – how much more or less each product costs than that one.
+- **Side by side, at a glance:** in every row of numbers the best value is green and the worst
+  red, the others show their distance to the best ("+€96 to the best"). Lower prices and higher
+  ratings, fit and test scores are better; for a field, its new setting "Smaller/Larger is
+  better" or its requirement rule decides. Fields without a direction show where each value lies
+  between the smallest and the largest. Yes/no shows ✓ and ✕.
+- More products join the side-by-side view with "+ Product".
+- Excluded products are set in italics in the table and side by side.
+- Fixed: the price cell told screen readers less than it shows.
+
 ## 0.4.1 — 2026-11-18
 
 - **Update from the shop page:** a clear button in the product details reads the product page
