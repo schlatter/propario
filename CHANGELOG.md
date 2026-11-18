@@ -6,6 +6,10 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- **Requirements as a table**, like the products: one compact row per requirement – priority,
+  requirement, automatic check, category, details – with fields that look like cells, groups as
+  slim rows and the budget as the first group. Far more fits on the screen; on phones the table
+  scrolls sideways.
 - **Budget, like a requirement:** at most and – optionally – at least, each with its own
   priority (at most is a must unless chosen otherwise, at least is important). Both count in the
   checks, the must count and the fit like any rule; the price says "€46 below the minimum". A

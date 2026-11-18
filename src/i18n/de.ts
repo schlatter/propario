@@ -467,6 +467,7 @@ export const de: Messages = {
     descriptionPlaceholder: 'Details oder Begründung',
     categoryPlaceholder: 'Kategorie',
     noRule: 'Wird manuell geprüft',
+    ruleColumn: 'Automatische Prüfung',
     ruleTarget: 'Feld',
     ruleValue: 'Wert',
     addRule: 'Automatische Prüfung hinzufügen',

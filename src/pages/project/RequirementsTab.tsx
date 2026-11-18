@@ -1,4 +1,4 @@
-import { useId, useState } from 'react'
+import { useState } from 'react'
 import { addRequirement, deleteRequirement, reorder, updateProduct, updateProject, updateRequirement } from '../../db/repo'
 import { PRIORITIES, type Condition, type ConditionOp, type Priority, type Requirement } from '../../db/types'
 import { productName } from '../../domain/display'
@@ -44,36 +44,7 @@ export function RequirementsTab({ data, onOpen }: { data: ProjectData; onOpen: (
   )
 
   return (
-    <div className="stack" style={{ gap: 20 }}>
-      <section className="req-group" aria-labelledby="budget-title">
-        <h3 id="budget-title">{m.budget.title}</h3>
-        <BudgetRow
-          label={m.budget.max}
-          sign="≤"
-          hint={m.budget.maxHint}
-          value={project.budget ?? null}
-          priority={project.budgetPriority ?? 'must'}
-          onValue={(n) => updateProject(project.id, { budget: n })}
-          onPriority={(p) => updateProject(project.id, { budgetPriority: p })}
-        />
-        <BudgetRow
-          label={m.budget.min}
-          sign="≥"
-          hint={m.budget.minHint}
-          value={project.budgetMin ?? null}
-          priority={project.budgetMinPriority ?? 'important'}
-          onValue={(n) => updateProject(project.id, { budgetMin: n })}
-          onPriority={(p) => updateProject(project.id, { budgetMinPriority: p })}
-        />
-        {(project.budget != null || project.budgetMin != null) && priceRules.length > 0 && (
-          <p className="small muted">{m.budget.ownPriceRule(priceRules.map((r) => r.label))}</p>
-        )}
-        {project.budget != null && project.budgetMin != null && project.budgetMin > project.budget && (
-          <p className="small filter-error" role="alert">
-            {m.budget.minAboveMax}
-          </p>
-        )}
-      </section>
+    <div className="stack" style={{ gap: 16 }}>
       <form
         className="quick-add"
         onSubmit={async (e) => {
@@ -116,28 +87,79 @@ export function RequirementsTab({ data, onOpen }: { data: ProjectData; onOpen: (
         </button>
       </form>
 
-      {requirements.length === 0 ? (
-        <div className="empty">{m.requirements.empty}</div>
-      ) : (
-        <>
-          <div>
-            {[...groups.entries()].map(([cat, list]) => (
-              <section className="req-group" key={cat || '_'}>
-                <h3>{cat || m.requirements.general}</h3>
-                {list.map((r) => (
-                  <RequirementRow key={r.id} req={r} data={data} onMove={(d) => move(r, d)} />
-                ))}
-              </section>
-            ))}
-          </div>
-          {data.products.length > 0 && data.checkable.length > 0 && <Matrix data={data} onOpen={onOpen} />}
-        </>
+      <div className="table-wrap">
+        <table className="grid req-table">
+          <colgroup>
+            <col style={{ width: 112 }} />
+            <col style={{ width: 240 }} />
+            <col style={{ width: 330 }} />
+            <col style={{ width: 130 }} />
+            {/* Details take the rest of the width. */}
+            <col />
+            <col style={{ width: 100 }} />
+          </colgroup>
+          <thead>
+            <tr>
+              <th scope="col">{m.field.priority}</th>
+              <th scope="col">{m.field.requirement}</th>
+              <th scope="col">{m.requirements.ruleColumn}</th>
+              <th scope="col">{m.field.category}</th>
+              <th scope="col">{m.field.description}</th>
+              <th scope="col">
+                <span className="sr-only">{m.common.actions}</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr className="group">
+              <th colSpan={6} scope="colgroup">
+                {m.budget.title}
+              </th>
+            </tr>
+            <BudgetRow
+              label={m.budget.max}
+              sign="≤"
+              hint={m.budget.maxHint}
+              value={project.budget ?? null}
+              priority={project.budgetPriority ?? 'must'}
+              onValue={(n) => updateProject(project.id, { budget: n })}
+              onPriority={(p) => updateProject(project.id, { budgetPriority: p })}
+            />
+            <BudgetRow
+              label={m.budget.min}
+              sign="≥"
+              hint={m.budget.minHint}
+              value={project.budgetMin ?? null}
+              priority={project.budgetMinPriority ?? 'important'}
+              onValue={(n) => updateProject(project.id, { budgetMin: n })}
+              onPriority={(p) => updateProject(project.id, { budgetMinPriority: p })}
+            />
+            {[...groups.entries()].map(([cat, list]) => [
+              <tr className="group" key={`g-${cat}`}>
+                <th colSpan={6} scope="colgroup">
+                  {cat || m.requirements.general}
+                </th>
+              </tr>,
+              ...list.map((r) => <RequirementRow key={r.id} req={r} data={data} onMove={(d) => move(r, d)} />),
+            ])}
+          </tbody>
+        </table>
+      </div>
+      {(project.budget != null || project.budgetMin != null) && priceRules.length > 0 && (
+        <p className="small muted">{m.budget.ownPriceRule(priceRules.map((r) => r.label))}</p>
       )}
+      {project.budget != null && project.budgetMin != null && project.budgetMin > project.budget && (
+        <p className="small filter-error" role="alert">
+          {m.budget.minAboveMax}
+        </p>
+      )}
+      {requirements.length === 0 && <p className="muted">{m.requirements.empty}</p>}
+      {data.products.length > 0 && data.checkable.length > 0 && <Matrix data={data} onOpen={onOpen} />}
     </div>
   )
 }
 
-/** One budget line, laid out like a requirement: its priority, an amount and what it means. */
+/** One budget line, as a row of the requirements: its priority, an amount and what it means. */
 function BudgetRow({
   label,
   sign,
@@ -156,50 +178,56 @@ function BudgetRow({
   onPriority: (p: Priority) => void
 }) {
   const { m } = useI18n()
-  const id = useId()
   return (
-    <div className="req budget">
-      <div className="prio-col">
-        <select
-          className="select"
-          value={priority}
-          onChange={(e) => onPriority(e.target.value as Priority)}
-          aria-label={`${m.field.priority}: ${label}`}
-          title={m.priorityHint[priority]}
-        >
-          {PRIORITIES.map((p) => (
-            <option key={p} value={p}>
-              {m.priority[p]}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="req-main">
-        <label className="budget-line" htmlFor={id}>
-          <span className="req-label-static">{label}</span>
-        </label>
-        <div className="rule">
+    <tr className="budget">
+      <td>
+        <PrioritySelect value={priority} onChange={onPriority} label={`${m.field.priority}: ${label}`} />
+      </td>
+      <th scope="row" className="req-static">
+        {label}
+      </th>
+      <td>
+        <span className="rule-cell">
           <span className="muted">
             {m.field.price} {sign}
           </span>
           <CommitInput
-            id={id}
-            className="input"
+            className="cell-input num"
             inputMode="decimal"
             value={value !== null ? String(value) : ''}
-            aria-describedby={`${id}-hint`}
+            aria-label={label}
             onCommit={(v) => {
               const n = parseNumber(v)
               onValue(n !== null && n >= 0 ? n : null)
             }}
           />
           <span className="muted">€</span>
-        </div>
-        <p id={`${id}-hint`} className="muted small">
-          {hint}
-        </p>
-      </div>
-    </div>
+        </span>
+      </td>
+      <td />
+      <td className="muted small req-static">{hint}</td>
+      <td />
+    </tr>
+  )
+}
+
+/** The priority as a compact select whose colour says how much it counts. */
+function PrioritySelect({ value, onChange, label }: { value: Priority; onChange: (p: Priority) => void; label: string }) {
+  const { m } = useI18n()
+  return (
+    <select
+      className={`cell-select prio-${value}`}
+      value={value}
+      onChange={(e) => onChange(e.target.value as Priority)}
+      aria-label={label}
+      title={m.priorityHint[value]}
+    >
+      {PRIORITIES.map((p) => (
+        <option key={p} value={p}>
+          {m.priority[p]}
+        </option>
+      ))}
+    </select>
   )
 }
 
@@ -218,6 +246,7 @@ function RequirementRow({ req, data, onMove }: { req: Requirement; data: Project
       : prop?.type === 'boolean'
         ? BOOL_OPS
         : TEXT_OPS
+  const named = (what: string) => `${what}: ${req.label}`
 
   const setTarget = (key: string) => {
     if (!key) return set({ condition: null })
@@ -228,112 +257,109 @@ function RequirementRow({ req, data, onMove }: { req: Requirement; data: Project
   }
 
   return (
-    <div className="req">
-      <div className="prio-col stack" style={{ gap: 6 }}>
-        <select
-          className="select"
-          value={req.priority}
-          onChange={(e) => set({ priority: e.target.value as Priority })}
-          aria-label={m.field.priority}
-          title={m.priorityHint[req.priority]}
-        >
-          {PRIORITIES.map((p) => (
-            <option key={p} value={p}>
-              {m.priority[p]}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="req-main">
-        <CommitInput className="req-label" value={req.label} onCommit={(v) => v.trim() && set({ label: v.trim() })} aria-label={m.field.requirement} />
+    <tr>
+      <td>
+        <PrioritySelect value={req.priority} onChange={(p) => set({ priority: p })} label={named(m.field.priority)} />
+      </td>
+      <td>
+        <CommitInput className="cell-input strong" value={req.label} onCommit={(v) => v.trim() && set({ label: v.trim() })} aria-label={m.field.requirement} />
+      </td>
+      <td>
+        {req.priority === 'info' ? null : c ? (
+          <span className="rule-cell">
+            <select className="cell-select" value={targetKey} onChange={(e) => setTarget(e.target.value)} aria-label={named(m.requirements.ruleTarget)}>
+              <option value="price">{m.field.price}</option>
+              {ruleProps.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                  {p.unit ? ` (${p.unit})` : ''}
+                </option>
+              ))}
+            </select>
+            <select
+              className="cell-select"
+              value={c.op}
+              onChange={(e) => set({ condition: { ...c, op: e.target.value as ConditionOp } })}
+              aria-label={named(m.field.rule)}
+            >
+              {ops.map((o) => (
+                <option key={o} value={o}>
+                  {m.op[o]}
+                </option>
+              ))}
+            </select>
+            {c.op !== 'isTrue' && c.op !== 'isFalse' && (
+              <CommitInput
+                className="cell-input num"
+                value={c.value === undefined ? '' : String(c.value)}
+                aria-label={named(m.requirements.ruleValue)}
+                type={prop?.type === 'date' ? 'date' : 'text'}
+                onCommit={(v) => {
+                  const n = parseNumber(v)
+                  void set({ condition: { ...c, value: ops === NUMERIC_OPS && n !== null ? n : v } })
+                }}
+              />
+            )}
+            {(c.target.kind === 'price' ? '€' : prop?.unit) && <span className="muted">{c.target.kind === 'price' ? '€' : prop?.unit}</span>}
+            <button
+              className="icon-btn sm"
+              onClick={() => set({ condition: null })}
+              aria-label={named(m.requirements.removeRule)}
+              title={m.requirements.removeRule}
+            >
+              <Glyph name="close" />
+            </button>
+          </span>
+        ) : (
+          <span className="rule-cell">
+            <span className="muted small">{m.requirements.noRule}</span>
+            <button className="link-btn small" onClick={() => setTarget(ruleProps.find((p) => p.type === 'number')?.id ?? 'price')}>
+              + {m.requirements.addRule}
+            </button>
+          </span>
+        )}
+      </td>
+      <td>
+        <CommitInput
+          className="cell-input"
+          list="req-categories"
+          value={req.category}
+          placeholder={m.requirements.general}
+          onCommit={(v) => set({ category: v.trim() })}
+          aria-label={named(m.field.category)}
+        />
+      </td>
+      <td>
         <CommitTextarea
-          className="req-desc"
+          className="cell-input"
           rows={1}
           value={req.description}
           placeholder={m.requirements.descriptionPlaceholder}
           onCommit={(v) => set({ description: v })}
-          aria-label={m.field.description}
+          aria-label={named(m.field.description)}
         />
-        {req.priority !== 'info' && (
-          <div className="rule">
-            {c ? (
-              <>
-                <select className="select" value={targetKey} onChange={(e) => setTarget(e.target.value)} aria-label={m.requirements.ruleTarget}>
-                  <option value="price">{m.field.price}</option>
-                  {ruleProps.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                      {p.unit ? ` (${p.unit})` : ''}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  className="select"
-                  value={c.op}
-                  onChange={(e) => set({ condition: { ...c, op: e.target.value as ConditionOp } })}
-                  aria-label={m.field.rule}
-                >
-                  {ops.map((o) => (
-                    <option key={o} value={o}>
-                      {m.op[o]}
-                    </option>
-                  ))}
-                </select>
-                {c.op !== 'isTrue' && c.op !== 'isFalse' && (
-                  <CommitInput
-                    className="input"
-                    value={c.value === undefined ? '' : String(c.value)}
-                    aria-label={m.requirements.ruleValue}
-                    type={prop?.type === 'date' ? 'date' : 'text'}
-                    onCommit={(v) => {
-                      const n = parseNumber(v)
-                      void set({ condition: { ...c, value: ops === NUMERIC_OPS && n !== null ? n : v } })
-                    }}
-                  />
-                )}
-                {(c.target.kind === 'price' ? '€' : prop?.unit) && <span className="muted">{c.target.kind === 'price' ? '€' : prop?.unit}</span>}
-                <button className="btn ghost sm" onClick={() => set({ condition: null })}>
-                  {m.requirements.removeRule}
-                </button>
-              </>
-            ) : (
-              <>
-                <span className="muted">{m.requirements.noRule}</span>
-                <button className="btn ghost sm" onClick={() => setTarget(ruleProps.find((p) => p.type === 'number')?.id ?? 'price')}>
-                  + {m.requirements.addRule}
-                </button>
-              </>
-            )}
-          </div>
-        )}
-      </div>
-      <div className="row" style={{ gap: 0, flexWrap: 'nowrap' }}>
-        <CommitInput
-          className="req-cat"
-          style={{ width: 110 }}
-          value={req.category}
-          placeholder={m.field.category}
-          onCommit={(v) => set({ category: v.trim() })}
-          aria-label={m.field.category}
-        />
-        <button className="icon-btn sm" onClick={() => onMove(-1)} aria-label={m.common.moveUp} title={m.common.moveUp}>
-          <Glyph name="up" />
-        </button>
-        <button className="icon-btn sm" onClick={() => onMove(1)} aria-label={m.common.moveDown} title={m.common.moveDown}>
-          <Glyph name="down" />
-        </button>
-        <button
-          className="icon-btn sm"
-          aria-label={m.common.delete}
-          title={m.common.delete}
-          onClick={async () => {
-            if (await confirm({ title: m.requirements.deleteTitle(req.label), confirmLabel: m.common.delete, danger: true })) await deleteRequirement(req)
-          }}
-        >
-          <Glyph name="trash" />
-        </button>
-      </div>
-    </div>
+      </td>
+      <td>
+        <span className="row-actions">
+          <button className="icon-btn sm" onClick={() => onMove(-1)} aria-label={named(m.common.moveUp)} title={m.common.moveUp}>
+            <Glyph name="up" />
+          </button>
+          <button className="icon-btn sm" onClick={() => onMove(1)} aria-label={named(m.common.moveDown)} title={m.common.moveDown}>
+            <Glyph name="down" />
+          </button>
+          <button
+            className="icon-btn sm"
+            aria-label={named(m.common.delete)}
+            title={m.common.delete}
+            onClick={async () => {
+              if (await confirm({ title: m.requirements.deleteTitle(req.label), confirmLabel: m.common.delete, danger: true })) await deleteRequirement(req)
+            }}
+          >
+            <Glyph name="trash" />
+          </button>
+        </span>
+      </td>
+    </tr>
   )
 }
 

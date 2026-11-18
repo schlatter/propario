@@ -461,6 +461,7 @@ export const en = {
     descriptionPlaceholder: 'Details or reasoning',
     categoryPlaceholder: 'Category',
     noRule: 'Checked manually',
+    ruleColumn: 'Automatic check',
     ruleTarget: 'Field',
     ruleValue: 'Value',
     addRule: 'Add automatic check',

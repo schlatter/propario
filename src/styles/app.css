@@ -1564,96 +1564,6 @@ textarea.cell-editor {
 }
 
 /* ---------- requirements ---------- */
-.req-group h3 {
-  margin: 18px 0 8px;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--muted);
-  font-family: var(--font-ui);
-  font-weight: 700;
-}
-.req {
-  display: grid;
-  grid-template-columns: 120px minmax(0, 1fr) auto;
-  gap: 10px 14px;
-  align-items: start;
-  padding: 12px 14px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  margin-bottom: 8px;
-}
-.req-main {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-}
-.req-label {
-  border: 0;
-  background: transparent;
-  font-weight: 650;
-  padding: 2px 4px;
-  margin-left: -4px;
-  border-radius: 4px;
-  width: 100%;
-}
-.req-desc {
-  border: 0;
-  background: transparent;
-  color: var(--ink-2);
-  padding: 2px 4px;
-  margin-left: -4px;
-  border-radius: 4px;
-  width: 100%;
-  font-size: 14px;
-  resize: none;
-  field-sizing: content;
-  min-height: 1.5em;
-}
-.req-label:hover,
-.req-desc:hover,
-.req-cat:hover {
-  background: var(--sunken);
-}
-.req-cat {
-  border: 0;
-  background: transparent;
-  font-size: 12px;
-  color: var(--muted);
-  padding: 2px 4px;
-  margin-left: -4px;
-  border-radius: 4px;
-  width: 100%;
-}
-.rule {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  align-items: center;
-  font-size: 13px;
-}
-.rule .select,
-.rule .input {
-  width: auto;
-  min-height: 30px;
-  padding-top: 2px;
-  padding-bottom: 2px;
-  font-size: 13px;
-}
-.rule .input {
-  width: 110px;
-}
-@media (max-width: 720px) {
-  .req {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-  .req > .prio-col {
-    grid-column: 1 / -1;
-  }
-}
-
 .matrix-wrap {
   overflow: auto;
   max-height: 70vh;
@@ -3211,13 +3121,109 @@ main.project-page {
   background: color-mix(in srgb, var(--new) 15%, transparent);
 }
 
-/* Budget lines in the requirements: like a requirement, with an amount instead of a text. */
-.req.budget .req-label-static {
+/* Requirements as a table, like the products: one compact row each; fields look like cells and
+   show a frame only on hover or while edited. It fills the width; on phones it scrolls sideways. */
+table.grid.req-table {
+  width: 100%;
+  min-width: 860px;
+}
+.req-table td,
+.req-table th {
+  vertical-align: middle;
+}
+.req-table thead th {
+  padding: 0 10px;
+}
+.req-table tr.group th {
+  height: 30px;
+  padding: 0 10px;
+  background: var(--sunken);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: left;
+}
+.req-table .req-static {
+  padding: 6px 10px;
+  font-weight: 650;
+  text-align: left;
+}
+.req-table td.muted.req-static,
+.req-table td.small.req-static {
+  font-weight: 400;
+}
+.cell-input,
+.cell-select {
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  resize: none;
+}
+textarea.cell-input {
+  overflow: hidden;
+  line-height: 1.35;
+}
+textarea.cell-input:focus {
+  overflow: auto;
+  min-height: 72px;
+}
+.cell-input:hover,
+.cell-select:hover {
+  border-color: var(--line);
+}
+.cell-input:focus,
+.cell-select:focus {
+  outline: none;
+  border-color: var(--focus);
+  background: var(--surface);
+}
+.cell-input.strong {
   font-weight: 650;
 }
-.req.budget .rule .input {
-  width: 120px;
+.cell-input.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
-.req.budget p {
-  margin: 4px 0 0;
+.rule-cell {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 4px;
+  min-height: 40px;
+}
+.rule-cell .cell-select {
+  width: auto;
+  min-width: 0;
+  max-width: 150px;
+  padding: 6px 4px;
+}
+.rule-cell .cell-input {
+  width: 80px;
+  flex: none;
+}
+.rule-cell .muted {
+  padding: 0 4px;
+  white-space: nowrap;
+}
+.row-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 4px;
+}
+/* Priority colours, as in the requirement tags. */
+.cell-select.prio-must,
+.cell-select.prio-exclusion {
+  font-weight: 700;
+}
+.cell-select.prio-info {
+  color: var(--muted);
 }
