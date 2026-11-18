@@ -36,6 +36,9 @@ interface Col {
   align?: 'right' | 'center'
 }
 
+/** Colour of the selection: open grey, favourite green, excluded red. */
+const PILL: Record<Candidate, string> = { open: '', favorite: 'fav', excluded: 'excl' }
+
 /** Appends a field to a query, quoted when it has spaces or signs: `… AND "Offene Mitte" `. */
 function addClause(query: string, name: string): string {
   const field = /^[\p{L}\p{N}_.-]+$/u.test(name) ? name : `"${name.replace(/"/g, '')}"`
@@ -166,19 +169,34 @@ export function ProductTable({
         width: 128,
         sort: (p) => ({ favorite: 0, open: 1, excluded: 2 })[p.candidate],
         render: (p) => (
-          <EditableCell
-            kind="select"
-            label={m.field.candidate}
-            value={m.candidate[p.candidate]}
-            options={[m.candidate.open, m.candidate.favorite, m.candidate.excluded]}
-            display={
-              <span className={`pill${p.candidate === 'favorite' ? ' fav' : p.candidate === 'excluded' ? ' excl' : ''}`}>{m.candidate[p.candidate]}</span>
+          <Menu
+            floating
+            label={`${m.field.candidate}: ${m.candidate[p.candidate]}`}
+            className="cell candidate-trigger"
+            listClassName="candidate-menu"
+            trigger={
+              <span className={`pill ${PILL[p.candidate]}`}>
+                {m.candidate[p.candidate]}
+                <Glyph name="down" />
+              </span>
             }
-            onCommit={(v) => {
-              const c = (Object.keys(m.candidate) as Candidate[]).find((k) => m.candidate[k] === v) ?? 'open'
-              void updateProduct(p, { candidate: c })
-            }}
-          />
+          >
+            {(close) =>
+              (['open', 'favorite', 'excluded'] as Candidate[]).map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  aria-pressed={p.candidate === c}
+                  onClick={() => {
+                    close()
+                    if (c !== p.candidate) void updateProduct(p, { candidate: c })
+                  }}
+                >
+                  <span className={`pill ${PILL[c]}`}>{m.candidate[c]}</span>
+                </button>
+              ))
+            }
+          </Menu>
         ),
       },
       {

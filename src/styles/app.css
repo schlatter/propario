@@ -590,9 +590,8 @@ svg.glyph {
   color: var(--fav);
 }
 .pill.excl {
-  background: var(--unknown-soft);
-  color: var(--muted);
-  text-decoration: line-through;
+  background: var(--fail-soft);
+  color: var(--fail);
 }
 .pill.pass {
   background: var(--pass-soft);
@@ -3068,4 +3067,33 @@ main.project-page {
 .opts.row {
   align-items: center;
   gap: 10px;
+}
+
+/* Selection in the table: the pill opens a small menu of pills. */
+.cell.candidate-trigger {
+  cursor: pointer;
+  padding-top: 10px;
+}
+.candidate-trigger .pill {
+  gap: 4px;
+}
+.candidate-trigger .pill svg {
+  width: 10px;
+  height: 10px;
+  opacity: 0.7;
+}
+.menu-list.candidate-menu {
+  min-width: 150px;
+}
+.candidate-menu > button[aria-pressed='true'] {
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+/* Excluded rows: a faint red wash – visible at a glance, never loud. Selection still wins. */
+.grid tbody tr.is-excluded td:not(.req-pass):not(.req-fail),
+.grid tbody tr.is-excluded:hover td:not(.req-pass):not(.req-fail) {
+  background: color-mix(in srgb, var(--fail-soft) 55%, var(--surface));
+}
+.grid tbody tr.is-excluded.is-selected td {
+  background: var(--selected);
 }

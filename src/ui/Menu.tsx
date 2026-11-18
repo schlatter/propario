@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 
 /** Small disclosure menu. Closes on outside click, Escape and after an action. */
 export function Menu({
@@ -8,6 +8,7 @@ export function Menu({
   className = 'icon-btn',
   listClassName = '',
   scroll,
+  floating,
 }: {
   label: string
   trigger: ReactNode
@@ -15,8 +16,11 @@ export function Menu({
   className?: string
   listClassName?: string
   scroll?: boolean
+  /** Opens fixed to the viewport, for triggers inside containers that clip (table cells). */
+  floating?: boolean
 }) {
   const [open, setOpen] = useState(false)
+  const [place, setPlace] = useState<CSSProperties | undefined>()
   const ref = useRef<HTMLDivElement>(null)
   const btn = useRef<HTMLButtonElement>(null)
   const id = useId()
@@ -31,13 +35,35 @@ export function Menu({
         btn.current?.focus()
       }
     }
+    // A floating list would drift away from its trigger when the page scrolls it away: close it
+    // then – but not for a scroll that leaves the trigger where it was.
+    const start = btn.current?.getBoundingClientRect()
+    const onScroll = () => {
+      if (!floating || !start || !btn.current) return
+      const now = btn.current.getBoundingClientRect()
+      if (Math.abs(now.top - start.top) > 2 || Math.abs(now.left - start.left) > 2) setOpen(false)
+    }
     document.addEventListener('mousedown', onDown)
     document.addEventListener('keydown', onKey)
+    window.addEventListener('scroll', onScroll, true)
     return () => {
       document.removeEventListener('mousedown', onDown)
       document.removeEventListener('keydown', onKey)
+      window.removeEventListener('scroll', onScroll, true)
     }
-  }, [open])
+  }, [open, floating])
+  useLayoutEffect(() => {
+    if (!open || !floating || !btn.current) return setPlace(undefined)
+    const r = btn.current.getBoundingClientRect()
+    // Below the trigger, or above it when there is no room below.
+    const below = window.innerHeight - r.bottom > 180
+    setPlace({
+      position: 'fixed',
+      left: Math.max(8, r.left),
+      right: 'auto',
+      ...(below ? { top: r.bottom + 4 } : { top: 'auto', bottom: window.innerHeight - r.top + 4 }),
+    })
+  }, [open, floating])
   return (
     <div className="menu" ref={ref}>
       <button
@@ -57,7 +83,12 @@ export function Menu({
         {trigger}
       </button>
       {open && (
-        <div className={`menu-list${scroll ? ' scroll' : ''}${listClassName ? ` ${listClassName}` : ''}`} id={id} onClick={(e) => e.stopPropagation()}>
+        <div
+          className={`menu-list${scroll ? ' scroll' : ''}${listClassName ? ` ${listClassName}` : ''}`}
+          id={id}
+          style={place}
+          onClick={(e) => e.stopPropagation()}
+        >
           {children(() => setOpen(false))}
         </div>
       )}

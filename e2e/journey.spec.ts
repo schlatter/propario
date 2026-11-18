@@ -205,6 +205,16 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await addLink('https://www.shop.example/regal-1.html/?utm_source=mail')
   await expect.poll(countRows).toBe(2)
 
+  // The selection opens as a small menu of coloured choices; an excluded row is washed in red.
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page.getByRole('button', { name: 'Selection: Open' }).last().click()
+  await page.locator('.candidate-menu').getByRole('button', { name: 'Excluded' }).click()
+  await expect(page.locator('tr.is-excluded')).toHaveCount(1)
+  await accessible(page, 'excluded row')
+  await page.getByRole('button', { name: 'Selection: Excluded' }).click()
+  await page.locator('.candidate-menu').getByRole('button', { name: 'Open' }).click()
+  await expect(page.locator('tr.is-excluded')).toHaveCount(0)
+
   // Selected products can be deleted – after asking twice.
   await page.getByRole('checkbox', { name: 'Select for comparison: shop.example' }).check()
   await page.getByRole('button', { name: 'Delete', exact: true }).click()
