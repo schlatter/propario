@@ -11,6 +11,23 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.6.0',
+    notes: {
+      en: [
+        'Install Propario as an app – and share product links to it from other apps.',
+        'On phones the filters fold away and more columns fit on screen.',
+        'Copy a comparison for your own AI, with a question to answer.',
+        'Selection as coloured pills; excluded products stand out in red.',
+      ],
+      de: [
+        'Propario als App installieren – und Produktlinks aus anderen Apps hineinteilen.',
+        'Auf dem Handy klappen die Filter weg, und mehr Spalten passen auf den Bildschirm.',
+        'Einen Vergleich für die eigene KI kopieren, samt Frage.',
+        'Auswahl als farbige Pillen; Ausgeschlossene fallen rot auf.',
+      ],
+    },
+  },
+  {
     version: '0.5.0',
     notes: {
       en: [

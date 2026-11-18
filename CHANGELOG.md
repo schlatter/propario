@@ -6,27 +6,29 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
-- **Copy for my AI** (⋯ menu of a comparison): requirements, budget and every product with
-  price, fields, verdicts, ratings and notes as text with a question, for the AI you use – no
-  key, nothing sent by Propario, no names of people.
-- **"3 new"** on a comparison's card opens its table filtered to the new products.
-- **Locked out?** Whoever runs the server can issue a new recovery key with
-  `node server/recovery-key.ts "Name"`; the old key stops working.
-- The product notes field now says what it is: seen by everyone in the comparison (it read
-  "Personal notes").
+## 0.6.0 — 2026-11-18
+
+- **Install as an app:** a web app manifest, app icons (also maskable and monochrome for
+  Android) and a small service worker, so Android offers "Install app"
+  and iOS "Add to Home Screen". The worker keeps only the app's versioned files – never pages,
+  data or pictures – and shows a friendly page when the server cannot be reached, e.g. outside
+  the VPN.
 - **Share → Propario:** with the app installed, a product link shared from a shop app or the
   browser lands in Propario; you pick the comparison, it is added – or the existing entry opens
   when the link is already there – and picture and data follow from the shop page.
-- **Install as an app:** Propario has a web app manifest, app icons (also maskable and
-  monochrome for Android) and a small service worker, so Android offers
-  "Install app" and iOS "Add to Home Screen". The worker keeps only the app's versioned files –
-  never pages, data or pictures – and shows a friendly page when the server cannot be reached,
-  e.g. outside the VPN.
 - **Phones:** the quick filters fold away behind one "Filter" button that counts the active
-  filters; the fixed selection and product columns and the selection column are narrower, so
-  more columns stay in view in portrait; search, filter and columns share one line.
+  filters; the fixed columns are narrower, so more columns stay in view in portrait; search,
+  filter and columns share one line.
+- **Copy for my AI** (⋯ menu of a comparison): requirements, budget and every product with
+  price, fields, verdicts, ratings and notes as text with a question, for the AI you use – no
+  key, nothing sent by Propario, no names of people.
 - The selection opens as a small menu of coloured pills – open grey, favourite green, excluded
   red; excluded rows get a faint red wash.
+- **"3 new"** on a comparison's card opens its table filtered to the new products.
+- **Locked out?** Whoever runs the server can issue a new recovery key with
+  `node server/recovery-key.ts "Name"`; the old key stops working.
+- The product notes field says what it is: seen by everyone in the comparison (it read
+  "Personal notes").
 - The picture in the details also grows when it appears under a resting mouse pointer.
 
 ## 0.5.0 — 2026-11-18
