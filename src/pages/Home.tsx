@@ -12,7 +12,7 @@ import { Glyph } from '../ui/Glyph'
 import { Field } from '../ui/inputs'
 import { Stage } from '../ui/Marks'
 import { Menu } from '../ui/Menu'
-import { productName } from '../domain/display'
+import { isNew, productName } from '../domain/display'
 import { openReturns } from '../domain/purchase'
 
 export function HomePage() {
@@ -153,6 +153,8 @@ function ProjectCard({ project, items, hits, onEdit }: { project: Project; items
   const pick = decision ?? favorite
   const archived = project.status === 'archived'
   const returns = openReturns(items)
+  // Found in the last days and still in the running: one tap opens the table filtered to them.
+  const fresh = items.filter((p) => p.candidate !== 'excluded' && isNew(p.createdAt)).length
 
   return (
     <article className={`card${archived ? ' archived' : ''}`}>
@@ -178,6 +180,11 @@ function ProjectCard({ project, items, hits, onEdit }: { project: Project; items
           {project.category && <span className="card-meta">· {project.category}</span>}
         </div>
         {hits > 0 && <span className="card-hits">{m.home.matchesIn(hits)}</span>}
+        {fresh > 0 && (
+          <Link className="card-new" to={`/p/${project.id}?chips=new`}>
+            {m.home.newCount(fresh)}
+          </Link>
+        )}
         {returns.length > 0 && (
           <span className="card-return">
             <span className="warn-dot" aria-hidden="true" />

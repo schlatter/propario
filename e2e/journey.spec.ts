@@ -398,6 +398,23 @@ test('Ada moves rows and decides by swiping', async () => {
   await page.getByRole('button', { name: 'Delete', exact: true }).click()
   await page.getByRole('button', { name: 'Delete', exact: true }).last().click()
   await page.getByRole('button', { name: 'Delete for good' }).click()
+
+  // "Copy for my AI": the comparison as text for one's own AI, without names of people.
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write'])
+  await page.getByRole('button', { name: 'More', exact: true }).first().click()
+  await page.getByRole('button', { name: 'Copy for my AI' }).click()
+  await expect(page.getByText('Copied – paste it into the AI you use.')).toBeVisible()
+  const copied = await page.evaluate(() => navigator.clipboard.readText())
+  expect(copied).toContain('# Kitchen cabinet')
+  expect(copied).toContain('### Arvika')
+
+  // The start page points at what is new.
+  await page.goto('/')
+  await page
+    .getByRole('link', { name: /\d+ new/ })
+    .first()
+    .click()
+  await expect(page).toHaveURL(/chips=new/)
 })
 
 test('Ada invites Grace, who joins and sees nothing that is not hers', async ({ browser }) => {

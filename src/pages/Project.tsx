@@ -16,6 +16,7 @@ import { ProductDrawer } from './project/ProductDrawer'
 import { ProductTable } from './project/ProductTable'
 import { RequirementsTab } from './project/RequirementsTab'
 import { useProjectData } from './project/useProjectData'
+import { comparisonForAi } from '../domain/ai-export'
 import { ShareDialog } from './project/ShareDialog'
 import { QuickAdd } from './project/QuickAdd'
 import { ProjectDialog } from './Home'
@@ -128,6 +129,17 @@ export function ProjectPage() {
                   }}
                 >
                   <Glyph name="download" /> {m.common.exportJson}
+                </button>
+                <button
+                  onClick={() => {
+                    close()
+                    navigator.clipboard
+                      .writeText(comparisonForAi(data, m, fmt))
+                      .then(() => toast(m.ai.copied))
+                      .catch(() => toast(m.ai.failed))
+                  }}
+                >
+                  <Glyph name="copy" /> {m.ai.copy}
                 </button>
                 <hr />
                 <button

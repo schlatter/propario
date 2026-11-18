@@ -106,6 +106,9 @@ expires after 14 days.
   `/data/backups/`. Copy it off the machine; keep `DATA_KEY` somewhere else.
 - **Personal:** _Backup → Download backup_ saves everything you can see, pictures included, as
   one JSON file that restores on any Propario instance.
+- **Locked out:** if someone has lost every passkey and their recovery key,
+  `docker compose exec app node server/recovery-key.ts "Display name"` issues a new recovery
+  key (the old one stops working). Hand it over in person.
 - **Update:** `git pull && docker compose up -d --build`. The database migrates itself on start;
   take a snapshot first.
 

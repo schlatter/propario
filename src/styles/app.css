@@ -3193,3 +3193,20 @@ main.project-page {
 .share-name {
   font-weight: 650;
 }
+
+/* "3 new" on a comparison's card: the same blue as the stripe of new rows. */
+.card-new {
+  align-self: flex-start;
+  position: relative;
+  z-index: 1;
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--new);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 650;
+  text-decoration: none;
+}
+.card-new:hover {
+  background: color-mix(in srgb, var(--new) 15%, transparent);
+}

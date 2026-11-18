@@ -6,6 +6,14 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- **Copy for my AI** (⋯ menu of a comparison): requirements, budget and every product with
+  price, fields, verdicts, ratings and notes as text with a question, for the AI you use – no
+  key, nothing sent by Propario, no names of people.
+- **"3 new"** on a comparison's card opens its table filtered to the new products.
+- **Locked out?** Whoever runs the server can issue a new recovery key with
+  `node server/recovery-key.ts "Name"`; the old key stops working.
+- The product notes field now says what it is: seen by everyone in the comparison (it read
+  "Personal notes").
 - **Share → Propario:** with the app installed, a product link shared from a shop app or the
   browser lands in Propario; you pick the comparison, it is added – or the existing entry opens
   when the link is already there – and picture and data follow from the shop page.

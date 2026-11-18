@@ -142,7 +142,7 @@ export const de: Messages = {
     overall: 'Gesamteindruck',
     pros: 'Vorteile',
     cons: 'Nachteile',
-    notes: 'Persönliche Notizen',
+    notes: 'Notizen (für alle im Vergleich sichtbar)',
     purchaseStatus: 'Kaufstatus',
     purchaseDate: 'Kaufdatum',
     purchasePrice: 'Tatsächlicher Kaufpreis',
@@ -185,6 +185,7 @@ export const de: Messages = {
     emptyText: 'Lege einen neuen Vergleich an oder übernimm deine bestehenden Excel-Dateien.',
     importExcel: 'Excel importieren',
     noResults: 'Keine Treffer für diese Filter.',
+    newCount: (n) => `${n} neu`,
     returnUntil: (date) => `Rückgabe bis ${date}`,
     matchesIn: (n) => (n === 1 ? '1 passendes Produkt' : `${n} passende Produkte`),
     deleteTitle: (name) => `„${name}“ löschen?`,
@@ -355,6 +356,16 @@ export const de: Messages = {
       'Immer da: Name, Marke, Modell, Produktart, Variante, Preis, Händler, Gefunden von, Funddatum, Neu, Mein, Auswahl (offen / Favorit / ausgeschlossen), Grund (Optik / Maße / Preis / Marke / Shop / Qualität / Sonstiges), Geeignet, Eignung, Bewertung, Gekauft, Beschreibung, Kommentar, GTIN, MPN.',
     examplesTitle: 'Beispiele (klicken zum Übernehmen):',
     examples: ['Preis < 800 UND NICHT Auswahl = ausgeschlossen', 'Auswahl = Favorit ODER Neu = ja', 'Marke IST LEER', 'Eignung >= 70 UND Geeignet = ja'],
+  },
+  ai: {
+    copy: 'Für meine KI kopieren',
+    copied: 'Kopiert – füge es in die KI ein, die du nutzt.',
+    failed: 'Kopieren nicht möglich – der Browser hat es nicht erlaubt.',
+    prompt:
+      'Hilf uns bei der Entscheidung. Welches Produkt passt am besten zu unseren Anforderungen, und warum? Welche wichtigen Werte fehlen noch? Was übersehen wir? Antworte knapp, Muss-Kriterien zuerst.',
+    products: (n) => `Produkte (${n})`,
+    notMet: 'Nicht erfüllt',
+    unknown: 'Noch unbekannt',
   },
   shareTarget: {
     title: 'Geteiltes Produkt hinzufügen',

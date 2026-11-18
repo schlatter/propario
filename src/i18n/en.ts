@@ -141,7 +141,7 @@ export const en = {
     overall: 'Overall impression',
     pros: 'Pros',
     cons: 'Cons',
-    notes: 'Personal notes',
+    notes: 'Notes (seen by everyone in this comparison)',
     purchaseStatus: 'Purchase status',
     purchaseDate: 'Purchase date',
     purchasePrice: 'Actual price paid',
@@ -184,6 +184,7 @@ export const en = {
     emptyText: 'Start a new comparison or bring in your existing Excel workbooks.',
     importExcel: 'Import Excel',
     noResults: 'Nothing matches these filters.',
+    newCount: (n: number) => `${n} new`,
     returnUntil: (date: string) => `Return until ${date}`,
     matchesIn: (n: number) => `${n} matching product${n === 1 ? '' : 's'}`,
     deleteTitle: (name: string) => `Delete “${name}”?`,
@@ -353,6 +354,16 @@ export const en = {
       'Always there: Name, Brand, Model, Type, Variant, Price, Retailer, Found by, Found on, New, Mine, Selection (open / favourite / excluded), Reason (looks / size / price / brand / shop / quality / other), Eligible, Fit, Rating, Purchased, Description, Comments, GTIN, MPN.',
     examplesTitle: 'Examples (click to use):',
     examples: ['Price < 800 AND NOT Selection = excluded', 'Selection = favourite OR New = yes', 'Brand IS EMPTY', 'Fit >= 70 AND Eligible = yes'],
+  },
+  ai: {
+    copy: 'Copy for my AI',
+    copied: 'Copied – paste it into the AI you use.',
+    failed: 'Could not copy – the browser did not allow it.',
+    prompt:
+      'Help us decide. Which product fits our requirements best, and why? Which important values are still missing? What are we overlooking? Answer briefly; must criteria first.',
+    products: (n: number) => `Products (${n})`,
+    notMet: 'Not met',
+    unknown: 'Not known yet',
   },
   shareTarget: {
     title: 'Add a shared product',
