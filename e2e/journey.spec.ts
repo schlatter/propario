@@ -231,6 +231,17 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await expect(page.getByRole('button', { name: 'Arvika', exact: true })).toHaveCount(0)
   await page.getByRole('button', { name: /Budget\): showing only not met/ }).click() // all again
   await expect(page.getByRole('button', { name: 'Arvika', exact: true })).toBeVisible()
+  // The budget is a must for every product; the price says how far it is from it.
+  await page.getByRole('tab', { name: /Requirements/ }).click()
+  await page.getByLabel('Budget (€)').fill('300')
+  await page.getByLabel('Budget (€)').press('Tab')
+  await page.getByRole('tab', { name: /Products/ }).click()
+  await expect(page.getByText('€96 under budget')).toBeVisible()
+  // A product can be the price reference instead.
+  await page.getByRole('button', { name: 'Arvika', exact: true }).click()
+  await page.getByRole('button', { name: 'Use as price reference' }).click()
+  await page.locator('dialog.drawer').getByRole('button', { name: 'Close' }).click()
+  await expect(page.locator('.price-cell').getByText('price reference')).toBeVisible()
   await accessible(page, 'comparison with rules')
 
   // Quick filters toggle; the advanced query filters by any field and says what went wrong.
@@ -313,6 +324,31 @@ test('Ada moves rows and decides by swiping', async () => {
   await page.getByRole('link', { name: 'Back to the table' }).click()
   await expect(page.locator('.vote.like')).toHaveCount(1)
   await expect(page.locator('.vote.dislike')).toHaveCount(1)
+
+  // Side by side: the best price green, the worst red, the distance to the best; more products join from there.
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page.getByRole('button', { name: 'Price: —' }).click()
+  await page.keyboard.type('300')
+  await page.keyboard.press('Enter')
+  await page.getByRole('button', { name: 'Add product' }).click()
+  await page.getByPlaceholder(/shop link/).fill('Cleo')
+  await page.keyboard.press('Enter')
+  await page.keyboard.press('Escape')
+  await page.getByRole('checkbox', { name: 'Select for comparison: Arvika' }).check()
+  await page.getByRole('checkbox', { name: 'Select for comparison: Borre' }).check()
+  await page.getByRole('button', { name: /Compare 2/ }).click()
+  await expect(page.locator('.num-cell.best').getByText('€204')).toBeVisible()
+  await expect(page.locator('.num-cell.worst').getByText('€300')).toBeVisible()
+  await expect(page.getByText('+€96 to the best')).toBeVisible()
+  await accessible(page, 'side by side')
+  await page.getByRole('button', { name: 'Product', exact: true }).click()
+  await page
+    .getByRole('menuitem', { name: 'Cleo' })
+    .or(page.getByRole('button', { name: 'Cleo' }))
+    .first()
+    .click()
+  await expect(page.locator('table.compare thead th[scope=col]')).toHaveCount(3)
+  await page.goBack()
 })
 
 test('Ada invites Grace, who joins and sees nothing that is not hers', async ({ browser }) => {

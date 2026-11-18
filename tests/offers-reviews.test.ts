@@ -89,9 +89,19 @@ describe('server validation of offers, reviews and purchase dates', () => {
       ['whole number', { reviews: [review({ count: 1.5 })] }],
       ['at most', { offers: Array.from({ length: 51 }, () => offer({})) }],
       ['exclusionCategory', { exclusionCategory: 'boring' }],
+
       ['returnUntil', { purchase: { ...makeProduct('p').purchase, returnUntil: 'soon' } }],
     ]
     for (const [msg, fields] of bad) expect(checkFields('products', fields as Record<string, unknown>), msg).toMatch(new RegExp(msg))
+  })
+
+  it('checks the comparison budget and the direction of a field', () => {
+    expect(checkFields('projects', { budget: 1000, priceReference: '' })).toBeNull()
+    expect(checkFields('projects', { budget: null })).toBeNull()
+    expect(checkFields('projects', { budget: -5 })).toMatch(/budget/)
+    expect(checkFields('projects', { priceReference: '<script>' })).toMatch(/priceReference/)
+    expect(checkFields('properties', { better: 'lower' })).toBeNull()
+    expect(checkFields('properties', { better: 'sideways' })).toMatch(/better/)
   })
 
   it('still accepts records and patches from before these fields existed', () => {

@@ -123,6 +123,21 @@ export function FieldsTab({ data }: { data: ProjectData }) {
                   <Glyph name="trash" />
                 </button>
               </div>
+              {p.type === 'number' && (
+                <div className="opts row">
+                  <select
+                    className="select better-select"
+                    value={p.better ?? ''}
+                    aria-label={m.fields.better}
+                    onChange={(e) => updateProperty(p, { better: e.target.value as '' | 'lower' | 'higher' })}
+                  >
+                    <option value="">{m.fields.betterNone}</option>
+                    <option value="lower">{m.fields.betterLower}</option>
+                    <option value="higher">{m.fields.betterHigher}</option>
+                  </select>
+                  <span className="muted small">{m.fields.betterHint}</span>
+                </div>
+              )}
               {p.type === 'select' && (
                 <label className="field opts">
                   <span>{m.field.options}</span>

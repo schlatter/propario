@@ -1481,6 +1481,19 @@ textarea.cell-editor {
   color: var(--pass);
   font-weight: 650;
 }
+.price-cell .delta.over {
+  color: var(--fail);
+  font-weight: 650;
+}
+.price-cell .delta.ref {
+  color: var(--ink-2);
+  font-weight: 650;
+}
+/* Out of the running: slanted, so it stands out at a glance. */
+.grid tbody tr.is-excluded td,
+.compare .is-excluded {
+  font-style: italic;
+}
 .check-cell {
   display: flex;
   flex-direction: column;
@@ -1820,6 +1833,43 @@ table.compare {
 .compare .best {
   color: var(--pass);
   font-weight: 700;
+}
+/* Numbers side by side: best green, worst red, the others with their distance to the best. */
+.num-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.num-cell.best .num-value {
+  color: var(--pass);
+  font-weight: 700;
+}
+.num-cell.worst .num-value {
+  color: var(--fail);
+  font-weight: 700;
+}
+.num-delta {
+  font-size: 12px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+/* Without a "better" direction: where the value lies between the smallest and the largest. */
+.num-scale {
+  position: relative;
+  height: 4px;
+  margin: 6px 4px 2px;
+  border-radius: 2px;
+  background: var(--line);
+  max-width: 160px;
+}
+.num-scale i {
+  position: absolute;
+  top: -3px;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  border-radius: 50%;
+  background: var(--ink-2);
 }
 
 /* ---------- import ---------- */
@@ -3009,4 +3059,13 @@ main.project-page {
 }
 .confirm-list li {
   margin: 2px 0;
+}
+
+.better-select {
+  width: auto;
+  min-height: 32px;
+}
+.opts.row {
+  align-items: center;
+  gap: 10px;
 }

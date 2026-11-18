@@ -136,6 +136,17 @@ function DrawerContent({ data, product: p, onClose }: { data: ProjectData; produ
                   onCommit={(v) => set({ price: parseNumber(v) })}
                 />
               </Field>
+              {p.price !== null && (
+                <button
+                  type="button"
+                  className="link-btn small"
+                  aria-pressed={project.priceReference === p.id}
+                  title={m.priceRef.hint}
+                  onClick={() => updateProject(project.id, { priceReference: project.priceReference === p.id ? '' : p.id })}
+                >
+                  {project.priceReference === p.id ? m.priceRef.unset : m.priceRef.set}
+                </button>
+              )}
               {priceAge !== null && (
                 <small id="price-date" className={`field-note${priceAge > STALE_DAYS ? ' stale' : ''}`}>
                   {priceAge > STALE_DAYS && <span className="warn-dot" aria-hidden="true" />}

@@ -4,12 +4,14 @@ import { deleteProduct, reorder, setProductValue, updateProduct, updateProject }
 import type { Candidate, Product, PropertyDef, Requirement, TableView } from '../../db/types'
 import { avgStars, compareKeys, displayName, exclusionText, formatValue, isNew, productName, sortKey } from '../../domain/display'
 import { cellCheck, OP_SYMBOL, requirementsByColumn, WEIGHT } from '../../domain/requirements'
+import { priceHint, type PriceHint } from '../../domain/offers'
 import { compileQuery } from '../../domain/query'
 import { queryFields } from '../../domain/query-fields'
 import { useSession } from '../../session'
 import { reviewSummary } from '../../domain/reviews'
 import { coerceValue, daysSince, hostOf, isTyped, parseNumber, safeHref, STALE_DAYS } from '../../domain/values'
-import { useI18n } from '../../i18n'
+import { useI18n, type Formatters } from '../../i18n'
+import type { Messages } from '../../i18n/en'
 import { applyProductPage, ImageError, loadImages, missingImages, productImage, readProductPage } from '../../images'
 import { useConfirm, useToast } from '../../ui/Dialog'
 import { Glyph } from '../../ui/Glyph'
@@ -92,7 +94,7 @@ export function ProductTable({
   const compiled = useMemo(() => compileQuery<Product>(query, fields), [query, fields])
   /** Columns filtered by their requirements' verdict (the values themselves stay as they are). */
   const [reqFilter, setReqFilter] = useState<Record<string, 'pass' | 'fail'>>({})
-  const byColumn = useMemo(() => requirementsByColumn(data.requirements), [data.requirements])
+  const byColumn = useMemo(() => requirementsByColumn(data.rules), [data.rules])
   const tableRef = useRef<HTMLTableElement>(null)
   const [widths, setWidths] = useState<Record<string, number>>({})
   const toast = useToast()
@@ -156,10 +158,6 @@ export function ProductTable({
 
   const saveView = (patch: Partial<TableView>) => updateProject(project.id, { tableView: { ...view, ...patch } })
 
-  // Price context for "cheapest / +x" hints.
-  const activePrices = products.filter((p) => p.candidate !== 'excluded' && p.price !== null).map((p) => p.price!)
-  const minPrice = activePrices.length > 1 ? Math.min(...activePrices) : null
-
   const columns: Col[] = useMemo(() => {
     const cols: Col[] = [
       {
@@ -189,34 +187,32 @@ export function ProductTable({
         width: 120,
         align: 'right',
         sort: (p) => p.price,
-        render: (p) => (
-          <EditableCell
-            kind="number"
-            label={m.field.price}
-            value={p.price !== null ? String(p.price) : ''}
-            onCommit={(v) => {
-              const n = parseNumber(v)
-              void updateProduct(p, n === null && v.trim() ? { price: null, priceNote: v.trim() } : { price: n })
-            }}
-            display={
-              <span className="price-cell" style={{ padding: 0, minHeight: 0 }}>
-                <span className="price">
-                  {p.price !== null && (daysSince(p.priceDate) ?? 0) > STALE_DAYS && (
-                    <span className="warn-dot" title={`${m.product.priceAsOf(fmt.date(p.priceDate))} · ${m.product.priceStale}`}>
-                      <span className="sr-only">{m.product.priceStale}</span>
-                    </span>
-                  )}
-                  {p.price !== null ? fmt.money(p.price) : p.priceNote}
-                </span>
-                {p.price !== null && minPrice !== null && p.candidate !== 'excluded' && (
-                  <span className={`delta${p.price === minPrice ? ' best' : ''}`}>
-                    {p.price === minPrice ? m.project.cheapest : m.project.priceDiff(fmt.money(p.price - minPrice))}
+        render: (p) => {
+          const note = priceNote(priceHint(p, products, project), m, fmt)
+          const stale = p.price !== null && (daysSince(p.priceDate) ?? 0) > STALE_DAYS
+          return (
+            <EditableCell
+              kind="number"
+              label={m.field.price}
+              value={p.price !== null ? String(p.price) : ''}
+              spoken={[p.price !== null ? fmt.money(p.price) : p.priceNote, stale ? m.product.priceStale : '', note?.text ?? ''].filter(Boolean).join(' ')}
+              onCommit={(v) => {
+                const n = parseNumber(v)
+                void updateProduct(p, n === null && v.trim() ? { price: null, priceNote: v.trim() } : { price: n })
+              }}
+              display={
+                <span className="price-cell" style={{ padding: 0, minHeight: 0 }}>
+                  <span className="price">
+                    {stale && <span className="warn-dot" title={`${m.product.priceAsOf(fmt.date(p.priceDate))} · ${m.product.priceStale}`} />}
+                    {p.price !== null ? fmt.money(p.price) : p.priceNote}
                   </span>
-                )}
-              </span>
-            }
-          />
-        ),
+                  {note && ' '}
+                  {note && <span className={`delta${note.tone ? ` ${note.tone}` : ''}`}>{note.text}</span>}
+                </span>
+              }
+            />
+          )
+        },
       },
       {
         id: 'retailer',
@@ -457,7 +453,7 @@ export function ProductTable({
         render: (p) => <PropertyCell prop={prop} product={p} />,
       }
     }
-  }, [m, fmt, properties, data, minPrice, onOpen, users])
+  }, [m, fmt, properties, data, products, project, onOpen, users])
 
   // Column order chosen by dragging headers (or the arrows in the Columns menu).
   const ordered = useMemo(() => {
@@ -986,6 +982,28 @@ export function ProductTable({
       )}
     </>
   )
+}
+
+/** The note under a price – against the reference product, the budget or the cheapest – and its tone. */
+function priceNote(hint: PriceHint, m: Messages, fmt: Formatters): { text: string; tone: '' | 'best' | 'over' | 'ref' } | null {
+  if (!hint) return null
+  const signed = (d: number) => (d > 0 ? `+${fmt.money(d)}` : d < 0 ? `−${fmt.money(-d)}` : '±0')
+  switch (hint.kind) {
+    case 'reference':
+      return { text: m.priceRef.reference, tone: 'ref' }
+    case 'vsReference':
+      return { text: m.priceRef.vs(signed(hint.diff)), tone: hint.diff < 0 ? 'best' : hint.diff > 0 ? 'over' : '' }
+    case 'underBudget':
+      return { text: m.budget.under(fmt.money(hint.diff)), tone: 'best' }
+    case 'atBudget':
+      return { text: m.budget.at, tone: 'best' }
+    case 'overBudget':
+      return { text: m.budget.over(fmt.money(hint.diff)), tone: 'over' }
+    case 'cheapest':
+      return { text: m.project.cheapest, tone: 'best' }
+    case 'vsCheapest':
+      return { text: m.project.priceDiff(fmt.money(hint.diff)), tone: '' }
+  }
 }
 
 function HeaderCell({

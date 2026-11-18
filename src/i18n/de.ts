@@ -302,6 +302,21 @@ export const de: Messages = {
     column: 'Tests & Erfahrungen',
     sources: (n) => `${n} ${n === 1 ? 'Quelle' : 'Quellen'}`,
   },
+  budget: {
+    label: 'Budget',
+    input: 'Budget (€)',
+    hint: 'Gilt als Muss-Kriterium für jedes Produkt: Preis ≤ Budget. Leer lassen für kein Budget.',
+    under: (amount) => `${amount} unter Budget`,
+    over: (amount) => `${amount} über Budget`,
+    at: 'genau im Budget',
+  },
+  priceRef: {
+    reference: 'Preisreferenz',
+    vs: (signed) => `${signed} zur Referenz`,
+    set: 'Als Preisreferenz verwenden',
+    unset: 'Preisreferenz – aufheben',
+    hint: 'Die anderen Produkte zeigen, wie viel mehr oder weniger sie als dieses kosten.',
+  },
   exclusion: {
     category: 'Grund',
     none: '— auswählen —',
@@ -441,6 +456,12 @@ export const de: Messages = {
     deleteTitle: (name) => `Feld „${name}“ löschen?`,
     deleteText: 'Die Werte dieses Felds werden bei allen Produkten entfernt, ebenso Regeln, die es verwenden.',
     empty: 'Noch keine Felder.',
+    better: 'Beim Vergleichen',
+    betterNone: 'Kein besser oder schlechter',
+    betterLower: 'Kleiner ist besser',
+    betterHigher: 'Größer ist besser',
+    betterHint:
+      'In der Gegenüberstellung wird der beste Wert grün, der schlechteste rot. Ohne Auswahl entscheidet eine Regel auf dieses Feld (≤ 40 → kleiner).',
     optionsPlaceholder: 'Ein Auswahlwert pro Zeile',
   },
   compare: {
@@ -450,6 +471,10 @@ export const de: Messages = {
     tooFew: 'Wähle in der Tabelle mindestens zwei Produkte aus, um sie zu vergleichen.',
     backToTable: 'Zurück zur Tabelle',
     remove: 'Aus Gegenüberstellung entfernen',
+    add: 'Produkt',
+    best: 'bester Wert',
+    worst: 'schlechtester Wert',
+    toBest: (signed) => `${signed} zum besten`,
   },
   importer: {
     title: 'Excel importieren',

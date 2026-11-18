@@ -1,4 +1,4 @@
-import type { Condition, Priority, Product, PropertyDef, Requirement } from '../db/types'
+import type { Condition, Priority, Product, Project, PropertyDef, Requirement } from '../db/types'
 import { parseBoolean, parseNumber } from './values'
 
 export type CheckResult = 'pass' | 'fail' | 'unknown'
@@ -174,4 +174,27 @@ export function splitByWeight(items: { result: CheckResult; blocking: boolean }[
     return { pass: list.filter((i) => i.result === 'pass').length, fail: list.filter((i) => i.result === 'fail').length, total: list.length }
   }
   return { must: part(true), other: part(false) }
+}
+
+/** The id of the rule a comparison's budget stands for (never stored as a requirement). */
+export const BUDGET_RULE = 'budget'
+
+/**
+ * The comparison's rules: its requirements, and its budget as a must criterion "price ≤ budget"
+ * in front – measurable and relevant for almost every purchase, so it needs no rule of its own.
+ */
+export function withBudget(project: Pick<Project, 'id' | 'budget'>, requirements: Requirement[], label: string): Requirement[] {
+  if (project.budget === null || project.budget === undefined) return requirements
+  const rule: Requirement = {
+    id: BUDGET_RULE,
+    projectId: project.id,
+    category: '',
+    label,
+    description: '',
+    priority: 'must',
+    condition: { target: { kind: 'price' }, op: 'lte', value: project.budget },
+    order: -1,
+    updatedAt: '',
+  }
+  return [rule, ...requirements]
 }

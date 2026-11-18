@@ -57,6 +57,10 @@ export interface Project {
   notes: string
   imageUrl: string
   decisionProductId: string | null
+  /** Most the price may be; a must criterion for every product (null = no budget). Absent before 0.5. */
+  budget?: number | null
+  /** Product whose price the others are measured against ('' = budget or cheapest). Absent before 0.5. */
+  priceReference?: string
   tableView: TableView
   createdAt: string
   updatedAt: string
@@ -70,6 +74,8 @@ export interface PropertyDef {
   unit: string
   /** Choices for `select`. */
   options: string[]
+  /** For numbers: which way is better when comparing ('' = no judgement). Absent before 0.5. */
+  better?: '' | 'lower' | 'higher'
   order: number
   updatedAt: string
 }

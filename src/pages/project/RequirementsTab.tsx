@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { addRequirement, deleteRequirement, reorder, updateProduct, updateRequirement } from '../../db/repo'
+import { addRequirement, deleteRequirement, reorder, updateProduct, updateProject, updateRequirement } from '../../db/repo'
 import { PRIORITIES, type Condition, type ConditionOp, type Priority, type Requirement } from '../../db/types'
 import { productName } from '../../domain/display'
 import { evaluate } from '../../domain/requirements'
@@ -7,7 +7,7 @@ import { parseNumber } from '../../domain/values'
 import { useI18n } from '../../i18n'
 import { useConfirm } from '../../ui/Dialog'
 import { Glyph } from '../../ui/Glyph'
-import { CommitInput, CommitTextarea } from '../../ui/inputs'
+import { CommitInput, CommitTextarea, Field } from '../../ui/inputs'
 import { CheckMark } from '../../ui/Marks'
 import type { ProjectData } from './useProjectData'
 
@@ -40,6 +40,23 @@ export function RequirementsTab({ data, onOpen }: { data: ProjectData; onOpen: (
 
   return (
     <div className="stack" style={{ gap: 20 }}>
+      <div className="budget-row">
+        <Field label={m.budget.input}>
+          <CommitInput
+            className="input"
+            inputMode="decimal"
+            value={project.budget !== null && project.budget !== undefined ? String(project.budget) : ''}
+            aria-describedby="budget-hint"
+            onCommit={(v) => {
+              const n = parseNumber(v)
+              void updateProject(project.id, { budget: n !== null && n >= 0 ? n : null })
+            }}
+          />
+        </Field>
+        <p id="budget-hint" className="muted small">
+          {m.budget.hint}
+        </p>
+      </div>
       <form
         className="quick-add"
         onSubmit={async (e) => {

@@ -10,6 +10,7 @@ export function EditableCell({
   kind,
   value,
   display,
+  spoken,
   onCommit,
   options,
   label,
@@ -19,6 +20,8 @@ export function EditableCell({
   kind: EditorKind
   value: string
   display?: ReactNode
+  /** What screen readers hear when `display` is more than text: it must contain what is shown. */
+  spoken?: string
   onCommit: (v: string) => void
   options?: string[]
   label: string
@@ -65,7 +68,7 @@ export function EditableCell({
         className={`cell ${className}${raw ? ' raw' : ''}`}
         onClick={start}
         // The name carries what is shown ("38 cm"), so voice control and screen readers match the screen.
-        aria-label={`${label}: ${(typeof display === 'string' ? display : value) || '—'}`}
+        aria-label={`${label}: ${(spoken ?? (typeof display === 'string' ? display : value)) || '—'}`}
         title={value || undefined}
       >
         {display ?? value}
