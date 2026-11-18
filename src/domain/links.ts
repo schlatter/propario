@@ -16,3 +16,15 @@ export function linkKey(url: string): string {
 }
 
 export const sameLink = (a: string, b: string) => !!a && !!b && linkKey(a) === linkKey(b)
+
+/**
+ * The product link in what another app shares: `url` when it is one, else the first http(s)
+ * link in the text or title ("Look at this: https://…" – where many Android apps put it).
+ */
+export function sharedLink(shared: { url?: string | null; text?: string | null; title?: string | null }): string | null {
+  for (const candidate of [shared.url, shared.text, shared.title]) {
+    const m = (candidate ?? '').match(/https?:\/\/[^\s<>"']+/i)
+    if (m) return m[0].replace(/[.,;:!?)\]]+$/, '')
+  }
+  return null
+}

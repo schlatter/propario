@@ -356,6 +356,14 @@ export const de: Messages = {
     examplesTitle: 'Beispiele (klicken zum Übernehmen):',
     examples: ['Preis < 800 UND NICHT Auswahl = ausgeschlossen', 'Auswahl = Favorit ODER Neu = ja', 'Marke IST LEER', 'Eignung >= 70 UND Geeignet = ja'],
   },
+  shareTarget: {
+    title: 'Geteiltes Produkt hinzufügen',
+    choose: 'In welchen Vergleich?',
+    none: 'Es gibt noch keinen Vergleich, den du bearbeiten kannst. Lege zuerst einen an.',
+    noLink: 'Im geteilten Text steht kein Link zu einer Produktseite.',
+    already: 'Dieser Link ist schon im Vergleich – der vorhandene Eintrag wird geöffnet.',
+    back: 'Zu den Vergleichen',
+  },
   pageUpdate: {
     button: 'Von der Shopseite aktualisieren',
     hint: 'Liest die Produktseite erneut: füllt leere Felder, aktualisiert den Preis, ergänzt ein fehlendes Bild. Was du eingetragen hast, bleibt.',

@@ -377,6 +377,27 @@ test('Ada moves rows and decides by swiping', async () => {
     .click()
   await expect(page.locator('table.compare thead th[scope=col]')).toHaveCount(3)
   await page.goBack()
+
+  // "Share → Propario" from another app: the link lands in the chosen comparison, once.
+  const shared = '/share?title=Regal%20Cleo&text=Schau%20mal%3A%20https%3A%2F%2Fshop.example%2Fcleo-7.html'
+  await page.goto(shared)
+  await expect(page.getByRole('heading', { name: 'Add a shared product' })).toBeVisible()
+  await accessible(page, 'share target')
+  await page.getByRole('button', { name: /Kitchen cabinet/ }).click()
+  await expect(page.locator('dialog.drawer')).toBeVisible()
+  await expect(page).toHaveURL(/\/p\/[0-9a-f-]{36}\?product=/)
+  await page.locator('dialog.drawer').getByRole('button', { name: 'Close' }).click()
+  const before = await page.locator('table.grid tbody tr').count()
+  await page.goto(shared)
+  await page.getByRole('button', { name: /Kitchen cabinet/ }).click()
+  await expect(page.locator('dialog.drawer')).toBeVisible()
+  await page.locator('dialog.drawer').getByRole('button', { name: 'Close' }).click()
+  await expect.poll(() => page.locator('table.grid tbody tr').count()).toBe(before)
+  // Tidy up for the steps that follow.
+  await page.getByRole('checkbox', { name: 'Select for comparison: shop.example' }).check()
+  await page.getByRole('button', { name: 'Delete', exact: true }).click()
+  await page.getByRole('button', { name: 'Delete', exact: true }).last().click()
+  await page.getByRole('button', { name: 'Delete for good' }).click()
 })
 
 test('Ada invites Grace, who joins and sees nothing that is not hers', async ({ browser }) => {

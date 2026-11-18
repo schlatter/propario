@@ -14,6 +14,7 @@ import { ProjectPage } from './pages/Project'
 import { ComparePage } from './pages/Compare'
 import { SwipePage } from './pages/Swipe'
 import { BackupPage } from './pages/Backup'
+import { SharePage } from './pages/Share'
 import { SettingsPage } from './pages/Settings'
 
 // The importer pulls in the spreadsheet library; load it only when needed.
@@ -124,6 +125,7 @@ function Shell() {
           />
           <Route path="/backup" element={<BackupPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/share" element={<SharePage />} />
           <Route path="*" element={<HomePage />} />
         </Routes>
       </TopbarSlot.Provider>

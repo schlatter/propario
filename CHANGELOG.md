@@ -6,6 +6,9 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- **Share → Propario:** with the app installed, a product link shared from a shop app or the
+  browser lands in Propario; you pick the comparison, it is added – or the existing entry opens
+  when the link is already there – and picture and data follow from the shop page.
 - **Install as an app:** Propario has a web app manifest, app icons (also maskable and
   monochrome for Android) and a small service worker, so Android offers
   "Install app" and iOS "Add to Home Screen". The worker keeps only the app's versioned files –

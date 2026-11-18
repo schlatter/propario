@@ -29,5 +29,7 @@ describe('installable web app', () => {
     const maskable = m.icons.find((i: { purpose?: string }) => i.purpose === 'maskable')
     expect(pngSize(pub(maskable.src))).toEqual([512, 512])
     expect(fs.readFileSync(path.join(root, 'index.html'), 'utf8')).toContain('<link rel="manifest" href="/manifest.webmanifest" />')
+    // "Share → Propario" on Android lands on /share with the shared title, text and link.
+    expect(m.share_target).toEqual({ action: '/share', method: 'GET', params: { title: 'title', text: 'text', url: 'url' } })
   })
 })

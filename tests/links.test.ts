@@ -27,3 +27,13 @@ describe('updating from the shop page', () => {
     expect(planFacts(p, { price: 989 }, [], { refreshPrice: true }).patch).toEqual({})
   })
 })
+
+describe('a link shared from another app', () => {
+  it('is found in url, else in the text or title, without trailing punctuation', async () => {
+    const { sharedLink } = await import('../src/domain/links')
+    expect(sharedLink({ url: 'https://shop.example/p/1' })).toBe('https://shop.example/p/1')
+    expect(sharedLink({ text: 'Schau mal: https://shop.example/p/1?x=2.', title: 'Regal' })).toBe('https://shop.example/p/1?x=2')
+    expect(sharedLink({ title: 'Regal (https://shop.example/p/1)' })).toBe('https://shop.example/p/1')
+    expect(sharedLink({ text: 'javascript:alert(1) und nichts sonst' })).toBeNull()
+  })
+})

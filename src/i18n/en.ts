@@ -354,6 +354,14 @@ export const en = {
     examplesTitle: 'Examples (click to use):',
     examples: ['Price < 800 AND NOT Selection = excluded', 'Selection = favourite OR New = yes', 'Brand IS EMPTY', 'Fit >= 70 AND Eligible = yes'],
   },
+  shareTarget: {
+    title: 'Add a shared product',
+    choose: 'To which comparison?',
+    none: 'There is no comparison you can add to yet. Create one first.',
+    noLink: 'The shared text contains no link to a product page.',
+    already: 'This link is already in the comparison – the existing entry is opened.',
+    back: 'To the comparisons',
+  },
   pageUpdate: {
     button: 'Update from shop page',
     hint: 'Reads the product page again: fills empty fields, updates the price, adds a picture if there is none. What you entered stays.',
