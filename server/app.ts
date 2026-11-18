@@ -325,7 +325,13 @@ export function createApp(db: DB, config: Config, version: string | null = null)
       limit(`fetch:${me.id}`, 200, 600_000)
       try {
         const img = await fetchProductImage(url.searchParams.get('url') || '')
-        res.writeHead(200, { 'Content-Type': img.contentType, 'Cache-Control': 'private, no-store', 'X-Image-Source': encodeURI(img.source) })
+        res.writeHead(200, {
+          'Content-Type': img.contentType,
+          'Cache-Control': 'private, no-store',
+          'X-Image-Source': encodeURI(img.source),
+          // Checked facts only (digits, a short part number, a number), percent-encoded JSON.
+          'X-Product-Facts': encodeURIComponent(JSON.stringify(img.facts)),
+        })
         return void res.end(img.body)
       } catch (e) {
         const err = e instanceof ImageFetchError ? e : new ImageFetchError('failed', 502)

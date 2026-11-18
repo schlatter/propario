@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
-import { addProduct, updateProject } from '../../db/repo'
+import { db } from '../../db/db'
+import { addProduct, updateProduct, updateProject } from '../../db/repo'
 import { hostOf, looksLikeUrl, normalizeUrl } from '../../domain/values'
 import { useI18n } from '../../i18n'
 import { loadProductImage } from '../../images'
@@ -54,8 +55,14 @@ function QuickAddForm({ data, onOpen, autoFocus }: { data: ProjectData; onOpen: 
     if (looksLikeUrl(value)) {
       const url = normalizeUrl(value)
       const created = await addProduct(project.id, { url, retailer: hostOf(url) })
-      // The picture comes in the background; failures show in the product details.
-      void loadProductImage(created).catch(() => {})
+      // The picture comes in the background; failures show in the product details. A new
+      // product takes the shop's price as long as nobody has entered one in the meantime.
+      void loadProductImage(created)
+        .then(async (facts) => {
+          const now = await db.products.get(created.id)
+          if (now && now.price === null && facts.price !== undefined) await updateProduct(now, { price: facts.price })
+        })
+        .catch(() => {})
       setText('')
       onOpen(created.id)
     } else {

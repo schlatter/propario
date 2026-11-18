@@ -89,6 +89,9 @@ export function checkFields(kind: Kind, fields: Record<string, unknown>): string
     if ((key === 'id' || key === 'projectId') && !UUID.test(String(value))) return `field ${key} must be a UUID`
     if (URL_FIELDS.has(key) && value !== '' && !/^https?:\/\//i.test(String(value))) return `field ${key} must be an http(s) link`
     if (key === 'image' && value !== '' && !IMAGE_PATH.test(String(value))) return 'field image must point to this server'
+    if (key === 'gtin' && value !== '' && !/^\d{1,14}$/.test(String(value))) return 'field gtin must be up to 14 digits'
+    if (key === 'mpn' && String(value).length > 64) return 'field mpn is too long'
+    if (key === 'priceDate' && value !== '' && !/^\d{4}-\d{2}-\d{2}$/.test(String(value))) return 'field priceDate must be yyyy-mm-dd'
     if (key === 'links' && !(value as unknown[]).every((l) => typeof l === 'string' && /^https?:\/\//i.test(l))) return 'links must be http(s)'
     if (key === 'votes' && !Object.entries(value as object).every(([k, v]) => UUID.test(k) && (v === 'like' || v === 'dislike')))
       return 'votes must be like or dislike per account'

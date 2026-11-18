@@ -105,6 +105,12 @@ export const en = {
     open: 'Must criteria not fully known',
     manualHint: 'Click to set manually: met → not met → automatic',
     manual: 'set manually',
+    fit: 'Fit',
+    fitHint:
+      'Weighted share of the met soft requirements: important 3, wish 2, bonus 1, avoid 2. Must criteria are not weighed; unknown values do not count against a product.',
+    fitOpen: (n: number) => `${n} open`,
+    fitSummary: (fit: number | null, open: number) =>
+      `${fit === null ? 'Fit not known yet' : `Fit ${fit} %`}${open ? `, ${open} ${open === 1 ? 'requirement' : 'requirements'} still unknown` : ''}`,
   },
   field: {
     brand: 'Brand',
@@ -147,6 +153,8 @@ export const en = {
     options: 'Choices',
     status: 'Status',
     updated: 'Last edited',
+    gtin: 'GTIN / EAN',
+    mpn: 'Manufacturer part no.',
   },
   purchase: {
     none: 'Not bought',
@@ -236,6 +244,18 @@ export const en = {
     noProperties: 'This comparison has no custom fields yet. Add them in the “Fields” tab.',
     noRequirements: 'No requirements defined.',
     rawValue: 'Value does not match the field type and is kept as text',
+    priceAsOf: (date: string) => `As of ${date}`,
+    priceStale: 'older than a week – worth checking',
+    gtinInvalid: 'The check digit does not match – please compare with the packaging or shop page.',
+  },
+  lookup: {
+    title: 'Check elsewhere',
+    geizhals: 'Geizhals',
+    idealo: 'idealo',
+    warentest: 'Stiftung Warentest',
+    trustpilot: 'Shop on Trustpilot',
+    byGtin: 'Prices are searched by GTIN, tests by name. Opens the other site directly – Propario adds no tracking or affiliate codes.',
+    byName: 'Searched by brand and model; a GTIN finds the exact product. Opens the other site directly – Propario adds no tracking or affiliate codes.',
   },
   image: {
     loadAll: (n: number) => `Load images (${n})`,
@@ -251,6 +271,8 @@ export const en = {
     dropLabel: 'Product image. Paste or drop an image here.',
     dropHint: 'Paste or drop an image',
     pasteHint: 'Tip: on the shop page, right-click the picture → Copy image, then click the box and press Ctrl+V. Dragging the picture over also works.',
+    pagePrice: (price: string) => `Price on the shop page: ${price}`,
+    takePrice: 'Use this price',
     error: {
       unavailable: 'Downloading images is switched off on this server.',
       blocked: 'The shop refuses automated access. Copy the image from the shop page and paste it here.',
@@ -343,6 +365,8 @@ export const en = {
       productType: 'Product type',
       price: 'Price',
       priceNote: 'Price note',
+      gtin: 'GTIN / EAN',
+      mpn: 'Manufacturer part no.',
       retailer: 'Retailer',
       url: 'Product link',
       imageUrl: 'Image URL',

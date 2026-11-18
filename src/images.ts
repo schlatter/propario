@@ -7,6 +7,7 @@ import { api } from './api'
 import { updateProduct } from './db/repo'
 import type { Product } from './db/types'
 import { safeHref } from './domain/values'
+import { cleanFacts, type ProductFacts } from './shared/product-facts.ts'
 import { IMAGE_PATH } from './shared/records.ts'
 
 /** Longest side of a stored image. Big enough for the hover preview, small enough for backups (~20–60 KB). */
@@ -31,7 +32,7 @@ export function productImage(p: Pick<Product, 'image'> | null | undefined): stri
 }
 
 /** Ask the server for the main image of a product page (or an image URL). */
-export async function fetchRemoteImage(url: string, signal?: AbortSignal): Promise<{ blob: Blob; source: string }> {
+export async function fetchRemoteImage(url: string, signal?: AbortSignal): Promise<{ blob: Blob; source: string; facts: ProductFacts }> {
   let res: Response
   try {
     res = await fetch(`/api/product-image?url=${encodeURIComponent(url)}`, { signal })
@@ -41,7 +42,7 @@ export async function fetchRemoteImage(url: string, signal?: AbortSignal): Promi
   }
   const type = res.headers.get('content-type') ?? ''
   if (res.ok && type.startsWith('image/')) {
-    return { blob: await res.blob(), source: decodeURI(res.headers.get('x-image-source') ?? url) }
+    return { blob: await res.blob(), source: decodeURI(res.headers.get('x-image-source') ?? url), facts: readFacts(res.headers.get('x-product-facts')) }
   }
   if (type.includes('json')) {
     const body = (await res.json().catch(() => ({}))) as { error?: string }
@@ -52,6 +53,15 @@ export async function fetchRemoteImage(url: string, signal?: AbortSignal): Promi
   }
   // No API behind this address (static hosting, `vite preview` without the plugin …).
   throw new ImageError('unavailable')
+}
+
+/** The product facts the server found on the page; checked again here, dropped when unreadable. */
+function readFacts(header: string | null): ProductFacts {
+  try {
+    return header ? cleanFacts(JSON.parse(decodeURIComponent(header))) : {}
+  } catch {
+    return {}
+  }
 }
 
 let webpOk: boolean | null = null
@@ -122,13 +132,23 @@ export async function uploadImage(projectId: string, blob: Blob): Promise<string
   return (await api<{ path: string }>(`/api/images?project=${encodeURIComponent(projectId)}`, { raw: blob })).path
 }
 
-/** Download, shrink and store the image for one product. `from` defaults to the image URL, then the product link. */
-export async function loadProductImage(p: Product, from?: string, signal?: AbortSignal): Promise<void> {
+/**
+ * Download, shrink and store the image for one product. `from` defaults to the image URL, then
+ * the product link. GTIN and part number from the page fill only empty fields, never overwrite;
+ * the facts are returned so the caller can offer the page's price.
+ */
+export async function loadProductImage(p: Product, from?: string, signal?: AbortSignal): Promise<ProductFacts> {
   const target = from ?? (safeHref(p.imageUrl) || safeHref(p.url))
   if (!target) throw new ImageError('invalid-url')
-  const { blob, source } = await fetchRemoteImage(target, signal)
+  const { blob, source, facts } = await fetchRemoteImage(target, signal)
   const image = await uploadImage(p.projectId, await shrinkImage(blob))
-  await updateProduct(p, { image, imageUrl: p.imageUrl || source })
+  await updateProduct(p, {
+    image,
+    imageUrl: p.imageUrl || source,
+    ...(!p.gtin && facts.gtin ? { gtin: facts.gtin } : {}),
+    ...(!p.mpn && facts.mpn ? { mpn: facts.mpn } : {}),
+  })
+  return facts
 }
 
 /** Store an image the user picked, pasted or dropped. */

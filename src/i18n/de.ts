@@ -106,6 +106,12 @@ export const de: Messages = {
     open: 'Muss-Kriterien noch nicht vollständig bekannt',
     manualHint: 'Klicken zum manuellen Setzen: erfüllt → nicht erfüllt → automatisch',
     manual: 'manuell gesetzt',
+    fit: 'Eignung',
+    fitHint:
+      'Gewichteter Anteil der erfüllten weichen Anforderungen: wichtig 3, Wunsch 2, Bonus 1, vermeiden 2. Muss-Kriterien zählen nicht mit; unbekannte Werte gehen nicht zulasten eines Produkts.',
+    fitOpen: (n) => `${n} offen`,
+    fitSummary: (fit, open) =>
+      `${fit === null ? 'Eignung noch nicht bekannt' : `Eignung ${fit} %`}${open ? `, ${open} ${open === 1 ? 'Anforderung' : 'Anforderungen'} noch unbekannt` : ''}`,
   },
   field: {
     brand: 'Hersteller / Marke',
@@ -148,6 +154,8 @@ export const de: Messages = {
     options: 'Auswahlwerte',
     status: 'Status',
     updated: 'Zuletzt bearbeitet',
+    gtin: 'GTIN / EAN',
+    mpn: 'Herstellernummer',
   },
   purchase: {
     none: 'Nicht gekauft',
@@ -238,6 +246,19 @@ export const de: Messages = {
     noProperties: 'Dieser Vergleich hat noch keine eigenen Felder. Lege sie im Reiter „Felder“ an.',
     noRequirements: 'Keine Anforderungen festgelegt.',
     rawValue: 'Wert passt nicht zum Feldtyp und bleibt als Text erhalten',
+    priceAsOf: (date) => `Stand ${date}`,
+    priceStale: 'älter als eine Woche – neu prüfen',
+    gtinInvalid: 'Die Prüfziffer passt nicht – bitte mit Verpackung oder Shopseite vergleichen.',
+  },
+  lookup: {
+    title: 'Woanders prüfen',
+    geizhals: 'Geizhals',
+    idealo: 'idealo',
+    warentest: 'Stiftung Warentest',
+    trustpilot: 'Shop bei Trustpilot',
+    byGtin: 'Preise werden per GTIN gesucht, Tests per Name. Öffnet die andere Seite direkt – Propario hängt keine Tracking- oder Partnercodes an.',
+    byName:
+      'Gesucht wird nach Marke und Modell; mit GTIN wird das genaue Produkt gefunden. Öffnet die andere Seite direkt – Propario hängt keine Tracking- oder Partnercodes an.',
   },
   image: {
     loadAll: (n: number) => `Bilder laden (${n})`,
@@ -255,6 +276,8 @@ export const de: Messages = {
     dropLabel: 'Produktbild. Bild hier einfügen oder hineinziehen.',
     dropHint: 'Bild einfügen oder hineinziehen',
     pasteHint: 'Tipp: Im Shop mit Rechtsklick auf das Bild → „Bild kopieren“, dann das Feld anklicken und Strg+V drücken. Hineinziehen funktioniert auch.',
+    pagePrice: (price) => `Preis auf der Shopseite: ${price}`,
+    takePrice: 'Diesen Preis übernehmen',
     error: {
       unavailable: 'Das Herunterladen von Bildern ist auf diesem Server ausgeschaltet.',
       blocked: 'Der Shop blockiert automatische Abrufe. Bild im Shop kopieren und hier einfügen.',
@@ -347,6 +370,8 @@ export const de: Messages = {
       productType: 'Produktart',
       price: 'Preis',
       priceNote: 'Preisnotiz',
+      gtin: 'GTIN / EAN',
+      mpn: 'Herstellernummer',
       retailer: 'Händler',
       url: 'Produktlink',
       imageUrl: 'Bild-URL',

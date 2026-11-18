@@ -58,6 +58,21 @@ export function dateToIso(d: Date): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
 
+/** A price older than this many days is marked as worth checking again. */
+export const STALE_DAYS = 7
+
+/** Today in local time, ISO `yyyy-mm-dd`. */
+export const todayIso = () => dateToIso(new Date())
+
+/** Whole days between an ISO date and `now` (local calendar days); null when there is no date. */
+export function daysSince(iso: string | undefined, now = new Date()): number | null {
+  const m = iso?.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (!m) return null
+  const then = new Date(+m[1], +m[2] - 1, +m[3])
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  return Math.round((today.getTime() - then.getTime()) / 86_400_000)
+}
+
 /** Excel serial day number → ISO date (1900 date system). */
 export function excelSerialToIso(serial: number): string {
   const ms = Math.round((serial - 25569) * 86400 * 1000)

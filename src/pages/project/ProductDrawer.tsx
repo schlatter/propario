@@ -1,8 +1,10 @@
 import { deleteProduct, duplicateProduct, setDecision, updateProduct, updateProject } from '../../db/repo'
 import type { Candidate, Product, PurchaseStatus, Rating } from '../../db/types'
 import { productName } from '../../domain/display'
+import { lookupLinks } from '../../domain/lookup'
 import { evaluate, OP_SYMBOL } from '../../domain/requirements'
-import { hostOf, normalizeUrl, parseNumber, safeHref } from '../../domain/values'
+import { daysSince, hostOf, normalizeUrl, parseNumber, safeHref, STALE_DAYS } from '../../domain/values'
+import { isValidGtin, normalizeGtin } from '../../shared/product-facts.ts'
 import { useSettings } from '../../hooks'
 import { useI18n } from '../../i18n'
 import { Modal, useConfirm } from '../../ui/Dialog'
@@ -32,6 +34,9 @@ function DrawerContent({ data, product: p, onClose }: { data: ProjectData; produ
   const href = safeHref(p.url)
   const set = (patch: Partial<Product>) => updateProduct(p, patch)
   const name = productName(p, m.product.unnamed)
+  const lookups = lookupLinks(p)
+  const priceAge = p.price !== null ? daysSince(p.priceDate) : null
+  const gtinInvalid = !!p.gtin && !isValidGtin(p.gtin)
 
   const setRating = (i: number, patch: Partial<Rating>) => set({ ratings: p.ratings.map((r, j) => (j === i ? { ...r, ...patch } : r)) })
   const unratedPeople = settings.people.filter((x) => !p.ratings.some((r) => r.person === x))
@@ -97,14 +102,25 @@ function DrawerContent({ data, product: p, onClose }: { data: ProjectData; produ
             <Field label={m.field.model}>
               <CommitInput className="input" value={p.model} onCommit={(v) => set({ model: v.trim() })} />
             </Field>
-            <Field label={m.field.price}>
-              <CommitInput
-                className="input"
-                inputMode="decimal"
-                value={p.price !== null ? String(p.price) : ''}
-                onCommit={(v) => set({ price: parseNumber(v) })}
-              />
-            </Field>
+            {/* The note sits beside the label, not in it, so it does not become part of the field's name. */}
+            <div className="field-stack">
+              <Field label={m.field.price}>
+                <CommitInput
+                  className="input"
+                  inputMode="decimal"
+                  value={p.price !== null ? String(p.price) : ''}
+                  aria-describedby={priceAge !== null ? 'price-date' : undefined}
+                  onCommit={(v) => set({ price: parseNumber(v) })}
+                />
+              </Field>
+              {priceAge !== null && (
+                <small id="price-date" className={`field-note${priceAge > STALE_DAYS ? ' stale' : ''}`}>
+                  {priceAge > STALE_DAYS && <span className="warn-dot" aria-hidden="true" />}
+                  {m.product.priceAsOf(fmt.date(p.priceDate))}
+                  {priceAge > STALE_DAYS && ` · ${m.product.priceStale}`}
+                </small>
+              )}
+            </div>
             <Field label={m.field.priceNote}>
               <CommitInput className="input" value={p.priceNote} onCommit={(v) => set({ priceNote: v })} />
             </Field>
@@ -121,6 +137,27 @@ function DrawerContent({ data, product: p, onClose }: { data: ProjectData; produ
                   void set({ url, retailer: p.retailer || hostOf(url) })
                 }}
               />
+            </Field>
+            <div className="field-stack">
+              <Field label={m.field.gtin}>
+                <CommitInput
+                  className="input"
+                  inputMode="numeric"
+                  value={p.gtin ?? ''}
+                  aria-invalid={gtinInvalid || undefined}
+                  aria-describedby={gtinInvalid ? 'gtin-note' : undefined}
+                  onCommit={(v) => set({ gtin: normalizeGtin(v) })}
+                />
+              </Field>
+              {gtinInvalid && (
+                <small id="gtin-note" className="field-note stale">
+                  <span className="warn-dot" aria-hidden="true" />
+                  {m.product.gtinInvalid}
+                </small>
+              )}
+            </div>
+            <Field label={m.field.mpn}>
+              <CommitInput className="input" value={p.mpn ?? ''} maxLength={64} onCommit={(v) => set({ mpn: v.trim() })} />
             </Field>
             <Field label={m.field.productType}>
               <CommitInput className="input" value={p.productType} onCommit={(v) => set({ productType: v })} />
@@ -154,6 +191,22 @@ function DrawerContent({ data, product: p, onClose }: { data: ProjectData; produ
             <CommitTextarea className="textarea" value={p.description} onCommit={(v) => set({ description: v })} />
           </Field>
         </div>
+
+        {lookups.length > 0 && (
+          <div className="section">
+            <h3 id="lookup-title">{m.lookup.title}</h3>
+            <ul className="lookups" aria-labelledby="lookup-title">
+              {lookups.map((l) => (
+                <li key={l.id}>
+                  <a className="btn sm" href={l.href} target="_blank" rel="noopener noreferrer">
+                    <Glyph name="out" /> {m.lookup[l.id]}
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <p className="muted small">{p.gtin && isValidGtin(p.gtin) ? m.lookup.byGtin : m.lookup.byName}</p>
+          </div>
+        )}
 
         <div className="section">
           <h3>{m.product.properties}</h3>

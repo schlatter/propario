@@ -4,24 +4,29 @@ import type { Product } from '../../db/types'
 import { safeHref } from '../../domain/values'
 import { useI18n } from '../../i18n'
 import { ImageError, imageFromTransfer, loadProductImage, productImage, setProductImageFromBlob, type ImageErrorCode } from '../../images'
+import type { ProductFacts } from '../../shared/product-facts.ts'
 import { Glyph } from '../../ui/Glyph'
 
 /** Image block in the product drawer: load from link, pick a file, paste or drop, remove. */
 export function ProductImage({ product: p, name }: { product: Product; name: string }) {
-  const { m } = useI18n()
+  const { m, fmt } = useI18n()
   const file = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<ImageErrorCode | null>(null)
   const [over, setOver] = useState(false)
+  /** The price the shop page states, offered when it differs from the product's price. */
+  const [pagePrice, setPagePrice] = useState<number | null>(null)
   const src = productImage(p)
   const stored = !!p.image
   const link = safeHref(p.url)
 
-  const run = async (job: () => Promise<void>) => {
+  const run = async (job: () => Promise<ProductFacts | void>) => {
     setBusy(true)
     setError(null)
+    setPagePrice(null)
     try {
-      await job()
+      const facts = await job()
+      if (facts?.price !== undefined && facts.price !== p.price) setPagePrice(facts.price)
     } catch (e) {
       setError(e instanceof ImageError ? e.code : 'failed')
     } finally {
@@ -88,6 +93,21 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
           />
         </div>
         <p className="muted small">{m.image.pasteHint}</p>
+        {pagePrice !== null && (
+          <p className="small row" role="status">
+            {m.image.pagePrice(fmt.money(pagePrice))}
+            <button
+              type="button"
+              className="btn sm"
+              onClick={async () => {
+                await updateProduct(p, { price: pagePrice })
+                setPagePrice(null)
+              }}
+            >
+              {m.image.takePrice}
+            </button>
+          </p>
+        )}
         {error && (
           <p className="small pimg-error" role="alert">
             {m.image.error[error]}

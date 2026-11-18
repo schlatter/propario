@@ -8,6 +8,8 @@ export type FieldTarget =
   | 'productType'
   | 'price'
   | 'priceNote'
+  | 'gtin'
+  | 'mpn'
   | 'retailer'
   | 'url'
   | 'imageUrl'
@@ -34,6 +36,8 @@ export const FIELD_TARGETS: FieldTarget[] = [
   'productType',
   'price',
   'priceNote',
+  'gtin',
+  'mpn',
   'retailer',
   'url',
   'imageUrl',
@@ -62,6 +66,8 @@ export const SINGLE_TARGETS: FieldTarget[] = [
   'productType',
   'price',
   'priceNote',
+  'gtin',
+  'mpn',
   'retailer',
   'url',
   'imageUrl',
@@ -80,6 +86,8 @@ const PRODUCT_SYNONYMS: Partial<Record<FieldTarget, string[]>> = {
   productType: ['produktart', 'möbelart', 'product type', 'art', 'gerätetyp'],
   price: ['preis', 'price', 'kosten', 'cost', 'preis eur', 'price eur'],
   priceNote: ['preisnotiz', 'price note', 'preisstand'],
+  gtin: ['gtin', 'ean', 'gtin ean', 'ean code', 'barcode'],
+  mpn: ['mpn', 'herstellernummer', 'herstellerartikelnummer', 'manufacturer part no', 'part number', 'artikelnummer hersteller'],
   retailer: ['händler', 'haendler', 'shop', 'retailer', 'store', 'bezugsquelle', 'verkäufer', 'seller'],
   url: ['link', 'produktlink', 'url', 'product link', 'produktseite', 'webseite', 'website'],
   imageUrl: ['bild', 'produktbild', 'image', 'image url', 'product image', 'foto'],

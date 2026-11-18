@@ -81,6 +81,12 @@ export function evaluate(req: Requirement, product: Product, props: Map<string, 
   return holds !== inverted ? 'pass' : 'fail'
 }
 
+/**
+ * How much each soft requirement counts towards the fit. Must and exclusion are not weighed:
+ * they are gates (`blocked`, `qualified`). "Avoid" counts when the product avoids it.
+ */
+export const WEIGHT: Partial<Record<Priority, number>> = { important: 3, wish: 2, bonus: 1, avoid: 2 }
+
 export interface Summary {
   pass: number
   fail: number
@@ -89,10 +95,16 @@ export interface Summary {
   blocked: boolean
   /** All must/exclusion requirements are known to pass. */
   qualified: boolean
+  /** Weighted share (0–100) of the known soft requirements that pass; null while none is known. */
+  fit: number | null
+  /** Soft requirements still unknown – they do not lower the fit. */
+  fitOpen: number
 }
 
 export function summarize(reqs: Requirement[], product: Product, props: Map<string, PropertyDef>): Summary {
-  const s: Summary = { pass: 0, fail: 0, unknown: 0, blocked: false, qualified: true }
+  const s: Summary = { pass: 0, fail: 0, unknown: 0, blocked: false, qualified: true, fit: null, fitOpen: 0 }
+  let won = 0
+  let known = 0
   for (const r of reqs) {
     if (!CHECKABLE.includes(r.priority)) continue
     const res = evaluate(r, product, props)
@@ -101,7 +113,16 @@ export function summarize(reqs: Requirement[], product: Product, props: Map<stri
       if (res === 'fail') s.blocked = true
       if (res !== 'pass') s.qualified = false
     }
+    const w = WEIGHT[r.priority]
+    if (w) {
+      if (res === 'unknown') s.fitOpen++
+      else {
+        known += w
+        if (res === 'pass') won += w
+      }
+    }
   }
+  if (known) s.fit = Math.round((100 * won) / known)
   return s
 }
 

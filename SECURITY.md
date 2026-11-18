@@ -57,6 +57,11 @@ happens.** Every change is measured against this list; `npm run verify` checks m
 - Fetching a product page is guarded against SSRF: http(s) on ports 80/443, public addresses
   only, checked at connection time (DNS rebinding) and after every redirect, time and size
   limits, no cookies, SVG refused, signed-in users only.
+- Facts read from a product page (GTIN, part number, price) are untrusted: only a GTIN with a
+  valid check digit, a short plain part number and a euro amount pass, on the server and again
+  in the browser (`src/shared/product-facts.ts`). They fill only empty fields.
+- Links to other sites are built from a fixed list in the code (`src/domain/lookup.ts`) with
+  encoded search terms, open with `noopener noreferrer`, and carry no tracking parameters.
 - Errors show a reference, never a stack trace; the log has the details.
 
 ### The container (CIS Docker Benchmark)

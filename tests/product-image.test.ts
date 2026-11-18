@@ -2,7 +2,7 @@
 import http from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { checkUrl, extractImageCandidates, fetchProductImage, isForbiddenAddress } from '../server/product-image.ts'
+import { checkUrl, extractImageCandidates, extractProductFacts, fetchProductImage, isForbiddenAddress } from '../server/product-image.ts'
 
 // 1×1 PNG
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64')
@@ -36,6 +36,25 @@ describe('extractImageCandidates', () => {
   })
 })
 
+describe('extractProductFacts', () => {
+  it('reads GTIN, MPN and a euro price from JSON-LD, also inside @graph and offers', () => {
+    const html = `<script type="application/ld+json">{"@graph":[{"@type":"WebPage"},
+      {"@type":"Product","name":"Waschmaschine","gtin13":"4006381333931","mpn":"WAX32M40",
+       "offers":{"@type":"Offer","price":"849.00","priceCurrency":"EUR"}}]}</script>`
+    expect(extractProductFacts(html)).toEqual({ gtin: '4006381333931', mpn: 'WAX32M40', price: 849 })
+  })
+
+  it('falls back to microdata and drops prices in other currencies and malformed values', () => {
+    const html = `<meta itemprop="gtin13" content="4006381333931"><meta itemprop="sku" content="ignored">
+      <script type="application/ld+json">{"@type":"Product","mpn":"<b>x</b>","offers":[{"price":99,"priceCurrency":"USD"}]}</script>`
+    expect(extractProductFacts(html)).toEqual({ gtin: '4006381333931' })
+  })
+
+  it('finds nothing on pages without product data', () => {
+    expect(extractProductFacts('<html><body>Hallo</body></html>')).toEqual({})
+  })
+})
+
 describe('address and URL checks', () => {
   it('refuses private, loopback and link-local addresses', () => {
     for (const ip of ['127.0.0.1', '10.1.2.3', '192.168.178.1', '172.20.0.5', '169.254.169.254', '::1', 'fd00::1', 'fe80::1', '::ffff:127.0.0.1', '100.64.0.1'])
@@ -57,7 +76,9 @@ describe('fetchProductImage against a local test shop', () => {
     server = http.createServer((req, res) => {
       if (req.url === '/product') {
         res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' })
-        res.end('<html><head><meta property="og:image" content="/missing.jpg"><meta property="og:image" content="/img.png"></head></html>')
+        res.end(
+          '<html><head><meta property="og:image" content="/missing.jpg"><meta property="og:image" content="/img.png"><meta itemprop="gtin13" content="4006381333931"></head></html>',
+        )
       } else if (req.url === '/moved') {
         res.writeHead(301, { location: '/product' })
         res.end()
@@ -85,6 +106,9 @@ describe('fetchProductImage against a local test shop', () => {
     expect(img.contentType).toBe('image/png')
     expect(img.body.equals(PNG)).toBe(true)
     expect(img.source).toBe(`${base}/img.png`)
+  })
+  it('returns the facts of the page it read for the picture', async () => {
+    expect((await fetchProductImage(`${base}/moved`, { allowPrivate: true })).facts).toEqual({ gtin: '4006381333931' })
   })
   it('passes direct image URLs through', async () => {
     expect((await fetchProductImage(`${base}/img.png`, { allowPrivate: true })).source).toBe(`${base}/img.png`)

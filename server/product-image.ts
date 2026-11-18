@@ -1,6 +1,7 @@
 /**
  * Product image fetcher: given a product page (or a direct image URL), find the page's main
- * image (Open Graph, Twitter card, JSON-LD Product, image_src) and return its bytes.
+ * image (Open Graph, Twitter card, JSON-LD Product, image_src) and return its bytes – plus the
+ * facts the same page states about the product (GTIN, MPN, euro price), so nothing is read twice.
  *
  * Runs server-side because browsers cannot read other sites' pages (CORS). Called by the API
  * (signed-in users only, rate limited); the browser shrinks the result and stores it on this
@@ -15,6 +16,7 @@ import http from 'node:http'
 import https from 'node:https'
 import net from 'node:net'
 import zlib from 'node:zlib'
+import { cleanFacts, type ProductFacts } from '../src/shared/product-facts.ts'
 
 const MAX_HTML = 4 * 1024 * 1024
 const MAX_IMAGE = 10 * 1024 * 1024
@@ -270,6 +272,47 @@ export function extractImageCandidates(html: string, pageUrl: string): string[] 
   return result
 }
 
+const GTIN_KEYS = ['gtin13', 'gtin', 'gtin14', 'gtin12', 'gtin8']
+
+function ldFacts(node: any, raw: Record<string, unknown>, depth = 0): void {
+  if (!node || depth > 8 || typeof node !== 'object') return
+  if (Array.isArray(node)) {
+    for (const n of node) ldFacts(n, raw, depth + 1)
+    return
+  }
+  const type = ([] as unknown[]).concat(node['@type'] || []).map(String)
+  if (type.some((t) => /product/i.test(t))) {
+    raw.gtin ??= GTIN_KEYS.map((k) => node[k]).find((v) => v !== undefined)
+    raw.mpn ??= node.mpn
+    for (const offer of ([] as any[]).concat(node.offers || [])) {
+      if (raw.price !== undefined || !offer || typeof offer !== 'object') continue
+      if (String(offer.priceCurrency ?? '').toUpperCase() === 'EUR') raw.price = offer.price ?? offer.lowPrice
+    }
+  }
+  for (const key of ['@graph', 'mainEntity', 'itemListElement', 'item']) if (node[key]) ldFacts(node[key], raw, depth + 1)
+}
+
+/** What a page states about its product (JSON-LD first, then microdata); only well-formed values. */
+export function extractProductFacts(html: string): ProductFacts {
+  const raw: Record<string, unknown> = {}
+  for (const m of html.matchAll(/<script\b[^>]*type\s*=\s*["']?application\/ld\+json["']?[^>]*>([\s\S]*?)<\/script>/gi)) {
+    try {
+      ldFacts(JSON.parse(m[1].trim()), raw)
+    } catch {
+      /* broken JSON-LD is common; ignore */
+    }
+  }
+  const micro: Record<string, string> = {}
+  for (const m of html.matchAll(/<meta\b[^>]*>/gi)) {
+    const a = attrs(m[0])
+    if (a.itemprop && a.content && !(a.itemprop.toLowerCase() in micro)) micro[a.itemprop.toLowerCase()] = a.content
+  }
+  raw.gtin ??= GTIN_KEYS.map((k) => micro[k]).find((v) => v !== undefined)
+  raw.mpn ??= micro.mpn
+  if (raw.price === undefined && (micro.pricecurrency ?? '').toUpperCase() === 'EUR') raw.price = micro.price
+  return cleanFacts(raw)
+}
+
 const isImage = (type: string) => type.startsWith('image/') && !type.includes('svg')
 
 export interface FetchOptions {
@@ -279,7 +322,10 @@ export interface FetchOptions {
 }
 
 /** The main image of a product page (or a direct image URL). */
-export async function fetchProductImage(url: string, opts: FetchOptions = {}): Promise<{ body: Buffer; contentType: string; source: string }> {
+export async function fetchProductImage(
+  url: string,
+  opts: FetchOptions = {},
+): Promise<{ body: Buffer; contentType: string; source: string; facts: ProductFacts }> {
   const userAgent = opts.userAgent || 'Mozilla/5.0 (compatible; Propario; product image preview)'
   const allowPrivate = !!opts.allowPrivate
   const deadline = Date.now() + (opts.timeoutMs || TIMEOUT_MS)
@@ -298,10 +344,12 @@ export async function fetchProductImage(url: string, opts: FetchOptions = {}): P
     throw e
   })
   if (page.status >= 400) throw statusError(page.status)
-  if (isImage(page.type)) return { body: page.body, contentType: page.type.split(';')[0], source: page.url }
+  if (isImage(page.type)) return { body: page.body, contentType: page.type.split(';')[0], source: page.url, facts: {} }
   if (!page.type.includes('html')) throw new ImageFetchError('no-image', 422)
 
-  const candidates = extractImageCandidates(page.body.toString('utf8'), page.url).slice(0, 3)
+  const html = page.body.toString('utf8')
+  const facts = extractProductFacts(html)
+  const candidates = extractImageCandidates(html, page.url).slice(0, 3)
   if (!candidates.length) throw new ImageFetchError('no-image', 422)
   let lastError: ImageFetchError = new ImageFetchError('no-image', 422)
   for (const c of candidates) {
@@ -311,7 +359,7 @@ export async function fetchProductImage(url: string, opts: FetchOptions = {}): P
         lastError = statusError(img.status)
         continue
       }
-      if (isImage(img.type)) return { body: img.body, contentType: img.type.split(';')[0], source: img.url }
+      if (isImage(img.type)) return { body: img.body, contentType: img.type.split(';')[0], source: img.url, facts }
     } catch (e) {
       lastError = e instanceof ImageFetchError ? e : new ImageFetchError('failed', 502)
       if (lastError.code === 'timeout') break

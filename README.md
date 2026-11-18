@@ -18,6 +18,9 @@ candidates, their pictures, your ratings and the final decision.
 - **Pictures**: paste a shop link and Propario fetches the product picture once and keeps a
   small copy. A thumbnail sits in front of each name and grows on hover. Shops that refuse
   automated access are respected; paste or drop the picture instead.
+- **Check elsewhere**: links to price comparisons (Geizhals, idealo), Stiftung Warentest and
+  the shop on Trustpilot – by GTIN when known. No tracking or affiliate codes.
+- **Fit**: requirements weighted by priority, prices with the date they were seen.
 - **Side by side**: selected products next to each other, differences highlighted.
 - **Decide together**: favourites, exclusion reasons, star ratings and notes per person, pros and
   cons, the final decision and the purchase.
@@ -33,8 +36,11 @@ candidates, their pictures, your ratings and the final decision.
   device PIN). New people join only with an invitation.
 - No tracking, no analytics, no third-party scripts or fonts. Pages show pictures from this
   server only, so no shop learns who is looking.
-- No crawling. A product page is read once when you ask for its picture: its preview image
-  (Open Graph, schema.org), nothing else; no disguised client, no getting past bot walls.
+- No crawling. A product page is read once when you ask for its picture: its preview image and
+  what it states about the product (GTIN, part number, euro price; Open Graph, schema.org),
+  nothing else; no disguised client, no getting past bot walls.
+- Links to other sites (price comparisons, tests) are built in your browser and open there
+  directly; this server never contacts them.
 
 ## Try it on your computer
 

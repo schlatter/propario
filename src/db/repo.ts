@@ -9,6 +9,7 @@ import type { Product, Project, PropertyDef, Requirement } from './types'
 import { sanitize, type Change } from '../shared/records.ts'
 import { commit, setLocalRole } from '../sync'
 import { rehostImages } from '../images'
+import { todayIso } from '../domain/values'
 
 /** All records belonging to one project. Used for duplicate, export and import. */
 export interface ProjectBundle {
@@ -132,6 +133,9 @@ export async function addProduct(projectId: string, data: Partial<Product> = {})
 }
 
 export async function updateProduct(product: Product, fields: Partial<Product>) {
+  // A price someone sets is a price seen today; the date says how current it is.
+  if ('price' in fields && !('priceDate' in fields) && fields.price !== product.price)
+    fields = { ...fields, priceDate: fields.price === null ? '' : todayIso() }
   await commit([patch('products', product, fields)])
 }
 

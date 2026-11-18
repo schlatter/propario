@@ -137,6 +137,15 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await expect(picture).toHaveAttribute('src', /^\/api\/images\/[0-9a-f-]{36}$/)
   await expect.poll(() => picture.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0)
   await inside(picture, page.locator('.pimg-drop'))
+
+  // Price with its date, the GTIN, and links to look the product up elsewhere (no tracking codes).
+  await page.getByLabel('Price', { exact: true }).fill('249')
+  await page.getByLabel('GTIN / EAN').fill('4006381 333931')
+  await page.getByLabel('Manufacturer part no.').click()
+  await expect(page.getByText(/^As of /)).toBeVisible()
+  await expect(page.getByLabel('GTIN / EAN')).toHaveValue('4006381333931')
+  await expect(page.getByRole('link', { name: 'Geizhals' })).toHaveAttribute('href', 'https://geizhals.de/?fs=4006381333931')
+  await expect(page.getByRole('link', { name: 'Stiftung Warentest' })).toHaveAttribute('rel', 'noopener noreferrer')
   await accessible(page, 'product details')
   await page.keyboard.press('Escape')
 })

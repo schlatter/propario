@@ -6,6 +6,17 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- **Check elsewhere:** each product links to Geizhals, idealo and Stiftung Warentest, and its
+  shop to Trustpilot. Searches use the GTIN when known, otherwise brand and model. The links go
+  straight to those sites; Propario fetches nothing and adds no tracking or affiliate codes.
+- Products have a **GTIN/EAN** and a **manufacturer part number**. When the picture is fetched
+  from the shop page, both are taken from the same page if they are still empty; a new product
+  added by link also takes the shop's price. Excel import and export know both columns.
+- **Fit:** a weighted share of the met soft requirements (important 3, wish 2, bonus 1, avoid 2)
+  as a sortable column and in the side-by-side view. Must criteria stay filters; unknown values
+  do not count against a product, they are shown as open.
+- Prices carry the date they were set; prices older than a week are marked.
+
 - Clicking a product's name opens its details; the shop page opens with the ↗ button next to
   it, in a new tab.
 - Tall product pictures stay inside their box in the details and on swipe cards instead of

@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { reorder, setProductValue, updateProduct, updateProject } from '../../db/repo'
 import type { Candidate, Product, PropertyDef, TableView } from '../../db/types'
 import { avgStars, compareKeys, formatValue, productName, sortKey } from '../../domain/display'
-import { coerceValue, hostOf, isTyped, parseNumber, safeHref } from '../../domain/values'
+import { WEIGHT } from '../../domain/requirements'
+import { coerceValue, daysSince, hostOf, isTyped, parseNumber, safeHref, STALE_DAYS } from '../../domain/values'
 import { useI18n } from '../../i18n'
 import { ImageError, loadImages, missingImages, productImage } from '../../images'
 import { useToast } from '../../ui/Dialog'
@@ -116,7 +117,14 @@ export function ProductTable({
             }}
             display={
               <span className="price-cell" style={{ padding: 0, minHeight: 0 }}>
-                <span className="price">{p.price !== null ? fmt.money(p.price) : p.priceNote}</span>
+                <span className="price">
+                  {p.price !== null && (daysSince(p.priceDate) ?? 0) > STALE_DAYS && (
+                    <span className="warn-dot" title={`${m.product.priceAsOf(fmt.date(p.priceDate))} · ${m.product.priceStale}`}>
+                      <span className="sr-only">{m.product.priceStale}</span>
+                    </span>
+                  )}
+                  {p.price !== null ? fmt.money(p.price) : p.priceNote}
+                </span>
                 {p.price !== null && minPrice !== null && p.candidate !== 'excluded' && (
                   <span className={`delta${p.price === minPrice ? ' best' : ''}`}>
                     {p.price === minPrice ? m.project.cheapest : m.project.priceDiff(fmt.money(p.price - minPrice))}
@@ -142,7 +150,7 @@ export function ProductTable({
         width: Math.min(Math.max(120, data.checkable.length * 11 + 30), 260),
         sort: (p) => {
           const s = data.summaries.get(p.id)!
-          return (s.blocked ? 0 : s.qualified ? 2000 : 1000) + s.pass
+          return (s.blocked ? 0 : s.qualified ? 2000 : 1000) + (s.fit ?? 0)
         },
         render: (p) => (
           <span className="check-cell">
@@ -150,6 +158,30 @@ export function ProductTable({
             <CheckStrip items={data.results(p)} />
           </span>
         ),
+      })
+    }
+    if (data.checkable.some((r) => WEIGHT[r.priority])) {
+      cols.push({
+        id: 'fit',
+        label: m.check.fit,
+        width: 110,
+        align: 'right',
+        sort: (p) => data.summaries.get(p.id)!.fit,
+        render: (p) => {
+          const s = data.summaries.get(p.id)!
+          const text = m.check.fitSummary(s.fit, s.fitOpen)
+          return (
+            <span className="fit-cell" title={`${m.check.fitHint} ${text}`}>
+              <span aria-hidden="true">{s.fit !== null ? `${s.fit} %` : '–'}</span>
+              {s.fitOpen > 0 && (
+                <span className="muted small" aria-hidden="true">
+                  {m.check.fitOpen(s.fitOpen)}
+                </span>
+              )}
+              <span className="sr-only">{text}</span>
+            </span>
+          )
+        },
       })
     }
     cols.push({

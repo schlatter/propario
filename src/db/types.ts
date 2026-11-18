@@ -94,6 +94,12 @@ export interface Product {
   price: number | null
   /** Original price text when it could not be read as one number, e.g. "830 – 900 €". */
   priceNote: string
+  /** When the price was last set, ISO `yyyy-mm-dd` ('' when unknown, e.g. imported). */
+  priceDate: string
+  /** GTIN/EAN, digits only ('' when unknown). Identifies the product for price and test searches. */
+  gtin: string
+  /** Manufacturer part number ('' when unknown). */
+  mpn: string
   retailer: string
   url: string
   imageUrl: string

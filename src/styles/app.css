@@ -1413,6 +1413,46 @@ textarea.cell-editor {
 }
 .price-cell .price {
   font-weight: 650;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.fit-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 7px 10px;
+  min-height: 44px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+}
+.fit-cell .small {
+  font-weight: 400;
+}
+.field-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.field-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.field-note.stale {
+  color: var(--ink-2);
+}
+.lookups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 6px;
+  padding: 0;
+  list-style: none;
 }
 .price-cell .delta {
   font-size: 11px;
@@ -1870,6 +1910,7 @@ table.compare {
   white-space: nowrap;
 }
 .warn-dot {
+  display: inline-block;
   width: 8px;
   height: 8px;
   border-radius: 50%;

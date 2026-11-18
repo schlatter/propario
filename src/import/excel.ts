@@ -8,6 +8,7 @@ import { makeProduct, makeProject, makeProperty, makeRequirement } from '../db/f
 import type { Condition, ConditionOp, Priority, Product, PropertyDef, PropertyType } from '../db/types'
 import type { ProjectBundle } from '../db/repo'
 import { coerceValue, dateToIso, looksLikeUrl, normalizeUrl, parseBoolean, parseDate, parseLeadingNumber, parseNumber } from '../domain/values'
+import { normalizeGtin } from '../shared/product-facts.ts'
 import { isUnit, nameTokens, norm, splitUnit, suggestCategory } from './normalize'
 import { priorityFor, productTargetFor, reqTargetFor, sectionKind, SINGLE_TARGETS, type FieldTarget, type ReqTarget } from './synonyms'
 
@@ -404,6 +405,17 @@ export function rowToProduct(row: (Cell | null)[], draft: SheetDraft, projectId:
         break
       case 'priceNote':
         p.priceNote = appendText(p.priceNote, text)
+        break
+      case 'gtin': {
+        // Excel often shows long numbers in scientific notation; only clean digit strings count.
+        const gtin = normalizeGtin(text)
+        if (gtin.length >= 8 && gtin.length === text.replace(/[\s-]/g, '').length) p.gtin = gtin
+        else keep()
+        break
+      }
+      case 'mpn':
+        if (text.length <= 64) p.mpn = text
+        else keep()
         break
       case 'brand':
       case 'model':

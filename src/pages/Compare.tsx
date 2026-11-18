@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import type { Product } from '../db/types'
 import { avgStars, formatValue, productName } from '../domain/display'
-import { evaluate } from '../domain/requirements'
+import { evaluate, WEIGHT } from '../domain/requirements'
 import { hostOf, safeHref } from '../domain/values'
 import { useI18n } from '../i18n'
 import { productImage } from '../images'
@@ -102,6 +102,19 @@ export function ComparePage() {
           values: products.map((p) => JSON.stringify(data.summaries.get(p.id))),
           cells: products.map((p) => <Verdict summary={data.summaries.get(p.id)!} />),
         },
+        ...(data.checkable.some((r) => WEIGHT[r.priority])
+          ? [
+              {
+                key: 'fit',
+                label: m.check.fit,
+                values: products.map((p) => String(data.summaries.get(p.id)!.fit)),
+                cells: products.map((p) => {
+                  const s = data.summaries.get(p.id)!
+                  return m.check.fitSummary(s.fit, s.fitOpen)
+                }),
+              },
+            ]
+          : []),
         ...data.checkable.map((r) => ({
           key: r.id,
           label: (
