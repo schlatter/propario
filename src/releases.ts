@@ -11,6 +11,23 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.7.0',
+    notes: {
+      en: [
+        'Requirements as a compact table – with each one’s weight in the fit.',
+        'Budget with at most and at least, each with its own priority.',
+        'Own price rules move into the budget with one click.',
+        'Missing fields are created from the requirement; rows move by dragging.',
+      ],
+      de: [
+        'Anforderungen als kompakte Tabelle – mit dem Gewicht jeder einzelnen.',
+        'Budget mit Höchst- und Mindestbetrag, jeweils mit eigener Priorität.',
+        'Eigene Preisregeln wandern mit einem Klick ins Budget.',
+        'Fehlende Felder entstehen aus der Anforderung; Zeilen verschiebt man per Ziehen.',
+      ],
+    },
+  },
+  {
     version: '0.6.0',
     notes: {
       en: [

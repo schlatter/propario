@@ -6,14 +6,25 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+## 0.7.0 — 2026-11-18
+
 - **Requirements as a table**, like the products: one compact row per requirement – priority,
-  requirement, automatic check, category, details – with fields that look like cells, groups as
-  slim rows and the budget as the first group. Far more fits on the screen; on phones the table
-  scrolls sideways.
+  requirement, weight, automatic check, category, details – with fields that look like cells and
+  groups as slim rows. Far more fits on the screen; on phones priority and requirement stay in
+  view while the rest scrolls sideways.
 - **Budget, like a requirement:** at most and – optionally – at least, each with its own
-  priority (at most is a must unless chosen otherwise, at least is important). Both count in the
-  checks, the must count and the fit like any rule; the price says "€46 below the minimum". A
-  hint points at an own price rule that the budget probably duplicates.
+  priority (at most is a must unless chosen otherwise, at least is important), as the first
+  group of the table. Both count in the checks, the must count and the fit like any rule; the
+  price says "€46 below the minimum".
+- **Own price rules into the budget** with one click: "Budget ≤ 800" from an Excel import becomes
+  the budget's maximum with its priority, and the rule is removed.
+- **Weights visible:** each requirement shows how much it counts – "Filter" for must and
+  exclusion, otherwise its weight and its share of the fit ("2 · 25 %").
+- **A missing field, created from the requirement:** "Maximale Tiefe 40 cm" offers "New field
+  Tiefe (cm)" and sets the check to Tiefe ≤ 40 right away.
+- **Requirements move by dragging their handle** (or the arrow keys on it), also into another
+  group, which they then join.
+
 ## 0.6.0 — 2026-11-18
 
 - **Install as an app:** a web app manifest, app icons (also maskable and monochrome for
