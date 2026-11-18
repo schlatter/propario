@@ -10,7 +10,7 @@
 import { makeProduct, makeProject, makeProperty, makeRequirement } from '../db/factories.ts'
 import type { Product, Project, PropertyDef, Requirement } from '../db/types'
 import { UUID } from './ids.ts'
-import { SCALE_RANGE } from '../domain/reviews.ts'
+import { SCALE_RANGE } from './review-scales.ts'
 
 export const KINDS = ['projects', 'products', 'properties', 'requirements'] as const
 export type Kind = (typeof KINDS)[number]

@@ -5,8 +5,9 @@
  */
 import type { Review, ReviewScale } from '../db/types'
 
-/** Allowed range per scale (inclusive). */
-export const SCALE_RANGE: Record<ReviewScale, [number, number]> = { stars5: [0, 5], grade: [0.5, 5.5], percent: [0, 100] }
+import { SCALE_RANGE } from '../shared/review-scales.ts'
+
+export { SCALE_RANGE }
 
 /** Well-known sources with how they usually rate; picking one fills in scale and subject. */
 export const KNOWN_SOURCES: { name: string; scale: ReviewScale; about: Review['about'] }[] = [
