@@ -63,6 +63,33 @@ describe('planFacts: what a shop page fills in', () => {
     ])
   })
 
+  it('reads a furniture data sheet: H/B/T with slashes, "Gesamtgewicht ca.", colour as variant, shop lines left out', () => {
+    // Structure as seen on a furniture shop (2026-11), values invented.
+    const plan = planFacts(
+      makeProduct('p'),
+      {
+        specs: [
+          { name: 'Farbe', value: 'weiß/braun', table: true },
+          { name: 'Abmessungen', value: 'H/B/T ca. 190/60/40 cm', table: true },
+          { name: 'Fach links', value: 'H/B/T ca. 40/20/30 cm', table: true },
+          { name: 'Gewicht', value: 'Gesamtgewicht ca. 50 kg', table: true },
+          { name: 'Finish', value: 'gewachst', table: true },
+          { name: 'Hersteller', value: 'Firma, Straße 1, 12345 Stadt', table: true },
+          { name: 'Pflegehinweis', value: 'Belastbarkeit: ca. 300 kg', table: true },
+        ],
+      },
+      [],
+    )
+    expect(plan.patch.variant).toBe('weiß/braun')
+    expect(plan.create).toEqual([
+      { dimension: 'height', value: 190 },
+      { dimension: 'width', value: 60 },
+      { dimension: 'depth', value: 40 },
+      { dimension: 'weight', value: 50 },
+    ])
+    expect(plan.patch.extra).toEqual({ Abmessungen: 'H/B/T ca. 190/60/40 cm', 'Fach links': 'H/B/T ca. 40/20/30 cm', Finish: 'gewachst' })
+  })
+
   it('does not guess: unlabelled dimensions, unknown units and odd values stay out', () => {
     const [width] = props()
     const plan = planFacts(
@@ -80,7 +107,7 @@ describe('planFacts: what a shop page fills in', () => {
     expect(plan.create).toEqual([])
   })
 
-  it('keeps other structured lines as extras, but ignores loose table lines', () => {
+  it('keeps other lines as extras, but not lines about the shop', () => {
     const plan = planFacts(
       makeProduct('p'),
       {

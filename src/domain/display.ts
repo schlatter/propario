@@ -49,6 +49,15 @@ export function compareKeys(a: number | string | null, b: number | string | null
   return String(a).localeCompare(String(b), undefined, { numeric: true }) * dir
 }
 
+/** How long an entry counts as new (and gets the blue stripe). */
+export const NEW_FOR_DAYS = 3
+
+/** Added within the last NEW_FOR_DAYS days. */
+export function isNew(createdAt: string | undefined, now = new Date()): boolean {
+  const t = Date.parse(createdAt ?? '')
+  return Number.isFinite(t) && now.getTime() - t < NEW_FOR_DAYS * 86_400_000 && t <= now.getTime() + 60_000
+}
+
 /** "brand", "Breite" → "Brand, Breite": product field keys in the interface language, field names as they are. */
 export function filledLabels(filled: string[], m: Messages): string {
   const fields = m.field as Record<string, string>

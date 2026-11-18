@@ -1,11 +1,11 @@
 import type { Priority, ProjectStatus } from '../db/types'
-import type { CheckResult, Summary } from '../domain/requirements'
+import { splitByWeight, type CheckResult, type Summary } from '../domain/requirements'
 import { useI18n } from '../i18n'
 import { Glyph } from './Glyph'
 
-export function CheckMark({ result, manual }: { result: CheckResult; manual?: boolean }) {
+export function CheckMark({ result, manual, label: own }: { result: CheckResult; manual?: boolean; label?: string }) {
   const { m } = useI18n()
-  const label = m.check[result] + (manual ? ` (${m.check.manual})` : '')
+  const label = own ?? m.check[result] + (manual ? ` (${m.check.manual})` : '')
   return (
     <span className={`mark ${result}${manual ? ' manual' : ''}`} role="img" aria-label={label} title={label}>
       {result === 'pass' ? '✓' : result === 'fail' ? '✕' : '?'}
@@ -30,6 +30,37 @@ export function CheckStrip({ items }: { items: { id: string; result: CheckResult
     <span className="strip" aria-hidden="true">
       {items.map((i) => (
         <i key={i.id} className={`${i.result}${i.blocking ? ' blocking' : ''}`} title={`${i.label}: ${m.check[i.result]}`} />
+      ))}
+    </span>
+  )
+}
+
+/**
+ * Requirements of one product as two bars, must criteria above the others, each with its count:
+ * "Must 2/2" and "Other 0/31" say at a glance that a product qualifies but fits little else.
+ */
+export function RequirementBars({ summary, items }: { summary: Summary; items: { id: string; result: CheckResult; blocking: boolean; label: string }[] }) {
+  const { m } = useI18n()
+  const parts = splitByWeight(items)
+  const kind = summary.blocked ? 'fail' : summary.qualified ? 'pass' : 'unknown'
+  const rows = [
+    { key: 'must', label: m.check.must, part: parts.must, list: items.filter((i) => i.blocking) },
+    { key: 'other', label: m.check.other, part: parts.other, list: items.filter((i) => !i.blocking) },
+  ].filter((r) => r.part.total > 0)
+  return (
+    <span className={`req-bars ${kind}`}>
+      <span className="sr-only">
+        {summary.blocked ? m.check.blocked : summary.qualified ? m.check.eligible : m.check.open}.{' '}
+        {rows.map((r) => m.check.barSummary(r.label, r.part.pass, r.part.total)).join('. ')}
+      </span>
+      {rows.map((r) => (
+        <span className="req-bar-row" key={r.key} aria-hidden="true">
+          <span className="req-bar-label">{r.label}</span>
+          <CheckStrip items={r.list} />
+          <span className={`req-bar-count${r.key === 'must' ? ` ${kind}` : ''}`}>
+            {r.part.pass}/{r.part.total}
+          </span>
+        </span>
       ))}
     </span>
   )

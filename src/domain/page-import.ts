@@ -9,9 +9,8 @@
  *   that does not fit is left out rather than guessed.
  * - Width, height, depth and weight get their own field when the comparison has none yet –
  *   they are what products are most often compared by.
- * - Other lines from the page's structured data are kept under "Imported extras", never lost;
- *   lines read from HTML tables only count where they fit a field (tables also hold shipping
- *   costs, size charts and the like).
+ * - Other lines are kept under "Imported extras", never lost – except data-sheet lines about
+ *   the shop rather than the product (shipping, payment, manufacturer address, notes).
  */
 import type { Product, PropertyDef, PropertyValue } from '../db/types'
 import { norm, splitUnit } from '../import/normalize'
@@ -52,9 +51,13 @@ export function convert(n: number, from: string, to: string): number | null {
   return table ? Math.round(((n * table[f]) / table[t]) * 1000) / 1000 : null
 }
 
-/** "60,5 cm" → { n: 60.5, unit: 'cm' }; the spec's own unit wins over one in the text. */
+/**
+ * "60,5 cm", "ca. 51 kg", "Gesamtgewicht ca. 51 kg" → the number at the end with its unit; the
+ * spec's own unit wins over one in the text. A value with more than one number is not guessed.
+ */
 function quantity(spec: Spec): { n: number; unit: string } | null {
-  const m = spec.value.match(/^\s*(?:ca\.?\s*)?(\d[\d.,]*)\s*([a-zA-Zµ]+)?\s*$/)
+  if ((spec.value.match(/\d[\d.,]*/g) ?? []).length !== 1) return null
+  const m = spec.value.match(/(?:^|\s)(?:ca\.?\s*)?(\d[\d.,]*)\s*([a-zA-Zµ]+)?\s*$/)
   if (!m) return null
   const n = parseNumber(m[1])
   return n === null ? null : { n, unit: (spec.unit || m[2] || '').toLowerCase() }
@@ -74,13 +77,18 @@ export function splitDimensions(spec: Spec): Spec[] {
   const labelled = [...spec.value.matchAll(new RegExp(String.raw`\b([BHTWD])\s*:?\s*${NUM}`, 'gi'))]
   if (labelled.length >= 2) return labelled.map((m) => ({ name: LETTER[m[1].toLowerCase()], value: m[2], unit })).filter((s) => s.name)
   const order = text.match(/\b([BHTWD])\s*[x×*/]\s*([BHTWD])(?:\s*[x×*/]\s*([BHTWD]))?\b/i)
-  const nums = spec.value.match(new RegExp(String.raw`${NUM}\s*(?:${unit})?\s*[x×*]\s*${NUM}(?:\s*(?:${unit})?\s*[x×*]\s*${NUM})?`, 'i'))
+  // Numbers separated by x, × or / ("60 x 180 x 55", "198/66/39").
+  const nums = spec.value.match(new RegExp(String.raw`${NUM}\s*(?:${unit})?\s*[x×*/]\s*${NUM}(?:\s*(?:${unit})?\s*[x×*/]\s*${NUM})?`, 'i'))
   if (!order || !nums) return []
   const letters = order.slice(1).filter(Boolean)
   const values = nums.slice(1).filter(Boolean)
   if (letters.length !== values.length) return []
   return letters.map((l, i) => ({ name: LETTER[l.toLowerCase()], value: values[i], unit })).filter((s) => s.name)
 }
+
+/** Data-sheet lines about the shop rather than the product: never kept as extras. */
+const NOT_PRODUCT =
+  /versand|liefer|zahlung|zahlart|preis|kontakt|hersteller|garantie|rückgabe|ruckgabe|retoure|widerruf|hinweis|bewertung|service|shipping|delivery|payment|price|contact|manufacturer|warranty|return|review/i
 
 const COMBINED = /^(maße|masse|abmessungen|abmessung|dimensions|dimension|größe|groesse|size|maße b x h x t|außenmaße|aussenmasse)$/
 
@@ -124,6 +132,9 @@ export function planFacts(p: Product, facts: ProductFacts, properties: PropertyD
     specs.push(s)
     if (COMBINED.test(norm(splitUnit(s.name).name)) || /\d\s*[x×]\s*\d/.test(s.value)) specs.push(...splitDimensions(s).map((d) => ({ ...d, table: s.table })))
   }
+  // A colour only named in the data sheet still becomes the variant.
+  const color = facts.color ?? specs.find((s) => meaning(s.name) === 'color')?.value
+  if (!facts.color && color) take('variant', color)
   if (facts.color) specs.push({ name: 'color', value: facts.color })
 
   const values: Record<string, PropertyValue> = {}
@@ -153,7 +164,8 @@ export function planFacts(p: Product, facts: ProductFacts, properties: PropertyD
       }
       continue
     }
-    if (!s.table && key !== 'color' && !(s.name in (p.extra ?? {})) && Object.keys(extra).length < 30) {
+    const keep = !s.table || !NOT_PRODUCT.test(s.name)
+    if (keep && key !== 'color' && !(s.name in (p.extra ?? {})) && Object.keys(extra).length < 30) {
       done.add(key)
       extra[s.name] = s.unit ? `${s.value} ${s.unit}` : s.value
     }

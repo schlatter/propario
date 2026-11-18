@@ -89,6 +89,24 @@ describe('extractProductFacts', () => {
     })
   })
 
+  it('reads data-sheet cells holding lists: the first item, then "Label: value" items as lines of their own', () => {
+    // Structure as seen on a furniture shop (2026-11), values invented.
+    const li = (s: string) => `<li class="properties-list-value"><span><span class="properties-interpolate-value">${s}</span></span></li>`
+    const html = `<table><tr class="properties-row"><th class="properties-label" scope="row"> Abmessungen </th>
+      <td class="properties-value"><ul>${li('H/B/T ca. 190/60/40 cm')}${li('Fach links: H/B/T ca. 40/20/30 cm')}${li('ohne Doppelpunkt')}</ul></td></tr>
+      <tr><th>Gewicht</th><td>Gesamtgewicht ca. 50 kg</td></tr>
+      <tr><th>Lang</th><td>${'Wort '.repeat(60)}</td></tr></table>`
+    const specs = extractProductFacts(html).specs!
+    expect(specs.slice(0, 3)).toEqual([
+      { name: 'Abmessungen', value: 'H/B/T ca. 190/60/40 cm', table: true },
+      { name: 'Fach links', value: 'H/B/T ca. 40/20/30 cm', table: true },
+      { name: 'Gewicht', value: 'Gesamtgewicht ca. 50 kg', table: true },
+    ])
+    // A long value is cut at a word, not dropped.
+    expect(specs[3].value.length).toBeLessThanOrEqual(200)
+    expect(specs[3].value.endsWith(' …')).toBe(true)
+  })
+
   it('keeps the facts header small, dropping table lines first', () => {
     const specs = Array.from({ length: 60 }, (_, i) => ({ name: `Zeile ${i}`, value: 'ä'.repeat(150), table: true }))
     const encoded = encodeFacts({ name: 'Arvika', specs: [{ name: 'Breite', value: '60' }, ...specs] })

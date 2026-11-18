@@ -361,20 +361,35 @@ function ldFacts(node: any, raw: Record<string, any>, depth = 0): void {
   for (const key of ['@graph', 'mainEntity', 'itemListElement', 'item', 'hasVariant']) if (node[key]) ldFacts(node[key], raw, depth + 1)
 }
 
-/** Label – value pairs of data-sheet tables (`<th>/<td>` or two cells) and definition lists. */
+/**
+ * Label – value pairs of data-sheet tables (`<th>/<td>` or two cells) and definition lists.
+ * A value given as a list ("H/B/T ca. 198/66/39 cm", "Fach links: H/B/T ca. 48/18/34 cm") counts
+ * with its first item; further items of the form "Label: value" become lines of their own.
+ * Long values are cut at a word rather than dropped.
+ */
 export function tableSpecs(html: string): { name: string; value: string; table: true }[] {
   const out: { name: string; value: string; table: true }[] = []
   const text = (s: string) => decodeEntities(stripTags(s)).replace(/\s+/g, ' ').trim()
+  const cut = (v: string) => (v.length <= 200 ? v : `${v.slice(0, v.lastIndexOf(' ', 197))} …`)
   const push = (name: string, value: string) => {
     const n = text(name).replace(/:$/, '')
-    const v = text(value)
-    if (n && v && n.length <= 80 && v.length <= 200 && out.length < 120) out.push({ name: n, value: v, table: true })
+    const v = cut(text(value))
+    if (n && v && n.length <= 80 && out.length < 120) out.push({ name: n, value: v, table: true })
+  }
+  const pair = (name: string, value: string) => {
+    const items = [...value.matchAll(/<li\b[^>]*>([\s\S]*?)<\/li>/gi)].map((m) => m[1])
+    if (items.length < 2) return push(name, value)
+    push(name, items[0])
+    for (const item of items.slice(1)) {
+      const m = text(item).match(/^([^:]{1,60}):\s*(.+)$/)
+      if (m) push(m[1], m[2])
+    }
   }
   for (const row of html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)) {
     const cells = [...row[1].matchAll(/<(th|td)\b[^>]*>([\s\S]*?)<\/\1>/gi)].map((c) => c[2])
-    if (cells.length === 2) push(cells[0], cells[1])
+    if (cells.length === 2) pair(cells[0], cells[1])
   }
-  for (const m of html.matchAll(/<dt\b[^>]*>([\s\S]*?)<\/dt>\s*<dd\b[^>]*>([\s\S]*?)<\/dd>/gi)) push(m[1], m[2])
+  for (const m of html.matchAll(/<dt\b[^>]*>([\s\S]*?)<\/dt>\s*<dd\b[^>]*>([\s\S]*?)<\/dd>/gi)) pair(m[1], m[2])
   return out
 }
 

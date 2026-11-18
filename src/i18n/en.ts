@@ -105,6 +105,11 @@ export const en = {
     open: 'Must criteria not fully known',
     manualHint: 'Click to set manually: met → not met → automatic',
     manual: 'set manually',
+    must: 'Must',
+    other: 'Other',
+    barSummary: (label: string, pass: number, total: number) => `${label}: ${pass} of ${total} met`,
+    filterRule: (rule: string, labels: string, filter: 'pass' | 'fail' | null) =>
+      `${rule} (${labels}): ${filter === 'pass' ? 'showing only met' : filter === 'fail' ? 'showing only not met' : 'showing all'} – click to change the filter`,
     fit: 'Fit',
     fitHint:
       'Weighted share of the met soft requirements: important 3, wish 2, bonus 1, avoid 2. Must criteria are not weighed; unknown values do not count against a product.',
@@ -126,6 +131,7 @@ export const en = {
     description: 'Description',
     comments: 'Comments',
     foundBy: 'Found by',
+    foundOn: 'Found on',
     candidate: 'Selection',
     favoriteRank: 'Favourite rank',
     exclusionReason: 'Reason for exclusion',
@@ -219,6 +225,8 @@ export const en = {
     descriptionHint: 'What should the purchase achieve?',
     stage: 'Stage',
     resizeColumn: 'Drag to resize column',
+    isNew: 'new',
+    autoFitHint: 'double-click to fit the content',
     sortBy: (name: string) => `Sort by ${name}`,
     toggleFavorite: 'Mark as favourite',
     selectRow: 'Select for comparison',

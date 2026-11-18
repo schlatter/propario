@@ -1,16 +1,16 @@
 import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { reorder, setProductValue, updateProduct, updateProject } from '../../db/repo'
-import type { Candidate, Product, PropertyDef, TableView } from '../../db/types'
-import { avgStars, compareKeys, formatValue, productName, sortKey } from '../../domain/display'
-import { WEIGHT } from '../../domain/requirements'
+import type { Candidate, Product, PropertyDef, Requirement, TableView } from '../../db/types'
+import { avgStars, compareKeys, formatValue, isNew, productName, sortKey } from '../../domain/display'
+import { cellCheck, OP_SYMBOL, requirementsByColumn, WEIGHT } from '../../domain/requirements'
 import { reviewSummary } from '../../domain/reviews'
 import { coerceValue, daysSince, hostOf, isTyped, parseNumber, safeHref, STALE_DAYS } from '../../domain/values'
 import { useI18n } from '../../i18n'
 import { ImageError, loadImages, missingImages, productImage } from '../../images'
 import { useToast } from '../../ui/Dialog'
 import { Glyph } from '../../ui/Glyph'
-import { CheckStrip, Stars, Verdict } from '../../ui/Marks'
+import { CheckMark, RequirementBars, Stars } from '../../ui/Marks'
 import { Menu } from '../../ui/Menu'
 import { Thumb } from '../../ui/Thumb'
 import { useUsers } from '../../users'
@@ -31,6 +31,10 @@ interface Col {
   align?: 'right' | 'center'
 }
 
+/** Narrowest and widest width a column gets from double-clicking its edge. */
+const MIN_COL = 60
+const MAX_FIT = 360
+
 export function ProductTable({
   data,
   selection,
@@ -48,6 +52,10 @@ export function ProductTable({
   const view = project.tableView
   const [filter, setFilter] = useState('')
   const [onlyEligible, setOnlyEligible] = useState(false)
+  /** Columns filtered by their requirements' verdict (the values themselves stay as they are). */
+  const [reqFilter, setReqFilter] = useState<Record<string, 'pass' | 'fail'>>({})
+  const byColumn = useMemo(() => requirementsByColumn(data.requirements), [data.requirements])
+  const tableRef = useRef<HTMLTableElement>(null)
   const [widths, setWidths] = useState<Record<string, number>>({})
   const toast = useToast()
   const users = useUsers()
@@ -148,17 +156,12 @@ export function ProductTable({
       cols.push({
         id: 'checks',
         label: m.field.checks,
-        width: Math.min(Math.max(120, data.checkable.length * 11 + 30), 260),
+        width: 190,
         sort: (p) => {
           const s = data.summaries.get(p.id)!
           return (s.blocked ? 0 : s.qualified ? 2000 : 1000) + (s.fit ?? 0)
         },
-        render: (p) => (
-          <span className="check-cell">
-            <Verdict summary={data.summaries.get(p.id)!} />
-            <CheckStrip items={data.results(p)} />
-          </span>
-        ),
+        render: (p) => <RequirementBars summary={data.summaries.get(p.id)!} items={data.results(p)} />,
       })
     }
     if (data.checkable.some((r) => WEIGHT[r.priority])) {
@@ -309,6 +312,19 @@ export function ProductTable({
         true,
       ),
       {
+        // When the product was added; entries of the last days also get a blue stripe.
+        id: 'foundOn',
+        label: m.field.foundOn,
+        width: 110,
+        sort: (p) => p.createdAt,
+        render: (p) => (
+          <span className="cell static" title={fmt.dateTime(p.createdAt)}>
+            {fmt.date(p.createdAt)}
+            {isNew(p.createdAt) && <span className="sr-only">, {m.project.isNew}</span>}
+          </span>
+        ),
+      },
+      {
         id: 'purchase',
         label: m.field.purchaseDate,
         width: 130,
@@ -403,6 +419,10 @@ export function ProductTable({
   let rows = products.filter((p) => {
     if (view.hideExcluded && p.candidate === 'excluded') return false
     if (onlyEligible && (data.summaries.get(p.id)?.blocked || p.candidate === 'excluded')) return false
+    for (const [col, want] of Object.entries(reqFilter)) {
+      const reqs = byColumn.get(col)
+      if (reqs && cellCheck(reqs, p, data.propMap) !== want) return false
+    }
     if (!q) return true
     const hay = [p.brand, p.model, p.retailer, p.comments, p.productType, p.variant, ...Object.values(p.values).map(String)].join(' ').toLowerCase()
     return hay.includes(q)
@@ -424,6 +444,40 @@ export function ProductTable({
   }
 
   const widthOf = (id: string, fallback: number) => widths[id] ?? view.columnWidths[id] ?? fallback
+
+  /**
+   * Double-click on a column's edge: the narrowest width that shows header and values in one
+   * line. The browser lays the table out once without fixed widths and wrapping, the width is
+   * read off, everything is put back – in the same frame, so nothing flickers. Long texts are
+   * capped so they wrap readably instead of stretching the table.
+   */
+  const autoFit = (id: string) => {
+    const table = tableRef.current
+    const col = table?.querySelector<HTMLTableColElement>(`col[data-col="${CSS.escape(id)}"]`)
+    const th = table?.querySelector<HTMLTableCellElement>(`th[data-fit="${CSS.escape(id)}"]`)
+    if (!table || !col || !th) return
+    const before = col.style.width
+    table.classList.add('measuring')
+    col.style.width = 'auto'
+    const natural = Math.ceil(th.getBoundingClientRect().width)
+    col.style.width = before
+    table.classList.remove('measuring')
+    const w = Math.max(MIN_COL, Math.min(MAX_FIT, natural))
+    setWidths((s) => ({ ...s, [id]: w }))
+    void saveView({ columnWidths: { ...view.columnWidths, [id]: w } })
+  }
+
+  /** "≤ 40" for the header of a column with requirement rules. */
+  const ruleLabel = (reqs: Requirement[]) =>
+    reqs.map((r) => `${OP_SYMBOL[r.condition!.op]}${r.condition!.value !== undefined ? ` ${r.condition!.value}` : ''}`).join(' · ')
+  const cycleFilter = (col: string) =>
+    setReqFilter((f) => {
+      const next = { ...f }
+      if (!f[col]) next[col] = 'pass'
+      else if (f[col] === 'pass') next[col] = 'fail'
+      else delete next[col]
+      return next
+    })
 
   const allSelected = rows.length > 0 && rows.every((r) => selection.has(r.id))
 
@@ -544,12 +598,12 @@ export function ProductTable({
         </div>
       ) : (
         <div className="table-wrap">
-          <table className="grid">
+          <table className="grid" ref={tableRef}>
             <colgroup>
               <col style={{ width: 64 }} />
-              <col style={{ width: widthOf('name', showThumbs ? 300 : 260) }} />
+              <col data-col="name" style={{ width: widthOf('name', showThumbs ? 300 : 260) }} />
               {visibleCols.map((c) => (
-                <col key={c.id} style={{ width: widthOf(c.id, c.width) }} />
+                <col key={c.id} data-col={c.id} style={{ width: widthOf(c.id, c.width) }} />
               ))}
             </colgroup>
             <thead>
@@ -573,6 +627,7 @@ export function ProductTable({
                   width={widthOf('name', showThumbs ? 300 : 260)}
                   onResize={(w) => setWidths((s) => ({ ...s, name: w }))}
                   onResizeEnd={(w) => saveView({ columnWidths: { ...view.columnWidths, name: w } })}
+                  onAutoFit={() => autoFit('name')}
                 />
                 {visibleCols.map((c) => (
                   <HeaderCell
@@ -585,7 +640,21 @@ export function ProductTable({
                     width={widthOf(c.id, c.width)}
                     onResize={(w) => setWidths((s) => ({ ...s, [c.id]: w }))}
                     onResizeEnd={(w) => saveView({ columnWidths: { ...view.columnWidths, [c.id]: w } })}
+                    onAutoFit={() => autoFit(c.id)}
                     align={c.align}
+                    check={
+                      byColumn.has(c.id)
+                        ? {
+                            rule: ruleLabel(byColumn.get(c.id)!),
+                            labels: byColumn
+                              .get(c.id)!
+                              .map((r) => r.label)
+                              .join(', '),
+                            filter: reqFilter[c.id] ?? null,
+                            onCycle: () => cycleFilter(c.id),
+                          }
+                        : undefined
+                    }
                     move={{
                       dragging: colDrag?.id === c.id && !!colDrag.target,
                       drop: colDrag?.target === c.id && colDrag.id !== c.id ? (colDrag.after ? 'after' : 'before') : null,
@@ -607,6 +676,7 @@ export function ProductTable({
                 const cls = [
                   selection.has(p.id) && 'is-selected',
                   p.candidate === 'favorite' && 'is-fav',
+                  isNew(p.createdAt) && 'is-new',
                   p.candidate === 'excluded' && 'is-excluded',
                   project.decisionProductId === p.id && 'is-decision',
                   drag?.id === p.id && 'is-dragging',
@@ -698,11 +768,26 @@ export function ProductTable({
                         </div>
                       </div>
                     </td>
-                    {visibleCols.map((c) => (
-                      <td key={c.id} style={c.align ? { textAlign: c.align } : undefined}>
-                        {c.render(p)}
-                      </td>
-                    ))}
+                    {visibleCols.map((c) => {
+                      const reqs = byColumn.get(c.id)
+                      const verdict = reqs ? cellCheck(reqs, p, data.propMap) : 'unknown'
+                      return (
+                        <td
+                          key={c.id}
+                          className={verdict !== 'unknown' ? `req-${verdict}` : undefined}
+                          style={c.align ? { textAlign: c.align } : undefined}
+                          title={reqs && verdict !== 'unknown' ? `${reqs.map((r) => r.label).join(', ')}: ${m.check[verdict]}` : undefined}
+                        >
+                          {c.render(p)}
+                          {verdict !== 'unknown' && (
+                            <span className="req-mark">
+                              <span aria-hidden="true">{verdict === 'pass' ? '✓' : '✕'}</span>
+                              <span className="sr-only">{m.check[verdict]}</span>
+                            </span>
+                          )}
+                        </td>
+                      )
+                    })}
                   </tr>
                 )
               })}
@@ -741,8 +826,10 @@ function HeaderCell({
   width,
   onResize,
   onResizeEnd,
+  onAutoFit,
   align,
   move,
+  check,
 }: {
   id: string
   label: string
@@ -753,7 +840,10 @@ function HeaderCell({
   width: number
   onResize: (w: number) => void
   onResizeEnd: (w: number) => void
+  onAutoFit: () => void
   align?: 'right' | 'center'
+  /** The column carries requirement rules: shown as "≤ 40", a click filters by their verdict. */
+  check?: { rule: string; labels: string; filter: 'pass' | 'fail' | null; onCycle: () => void }
   /** Columns that can move: drag the header sideways, or Alt+←/→ on it. */
   move?: {
     dragging: boolean
@@ -771,7 +861,7 @@ function HeaderCell({
   const dir = sort?.column === id ? sort.dir : null
   const cls = [className, move?.dragging && 'col-dragging', move?.drop && `col-drop-${move.drop}`].filter(Boolean).join(' ')
   return (
-    <th className={cls} data-col={move ? id : undefined} aria-sort={dir === 'asc' ? 'ascending' : dir === 'desc' ? 'descending' : 'none'}>
+    <th className={cls} data-col={move ? id : undefined} data-fit={id} aria-sort={dir === 'asc' ? 'ascending' : dir === 'desc' ? 'descending' : 'none'}>
       <div className="th-inner">
         <button
           type="button"
@@ -819,12 +909,25 @@ function HeaderCell({
             </span>
           )}
         </button>
+        {check && (
+          <button
+            type="button"
+            className={`th-rule${check.filter ? ` on ${check.filter}` : ''}`}
+            onClick={check.onCycle}
+            aria-label={m.check.filterRule(check.rule, check.labels, check.filter)}
+            title={m.check.filterRule(check.rule, check.labels, check.filter)}
+          >
+            {check.rule}
+            {check.filter === 'pass' ? ' ✓' : check.filter === 'fail' ? ' ✕' : ''}
+          </button>
+        )}
         <span
           className={`resizer${active ? ' active' : ''}`}
           role="separator"
           aria-orientation="vertical"
           aria-label={m.project.resizeColumn}
-          title={m.project.resizeColumn}
+          title={`${m.project.resizeColumn} · ${m.project.autoFitHint}`}
+          onDoubleClick={onAutoFit}
           onPointerDown={(e) => {
             e.preventDefault()
             const startX = e.clientX
@@ -839,7 +942,8 @@ function HeaderCell({
               setActive(false)
               window.removeEventListener('pointermove', move)
               window.removeEventListener('pointerup', up)
-              onResizeEnd(last)
+              // A plain click (also each half of a double-click) changes nothing.
+              if (last !== startW) onResizeEnd(last)
             }
             window.addEventListener('pointermove', move)
             window.addEventListener('pointerup', up)
@@ -867,8 +971,8 @@ export function PropertyCell({ prop, product }: { prop: PropertyDef; product: Pr
         onClick={() => setProductValue(product, prop.id, next)}
         aria-label={`${prop.name}: ${formatValue(prop, v, m, fmt) || '—'}`}
       >
-        {v === true && <span className="bool yes">{m.common.yes}</span>}
-        {v === false && <span className="bool no">{m.common.no}</span>}
+        {v === true && <CheckMark result="pass" label={m.common.yes} />}
+        {v === false && <CheckMark result="fail" label={m.common.no} />}
       </button>
     )
   }

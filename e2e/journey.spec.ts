@@ -128,6 +128,9 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await page.getByPlaceholder(/shop link/).fill('Arvika')
   await page.keyboard.press('Enter')
   await expect(page.getByRole('button', { name: 'Arvika', exact: true })).toBeVisible()
+  // A new entry carries the day it was found and a blue stripe for three days.
+  await expect(page.locator('tr.is-new')).toHaveCount(1)
+  await expect(page.locator('tr.is-new').getByText(new Date().toLocaleDateString('en-GB'))).toBeVisible()
   await accessible(page, 'comparison')
 
   await page.getByRole('button', { name: 'Arvika', exact: true }).click()
@@ -172,6 +175,34 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await expect(page.getByText('Product: 90/100 from 1 source')).toBeVisible()
   await accessible(page, 'product details')
   await page.keyboard.press('Escape')
+
+  // A rule on the price shows in the price column itself; its header filters by the verdict.
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page.getByRole('tab', { name: /Requirements/ }).click()
+  await page.getByLabel('Requirement', { exact: true }).fill('Budget')
+  await page.getByRole('button', { name: 'Add requirement' }).click()
+  await page.getByRole('button', { name: '+ Add automatic check' }).click()
+  await page.getByLabel('Value', { exact: true }).fill('250')
+  await page.getByLabel('Value', { exact: true }).press('Tab')
+  await page.getByRole('tab', { name: /Products/ }).click()
+  await expect(page.locator('td.req-pass')).toHaveCount(1)
+  await expect(page.locator('.req-bar-row')).toHaveText(/Must.*1\/1/)
+  const rule = page.getByRole('button', { name: /Budget\): showing all/ })
+  await rule.click() // only met
+  await expect(page.getByRole('button', { name: 'Arvika', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: /Budget\): showing only met/ }).click() // only not met
+  await expect(page.getByRole('button', { name: 'Arvika', exact: true })).toHaveCount(0)
+  await page.getByRole('button', { name: /Budget\): showing only not met/ }).click() // all again
+  await expect(page.getByRole('button', { name: 'Arvika', exact: true })).toBeVisible()
+  await accessible(page, 'comparison with rules')
+
+  // Double-click on a column's edge: as narrow as the header and values allow, nothing cut off.
+  const col = page.locator('col[data-col="retailer"]')
+  const before = await col.evaluate((c: HTMLElement) => parseFloat(c.style.width))
+  await page.locator('th[data-fit="retailer"] .resizer').dblclick()
+  await expect.poll(() => col.evaluate((c: HTMLElement) => parseFloat(c.style.width))).not.toBe(before)
+  const label = page.locator('th[data-fit="retailer"] .th-sort > span').first()
+  expect(await label.evaluate((e) => e.scrollWidth <= e.clientWidth)).toBe(true)
 })
 
 test('Ada moves rows and decides by swiping', async () => {

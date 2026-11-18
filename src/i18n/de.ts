@@ -106,6 +106,11 @@ export const de: Messages = {
     open: 'Muss-Kriterien noch nicht vollständig bekannt',
     manualHint: 'Klicken zum manuellen Setzen: erfüllt → nicht erfüllt → automatisch',
     manual: 'manuell gesetzt',
+    must: 'Muss',
+    other: 'Weitere',
+    barSummary: (label, pass, total) => `${label}: ${pass} von ${total} erfüllt`,
+    filterRule: (rule, labels, filter) =>
+      `${rule} (${labels}): ${filter === 'pass' ? 'nur erfüllte' : filter === 'fail' ? 'nur nicht erfüllte' : 'alle'} – klicken, um den Filter zu wechseln`,
     fit: 'Eignung',
     fitHint:
       'Gewichteter Anteil der erfüllten weichen Anforderungen: wichtig 3, Wunsch 2, Bonus 1, vermeiden 2. Muss-Kriterien zählen nicht mit; unbekannte Werte gehen nicht zulasten eines Produkts.',
@@ -127,6 +132,7 @@ export const de: Messages = {
     description: 'Beschreibung',
     comments: 'Kommentare',
     foundBy: 'Gefunden von',
+    foundOn: 'Funddatum',
     candidate: 'Auswahl',
     favoriteRank: 'Favoritenrang',
     exclusionReason: 'Ausschlussgrund',
@@ -221,6 +227,8 @@ export const de: Messages = {
     descriptionHint: 'Was soll die Anschaffung leisten?',
     stage: 'Stand',
     resizeColumn: 'Ziehen, um die Spaltenbreite zu ändern',
+    isNew: 'neu',
+    autoFitHint: 'Doppelklick passt die Breite an den Inhalt an',
     sortBy: (name) => `Nach ${name} sortieren`,
     toggleFavorite: 'Als Favorit markieren',
     selectRow: 'Für Gegenüberstellung auswählen',

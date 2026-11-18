@@ -23,6 +23,10 @@
   --signal-soft: #fbe6de;
   --pass: #1d7348;
   --pass-soft: #dcefe3;
+  /* Favourites: a deep green akin to "met"; new entries: a light blue. */
+  --fav: #1a6640;
+  --fav-soft: #dcefe3;
+  --new: #4b93d1;
   --fail: #b8322a;
   --fail-soft: #f8e0dd;
   --unknown: #868b92;
@@ -55,6 +59,9 @@
     --signal-soft: #3a211a;
     --pass: #5fcf95;
     --pass-soft: #173226;
+    --fav: #5fcf95;
+    --fav-soft: #173226;
+    --new: #6aaee8;
     --fail: #ff8379;
     --fail-soft: #3d1d1b;
     --unknown: #8b9097;
@@ -82,6 +89,9 @@
   --signal-soft: #3a211a;
   --pass: #5fcf95;
   --pass-soft: #173226;
+  --fav: #5fcf95;
+  --fav-soft: #173226;
+  --new: #6aaee8;
   --fail: #ff8379;
   --fail-soft: #3d1d1b;
   --unknown: #8b9097;
@@ -576,8 +586,8 @@ svg.glyph {
   white-space: nowrap;
 }
 .pill.fav {
-  background: var(--signal-soft);
-  color: var(--signal);
+  background: var(--fav-soft);
+  color: var(--fav);
 }
 .pill.excl {
   background: var(--unknown-soft);
@@ -1284,7 +1294,16 @@ table.grid {
   background: var(--selected);
 }
 .grid tbody tr.is-fav td.col-sel {
-  box-shadow: inset 3px 0 0 var(--signal);
+  box-shadow: inset 3px 0 0 var(--fav);
+}
+.grid tbody tr.is-new td.col-sel {
+  box-shadow: inset 3px 0 0 var(--new);
+}
+/* New and favourite: green outside, blue beside it. */
+.grid tbody tr.is-fav.is-new td.col-sel {
+  box-shadow:
+    inset 3px 0 0 var(--fav),
+    inset 6px 0 0 var(--new);
 }
 .grid tbody tr.is-excluded td {
   color: var(--muted);
@@ -1356,7 +1375,7 @@ table.grid {
   color: var(--line-strong);
 }
 .fav-toggle[aria-pressed='true'] {
-  color: var(--signal);
+  color: var(--fav);
 }
 .cell {
   display: block;
@@ -2811,4 +2830,109 @@ main.project-page {
   gap: 6px;
   font-size: 13px;
   color: var(--ink-2);
+}
+
+/* Requirements shown in the column they concern: a tint and a quiet mark; the value stays. */
+.grid tbody td.req-pass,
+.grid tbody tr:hover td.req-pass {
+  background: var(--pass-soft);
+}
+.grid tbody td.req-fail,
+.grid tbody tr:hover td.req-fail {
+  background: var(--fail-soft);
+}
+.grid td.req-pass,
+.grid td.req-fail {
+  position: relative;
+}
+/* Room for the mark in front of the value. */
+.grid td.req-pass > .cell,
+.grid td.req-fail > .cell {
+  padding-left: 22px;
+}
+.req-mark {
+  position: absolute;
+  top: 50%;
+  left: 7px;
+  transform: translateY(-50%);
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--ink-2);
+  pointer-events: none;
+}
+.th-rule {
+  flex: none;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink-2);
+  border-radius: 999px;
+  padding: 1px 7px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 650;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.th-rule.on.pass {
+  background: var(--pass-soft);
+  border-color: var(--pass);
+  color: var(--ink);
+}
+.th-rule.on.fail {
+  background: var(--fail-soft);
+  border-color: var(--fail);
+  color: var(--ink);
+}
+
+/* Must criteria above the others, each with its own count. */
+.req-bars {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 7px 10px;
+  min-height: 44px;
+}
+.req-bar-row {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+}
+.req-bar-label {
+  font-size: 11px;
+  font-weight: 650;
+  color: var(--muted);
+}
+.req-bar-count {
+  font-size: 12px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+.req-bar-count.pass {
+  color: var(--pass);
+}
+.req-bar-count.fail {
+  color: var(--fail);
+}
+.req-bars .strip i.blocking {
+  height: 14px;
+}
+
+/* Measuring for "fit column to content": one layout without fixed widths or wrapping. */
+.grid.measuring {
+  table-layout: auto;
+}
+.grid.measuring th *,
+.grid.measuring td * {
+  white-space: nowrap !important;
+}
+
+/* A cell that shows, not edits (e.g. the date a product was found). */
+.cell.static {
+  cursor: default;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
 }

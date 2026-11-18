@@ -64,7 +64,8 @@ export function EditableCell({
         type="button"
         className={`cell ${className}${raw ? ' raw' : ''}`}
         onClick={start}
-        aria-label={`${label}: ${value || '—'}`}
+        // The name carries what is shown ("38 cm"), so voice control and screen readers match the screen.
+        aria-label={`${label}: ${(typeof display === 'string' ? display : value) || '—'}`}
         title={value || undefined}
       >
         {display ?? value}

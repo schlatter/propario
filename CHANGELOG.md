@@ -6,6 +6,15 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- **Requirements in their column:** a rule such as "Depth ≤ 40" tints the depth cells green or
+  red with a quiet ✓ or ✕ in front of the value; the column header shows the rule and filters
+  by it (all → met → not met). Values stay as they are for sorting and filtering.
+- Yes/no fields show ✓ and ✕ instead of words.
+- The requirements column shows two bars, must criteria above the others, each with its count
+  ("Must 2/2", "Other 0/31").
+- Double-click a column's edge to fit its width to header and values.
+- Fixed: number cells told screen readers the bare number instead of what is shown ("38 cm");
+  a unit typed for one number field no longer sticks to the next field of another type.
 - **More from the shop page:** adding a product by link now also takes its name, brand, kind
   of product (category or breadcrumb), colour, description and data sheet. Lines go into the
   comparison's fields of the same meaning, with units converted (600 mm → 60 cm); width,

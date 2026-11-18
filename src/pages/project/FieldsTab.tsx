@@ -34,7 +34,8 @@ export function FieldsTab({ data }: { data: ProjectData }) {
         onSubmit={async (e) => {
           e.preventDefault()
           if (!name.trim()) return
-          await add(name, type, unit)
+          // A unit belongs to numbers only (also when a previous number field's unit is still typed in).
+          await add(name, type, type === 'number' ? unit : '')
           setName('')
           setUnit('')
         }}

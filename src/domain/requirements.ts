@@ -137,3 +137,41 @@ export const OP_SYMBOL: Record<Condition['op'], string> = {
   isTrue: '✓',
   isFalse: '✗',
 }
+
+/** The table column a requirement's rule looks at: `prop:<id>` or `price`; null without a rule. */
+export function columnOf(r: Requirement): string | null {
+  if (!r.condition || !CHECKABLE.includes(r.priority)) return null
+  // A rule still being written ("≤" without a value) shows nowhere yet.
+  const { op, value } = r.condition
+  if (op !== 'isTrue' && op !== 'isFalse' && (value === undefined || value === '')) return null
+  return r.condition.target.kind === 'price' ? 'price' : `prop:${r.condition.target.propertyId}`
+}
+
+/** Requirements with a rule, grouped by the column they look at. */
+export function requirementsByColumn(reqs: Requirement[]): Map<string, Requirement[]> {
+  const out = new Map<string, Requirement[]>()
+  for (const r of reqs) {
+    const col = columnOf(r)
+    if (col) out.set(col, [...(out.get(col) ?? []), r])
+  }
+  return out
+}
+
+/**
+ * One cell's verdict for the requirements on its column: fail if any fails, pass if all are
+ * known to pass, otherwise unknown (shown without colour).
+ */
+export function cellCheck(reqs: Requirement[], product: Product, props: Map<string, PropertyDef>): CheckResult {
+  const results = reqs.map((r) => evaluate(r, product, props))
+  if (results.includes('fail')) return 'fail'
+  return results.length && results.every((x) => x === 'pass') ? 'pass' : 'unknown'
+}
+
+/** Met / known of the blocking (must, exclusion) and of the other requirements, for two bars. */
+export function splitByWeight(items: { result: CheckResult; blocking: boolean }[]) {
+  const part = (blocking: boolean) => {
+    const list = items.filter((i) => i.blocking === blocking)
+    return { pass: list.filter((i) => i.result === 'pass').length, fail: list.filter((i) => i.result === 'fail').length, total: list.length }
+  }
+  return { must: part(true), other: part(false) }
+}
