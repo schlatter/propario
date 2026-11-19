@@ -69,6 +69,7 @@ export const de: Messages = {
     dislike: 'Gefällt mir nicht',
     short: { like: 'Gefällt', neutral: 'Neutral', dislike: 'Gefällt nicht' },
     yours: 'Dein Urteil',
+    none: 'noch keins',
     column: 'Urteile',
     others: (parts) => parts.join(' · '),
     named: (verdict, names) => `${verdict}: ${names}`,

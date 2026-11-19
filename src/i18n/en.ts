@@ -68,6 +68,7 @@ export const en = {
     dislike: 'I don’t like it',
     short: { like: 'Like', neutral: 'Neutral', dislike: 'Dislike' },
     yours: 'Your verdict',
+    none: 'none yet',
     column: 'Verdicts',
     others: (parts: string[]) => parts.join(' · '),
     named: (verdict: string, names: string) => `${verdict}: ${names}`,

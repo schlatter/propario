@@ -4241,49 +4241,36 @@ button.info-tip {
   position: relative;
 }
 
-/* Verdicts in the table: everyone's counts, and a tap sets or takes back one's own. */
-.verdict-cell {
-  display: inline-flex;
-  gap: 2px;
-  padding: 0 4px;
-}
-.verdict-cell button {
-  display: inline-flex;
+/* The verdict in the table: one's own as a symbol, neutral and paler while none is given. */
+.cell.verdict-trigger {
+  display: flex;
   align-items: center;
-  gap: 3px;
-  min-width: 36px;
-  min-height: 32px;
-  padding: 0 6px;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  background: none;
-  color: var(--line-strong);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
+  padding-left: 12px;
   cursor: pointer;
 }
-.verdict-cell button:hover {
-  background: var(--sunken);
+.verdict-trigger .glyph {
+  width: 18px;
+  height: 18px;
 }
-.verdict-cell button.has.like,
-.verdict-cell button[aria-pressed='true'].like {
+.verdict-trigger.like {
   color: var(--brand-text);
 }
-.verdict-cell button.has.neutral,
-.verdict-cell button[aria-pressed='true'].neutral {
-  color: var(--muted);
+.verdict-trigger.neutral {
+  color: var(--ink-2);
 }
-.verdict-cell button.has.dislike,
-.verdict-cell button[aria-pressed='true'].dislike {
+.verdict-trigger.dislike {
   color: var(--fail);
 }
-.verdict-cell button[aria-pressed='true'] {
-  border-color: currentColor;
-  background: var(--surface);
+.verdict-trigger.unset {
+  color: var(--unknown);
 }
-.verdict-cell .glyph {
+.verdict-menu .glyph {
   width: 15px;
   height: 15px;
+}
+.verdict-menu .verdict-like .glyph {
+  color: var(--brand-text);
+}
+.verdict-menu .verdict-dislike .glyph {
+  color: var(--fail);
 }

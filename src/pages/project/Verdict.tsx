@@ -9,6 +9,7 @@ import { favoritePatch, isFavorite, tally } from '../../domain/verdict'
 import { useI18n } from '../../i18n'
 import { useMe } from '../../session'
 import { Glyph, type GlyphName } from '../../ui/Glyph'
+import { Menu } from '../../ui/Menu'
 import { useUsers } from '../../users'
 
 export const VOTE_GLYPH: Record<Vote, GlyphName> = { like: 'thumbUp', neutral: 'neutral', dislike: 'thumbDown' }
@@ -57,8 +58,9 @@ export function VerdictControl({ product: p }: { product: Product }) {
 }
 
 /**
- * The table's verdict cell: a button per verdict with how many gave it. One's own is marked;
- * a tap sets it, a tap on the marked one takes it back.
+ * The table's verdict cell: only one's own verdict as a symbol – neutral, paler, while none is
+ * given. A tap opens the three choices with how many gave each (names on hover); choosing the
+ * marked one again takes it back.
  */
 export function VerdictCell({ product: p }: { product: Product }) {
   const { m } = useI18n()
@@ -66,27 +68,38 @@ export function VerdictCell({ product: p }: { product: Product }) {
   const users = useUsers()
   const t = tally(p)
   const mine = p.votes?.[me.id] ?? null
+  const shown = mine ?? 'neutral'
   const names = (v: Vote) =>
     Object.entries(p.votes ?? {})
       .filter(([, x]) => x === v)
       .map(([id]) => users.get(id) ?? '?')
       .join(', ')
   return (
-    <span className="verdict-cell" role="group" aria-label={m.verdict.yours}>
-      {VOTES.map((v) => (
-        <button
-          key={v}
-          type="button"
-          className={`${v}${t[v] ? ' has' : ''}`}
-          aria-pressed={mine === v}
-          aria-label={`${m.verdict[v]}: ${t[v]}`}
-          title={t[v] ? m.verdict.named(m.verdict[v], names(v)) : m.verdict[v]}
-          onClick={() => void setVote(p, me.id, mine === v ? null : v)}
-        >
-          <Glyph name={VOTE_GLYPH[v]} />
-          {t[v] > 0 && <span aria-hidden="true">{t[v]}</span>}
-        </button>
-      ))}
-    </span>
+    <Menu
+      floating
+      label={`${m.verdict.yours}: ${mine ? m.verdict[mine] : m.verdict.none}`}
+      className={`cell verdict-trigger ${shown}${mine ? '' : ' unset'}`}
+      listClassName="candidate-menu verdict-menu"
+      trigger={<Glyph name={VOTE_GLYPH[shown]} />}
+    >
+      {(close) =>
+        VOTES.map((v) => (
+          <button
+            key={v}
+            type="button"
+            className={`verdict-${v}`}
+            aria-pressed={mine === v}
+            title={t[v] ? m.verdict.named(m.verdict[v], names(v)) : undefined}
+            onClick={() => {
+              close()
+              void setVote(p, me.id, mine === v ? null : v)
+            }}
+          >
+            <Glyph name={VOTE_GLYPH[v]} /> {m.verdict[v]}
+            {t[v] > 0 && <span className="muted"> · {t[v]}</span>}
+          </button>
+        ))
+      }
+    </Menu>
   )
 }
