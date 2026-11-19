@@ -11,6 +11,23 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.12.0',
+    notes: {
+      en: [
+        'One way to judge: Open, Checked or Excluded, a star for favourites, and 👍 · neutral · 👎 from everyone.',
+        'The fit sits under the requirements – and says “Must not met” where a must fails.',
+        'Details: shop link under the picture, price in €, explanations behind a quiet ⓘ.',
+        'Shops that refuse automated access say so; name and size come from the link instead.',
+      ],
+      de: [
+        'Ein Bewertungssystem: Offen, Geprüft oder Ausgeschlossen, ★ für Favoriten, 👍 · neutral · 👎 von allen.',
+        'Die Eignung steht unter den Anforderungen – und sagt „Muss nicht erfüllt“, wo ein Muss fehlt.',
+        'Details: Shop-Link unter dem Bild, Preis in €, Erklärungen hinter einem dezenten ⓘ.',
+        'Shops, die automatische Abrufe ablehnen, sagen das; Name und Maße kommen dann aus dem Link.',
+      ],
+    },
+  },
+  {
     version: '0.11.0',
     notes: {
       en: [

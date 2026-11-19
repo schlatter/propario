@@ -6,6 +6,8 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+## 0.12.0 — 2026-11-19
+
 - Changed: the fit moved into the requirements column, under the bars – "Fit 86 % · 3 open" – and
   a product that fails a must says "Must not met" there instead of a percentage that looked
   good. The separate fit column is gone.
