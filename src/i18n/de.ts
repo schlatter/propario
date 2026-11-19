@@ -443,6 +443,14 @@ export const de: Messages = {
     oldNotesHint: 'Dieses Feld entfällt; die Kommentare ersetzen es. Übernimm den Text dorthin.',
     moveToComments: 'In Kommentare übernehmen',
   },
+  debug: {
+    title: 'Fehlersuche',
+    text: 'Wenn auf diesem Gerät etwas nicht funktioniert: das ausführliche Protokoll einschalten, Propario benutzen, bis es passiert, dann das Support-Paket herunterladen und weitergeben.',
+    log: 'Ausführliches Protokoll auf diesem Gerät',
+    entries: (n) => `${n} Einträge bisher (die letzten 400 bleiben erhalten, auch über Updates hinweg).`,
+    download: 'Support-Paket herunterladen',
+    privacy: 'Das Paket enthält nur Technisches – Version, Gerät, Programmdateien, Speicher, Anfragen und Fehler –, keine Inhalte deiner Vergleiche.',
+  },
   sync: {
     saving: 'Wird gespeichert …',
   },
@@ -460,6 +468,7 @@ export const de: Messages = {
     reload: 'Neu laden',
     reset: 'Browser zurücksetzen',
     resetHint: 'Zurücksetzen entfernt nur die Kopie von Propario in diesem Browser. Du bleibst angemeldet; alles wird neu vom Server geladen.',
+    support: 'Support-Paket herunterladen',
     details: 'Details zur Fehlersuche',
     reference: 'Referenz',
   },

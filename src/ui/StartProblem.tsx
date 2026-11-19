@@ -7,6 +7,7 @@
 import { useEffect, useState } from 'react'
 import { currentStep, errorText, report, type Step } from '../diagnostics'
 import { useI18n } from '../i18n'
+import { downloadSupportPackage } from '../debug'
 
 /** How long starting may take before it counts as stuck. */
 export const STUCK_AFTER = 10_000
@@ -44,6 +45,9 @@ export function StartProblem({ step, refId, error }: { step: Step; refId: string
           {m.start.reference}: <code>{refId}</code> · {__APP_VERSION__}
         </p>
         {error !== undefined && <pre className="small">{errorText(error)}</pre>}
+        <button type="button" className="btn sm" onClick={() => void downloadSupportPackage()}>
+          {m.start.support}
+        </button>
       </details>
     </main>
   )

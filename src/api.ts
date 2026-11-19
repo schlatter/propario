@@ -1,4 +1,5 @@
 /** Talking to the Propario server: same origin, JSON, session cookie. */
+import { debugLog } from './debug'
 import { isDemo } from './demo'
 
 export class ApiError extends Error {
@@ -30,13 +31,19 @@ export async function api<T = unknown>(path: string, init: { method?: string; bo
     headers['Content-Type'] = 'application/json'
   }
   let res: Response
+  const method = init.method ?? (body ? 'POST' : 'GET')
+  // Logged by method and path only (src/debug.ts): never contents.
+  const what = `${method} ${path.split('?')[0]}`
+  const started = performance.now()
   try {
     // A request that never ends must not freeze the app: after this long it counts as offline.
     const signal = AbortSignal.timeout(init.raw ? 120_000 : 30_000)
-    res = await fetch(path, { method: init.method ?? (body ? 'POST' : 'GET'), headers, body, credentials: 'same-origin', signal })
-  } catch {
+    res = await fetch(path, { method, headers, body, credentials: 'same-origin', signal })
+  } catch (e) {
+    debugLog('request', `${what} failed after ${Math.round(performance.now() - started)} ms: ${(e as Error).name}`)
     throw new ApiError(0, 'offline')
   }
+  debugLog('request', `${what} ${res.status} ${Math.round(performance.now() - started)} ms`)
   const data = (res.headers.get('content-type') ?? '').includes('json') ? await res.json().catch(() => ({})) : {}
   if (!res.ok) {
     const code = (data as { error?: string }).error ?? `http-${res.status}`

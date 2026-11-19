@@ -704,6 +704,37 @@ test('shared read-only, Grace sees the comparison and its picture, but may not c
   await expect(g.getByRole('button', { name: 'Share comparison' })).toHaveCount(0)
 })
 
+test('troubleshooting: a detailed log on one device and a support package without contents', async () => {
+  const { page } = ada
+  await go(page, 'Settings')
+  await page.getByRole('checkbox', { name: 'Detailed log on this device' }).check()
+  await go(page, 'Comparisons')
+  await page.getByRole('link', { name: 'Kitchen cabinet' }).click()
+  await page.locator('table.grid tbody .name-model').first().click()
+  const selection = page.getByRole('group', { name: 'Selection' })
+  const was = (await selection.locator('[aria-pressed="true"]').textContent())!
+  await selection.getByRole('button', { name: was === 'Favourite' ? 'Open' : 'Favourite', exact: true }).click()
+  await selection.getByRole('button', { name: was, exact: true }).click()
+  await expect.poll(() => page.evaluate(() => (localStorage.getItem('pv.debug.log') ?? '').includes('saved in'))).toBe(true)
+  await page.locator('dialog.drawer').getByRole('button', { name: 'Close', exact: true }).click()
+  await go(page, 'Settings')
+  await expect(page.getByText(/\d+ entries logged so far/)).toBeVisible()
+  await accessible(page, 'settings with troubleshooting')
+
+  const download = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Download support package' }).click()
+  const file = await (await download).path()
+  const text = (await import('node:fs')).readFileSync(file, 'utf8')
+  const pack = JSON.parse(text)
+  expect(pack).toMatchObject({ app: 'propario-support', startStep: 'ready', log: { on: true } })
+  expect(pack.records.products).toBeGreaterThan(0)
+  expect(pack.log.entries.some((e: { kind: string; text: string }) => e.kind === 'request' && /^POST \/api\/changes 200/.test(e.text))).toBe(true)
+  // Technical only: no names of comparisons or products.
+  expect(text).not.toContain('Kitchen cabinet')
+  expect(text).not.toContain('Arvika')
+  await page.getByRole('checkbox', { name: 'Detailed log on this device' }).uncheck()
+})
+
 test('after an update, a long-open app reloads itself instead of going blank', async () => {
   const { page, context } = ada
   // A page started before the update, which has not loaded the import parts yet.

@@ -182,8 +182,12 @@ describe('error reports from the browser', () => {
       // A line break cannot start a fake log line.
       expect(lines[0]).not.toContain('\n')
       expect(lines[0]).toContain('message="hangs [error] fake"')
+      expect(lines[0]).not.toContain(' log=')
+      // With the detailed log on, the last lines come along – also on one line.
+      await post('/api/client-error', { ...report, log: '10:00:01 request GET /api/sync 200 80 ms\n| x' })
+      expect(lines[1]).toContain('log="10:00:01 request GET /api/sync 200 80 ms | x"')
       expect((await post('/api/client-error', report, { origin: 'https://evil.example' })).status).toBe(403)
-      for (let i = 0; i < 19; i++) await post('/api/client-error', report)
+      for (let i = 0; i < 18; i++) await post('/api/client-error', report)
       expect((await post('/api/client-error', report)).status).toBe(429)
     } finally {
       console.error = original

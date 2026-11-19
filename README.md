@@ -120,6 +120,10 @@ expires after 14 days.
   names the step it hangs at and shows a reference; `docker compose logs app | grep <reference>`
   shows the error. _Reset this browser_ (`/reset.html`, also linked when the app's code does not
   load at all) removes only Propario's copy in that browser – the sign-in and the data stay.
+- **Something odd on one device:** _Settings → Troubleshooting_ switches on a detailed log for
+  that device and downloads a support package (technical details only: version, device, app
+  files, storage, requests, errors – no contents). With the log on, reports in the server log
+  carry its last lines too.
 
 ### Coming from version 0.1
 

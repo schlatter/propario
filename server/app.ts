@@ -182,7 +182,8 @@ export function createApp(db: DB, config: Config, version: string | null = null)
       const ref = /^[0-9a-f]{8}$/.test(String(b.ref)) ? String(b.ref) : '-'
       console.error(
         `[client] ref=${ref} user=${user?.id ?? '-'} kind=${field(b.kind, 20) || '-'} step=${field(b.step, 20) || '-'} version=${field(b.version, 40) || '-'}` +
-          ` path=${field(b.path, 200).split('?')[0] || '-'} message=${JSON.stringify(field(b.message, 500))} stack=${JSON.stringify(field(b.stack, 1500))}`,
+          ` path=${field(b.path, 200).split('?')[0] || '-'} message=${JSON.stringify(field(b.message, 500))} stack=${JSON.stringify(field(b.stack, 1500))}` +
+          (b.log ? ` log=${JSON.stringify(field(b.log, 2000))}` : ''),
       )
       return send(res, 200, { ok: true })
     }

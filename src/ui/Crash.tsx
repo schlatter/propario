@@ -7,6 +7,7 @@
  */
 import { Component, type ReactNode } from 'react'
 import { errorText, report } from '../diagnostics'
+import { downloadSupportPackage } from '../debug'
 import { outdated, reloadOnce } from '../freshness'
 import { initialLocale } from '../i18n/active'
 
@@ -46,6 +47,9 @@ export class Crash extends Component<{ children: ReactNode }, { error: unknown; 
           </summary>
           <pre className="small">{errorText(this.state.error)}</pre>
           <p className="small">{__APP_VERSION__}</p>
+          <button type="button" className="btn sm" onClick={() => void downloadSupportPackage()}>
+            {de ? 'Support-Paket herunterladen' : 'Download support package'}
+          </button>
         </details>
       </main>
     )

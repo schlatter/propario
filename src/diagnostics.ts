@@ -3,14 +3,20 @@
  * reference that appears both on screen and in the server log (`[client] ref=…`). Reports carry
  * the error, the step, the version and the page's path – no contents of comparisons.
  */
+import { debugEntries, debugLog, debugOn } from './debug'
+
 export type Step = 'session' | 'cache' | 'sync' | 'ready'
 
 let step: Step = 'session'
-export const setStep = (s: Step) => void (step = s)
+export const setStep = (s: Step) => {
+  step = s
+  debugLog('start', s)
+}
 export const currentStep = () => step
 
 /** Sends a report and returns its reference; never throws, never waits. */
 export function report(kind: 'crash' | 'stuck' | 'start-failed' | 'slow', error?: unknown): string {
+  debugLog('report', `${kind}: ${error instanceof Error ? error.message : String(error ?? '')}`)
   const ref = Array.from(crypto.getRandomValues(new Uint8Array(4)), (b) => b.toString(16).padStart(2, '0')).join('')
   const e = error instanceof Error ? error : null
   try {
@@ -27,6 +33,13 @@ export function report(kind: 'crash' | 'stuck' | 'start-failed' | 'slow', error?
         path: location.pathname,
         message: e ? `${e.name}: ${e.message}` : String(error ?? ''),
         stack: e?.stack ?? '',
+        // With the detailed log on, what happened just before (src/debug.ts).
+        log: debugOn()
+          ? debugEntries()
+              .slice(-15)
+              .map((x) => `${x.t.slice(11, 19)} ${x.kind} ${x.text}`)
+              .join(' | ')
+          : '',
       }),
     }).catch(() => {})
   } catch {

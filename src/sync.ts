@@ -15,6 +15,7 @@ import { db, type AppDB } from './db/db'
 import { applyPatch, KINDS, type AnyRecord, type Change, type Kind } from './shared/records.ts'
 import { nowIso } from './shared/ids.ts'
 import { report } from './diagnostics'
+import { debugLog } from './debug'
 
 export type Role = 'owner' | 'editor' | 'viewer'
 
@@ -131,6 +132,7 @@ export async function commit(changes: Change[]): Promise<void> {
     schedulePull(300)
     return
   }
+  const started = performance.now()
   const before = await snapshot(changes, database)
   await applyLocal(changes, database)
   setSaving(1)
@@ -139,6 +141,7 @@ export async function commit(changes: Change[]): Promise<void> {
   try {
     await transport.push(changes)
   } catch (e) {
+    debugLog('save', `${changes.length} change(s) not saved, taken back: ${(e as Error).message}`)
     // Signed out or switched account meanwhile: that cache is gone anyway.
     if (database === db) await restore(before, database)
     throw e
@@ -146,6 +149,7 @@ export async function commit(changes: Change[]): Promise<void> {
     clearTimeout(slow)
     setSaving(-1)
   }
+  debugLog('save', `${changes.length} change(s) saved in ${Math.round(performance.now() - started)} ms`)
   schedulePull(300)
 }
 
@@ -162,6 +166,8 @@ async function doPull() {
   const database = db
   const since = ((await database.meta.get('seq'))?.value as number | undefined) ?? 0
   const r = await transport.pull(since)
+  if (r.full || r.records.length || r.deleted.length)
+    debugLog('sync', `${r.full ? 'full' : 'changes'}: ${r.records.length} records, ${r.deleted.length} removed, seq ${r.seq}`)
   if (database !== db) return // signed out or switched account meanwhile
   await database.transaction('rw', [database.projects, database.products, database.properties, database.requirements, database.meta], async () => {
     const allowed = new Set(r.projects.map((p) => p.id))

@@ -6,6 +6,13 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- Added: **Troubleshooting** in Settings – a detailed log on this device (requests with status
+  and duration, saving and syncing, start steps, errors, going to the background, network and
+  app-file changes; the last 400 entries, kept across updates) and a **support package** to
+  download: version, device, installed or not, service worker, caches, the browser's
+  databases, storage, record counts and the log – no contents of comparisons. The error pages
+  offer the package too, and with the log on, reports in the server log carry its last lines.
+
 - Fixed: Propario could hang for good while starting, at "opening the data stored in this
   browser" (the server log showed it). A browser database cannot open while its removal is
   pending, and the removal waits for every other window – an installed app frozen in the

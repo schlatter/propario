@@ -1,3 +1,4 @@
+import { debugEntries, debugOn, downloadSupportPackage, setDebug } from '../debug'
 import { useState } from 'react'
 import { saveSettings } from '../db/db'
 import { useSettings } from '../hooks'
@@ -94,6 +95,8 @@ export function SettingsPage() {
         </form>
       </section>
 
+      <Troubleshooting />
+
       <section className="panel stack">
         <h2>{m.settings.about}</h2>
         <p>{m.settings.aboutText}</p>
@@ -104,5 +107,37 @@ export function SettingsPage() {
         <p className="muted small">{m.settings.version(__APP_VERSION__)}</p>
       </section>
     </main>
+  )
+}
+
+/** For finding out what goes wrong on this device (src/debug.ts). */
+function Troubleshooting() {
+  const { m } = useI18n()
+  const [on, setOn] = useState(debugOn)
+  const [count, setCount] = useState(() => debugEntries().length)
+  return (
+    <section className="panel stack" aria-labelledby="troubleshooting">
+      <h2 id="troubleshooting">{m.debug.title}</h2>
+      <p className="muted">{m.debug.text}</p>
+      <label className="check">
+        <input
+          type="checkbox"
+          checked={on}
+          onChange={(e) => {
+            setDebug(e.target.checked)
+            setOn(e.target.checked)
+            setCount(debugEntries().length)
+          }}
+        />
+        {m.debug.log}
+      </label>
+      {on && <p className="muted small">{m.debug.entries(count)}</p>}
+      <div className="row">
+        <button type="button" className="btn" onClick={() => void downloadSupportPackage()}>
+          <Glyph name="download" /> {m.debug.download}
+        </button>
+      </div>
+      <p className="muted small">{m.debug.privacy}</p>
+    </section>
   )
 }

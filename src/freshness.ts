@@ -10,6 +10,8 @@
  *
  * Each reload happens at most once a minute, so a real outage cannot cause a reload loop.
  */
+import { debugLog } from './debug'
+
 const RUNNING = __APP_VERSION__
 const KEY = 'propario-reloaded-at'
 const PAUSE = 60_000
@@ -20,6 +22,7 @@ export function reloadOnce(now = Date.now()): boolean {
     const last = Number(sessionStorage.getItem(KEY) || 0)
     if (now - last < PAUSE) return false
     sessionStorage.setItem(KEY, String(now))
+    debugLog('reload', 'newer version or a part that would not load')
   } catch {
     return false // without a place to remember it, a loop could not be stopped
   }

@@ -439,6 +439,14 @@ export const en = {
     oldNotesHint: 'This field is retired; the comments replace it. Move its text there.',
     moveToComments: 'Move to comments',
   },
+  debug: {
+    title: 'Troubleshooting',
+    text: 'When something does not work on this device: switch on the detailed log, use Propario until it happens, then download the support package and pass it on.',
+    log: 'Detailed log on this device',
+    entries: (n: number) => `${n} entries logged so far (the last 400 are kept, also across updates).`,
+    download: 'Download support package',
+    privacy: 'The package holds technical details only – version, device, app files, storage, requests and errors – no contents of your comparisons.',
+  },
   sync: {
     saving: 'Saving …',
   },
@@ -457,6 +465,7 @@ export const en = {
     reset: 'Reset this browser',
     resetHint: 'Resetting removes only Propario’s copy in this browser. You stay signed in; everything is loaded again from the server.',
     details: 'Details for troubleshooting',
+    support: 'Download support package',
     reference: 'Reference',
   },
   merge: {

@@ -6,9 +6,11 @@ import './styles/app.css'
 import { App } from './App'
 import { applyTheme, readTheme } from './theme'
 import { keepCurrent } from './freshness'
+import { installDebug } from './debug'
 import { Crash } from './ui/Crash'
 
 applyTheme(readTheme())
+installDebug()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -23,6 +23,11 @@ happens.** Every change is measured against this list; `npm run verify` checks m
 - No analytics, no tracking, no third-party scripts, fonts or images.
 - The service worker (`src/service-worker.js`) caches only versioned app files (`/assets/*`) and
   an offline page – never pages, API answers or pictures; each release clears the one before.
+- Troubleshooting (`src/debug.ts`) is off by default and per device. When switched on, the
+  browser keeps its last 400 technical events in localStorage: requests by method, path
+  without query, status and duration; errors by message; start steps – no contents. Reports to
+  the server log then carry the last 15 of them. The support package is a file the person
+  downloads and passes on themselves; it holds the same technical details only.
 - The demo (`src/demo.ts`) runs entirely in the browser tab, in its own browser database: its
   changes go nowhere, other server calls are refused before they are sent, and its data is
   removed when it ends.
