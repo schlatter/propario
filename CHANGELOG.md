@@ -6,6 +6,11 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- Changed back: the fit has its own column again, and the verdicts too – the rows were too
+  tall. The thumb down stays red.
+- Added: verdicts are set right in the table – 👍 ⊖ 👎 with how many gave each; one's own is
+  marked, a tap sets it or takes it back. The column shows by default.
+
 ## 0.12.0 — 2026-11-19
 
 - Changed: the fit moved into the requirements column, under the bars – "Fit 86 % · 3 open" – and

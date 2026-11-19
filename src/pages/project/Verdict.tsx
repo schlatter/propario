@@ -56,27 +56,37 @@ export function VerdictControl({ product: p }: { product: Product }) {
   )
 }
 
-/** Everyone's verdicts as counts, with the names for screen readers and on hover. */
-export function VerdictSummary({ product: p }: { product: Product }) {
+/**
+ * The table's verdict cell: a button per verdict with how many gave it. One's own is marked;
+ * a tap sets it, a tap on the marked one takes it back.
+ */
+export function VerdictCell({ product: p }: { product: Product }) {
   const { m } = useI18n()
+  const me = useMe()
   const users = useUsers()
   const t = tally(p)
+  const mine = p.votes?.[me.id] ?? null
   const names = (v: Vote) =>
     Object.entries(p.votes ?? {})
       .filter(([, x]) => x === v)
       .map(([id]) => users.get(id) ?? '?')
       .join(', ')
-  const said = VOTES.filter((v) => t[v] > 0)
-  if (!said.length) return null
-  const text = m.verdict.others(said.map((v) => m.verdict.named(m.verdict[v], names(v))))
   return (
-    <span className="votes" title={text}>
-      {said.map((v) => (
-        <span key={v} className={`vote ${v}`} aria-hidden="true">
-          <Glyph name={VOTE_GLYPH[v]} /> {t[v]}
-        </span>
+    <span className="verdict-cell" role="group" aria-label={m.verdict.yours}>
+      {VOTES.map((v) => (
+        <button
+          key={v}
+          type="button"
+          className={`${v}${t[v] ? ' has' : ''}`}
+          aria-pressed={mine === v}
+          aria-label={`${m.verdict[v]}: ${t[v]}`}
+          title={t[v] ? m.verdict.named(m.verdict[v], names(v)) : m.verdict[v]}
+          onClick={() => void setVote(p, me.id, mine === v ? null : v)}
+        >
+          <Glyph name={VOTE_GLYPH[v]} />
+          {t[v] > 0 && <span aria-hidden="true">{t[v]}</span>}
+        </button>
       ))}
-      <span className="sr-only">{text}</span>
     </span>
   )
 }

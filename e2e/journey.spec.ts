@@ -504,12 +504,12 @@ test('Ada moves rows and decides by swiping', async () => {
   await expect(page.getByRole('heading', { name: 'All decided' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Arvika' })).toBeVisible()
   await page.getByRole('link', { name: 'Back to the table' }).click()
-  await expect(page.locator('.vote.like')).toHaveCount(1)
-  await expect(page.locator('.vote.dislike')).toHaveCount(1)
+  await expect(page.locator('.verdict-cell .like.has')).toHaveCount(1)
+  await expect(page.locator('.verdict-cell .dislike.has')).toHaveCount(1)
 
   // A swipe in the wrong direction is put right in the details, where the verdict can be given too.
   await page
-    .locator('table.grid tbody tr', { has: page.locator('.vote.dislike') })
+    .locator('table.grid tbody tr', { has: page.locator('.verdict-cell .dislike.has') })
     .locator('.name-model')
     .click()
   const verdict = page.getByRole('group', { name: 'Your verdict' })
@@ -532,8 +532,16 @@ test('Ada moves rows and decides by swiping', async () => {
   await expect(page.getByText('Notes (seen by everyone in this comparison)')).toHaveCount(0)
   await accessible(page, 'details with verdict')
   await page.locator('dialog.drawer').getByRole('button', { name: 'Close', exact: true }).click()
-  await expect(page.locator('.vote.like')).toHaveCount(2)
-  await expect(page.locator('.vote.dislike')).toHaveCount(0)
+  await expect(page.locator('.verdict-cell .like.has')).toHaveCount(2)
+  await expect(page.locator('.verdict-cell .dislike.has')).toHaveCount(0)
+  // The verdict is set right in the table too: a tap marks one's own, another takes it back.
+  const firstVerdict = page.locator('table.grid tbody tr').first().getByRole('group', { name: 'Your verdict' })
+  await firstVerdict.getByRole('button', { name: /^Neutral/ }).click()
+  await expect(firstVerdict.getByRole('button', { name: /^Neutral/ })).toHaveAttribute('aria-pressed', 'true')
+  await expect(firstVerdict.getByRole('button', { name: /^I like it/ })).toHaveAttribute('aria-pressed', 'false')
+  await firstVerdict.getByRole('button', { name: /^Neutral/ }).click()
+  await expect(firstVerdict.getByRole('button', { name: /^Neutral/ })).toHaveAttribute('aria-pressed', 'false')
+  await accessible(page, 'table with verdicts')
 
   // Without a connection a change shows at once, is taken back when it cannot be saved, and the
   // app says so – it never waits with nothing happening.

@@ -4241,25 +4241,49 @@ button.info-tip {
   position: relative;
 }
 
-/* The fit, under a product's requirement bars: or that a must rules it out. */
-.req-fit {
-  display: block;
-  margin-top: 2px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--ink-2);
-  font-variant-numeric: tabular-nums;
+/* Verdicts in the table: everyone's counts, and a tap sets or takes back one's own. */
+.verdict-cell {
+  display: inline-flex;
+  gap: 2px;
+  padding: 0 4px;
 }
-.req-fit.fail {
+.verdict-cell button {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 36px;
+  min-height: 32px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--line-strong);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.verdict-cell button:hover {
+  background: var(--sunken);
+}
+.verdict-cell button.has.like,
+.verdict-cell button[aria-pressed='true'].like {
+  color: var(--brand-text);
+}
+.verdict-cell button.has.neutral,
+.verdict-cell button[aria-pressed='true'].neutral {
+  color: var(--muted);
+}
+.verdict-cell button.has.dislike,
+.verdict-cell button[aria-pressed='true'].dislike {
   color: var(--fail);
 }
-.status-cell {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
+.verdict-cell button[aria-pressed='true'] {
+  border-color: currentColor;
+  background: var(--surface);
 }
-.status-cell .votes {
-  padding: 0 8px 6px;
-  font-size: 13px;
+.verdict-cell .glyph {
+  width: 15px;
+  height: 15px;
 }

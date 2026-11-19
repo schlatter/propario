@@ -23,7 +23,7 @@ import { EditableCell } from './EditableCell'
 import { QuickAdd } from './QuickAdd'
 import type { ProjectData } from './useProjectData'
 import { isFavorite, statusOf, statusPatch, tally } from '../../domain/verdict'
-import { FavoriteToggle, VerdictSummary } from './Verdict'
+import { FavoriteToggle, VerdictCell } from './Verdict'
 
 interface Col {
   id: string
@@ -180,40 +180,36 @@ export function ProductTable({
         id: 'candidate',
         label: m.field.candidate,
         width: 128,
-        sort: (p) => ({ checked: 0, open: 1, excluded: 2 })[statusOf(p)] * 100 - tally(p).like + tally(p).dislike,
+        sort: (p) => ({ checked: 0, open: 1, excluded: 2 })[statusOf(p)],
         render: (p) => (
-          <span className="status-cell">
-            <Menu
-              floating
-              label={`${m.field.candidate}: ${m.candidate[statusOf(p)]}`}
-              className="cell candidate-trigger"
-              listClassName="candidate-menu"
-              trigger={
-                <span className={`pill ${PILL[statusOf(p)]}`}>
-                  {m.candidate[statusOf(p)]}
-                  <Glyph name="down" />
-                </span>
-              }
-            >
-              {(close) =>
-                STATUSES.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    aria-pressed={statusOf(p) === c}
-                    onClick={() => {
-                      close()
-                      if (c !== statusOf(p)) void updateProduct(p, statusPatch(p, c))
-                    }}
-                  >
-                    <span className={`pill ${PILL[c]}`}>{m.candidate[c]}</span>
-                  </button>
-                ))
-              }
-            </Menu>
-            {/* Everyone's verdicts, right next to where the product stands. */}
-            <VerdictSummary product={p} />
-          </span>
+          <Menu
+            floating
+            label={`${m.field.candidate}: ${m.candidate[statusOf(p)]}`}
+            className="cell candidate-trigger"
+            listClassName="candidate-menu"
+            trigger={
+              <span className={`pill ${PILL[statusOf(p)]}`}>
+                {m.candidate[statusOf(p)]}
+                <Glyph name="down" />
+              </span>
+            }
+          >
+            {(close) =>
+              STATUSES.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  aria-pressed={statusOf(p) === c}
+                  onClick={() => {
+                    close()
+                    if (c !== statusOf(p)) void updateProduct(p, statusPatch(p, c))
+                  }}
+                >
+                  <span className={`pill ${PILL[c]}`}>{m.candidate[c]}</span>
+                </button>
+              ))
+            }
+          </Menu>
         ),
       },
       {
@@ -261,12 +257,36 @@ export function ProductTable({
       cols.push({
         id: 'checks',
         label: m.field.checks,
-        width: 200,
+        width: 190,
         sort: (p) => {
           const s = data.summaries.get(p.id)!
           return (s.blocked ? 0 : s.qualified ? 2000 : 1000) + (s.fit ?? 0)
         },
-        render: (p) => <RequirementBars summary={data.summaries.get(p.id)!} items={data.results(p)} fit={data.checkable.some((r) => WEIGHT[r.priority])} />,
+        render: (p) => <RequirementBars summary={data.summaries.get(p.id)!} items={data.results(p)} />,
+      })
+    }
+    if (data.checkable.some((r) => WEIGHT[r.priority])) {
+      cols.push({
+        id: 'fit',
+        label: m.check.fit,
+        width: 110,
+        align: 'right',
+        sort: (p) => data.summaries.get(p.id)!.fit,
+        render: (p) => {
+          const s = data.summaries.get(p.id)!
+          const text = m.check.fitSummary(s.fit, s.fitOpen)
+          return (
+            <span className="fit-cell" title={`${m.check.fitHint} ${text}`}>
+              <span aria-hidden="true">{s.fit !== null ? `${s.fit} %` : '–'}</span>
+              {s.fitOpen > 0 && (
+                <span className="muted small" aria-hidden="true">
+                  {m.check.fitOpen(s.fitOpen)}
+                </span>
+              )}
+              <span className="sr-only">{text}</span>
+            </span>
+          )
+        },
       })
     }
     cols.push({
@@ -287,6 +307,17 @@ export function ProductTable({
           </button>
         )
       },
+    })
+    cols.push({
+      id: 'votes',
+      label: m.verdict.column,
+      width: 140,
+      sort: (p) => {
+        const t = tally(p)
+        return t.like + t.neutral + t.dislike ? t.like - t.dislike : null
+      },
+      // Everyone's verdicts at a glance, and one's own set right here.
+      render: (p) => <VerdictCell product={p} />,
     })
     for (const prop of properties) cols.push(propertyColumn(prop))
     cols.push(

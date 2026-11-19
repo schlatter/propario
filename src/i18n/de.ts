@@ -131,8 +131,8 @@ export const de: Messages = {
     fitHint:
       'Gewichteter Anteil der erfüllten weichen Anforderungen: wichtig 3, Wunsch 2, Bonus 1, vermeiden 2. Muss-Kriterien zählen nicht mit; unbekannte Werte gehen nicht zulasten eines Produkts.',
     fitOpen: (n) => `${n} offen`,
-    fitSummary: (fit, open) => [fit === null ? 'Eignung noch nicht bekannt' : `Eignung ${fit} %`, open ? `${open} offen` : ''].filter(Boolean).join(' · '),
-    mustFailed: 'Muss nicht erfüllt',
+    fitSummary: (fit, open) =>
+      `${fit === null ? 'Eignung noch nicht bekannt' : `Eignung ${fit} %`}${open ? `, ${open} ${open === 1 ? 'Anforderung' : 'Anforderungen'} noch unbekannt` : ''}`,
   },
   field: {
     brand: 'Hersteller / Marke',
