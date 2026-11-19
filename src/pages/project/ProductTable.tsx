@@ -39,6 +39,9 @@ interface Col {
 /** Colour of the selection: open grey, favourite green, excluded red. */
 const PILL: Record<Candidate, string> = { open: '', favorite: 'fav', excluded: 'excl' }
 
+/** Quick filters on when the address names none: only products still in the running. */
+const DEFAULT_CHIPS = 'eligible'
+
 /** Appends a field to a query, quoted when it has spaces or signs: `… AND "Offene Mitte" `. */
 function addClause(query: string, name: string): string {
   const field = /^[\p{L}\p{N}_.-]+$/u.test(name) ? name : `"${name.replace(/"/g, '')}"`
@@ -84,12 +87,14 @@ export function ProductTable({
       },
       { replace: true },
     )
-  const chips = new Set((params.get('chips') ?? '').split(',').filter(Boolean))
+  // Without a choice in the address, only products still in the running show: excluded ones and
+  // those failing a must criterion would only distract. Switching every chip off is kept as "none".
+  const chips = new Set((params.get('chips') ?? DEFAULT_CHIPS).split(',').filter((c) => c && c !== 'none'))
   const toggleChip = (c: string) => {
     const next = new Set(chips)
     if (next.has(c)) next.delete(c)
     else next.add(c)
-    setParam('chips', [...next].join(','))
+    setParam('chips', [...next].join(',') || 'none')
   }
   const onlyEligible = chips.has('eligible')
   const query = params.get('q') ?? ''
@@ -657,11 +662,9 @@ export function ProductTable({
               {m.filter.mine}
             </button>
           )}
-          {data.checkable.length > 0 && (
-            <button type="button" className="chip toggle" aria-pressed={onlyEligible} onClick={() => toggleChip('eligible')}>
-              {m.project.onlyEligible}
-            </button>
-          )}
+          <button type="button" className="chip toggle" aria-pressed={onlyEligible} onClick={() => toggleChip('eligible')}>
+            {m.project.onlyEligible}
+          </button>
           <button type="button" className="chip toggle" aria-pressed={view.hideExcluded} onClick={() => saveView({ hideExcluded: !view.hideExcluded })}>
             {m.project.hideExcluded}
           </button>

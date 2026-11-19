@@ -28,6 +28,8 @@ export function Modal({
       className={className}
       aria-labelledby={labelledBy}
       onCancel={(e) => {
+        // React hands a nested dialog's Escape on to the outer one too; only its own counts.
+        if (e.target !== ref.current) return
         e.preventDefault()
         onClose()
       }}

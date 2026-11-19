@@ -133,6 +133,13 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await expect(page.locator('tr.is-new').getByText(new Date().toLocaleDateString('en-GB'))).toBeVisible()
   await accessible(page, 'comparison')
 
+  // By default only products still in the running show; the steps below want to see all.
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await expect(page.getByRole('button', { name: 'Only eligible' })).toHaveAttribute('aria-pressed', 'true')
+  await page.getByRole('button', { name: 'Only eligible' }).click()
+  await expect(page).toHaveURL(/chips=none/)
+  await page.setViewportSize({ width: 390, height: 844 })
+
   // Installable app: a service worker that shows a friendly page without a connection.
   expect(await page.evaluate(() => navigator.serviceWorker.ready.then((r) => !!r.active))).toBe(true)
   await page.context().setOffline(true)
@@ -156,17 +163,30 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await page.mouse.move(0, 0)
   await expect(page.locator('.thumb-preview')).toHaveCount(0)
 
-  // A further picture (e.g. a dimension drawing): added, made the main one, removed.
+  // A further picture (e.g. a dimension drawing): added; the gallery opens at the main picture,
+  // steps on, and its star makes another picture the main one. Escape closes only the gallery.
   const mainSrc = await picture.getAttribute('src')
   await page.locator('.pimg-more input[type=file]').setInputFiles({ name: 'drawing.png', mimeType: 'image/png', buffer: png(600, 300) })
-  await expect(page.locator('.pimg-thumb')).toHaveCount(1)
-  await page.getByRole('button', { name: 'Picture 2: make it the main picture' }).click()
+  await expect(page.locator('.pimg-thumb')).toHaveCount(2)
+  await page.locator('.pimg-drop').click()
+  await expect(page.locator('dialog.gallery')).toBeVisible()
+  await expect(page.locator('.gallery-count')).toHaveText('1/2')
+  await page.keyboard.press('ArrowRight')
+  await expect(page.locator('.gallery-count')).toHaveText('2/2')
+  await page.getByRole('button', { name: 'Make main picture' }).click()
+  await expect(page.locator('.gallery-count')).toHaveText('1/2')
+  await expect(page.locator('.gallery-star')).toBeDisabled()
+  await accessible(page, 'gallery')
+  await page.keyboard.press('Escape')
+  await expect(page.locator('dialog.gallery')).toBeHidden()
+  await expect(page.locator('dialog.drawer')).toBeVisible()
   await expect(picture).not.toHaveAttribute('src', mainSrc!)
-  await expect(page.locator('.pimg-thumb img')).toHaveAttribute('src', mainSrc!)
-  await page.getByRole('button', { name: 'Picture 2: make it the main picture' }).click()
+  await page.getByRole('button', { name: 'Picture 2: show large' }).click()
+  await page.getByRole('button', { name: 'Make main picture' }).click()
+  await page.keyboard.press('Escape')
   await expect(picture).toHaveAttribute('src', mainSrc!)
   await page.getByRole('button', { name: 'Remove picture 2' }).click()
-  await expect(page.locator('.pimg-thumb')).toHaveCount(0)
+  await expect(page.locator('.pimg-thumb')).toHaveCount(1)
   await accessible(page, 'further pictures')
 
   // Excluding asks for a kind of reason (filterable) and optional details.

@@ -18,6 +18,7 @@ import type { ProductFacts } from '../../shared/product-facts.ts'
 import { Glyph } from '../../ui/Glyph'
 import { Preview, Thumb } from '../../ui/Thumb'
 import { filledLabels } from '../../domain/display'
+import { Gallery } from './Gallery'
 
 /** Image block in the product drawer: load from link, pick a file, paste or drop, remove. */
 export function ProductImage({ product: p, name }: { product: Product; name: string }) {
@@ -69,12 +70,16 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
   }
   const further = (p.images ?? []).filter((x) => IMAGE_PATH.test(x))
   const moreFiles = useRef<HTMLInputElement>(null)
-  /** A further picture becomes the main one; the main one takes its place among the others. */
+  /** All pictures, the main one first. */
+  const pictures = src ? [src, ...further] : []
+  const [gallery, setGallery] = useState<number | null>(null)
+  /** Picture `i` becomes the main one and moves to the front; the others keep their order. */
   const makeMain = (i: number) => {
-    const rest = [...further]
-    const [chosen] = rest.splice(i, 1, ...(p.image ? [p.image] : []))
-    void updateProduct(p, { image: chosen, images: rest })
+    const rest = pictures.filter((_, j) => j !== i)
+    void updateProduct(p, { image: pictures[i], images: rest })
   }
+  /** Removing the main picture lets the next one take its place. */
+  const removeMain = () => updateProduct(p, { image: further[0] ?? '', images: further.slice(1) })
 
   return (
     <div className="pimg">
@@ -86,7 +91,12 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
         // Also when the picture appears under a resting pointer (e.g. right after opening the details).
         onPointerMove={(e) => src && e.pointerType === 'mouse' && !zoom && setZoom(true)}
         onPointerLeave={() => setZoom(false)}
-        onPointerUp={(e) => src && e.pointerType !== 'mouse' && setZoom((z) => !z)}
+        // A click or tap opens the gallery – on a phone that is how a picture gets large.
+        onClick={() => {
+          if (!src) return
+          setZoom(false)
+          setGallery(0)
+        }}
         onFocus={(e) => src && e.currentTarget.matches(':focus-visible') && setZoom(true)}
         onBlur={() => setZoom(false)}
         onKeyDown={(e) => {
@@ -95,10 +105,14 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
             e.preventDefault()
             e.stopPropagation()
             setZoom(false)
+          } else if ((e.key === 'Enter' || e.key === ' ') && src && e.target === e.currentTarget) {
+            e.preventDefault()
+            setZoom(false)
+            setGallery(0)
           }
         }}
         role="group"
-        aria-label={m.image.dropLabel}
+        aria-label={src ? m.image.openGallery(pictures.length) : m.image.dropLabel}
         aria-busy={busy}
         onPaste={(e) => {
           if (take(e.clipboardData)) e.preventDefault()
@@ -129,7 +143,7 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
             <Glyph name="upload" /> {m.image.chooseFile}
           </button>
           {stored && (
-            <button type="button" className="btn sm ghost" disabled={busy} onClick={() => updateProduct(p, { image: '' })}>
+            <button type="button" className="btn sm ghost" disabled={busy} onClick={removeMain}>
               <Glyph name="trash" /> {m.image.remove}
             </button>
           )}
@@ -147,18 +161,30 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
         </div>
         {stored && (
           <div className="pimg-more" role="group" aria-label={m.image.further}>
-            {further.map((src, i) => (
-              <span className="pimg-thumb" key={src}>
-                <Thumb src={src} alt={m.image.furtherAlt(name, i + 1)} label={m.image.makeMain(i + 1)} onClick={() => makeMain(i)} previewSize={zoomSize()} />
-                <button
-                  type="button"
-                  className="icon-btn sm"
-                  aria-label={m.image.removeFurther(i + 1)}
-                  title={m.image.removeFurther(i + 1)}
-                  onClick={() => updateProduct(p, { images: further.filter((_, j) => j !== i) })}
-                >
-                  <Glyph name="close" />
-                </button>
+            {pictures.map((pic, i) => (
+              <span className={`pimg-thumb${i === 0 ? ' is-main' : ''}`} key={pic}>
+                <Thumb
+                  src={pic}
+                  alt={m.image.furtherAlt(name, i)}
+                  label={m.image.view(i + 1, i === 0)}
+                  onClick={() => setGallery(i)}
+                  previewSize={zoomSize()}
+                />
+                {i === 0 ? (
+                  <span className="pimg-star" title={m.gallery.isMain} aria-hidden="true">
+                    <Glyph name="star" />
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    className="icon-btn sm"
+                    aria-label={m.image.removeFurther(i)}
+                    title={m.image.removeFurther(i)}
+                    onClick={() => updateProduct(p, { images: further.filter((_, j) => j !== i - 1) })}
+                  >
+                    <Glyph name="close" />
+                  </button>
+                )}
               </span>
             ))}
             {further.length < MAX_PICTURES && (
@@ -209,6 +235,7 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
           </p>
         )}
       </div>
+      <Gallery pictures={pictures} name={name} start={gallery ?? 0} open={gallery !== null} onClose={() => setGallery(null)} onMakeMain={makeMain} />
     </div>
   )
 }

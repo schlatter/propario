@@ -385,6 +385,17 @@ export const de: Messages = {
     notMet: 'Nicht erfüllt',
     unknown: 'Noch unbekannt',
   },
+  gallery: {
+    position: (n, total) => `${n}/${total}`,
+    alt: (name, n, total) => `${name} – Bild ${n} von ${total}`,
+    isMain: 'Hauptbild',
+    makeMain: 'Als Hauptbild festlegen',
+    prev: 'Vorheriges Bild',
+    next: 'Nächstes Bild',
+    zoom: 'In voller Größe zeigen',
+    fit: 'An den Bildschirm anpassen',
+    all: 'Alle Bilder',
+  },
   shareTarget: {
     title: 'Geteiltes Produkt hinzufügen',
     choose: 'In welchen Vergleich?',
@@ -451,7 +462,11 @@ export const de: Messages = {
     fromLink: 'Bild von der Shopseite laden',
     further: 'Weitere Bilder',
     furtherAlt: (name, n) => `${name} – Bild ${n + 1}`,
-    makeMain: (n) => `Bild ${n + 1}: als Hauptbild verwenden`,
+    view: (n, main) => `Bild ${n}${main ? ' (Hauptbild)' : ''}: groß anzeigen`,
+    openGallery: (n) =>
+      n > 1
+        ? `Produktbild, ${n} Bilder – groß öffnen. Ein Bild hier einfügen oder hineinziehen fügt es hinzu.`
+        : 'Produktbild – groß öffnen. Ein Bild hier einfügen oder hineinziehen fügt es hinzu.',
     removeFurther: (n) => `Bild ${n + 1} entfernen`,
     addFurther: 'Bild',
     addFurtherHint: 'Ein weiteres Bild hinzufügen – am meisten hilft eine Maßzeichnung. Einfügen oder Hineinziehen aufs Hauptbild fügt auch eins hinzu.',

@@ -6,6 +6,15 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- **Gallery:** a click or tap on the product picture opens all pictures full screen, starting
+  with the main one; ‹ ›, the arrow keys, a swipe or the thumbnails step through them, and a tap
+  shows a picture at full size – also how a phone zooms in now. The first picture is the main
+  one, marked with a star; the star in the gallery makes another one the main picture (it moves
+  to the front). A click on a thumbnail no longer makes it the main picture by accident; removing
+  the main picture lets the next one take its place.
+- **Only products still in the running by default:** the quick filter "Only eligible" is on
+  unless switched off, so excluded products and those failing a must criterion do not distract.
+- Fixed: Escape in a dialog opened from the details (the gallery) closed the details too.
 - **Further pictures:** up to eight per product besides the main one – added by file, by pasting
   or dropping onto the picture, or from the shop page: when a picture is loaded, a second one
   from the page's gallery is kept – a dimension drawing when there is one: named so in its

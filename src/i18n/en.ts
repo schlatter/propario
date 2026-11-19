@@ -382,6 +382,17 @@ export const en = {
     notMet: 'Not met',
     unknown: 'Not known yet',
   },
+  gallery: {
+    position: (n: number, total: number) => `${n}/${total}`,
+    alt: (name: string, n: number, total: number) => `${name} – picture ${n} of ${total}`,
+    isMain: 'Main picture',
+    makeMain: 'Make main picture',
+    prev: 'Previous picture',
+    next: 'Next picture',
+    zoom: 'Show at full size',
+    fit: 'Fit to the screen',
+    all: 'All pictures',
+  },
   shareTarget: {
     title: 'Add a shared product',
     choose: 'To which comparison?',
@@ -445,7 +456,11 @@ export const en = {
     fromLink: 'Load picture from shop page',
     further: 'Further pictures',
     furtherAlt: (name: string, n: number) => `${name} – picture ${n + 1}`,
-    makeMain: (n: number) => `Picture ${n + 1}: make it the main picture`,
+    view: (n: number, main: boolean) => `Picture ${n}${main ? ' (main picture)' : ''}: show large`,
+    openGallery: (n: number) =>
+      n > 1
+        ? `Product picture, ${n} pictures – open large. Paste or drop an image here to add one.`
+        : 'Product picture – open large. Paste or drop an image here to add one.',
     removeFurther: (n: number) => `Remove picture ${n + 1}`,
     addFurther: 'Picture',
     addFurtherHint: 'Add another picture – a dimension drawing helps most. Pasting or dropping onto the main picture adds one too.',
