@@ -474,6 +474,27 @@ test('Ada moves rows and decides by swiping', async () => {
   expect(copied).toContain('# Kitchen cabinet')
   expect(copied).toContain('### Arvika')
 
+  // The AI answers with the table from the copy: one product changed, one new. Pasted back, the
+  // first updates its product and the second is added – after a preview.
+  const tableLines = copied.slice(copied.indexOf('## Products as a table')).split('\n')
+  const header = tableLines.find((l) => l.startsWith('| '))!
+  const cols = header.split('|').map((c) => c.trim())
+  const arvikaRow = tableLines.find((l) => /\| Arvika \|/.test(l))!.split('|')
+  arvikaRow[cols.indexOf('Price')] = ' 244 '
+  const newRow = cols.map((c) => (c === 'Model' ? ' Dora ' : c === 'Price' ? ' 299 ' : c === '' ? '' : ' '))
+  const answer = `Here is the updated table:\n\n${header}\n${tableLines[tableLines.indexOf(header) + 1]}\n${arvikaRow.join('|')}\n${newRow.join('|')}\n\nGood luck!`
+  await page.getByRole('button', { name: 'More', exact: true }).first().click()
+  await page.getByRole('button', { name: 'Add or update products' }).click()
+  await page.getByLabel('Table', { exact: true }).fill(answer)
+  await page.getByRole('button', { name: 'Read table' }).click()
+  await expect(page.getByRole('status').filter({ hasText: '1 new, 1 with changes' })).toBeVisible()
+  await expect(page.locator('.merge-item.update')).toContainText('€244')
+  await accessible(page, 'merge preview')
+  await page.getByRole('button', { name: 'Add 1, update 1' }).click()
+  await expect(page.getByText('1 added, 1 updated.')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Dora', exact: true })).toBeVisible()
+  await expect(page.locator('table.grid tbody tr', { hasText: 'Arvika' })).toContainText('244')
+
   // In the details, ← → (or a swipe on a phone) step through the products in the table's order.
   await page.goto(page.url().replace(/\?.*$/, ''))
   await page.locator('table.grid tbody .name-model').first().click()

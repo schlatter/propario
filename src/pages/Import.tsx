@@ -7,10 +7,9 @@ import { insertBundle, uniqueProjectName } from '../db/repo'
 import { PRIORITIES, PROPERTY_TYPES, type Priority, type PropertyType } from '../db/types'
 import { OP_SYMBOL } from '../domain/requirements'
 import {
-  analyzeWorkbook,
+  analyzeGrids,
   buildBundles,
   previewProducts,
-  readWorkbook,
   reanalyzeSheet,
   rereadRequirements,
   type ColumnMapping,
@@ -18,6 +17,7 @@ import {
   type SheetKind,
   type WorkbookDraft,
 } from '../import/excel'
+import { readTableFile, TABLE_FILES } from '../import/read-file'
 import { FIELD_TARGETS, type FieldTarget, type ReqTarget } from '../import/synonyms'
 import { useSettings } from '../hooks'
 import { useI18n } from '../i18n'
@@ -49,8 +49,8 @@ export function ImportPage() {
     setError('')
     setBusy(true)
     try {
-      const wb = readWorkbook(await file.arrayBuffer())
-      const d = analyzeWorkbook(wb, file.name, { people: settings.people })
+      const d = analyzeGrids(await readTableFile(file), file.name, { people: settings.people })
+      if (!d.sheets.length) throw new Error('no table')
       setDraft(d)
       setCurrent(d.sheets.find((s) => s.include)?.sheetName ?? d.sheets[0]?.sheetName ?? '')
       setStep('review')
@@ -131,7 +131,7 @@ export function ImportPage() {
               <Glyph name="upload" /> {m.importer.choose}
               <input
                 type="file"
-                accept=".xlsx,.xlsm,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                accept={TABLE_FILES}
                 className="sr-only"
                 onChange={(e) => {
                   const f = e.target.files?.[0]

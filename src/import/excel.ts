@@ -141,7 +141,13 @@ export function readWorkbook(data: ArrayBuffer | Uint8Array): XLSX.WorkBook {
 export function analyzeWorkbook(wb: XLSX.WorkBook, fileName: string, opts: AnalyzeOptions): WorkbookDraft {
   const grids: Record<string, Grid> = {}
   for (const name of wb.SheetNames) grids[name] = sheetToGrid(wb.Sheets[name])
-  const sheets = wb.SheetNames.map((name) => analyzeSheet(name, grids[name], opts))
+  return analyzeGrids(grids, fileName, opts)
+}
+
+/** Tables that already are grids, e.g. read from CSV or an AI's Markdown (./table-text.ts); one per sheet. */
+export function analyzeGrids(grids: Record<string, Grid>, fileName: string, opts: AnalyzeOptions): WorkbookDraft {
+  const names = Object.keys(grids)
+  const sheets = names.map((name) => analyzeSheet(name, grids[name], opts))
 
   const productSheets = sheets.filter((s) => s.kind === 'products')
   const reqSheets = sheets.filter((s) => s.kind === 'requirements')
@@ -149,7 +155,7 @@ export function analyzeWorkbook(wb: XLSX.WorkBook, fileName: string, opts: Analy
     .replace(/\.[^.]+$/, '')
     .replace(/[_-]+/g, ' ')
     .trim()
-  if (productSheets.length === 1 && (reqSheets.length > 0 || wb.SheetNames.length === 1)) {
+  if (productSheets.length === 1 && (reqSheets.length > 0 || names.length === 1)) {
     productSheets[0].projectName = baseName || productSheets[0].projectName
     productSheets[0].category = suggestCategory(productSheets[0].projectName) || productSheets[0].category
   }
@@ -364,7 +370,7 @@ export function inferType(values: Cell[]): { type: PropertyType; unit: string; o
 
 // ---------- product rows ----------
 
-function productRows(grid: Grid, draft: SheetDraft): number[] {
+export function productRows(grid: Grid, draft: SheetDraft): number[] {
   const nameCols = draft.columns.filter((c) => c.target === 'model' || c.target === 'brand').map((c) => c.index)
   const mapped = draft.columns.filter((c) => c.target !== 'ignore').map((c) => c.index)
   const rows: number[] = []

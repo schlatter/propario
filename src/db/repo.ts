@@ -138,6 +138,46 @@ export async function addProduct(projectId: string, data: Partial<Product> = {})
   return product
 }
 
+/**
+ * Applies a table merge (src/import/merge.ts) in one go: creates the new fields, adds the new
+ * products and patches the updated ones. Values keyed by a new field's key go to that field.
+ */
+export async function mergeProducts(
+  projectId: string,
+  fields: { key: string; name: string; type: PropertyDef['type']; unit: string; options: string[] }[],
+  adds: Product[],
+  updates: { product: Product; patch: Partial<Product> }[],
+) {
+  const me = (await db.meta.get('me'))?.value as { name?: string } | undefined
+  let fieldOrder = await nextOrder('properties', projectId)
+  let order = await nextOrder('products', projectId)
+  const created = fields.map(({ key, ...f }) => [key, makeProperty(projectId, { ...f, order: fieldOrder++ })] as const)
+  const ids = new Map(created.map(([key, prop]) => [key, prop.id]))
+  const remap = (values: Product['values'] | undefined) =>
+    Object.fromEntries(Object.entries(values ?? {}).flatMap(([k, v]) => (k.startsWith('new:') ? (ids.has(k) ? [[ids.get(k)!, v]] : []) : [[k, v]])))
+  const today = todayIso()
+  await commit([
+    ...created.map(([, record]) => ({ op: 'create', kind: 'properties', record }) as Change),
+    ...adds.map((p) => {
+      const { id: _id, projectId: _p, createdAt: _c, updatedAt: _u, order: _o, ...rest } = p
+      const record = makeProduct(projectId, {
+        ...rest,
+        foundBy: rest.foundBy || me?.name || '',
+        priceDate: rest.price !== null ? today : '',
+        values: remap(p.values),
+        order: order++,
+      })
+      return { op: 'create', kind: 'products', record } as Change
+    }),
+    ...updates.map(({ product, patch: fields }) => {
+      const next: Partial<Product> = { ...fields }
+      if ('values' in next) next.values = remap(next.values)
+      if ('price' in next && next.price !== product.price) next.priceDate = next.price === null ? '' : today
+      return patch('products', product, next)
+    }),
+  ])
+}
+
 export async function updateProduct(product: Product, fields: Partial<Product>) {
   // A price someone sets is a price seen today; the date says how current it is.
   if ('price' in fields && !('priceDate' in fields) && fields.price !== product.price)

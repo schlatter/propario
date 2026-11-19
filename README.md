@@ -29,8 +29,9 @@ candidates, their pictures, your ratings and the final decision.
   cons, the final decision and the purchase.
 - **Private by default, shared on purpose**: a comparison belongs to whoever created it and can
   be shared with other people on the instance – to view or to edit.
-- **Excel import** with a preview and a correctable column mapping; Excel and JSON export;
-  complete backups including pictures.
+- **Table import** (Excel, CSV, Markdown, an AI's answer) with a preview and a correctable
+  column mapping – as a new comparison, or into an existing one, where known products are
+  updated and the others added; Excel and JSON export; complete backups including pictures.
 - **English and German**; light, dark or like the device; built for WCAG 2.1 AA.
 
 ## What it deliberately does not do
@@ -117,13 +118,18 @@ expires after 14 days.
 Version 0.1 kept everything in the browser. After signing in, _Backup_ offers to move those
 comparisons into your account.
 
-## Excel import
+## Table import
 
-_Import_ → choose an `.xlsx`. Each sheet becomes a comparison. The wizard shows the detected
+_Import_ → choose an `.xlsx`, `.csv`, `.md`, `.txt` or `.json`. Each sheet becomes a comparison. The wizard shows the detected
 header row, the mapping of every column, the requirements and notes found below the product
 rows, and a product preview. Everything can be corrected before importing. Nothing is silently
 dropped: unknown columns become custom fields, values that do not fit are kept as text.
 Details: [docs/excel-import.md](docs/excel-import.md).
+
+Into an existing comparison: ⋯ → _Add or update products_, then paste a table or choose a file.
+A row with the same link, GTIN or name as a product updates it, the others are added. This is
+how an AI's suggestions come back: "Copy for my AI" ends with the products as a table and asks
+the AI to answer in it.
 
 ## Development
 

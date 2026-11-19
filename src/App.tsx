@@ -19,6 +19,7 @@ import { SettingsPage } from './pages/Settings'
 
 // The importer pulls in the spreadsheet library; load it only when needed.
 const ImportPage = lazy(() => import('./pages/Import').then((x) => ({ default: x.ImportPage })))
+const MergePage = lazy(() => import('./pages/Merge').then((x) => ({ default: x.MergePage })))
 
 export function App() {
   return (
@@ -115,6 +116,14 @@ function Shell() {
           <Route path="/p/:id" element={<ProjectPage />} />
           <Route path="/p/:id/compare" element={<ComparePage />} />
           <Route path="/p/:id/swipe" element={<SwipePage />} />
+          <Route
+            path="/p/:id/merge"
+            element={
+              <Suspense fallback={<main aria-busy="true" />}>
+                <MergePage />
+              </Suspense>
+            }
+          />
           <Route
             path="/import"
             element={

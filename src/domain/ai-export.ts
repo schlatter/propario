@@ -4,6 +4,9 @@
  * the notes everyone in the comparison sees – followed by a question. Nothing leaves Propario
  * by itself; the person pastes it where they choose. Names of people are left out: ratings
  * appear as stars only.
+ *
+ * It ends with the products as a table the AI can answer with: pasted back into "Add or update
+ * products" (src/import/merge.ts), its rows update the products they name and add new ones.
  */
 import type { Product, Project, PropertyDef, Requirement } from '../db/types'
 import type { Formatters } from '../i18n'
@@ -72,5 +75,45 @@ export function comparisonForAi(d: Input, m: Messages, fmt: Formatters): string 
     ] as const)
       if (v.trim()) lines.push(`- ${label}: ${v.trim().replace(/\s*\n\s*/g, ' / ')}`)
   }
+  lines.push('', `## ${m.ai.tableTitle}`, '', m.ai.tableHint, '', ...productTable(d, m))
   return lines.join('\n') + '\n'
+}
+
+/** Cells as Markdown keeps them: no pipes, no line breaks. */
+const mdCell = (s: string) =>
+  s
+    .replace(/\|/g, '\\|')
+    .replace(/\s*\n\s*/g, ' / ')
+    .trim()
+
+/** The products as a Markdown table; values plain (numbers without unit, dates ISO) so they read back exactly. */
+export function productTable(d: Pick<Input, 'products' | 'properties'>, m: Messages): string[] {
+  const own: [string, (p: Product) => string][] = (
+    [
+      ['url', m.field.url],
+      ['brand', m.field.brand],
+      ['model', m.field.model],
+      ['variant', m.field.variant],
+      ['productType', m.field.productType],
+      ['price', m.field.price],
+      ['retailer', m.field.retailer],
+      ['gtin', m.field.gtin],
+      ['mpn', m.field.mpn],
+    ] as const
+  )
+    // Link, name and price always; the rest only when some product has it.
+    .filter(([key]) => ['url', 'brand', 'model', 'price'].includes(key) || d.products.some((p) => p[key]))
+    .map(([key, label]) => [label, (p: Product) => (key === 'price' ? (p.price === null ? '' : String(p.price)) : String(p[key] ?? ''))])
+  const fields: [string, (p: Product) => string][] = d.properties.map((prop) => [
+    prop.unit && !prop.name.toLowerCase().includes(prop.unit.toLowerCase()) ? `${prop.name} (${prop.unit})` : prop.name,
+    (p) => {
+      const v = p.values?.[prop.id]
+      if (v === null || v === undefined) return ''
+      if (typeof v === 'boolean') return v ? m.common.yes : m.common.no
+      return String(v)
+    },
+  ])
+  const cols = [...own, ...fields]
+  const row = (cells: string[]) => `| ${cells.map(mdCell).join(' | ')} |`
+  return [row(cols.map(([h]) => h)), `|${cols.map(() => ' --- |').join('')}`, ...d.products.map((p) => row(cols.map(([, get]) => get(p))))]
 }

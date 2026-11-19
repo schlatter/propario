@@ -6,6 +6,14 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- Added: **Add or update products** (⋯ in a comparison). Paste a table – your AI's answer, rows
+  copied from Excel, CSV or Markdown – or choose a file (.xlsx, .csv, .md, .txt, .json). Rows
+  already in the comparison (same link, GTIN or name) update their product, the others are
+  added; new columns can become fields. A preview shows every change, and only what stays
+  ticked is saved. Empty cells clear nothing; comments and pros/cons are added to, not replaced.
+- Added: "Copy for my AI" ends with the products as a table and asks the AI to answer in it,
+  so its suggestions can be pasted straight back.
+- Changed: the table import for a new comparison also reads CSV, Markdown, text and JSON.
 - Fixed: swiping in the gallery stepped to another product instead of the next picture.
 ## 0.8.0 — 2026-11-19
 

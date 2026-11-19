@@ -143,6 +143,16 @@ export function ProjectPage() {
                 >
                   <Glyph name="copy" /> {m.ai.copy}
                 </button>
+                {role !== 'viewer' && (
+                  <button
+                    onClick={() => {
+                      close()
+                      navigate(`/p/${project.id}/merge`)
+                    }}
+                  >
+                    <Glyph name="upload" /> {m.merge.menu}
+                  </button>
+                )}
                 <hr />
                 <button
                   onClick={async () => {
