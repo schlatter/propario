@@ -3559,3 +3559,22 @@ dialog.gallery::backdrop {
   background: var(--selected);
   color: var(--ink);
 }
+
+/* ---------- when something breaks (src/ui/Crash.tsx) ---------- */
+.crash {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 10px;
+  min-height: 70vh;
+  text-align: center;
+}
+.crash h1 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  margin: 8px 0 0;
+  text-wrap: balance;
+}
+.crash .btn {
+  margin-top: 8px;
+}

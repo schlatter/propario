@@ -594,6 +594,52 @@ test('shared read-only, Grace sees the comparison and its picture, but may not c
   await expect(g.getByRole('button', { name: 'Share comparison' })).toHaveCount(0)
 })
 
+test('after an update, a long-open app reloads itself instead of going blank', async () => {
+  const { page, context } = ada
+  // A page started before the update, which has not loaded the import parts yet.
+  await page.goto('/')
+  await page.getByRole('link', { name: 'Kitchen cabinet' }).click()
+  await expect(page.getByRole('tab', { name: /Products/ })).toBeVisible()
+
+  // The server now runs a newer version and no longer has the old page's files.
+  // (The new version's service worker has also cleared the old version's cached files.)
+  let gone = true
+  await page.evaluate(async () => Promise.all((await caches.keys()).map((k) => caches.delete(k))))
+  await context.route('**/version.json', (route) => route.fulfill({ json: { version: '99.0.0+newer' } }))
+  await context.route('**/assets/Merge-*.js', (route) => (gone ? route.fulfill({ status: 404, body: 'Not found' }) : route.continue()))
+
+  // Opening a part not loaded yet fails – and the app reloads, landing where it was headed.
+  const reloaded = page.waitForEvent('load')
+  await page.getByRole('button', { name: 'More', exact: true }).first().click()
+  await page.getByRole('button', { name: 'Add or update products' }).click()
+  await reloaded
+  gone = false
+  await expect(page.getByRole('heading', { name: 'Add or update products' })).toBeVisible()
+
+  // Coming back to the app after an update reloads it before anything is tapped (once a minute
+  // at most, so the guard of the reload above is cleared first).
+  await page.evaluate(() => sessionStorage.clear())
+  const again = page.waitForEvent('load')
+  await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')))
+  await again
+
+  // Anything else that breaks shows a way out instead of a blank page.
+  await context.unrouteAll()
+  await page.evaluate(() => sessionStorage.clear())
+  await context.route('**/assets/Merge-*.js', (route) => route.fulfill({ status: 404, body: 'Not found' }))
+  await page.goto('/')
+  await page.evaluate(async () => Promise.all((await caches.keys()).map((k) => caches.delete(k))))
+  await page.evaluate(() => sessionStorage.setItem('propario-reloaded-at', String(Date.now())))
+  await page.getByRole('link', { name: 'Kitchen cabinet' }).click()
+  await page.getByRole('button', { name: 'More', exact: true }).first().click()
+  await page.getByRole('button', { name: 'Add or update products' }).click()
+  await expect(page.getByRole('heading', { name: 'Propario muss neu geladen werden' })).toBeVisible()
+  await accessible(page, 'crash screen')
+  await context.unrouteAll()
+  await page.getByRole('button', { name: 'Neu laden · Reload' }).click()
+  await expect(page.getByRole('heading', { name: 'Add or update products' })).toBeVisible()
+})
+
 test('the recovery key gets Ada back in exactly once', async ({ browser }) => {
   await go(ada.page, 'Settings')
   await ada.page.getByRole('button', { name: 'Sign out', exact: true }).click()
