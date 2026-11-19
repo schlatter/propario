@@ -6,6 +6,12 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- Changed: the fit moved into the requirements column, under the bars – "Fit 86 % · 3 open" – and
+  a product that fails a must says "Must not met" there instead of a percentage that looked
+  good. The separate fit column is gone.
+- Changed: everyone's verdicts show in the table, under each product's status; a thumb down is
+  red, apart from neutral.
+
 - Fixed: adding a product by a link whose shop refuses automated access (Otto answers with a
   bot check) gave no word at all. The app now says why nothing came, and takes what the address
   itself names – the product name and, as in Otto's addresses, width, depth and height – without

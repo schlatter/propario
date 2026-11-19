@@ -39,7 +39,16 @@ export function CheckStrip({ items }: { items: { id: string; result: CheckResult
  * Requirements of one product as two bars, must criteria above the others, each with its count:
  * "Must 2/2" and "Other 0/31" say at a glance that a product qualifies but fits little else.
  */
-export function RequirementBars({ summary, items }: { summary: Summary; items: { id: string; result: CheckResult; blocking: boolean; label: string }[] }) {
+export function RequirementBars({
+  summary,
+  items,
+  fit = false,
+}: {
+  summary: Summary
+  items: { id: string; result: CheckResult; blocking: boolean; label: string }[]
+  /** Also the fit line (when the comparison has weighed requirements). */
+  fit?: boolean
+}) {
   const { m } = useI18n()
   const parts = splitByWeight(items)
   const kind = summary.blocked ? 'fail' : summary.qualified ? 'pass' : 'unknown'
@@ -62,6 +71,12 @@ export function RequirementBars({ summary, items }: { summary: Summary; items: {
           </span>
         </span>
       ))}
+      {/* The fit says how well the rest fits – but not when a must already rules the product out. */}
+      {fit && (
+        <span className={`req-fit${summary.blocked ? ' fail' : ''}`} title={m.check.fitHint}>
+          {summary.blocked ? m.check.mustFailed : m.check.fitSummary(summary.fit, summary.fitOpen)}
+        </span>
+      )}
     </span>
   )
 }

@@ -131,7 +131,8 @@ export const en = {
       'Weighted share of the met soft requirements: important 3, wish 2, bonus 1, avoid 2. Must criteria are not weighed; unknown values do not count against a product.',
     fitOpen: (n: number) => `${n} open`,
     fitSummary: (fit: number | null, open: number) =>
-      `${fit === null ? 'Fit not known yet' : `Fit ${fit} %`}${open ? `, ${open} ${open === 1 ? 'requirement' : 'requirements'} still unknown` : ''}`,
+      [fit === null ? 'Fit not known yet' : `Fit ${fit} %`, open ? `${open} open` : ''].filter(Boolean).join(' · '),
+    mustFailed: 'Must not met',
   },
   field: {
     brand: 'Brand',

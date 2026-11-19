@@ -2335,7 +2335,7 @@ table.map {
   width: 15px;
   height: 15px;
 }
-/* Verdicts speak by their thumbs; green and red stay for requirement checks (docs/brand.md). */
+/* Verdicts: up in petrol, neutral grey, down in red – red is what speaks against (docs/brand.md). */
 .vote.like {
   color: var(--brand-text);
 }
@@ -2343,7 +2343,7 @@ table.map {
   color: var(--muted);
 }
 .vote.dislike {
-  color: var(--ink-2);
+  color: var(--fail);
 }
 
 /* ---------- Swipe mode ---------- */
@@ -2511,7 +2511,7 @@ table.map {
   height: 22px;
 }
 .swipe-btn.no {
-  color: var(--ink-2);
+  color: var(--fail);
 }
 .swipe-btn.yes {
   color: var(--brand-text);
@@ -4151,7 +4151,7 @@ button.info-tip {
   color: var(--brand-text);
 }
 .verdict-control .verdict-dislike[aria-pressed='true'] {
-  color: var(--ink);
+  color: var(--fail);
 }
 .btn.fav-toggle {
   color: var(--ink);
@@ -4239,4 +4239,27 @@ button.info-tip {
 .section > h3,
 .pimg-actions {
   position: relative;
+}
+
+/* The fit, under a product's requirement bars: or that a must rules it out. */
+.req-fit {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.req-fit.fail {
+  color: var(--fail);
+}
+.status-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+.status-cell .votes {
+  padding: 0 8px 6px;
+  font-size: 13px;
 }

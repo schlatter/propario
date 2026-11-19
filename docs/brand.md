@@ -73,8 +73,8 @@ Rules:
   marks something as special, it is amber. Never both on one element.
 - **Amber is rare.** At most a few amber marks per screen; amber text uses `--accent-text`,
   text on amber uses `--accent-ink`.
-- **Green, red and grey mean met, not met, unknown** – nothing else. Missing data is grey,
-  never red. Verdicts speak by their thumbs (up in petrol, neutral grey, down in ink); a
+- **Green, red and grey mean met, not met, unknown.** Red also marks a thumb down: both speak
+  against a product. Missing data is grey, never red. A thumb up is petrol, neutral grey; a
   favourite is a petrol star.
 - **Contrast:** text at least 4.5 : 1, icons and lines that carry meaning at least 3 : 1, in
   both themes. Check new colour pairs before using them.
