@@ -11,6 +11,16 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.9.3',
+    notes: {
+      en: ['Upright pictures fit the gallery whole; the magnifier enlarges where you tap.', '“Reset this browser” now says clearly whether it worked.'],
+      de: [
+        'Hochformatige Bilder passen ganz in die Galerie; die Lupe vergrößert dort, wo du tippst.',
+        '„Browser zurücksetzen“ sagt jetzt klar, ob es geklappt hat.',
+      ],
+    },
+  },
+  {
     version: '0.9.2',
     notes: {
       en: [

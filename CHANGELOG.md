@@ -6,6 +6,19 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+## 0.9.3 — 2026-11-19
+
+- Fixed: a browser whose storage stopped answering kept Propario blank – the service worker
+  waited for it on every app file. It now falls back to the network after two seconds, never
+  delays an answer to store a copy, and its own updates no longer wait for a hanging storage.
+- Fixed: "Reset this browser" stayed at "Resetting …". The browser now does the reset itself
+  (`Clear-Site-Data`, the sign-in stays), and the page checks the result and says clearly
+  whether it worked – and what to do if not. It and the error page speak one language, the
+  person's, instead of German and English together.
+- Fixed: in the gallery, upright pictures – above all further ones, which are stored larger –
+  were cut off, especially on a laptop. Every picture now fits whole; the magnifier enlarges
+  around the tapped spot and keeps the picture centred instead of moving it to the left.
+
 ## 0.9.2 — 2026-11-19
 
 - Fixed: a start that hangs no longer leaves a blank page forever. After 10 seconds Propario
