@@ -6,6 +6,12 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+## 0.12.2 — 2026-11-19
+
+- Changed: the verdict column shows only your own verdict as its symbol – neutral and paler while
+  you have not given one. A tap opens 👍 ⊖ 👎 with how many gave each (names on hover); choosing
+  the marked one again takes it back.
+
 ## 0.12.1 — 2026-11-19
 
 - Changed back: the fit has its own column again, and the verdicts too – the rows were too

@@ -11,6 +11,13 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.12.2',
+    notes: {
+      en: ['The table shows only your verdict – neutral until you give one; a tap changes it.'],
+      de: ['Die Tabelle zeigt nur dein Urteil – neutral, bis du eins gibst; ein Tipp ändert es.'],
+    },
+  },
+  {
     version: '0.12.1',
     notes: {
       en: ['Fit and verdicts have their own columns again – compact rows.', 'Set your verdict right in the table: 👍 ⊖ 👎.'],
