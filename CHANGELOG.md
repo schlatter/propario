@@ -6,6 +6,13 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- Changed: a new logo – a P whose bowl is a magnifying glass, in petrol with an amber handle –
+  in the favicon, the app icons and the top bar. It stands out on dark tabs and home screens,
+  and no longer looks like a finance chart. `scripts/icons.ts` draws all icons from one source.
+- Changed: one colour concept across the app, taken from the logo. Petrol for actions, where
+  you are and the shortlist; amber for the decision, stars, new entries and differences; green,
+  red and grey only for requirement checks. Neutrals are tinted to match, in light and dark.
+  Vision, mission and the design guide are in `docs/brand.md`.
 - Added: **Add or update products** (⋯ in a comparison). Paste a table – your AI's answer, rows
   copied from Excel, CSV or Markdown – or choose a file (.xlsx, .csv, .md, .txt, .json). Rows
   already in the comparison (same link, GTIN or name) update their product, the others are

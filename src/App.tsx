@@ -100,11 +100,8 @@ function Shell() {
           )}
         </Menu>
         <Link to="/" className="brand" aria-label={m.app.name}>
-          <span className="brand-mark" aria-hidden="true">
-            <i />
-            <i />
-            <i />
-          </span>
+          {/* The same drawing as the favicon and the app icons (scripts/icons.ts). */}
+          <img className="brand-mark" src="/favicon.svg" alt="" width={24} height={24} />
           <span className="brand-text">{m.app.name}</span>
         </Link>
         <div className="topbar-slot" ref={setSlot} />

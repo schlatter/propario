@@ -418,7 +418,7 @@ function SheetEditor({
                     <td>
                       <b>{c.header}</b>
                       {!c.confident && (
-                        <div className="small" style={{ color: 'var(--signal)' }}>
+                        <div className="small" style={{ color: 'var(--accent-text)' }}>
                           {m.importer.check}
                         </div>
                       )}

@@ -8,6 +8,8 @@ candidates, their pictures, your ratings and the final decision.
 > household comparing purchases together; contributions are welcome (see
 > [CONTRIBUTING.md](CONTRIBUTING.md)).
 
+Why it exists and how it looks and speaks: [docs/brand.md](docs/brand.md).
+
 ## What it does
 
 - **One comparison per purchase**, each with its own **fields** (columns with types and units),

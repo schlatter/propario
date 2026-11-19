@@ -2,7 +2,11 @@
 
 Compare products together and decide. Self-hosted web app, AGPL. Read `README.md` for what it
 does and how it runs, `SECURITY.md` for the baseline, `docs/excel-import.md` before changing
-the importer.
+the importer, and `docs/brand.md` – vision, mission and design guide – before changing the
+interface, its texts or the logo.
+
+**Vision:** every bigger purchase becomes a good decision, made together – without spreadsheet
+chaos, without advertising, and without anyone else owning your data. Decide in doubt by it.
 
 ## Principles, in order
 
@@ -38,7 +42,8 @@ the importer.
   `src/db/repo.ts` → `commit()` in `src/sync.ts` (server first, then the cache).
 - Texts in `src/i18n/en.ts` (source) and `de.ts`; TypeScript enforces complete translations.
 - UI: own design tokens in `src/styles/app.css` (light and dark), no component or icon library,
-  WCAG 2.1 AA, touch targets 44 px, real labels and buttons.
+  WCAG 2.1 AA, touch targets 44 px, real labels and buttons. Petrol acts, amber points out;
+  green, red and grey only for checks (`docs/brand.md`).
 - Words: the interface says _comparison_, the code says `project` (`GLOSSARY.md`).
 
 ## Before saying something is done

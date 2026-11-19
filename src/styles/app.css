@@ -1,104 +1,122 @@
 /* ==========================================================================
-   Propario – design tokens and components
-   Idea: a calm test bench. Ink on neutral paper, one signal colour for
-   favourites and decisions, and a "check strip" that shows every requirement
-   of a product as a small cell.
+   Propario – design tokens and components. The rules behind them: docs/brand.md.
+
+   Two colours carry the brand, as in the logo:
+   - Petrol (--brand) is Propario itself: actions, where you are, the shortlist.
+   - Amber (--accent) is the find: the decision, stars, what is new, what differs, what to check.
+   Green, red and grey only ever say whether a requirement is met. Everything else is
+   neutral, tinted slightly towards petrol so the page reads as one piece.
    ========================================================================== */
 
 :root {
   --font-ui: 'Public Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-display: 'Bricolage Grotesque Variable', 'Public Sans Variable', system-ui, sans-serif;
 
-  --bg: #f3f3f0;
+  --bg: #f2f4f3;
   --surface: #ffffff;
-  --surface-2: #f8f8f6;
-  --sunken: #ebebe7;
-  --ink: #15181c;
-  --ink-2: #3c4148;
-  --muted: #5d636b;
-  --line: #dcddd8;
-  --line-strong: #bfc1bb;
-  --signal: #d9461f;
-  --signal-ink: #ffffff;
-  --signal-soft: #fbe6de;
-  --pass: #1d7348;
-  --pass-soft: #dcefe3;
-  /* Favourites: a deep green akin to "met"; new entries: a light blue. */
-  --fav: #1a6640;
-  --fav-soft: #dcefe3;
-  --new: #4b93d1;
+  --surface-2: #f7f9f8;
+  --sunken: #e8eceb;
+  --ink: #121a1b;
+  --ink-2: #374244;
+  --muted: #586466;
+  --line: #d6dddc;
+  --line-strong: #b9c3c2;
+  /* Brand: fills and lines; --brand-text for petrol text on light tints. */
+  --brand: #1f7a80;
+  --brand-hover: #18666b;
+  --brand-ink: #ffffff;
+  --brand-text: #18666b;
+  --brand-soft: #e1f0f0;
+  /* Accent: a fill with dark text on it; --accent-text where amber itself is text. */
+  --accent: #f2b33d;
+  --accent-ink: #1d1503;
+  --accent-text: #8a5c00;
+  --accent-soft: #fdf1d8;
+  --star: #a87206;
+  /* Results of a check. */
+  --pass: #2a7339;
+  --pass-soft: #e0f0e2;
   --fail: #b8322a;
   --fail-soft: #f8e0dd;
-  --unknown: #868b92;
-  --unknown-soft: #ececea;
-  --focus: #2b59c3;
-  --selected: #e9eefb;
-  --diff: #fff4d6;
-  --overlay: rgb(21 24 28 / 0.38);
+  --unknown: #7f8a8c;
+  --unknown-soft: #e9edec;
+  --focus: #0f5257;
+  --overlay: rgb(18 26 27 / 0.38);
+
+  /* Roles, named for what they mean and built from the colours above. */
+  --fav: var(--brand-text);
+  --fav-soft: var(--brand-soft);
+  --new: var(--accent);
+  --selected: var(--brand-soft);
+  --diff: var(--accent-soft);
 
   --radius: 10px;
   --radius-sm: 6px;
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.05), 0 8px 24px rgb(0 0 0 / 0.06);
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.05), 0 8px 24px rgb(18 26 27 / 0.07);
   --gutter: clamp(16px, 3vw, 32px);
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --bg: #111315;
-    --surface: #191c1f;
-    --surface-2: #1e2125;
-    --sunken: #0c0e10;
-    --ink: #eceeea;
-    --ink-2: #c9ccc6;
-    --muted: #9ba0a6;
-    --line: #2d3136;
-    --line-strong: #454a50;
-    --signal: #ff7650;
-    --signal-ink: #1a0d08;
-    --signal-soft: #3a211a;
-    --pass: #5fcf95;
-    --pass-soft: #173226;
-    --fav: #5fcf95;
-    --fav-soft: #173226;
-    --new: #6aaee8;
+    --bg: #0e1314;
+    --surface: #151b1c;
+    --surface-2: #1a2122;
+    --sunken: #0a0e0f;
+    --ink: #e8eeed;
+    --ink-2: #c4cdcc;
+    --muted: #93a0a1;
+    --line: #273031;
+    --line-strong: #3d4849;
+    --brand: #5cbcc1;
+    --brand-hover: #79cbcf;
+    --brand-ink: #062022;
+    --brand-text: #79cbcf;
+    --brand-soft: #14302f;
+    --accent: #f2b33d;
+    --accent-ink: #1d1503;
+    --accent-text: #f2b33d;
+    --accent-soft: #3a2e14;
+    --star: #f2b33d;
+    --pass: #6ccf8a;
+    --pass-soft: #16301f;
     --fail: #ff8379;
     --fail-soft: #3d1d1b;
-    --unknown: #8b9097;
-    --unknown-soft: #26292d;
-    --focus: #8fb0ff;
-    --selected: #1e2a44;
-    --diff: #3a3217;
+    --unknown: #879395;
+    --unknown-soft: #222a2b;
+    --focus: #8fdade;
     --overlay: rgb(0 0 0 / 0.6);
     --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px rgb(0 0 0 / 0.4);
     color-scheme: dark;
   }
 }
 :root[data-theme='dark'] {
-  --bg: #111315;
-  --surface: #191c1f;
-  --surface-2: #1e2125;
-  --sunken: #0c0e10;
-  --ink: #eceeea;
-  --ink-2: #c9ccc6;
-  --muted: #9ba0a6;
-  --line: #2d3136;
-  --line-strong: #454a50;
-  --signal: #ff7650;
-  --signal-ink: #1a0d08;
-  --signal-soft: #3a211a;
-  --pass: #5fcf95;
-  --pass-soft: #173226;
-  --fav: #5fcf95;
-  --fav-soft: #173226;
-  --new: #6aaee8;
+  --bg: #0e1314;
+  --surface: #151b1c;
+  --surface-2: #1a2122;
+  --sunken: #0a0e0f;
+  --ink: #e8eeed;
+  --ink-2: #c4cdcc;
+  --muted: #93a0a1;
+  --line: #273031;
+  --line-strong: #3d4849;
+  --brand: #5cbcc1;
+  --brand-hover: #79cbcf;
+  --brand-ink: #062022;
+  --brand-text: #79cbcf;
+  --brand-soft: #14302f;
+  --accent: #f2b33d;
+  --accent-ink: #1d1503;
+  --accent-text: #f2b33d;
+  --accent-soft: #3a2e14;
+  --star: #f2b33d;
+  --pass: #6ccf8a;
+  --pass-soft: #16301f;
   --fail: #ff8379;
   --fail-soft: #3d1d1b;
-  --unknown: #8b9097;
-  --unknown-soft: #26292d;
-  --focus: #8fb0ff;
-  --selected: #1e2a44;
-  --diff: #3a3217;
+  --unknown: #879395;
+  --unknown-soft: #222a2b;
+  --focus: #8fdade;
   --overlay: rgb(0 0 0 / 0.6);
   --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px rgb(0 0 0 / 0.4);
   color-scheme: dark;
@@ -223,26 +241,10 @@ textarea {
   letter-spacing: -0.02em;
 }
 .brand-mark {
-  display: inline-flex;
-  align-items: flex-end;
-  gap: 2px;
-  height: 18px;
-}
-.brand-mark i {
   display: block;
-  width: 5px;
-  border-radius: 1.5px;
-  background: var(--ink);
-}
-.brand-mark i:nth-child(1) {
-  height: 12px;
-}
-.brand-mark i:nth-child(2) {
-  height: 8px;
-}
-.brand-mark i:nth-child(3) {
-  height: 18px;
-  background: var(--signal);
+  width: 24px;
+  height: 24px;
+  flex: none;
 }
 main {
   flex: 1;
@@ -307,12 +309,13 @@ main.wide {
   cursor: not-allowed;
 }
 .btn.primary {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--bg);
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--brand-ink);
 }
 .btn.primary:hover {
-  background: var(--ink-2);
+  background: var(--brand-hover);
+  border-color: var(--brand-hover);
 }
 .btn.danger {
   background: var(--fail);
@@ -417,7 +420,7 @@ svg.glyph {
 .check input {
   width: 16px;
   height: 16px;
-  accent-color: var(--ink);
+  accent-color: var(--brand);
 }
 .search {
   position: relative;
@@ -477,8 +480,8 @@ svg.glyph {
   flex-wrap: wrap;
   padding: 12px 16px;
   border-radius: var(--radius);
-  background: var(--signal-soft);
-  border: 1px solid color-mix(in srgb, var(--signal) 30%, transparent);
+  background: var(--accent-soft);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
   margin-bottom: 20px;
 }
 .notice p {
@@ -522,7 +525,7 @@ svg.glyph {
   background: var(--line);
 }
 .stage-rail i.on {
-  background: var(--ink);
+  background: var(--brand);
 }
 .stage[data-status='purchased'] .stage-rail i.on {
   background: var(--pass);
@@ -570,7 +573,7 @@ svg.glyph {
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
 }
 .stage-select button[aria-pressed='true']::before {
-  background: var(--signal);
+  background: var(--brand);
 }
 
 .pill {
@@ -737,7 +740,7 @@ svg.glyph {
   line-height: 0;
 }
 .stars button.on {
-  color: var(--signal);
+  color: var(--star);
 }
 .stars .glyph {
   width: 18px;
@@ -752,7 +755,7 @@ svg.glyph {
   line-height: 0;
 }
 .stars.readonly span.on {
-  color: var(--signal);
+  color: var(--star);
 }
 
 /* ---------- home ---------- */
@@ -875,7 +878,7 @@ svg.glyph {
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--signal);
+  color: var(--accent-text);
   flex: none;
 }
 .card-pick .label.purchased {
@@ -1106,7 +1109,7 @@ dialog.drawer {
   border-radius: var(--radius);
   background: var(--surface);
   border: 1px solid var(--line);
-  border-left: 4px solid var(--signal);
+  border-left: 4px solid var(--accent);
   margin-bottom: 18px;
 }
 .decision-bar.purchased {
@@ -1117,7 +1120,7 @@ dialog.drawer {
   font-weight: 750;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: var(--signal);
+  color: var(--accent-text);
 }
 .decision-bar.purchased .label {
   color: var(--pass);
@@ -1270,7 +1273,7 @@ table.grid {
   font-weight: 500;
 }
 .th-sort .dir {
-  color: var(--signal);
+  color: var(--brand-text);
 }
 .resizer {
   position: absolute;
@@ -1313,7 +1316,7 @@ table.grid {
 }
 .grid tbody tr.is-decision td.col-name {
   box-shadow:
-    inset 0 -2px 0 var(--signal),
+    inset 0 -2px 0 var(--accent),
     1px 0 0 var(--line);
 }
 .cell-sel {
@@ -1327,7 +1330,7 @@ table.grid {
 .cell-sel input {
   width: 16px;
   height: 16px;
-  accent-color: var(--ink);
+  accent-color: var(--brand);
 }
 .name-cell {
   display: flex;
@@ -1542,9 +1545,9 @@ textarea.cell-editor {
   font-weight: 600;
 }
 .compare-bar .btn {
-  background: var(--signal);
-  border-color: var(--signal);
-  color: var(--signal-ink);
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--brand-ink);
 }
 .compare-bar .btn.ghost {
   background: transparent;
@@ -1714,7 +1717,7 @@ table.compare {
   background: var(--diff);
 }
 .compare tr.differs th.rowhead {
-  box-shadow: inset 3px 0 0 var(--signal);
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 .compare .head-name {
   font-family: var(--font-display);
@@ -1814,8 +1817,8 @@ table.compare {
   color: var(--bg);
 }
 .steps li[aria-current='step'] b {
-  background: var(--signal);
-  color: var(--signal-ink);
+  background: var(--brand);
+  color: var(--brand-ink);
 }
 .steps ol {
   display: contents;
@@ -1903,7 +1906,7 @@ table.compare {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--signal);
+  background: var(--accent);
   flex: none;
 }
 table.map {
@@ -1931,7 +1934,7 @@ table.map {
   padding-bottom: 2px;
 }
 .map tr.unsure td:first-child {
-  box-shadow: inset 3px 0 0 var(--signal);
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 .map .samples {
   color: var(--muted);
@@ -2381,7 +2384,7 @@ table.map {
 .swipe-progress i {
   display: block;
   height: 100%;
-  background: var(--ink);
+  background: var(--brand);
   transition: width 200ms ease-out;
 }
 .swipe-card {
@@ -2613,7 +2616,7 @@ table.map {
 .nav-menu a[aria-current='page'] {
   color: var(--ink);
   font-weight: 700;
-  box-shadow: inset 3px 0 0 var(--signal);
+  box-shadow: inset 3px 0 0 var(--brand);
 }
 
 /* ---------- Comparison: tab row with stage and adding ---------- */
@@ -2671,7 +2674,7 @@ main.project-page {
 }
 .stage-dot[data-status='comparing'],
 .stage-dot[data-status='decided'] {
-  background: var(--signal);
+  background: var(--accent);
 }
 .stage-dot[data-status='purchased'] {
   background: var(--pass);
@@ -2916,9 +2919,9 @@ main.project-page {
 }
 .chip.toggle[aria-pressed='true'],
 .chip.toggle[aria-expanded='true'] {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--surface);
+  background: var(--brand-soft);
+  border-color: var(--brand);
+  color: var(--brand-text);
 }
 .advanced-filter {
   display: flex;
@@ -3383,8 +3386,8 @@ dialog.gallery::backdrop {
   background: transparent;
 }
 .gallery-star.is-main {
-  color: #5fcf95;
-  border-color: #5fcf95;
+  color: var(--accent);
+  border-color: var(--accent);
   opacity: 1;
 }
 .gallery-star svg {
@@ -3467,7 +3470,7 @@ dialog.gallery::backdrop {
   cursor: pointer;
 }
 .gallery-thumb.current {
-  border-color: #6aaee8;
+  border-color: var(--accent);
 }
 .gallery-thumb img {
   width: 100%;
@@ -3484,8 +3487,8 @@ dialog.gallery::backdrop {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: var(--fav);
-  color: #fff;
+  background: var(--accent);
+  color: var(--accent-ink);
 }
 .gallery-main-mark svg,
 .pimg-star svg {
@@ -3496,7 +3499,7 @@ dialog.gallery::backdrop {
   position: relative;
 }
 .pimg-thumb.is-main .thumb {
-  border-color: var(--fav);
+  border-color: var(--accent);
 }
 
 /* ---------- add or update products from a table ---------- */
