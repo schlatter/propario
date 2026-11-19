@@ -6,6 +6,16 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- Fixed: Propario could hang for good while starting, at "opening the data stored in this
+  browser" (the server log showed it). A browser database cannot open while its removal is
+  pending, and the removal waits for every other window – an installed app frozen in the
+  background may never let go. If this browser's copy does not open within 5 seconds, a fresh
+  one is used and the data comes again from the server; removing a copy never blocks a start.
+- Changed: **Fields** are a compact table like the requirements: name, type, unit, how values
+  compare or the choices of a selection, how many products have a value; edited in place,
+  moved by their handle (drag or ↑ ↓), the same way as requirements.
+- Fixed: an empty scroll bar showed beside the tabs of a comparison on desktop.
+
 - Changed: the app no longer waits for the server before it shows a change. A change appears
   at once and is saved in the background; if it cannot be saved (no connection, refused), it is
   taken back and the app says so. "Saving …" shows when it takes a moment. On a phone whose

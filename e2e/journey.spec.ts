@@ -630,6 +630,16 @@ test('Ada moves rows and decides by swiping', async () => {
   await page.getByRole('button', { name: '+ New field “Tiefe” (cm)' }).click()
   await expect(page.getByLabel('Value: Maximale Tiefe 40 cm')).toHaveValue('40')
   await expect(page.getByRole('tab', { name: /Fields 1/ })).toBeVisible()
+  // Fields are a table like the requirements: edited in place, moved by their handle.
+  await page.getByRole('tab', { name: /Fields 1/ }).click()
+  await expect(page.locator('table.fields-table tbody tr')).toHaveCount(1)
+  await expect(page.getByLabel('Unit: Tiefe')).toHaveValue('cm')
+  await page.getByLabel('When comparing: Tiefe').selectOption('lower')
+  await expect(page.getByLabel('When comparing: Tiefe')).toHaveValue('lower')
+  // The tab bar has nothing to scroll on a desktop, so no empty scroll bar.
+  expect(await page.locator('.tabs').evaluate((el) => el.scrollHeight <= el.clientHeight)).toBe(true)
+  await accessible(page, 'fields table')
+  await page.getByRole('tab', { name: /Requirements/ }).click()
   await addReq('Soft close', 'Comfort')
   await expect(page.locator('tr:has(input[value="Soft close"]) .weight-cell')).toHaveText('2 · 50 %')
   await page.getByRole('button', { name: 'Move Soft close' }).focus()

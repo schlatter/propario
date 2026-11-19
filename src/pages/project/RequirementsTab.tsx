@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { addProperty, addRequirement, deleteRequirement, reorder, updateProduct, updateProject, updateRequirement } from '../../db/repo'
 import { PRIORITIES, type Condition, type ConditionOp, type Priority, type Requirement } from '../../db/types'
 import { productName } from '../../domain/display'
@@ -11,6 +11,7 @@ import { Glyph } from '../../ui/Glyph'
 import { CommitInput, CommitTextarea } from '../../ui/inputs'
 import { CheckMark } from '../../ui/Marks'
 import type { ProjectData } from './useProjectData'
+import { useRowDrag, type RowDrag } from '../../ui/useRowDrag'
 
 /** Target option that creates the field a requirement asks about. */
 const NEW_FIELD = '__new-field'
@@ -39,8 +40,6 @@ export function RequirementsTab({ data, onOpen }: { data: ProjectData; onOpen: (
   // ---- moving rows: drag the handle (or arrow keys on it), also into another group ----
   /** The rows as shown: grouped by category, in their stored order within each group. */
   const ordered = [...groups.values()].flat()
-  const tbodyRef = useRef<HTMLTableSectionElement>(null)
-  const [drag, setDrag] = useState<{ id: string; target: string | null; after: boolean } | null>(null)
   const moveTo = async (id: string, targetId: string, after: boolean) => {
     const moving = ordered.find((r) => r.id === id)
     const target = ordered.find((r) => r.id === targetId)
@@ -51,33 +50,10 @@ export function RequirementsTab({ data, onOpen }: { data: ProjectData; onOpen: (
     if (moving.category !== target.category) await updateRequirement(moving, { category: target.category })
     await reorder('requirements', list)
   }
-  const moveBy = (r: Requirement, delta: -1 | 1) => {
-    const i = ordered.findIndex((x) => x.id === r.id)
-    const target = ordered[i + delta]
-    if (target) void moveTo(r.id, target.id, delta === 1)
-  }
-  const dragOver = (clientY: number) => {
-    if (!drag || !tbodyRef.current) return
-    const rows = [...tbodyRef.current.querySelectorAll<HTMLTableRowElement>('tr[data-id]')]
-    for (const tr of rows) {
-      const box = tr.getBoundingClientRect()
-      if (clientY < box.top + box.height / 2) return setDrag({ ...drag, target: tr.dataset.id!, after: false })
-    }
-    const last = rows[rows.length - 1]
-    if (last) setDrag({ ...drag, target: last.dataset.id!, after: true })
-  }
-  const dragProps = (r: Requirement): DragProps => ({
-    dragging: drag?.id === r.id,
-    drop: drag && drag.target === r.id && drag.target !== drag.id ? (drag.after ? 'after' : 'before') : null,
-    onStart: () => setDrag({ id: r.id, target: null, after: false }),
-    onMove: dragOver,
-    onEnd: () => {
-      if (drag?.target) void moveTo(drag.id, drag.target, drag.after)
-      setDrag(null)
-    },
-    onCancel: () => setDrag(null),
-    onKey: (delta) => moveBy(r, delta),
-  })
+  const drag = useRowDrag(
+    ordered.map((r) => r.id),
+    (id, target, after) => void moveTo(id, target, after),
+  )
 
   /** Sum of the soft weights, to show each requirement's share of the fit. */
   const totalWeight = data.rules.reduce((n, r) => n + (WEIGHT[r.priority] ?? 0), 0)
@@ -174,7 +150,7 @@ export function RequirementsTab({ data, onOpen }: { data: ProjectData; onOpen: (
               </th>
             </tr>
           </thead>
-          <tbody ref={tbodyRef}>
+          <tbody ref={drag.body}>
             <tr className="group">
               <th colSpan={7} scope="colgroup">
                 {m.budget.title}
@@ -206,7 +182,7 @@ export function RequirementsTab({ data, onOpen }: { data: ProjectData; onOpen: (
                   {cat || m.requirements.general}
                 </th>
               </tr>,
-              ...list.map((r) => <RequirementRow key={r.id} req={r} data={data} totalWeight={totalWeight} drag={dragProps(r)} />),
+              ...list.map((r) => <RequirementRow key={r.id} req={r} data={data} totalWeight={totalWeight} drag={drag} />),
             ])}
           </tbody>
         </table>
@@ -321,17 +297,7 @@ function WeightCell({ priority, total }: { priority: Priority; total: number }) 
   )
 }
 
-interface DragProps {
-  dragging: boolean
-  drop: 'before' | 'after' | null
-  onStart: () => void
-  onMove: (clientY: number) => void
-  onEnd: () => void
-  onCancel: () => void
-  onKey: (delta: -1 | 1) => void
-}
-
-function RequirementRow({ req, data, totalWeight, drag }: { req: Requirement; data: ProjectData; totalWeight: number; drag: DragProps }) {
+function RequirementRow({ req, data, totalWeight, drag }: { req: Requirement; data: ProjectData; totalWeight: number; drag: RowDrag }) {
   const { m } = useI18n()
   const confirm = useConfirm()
   const set = (patch: Partial<Requirement>) => updateRequirement(req, patch)
@@ -365,7 +331,7 @@ function RequirementRow({ req, data, totalWeight, drag }: { req: Requirement; da
   }
 
   return (
-    <tr data-id={req.id} className={[drag.dragging && 'is-dragging', drag.drop && `drop-${drag.drop}`].filter(Boolean).join(' ') || undefined}>
+    <tr {...drag.row(req.id)}>
       <td>
         <PrioritySelect value={req.priority} onChange={(p) => set({ priority: p })} label={named(m.field.priority)} />
       </td>
@@ -461,27 +427,7 @@ function RequirementRow({ req, data, totalWeight, drag }: { req: Requirement; da
       </td>
       <td>
         <span className="row-actions">
-          <button
-            type="button"
-            className="grip"
-            aria-label={m.reorder.handle(req.label)}
-            title={m.reorder.requirementHint}
-            aria-keyshortcuts="ArrowUp ArrowDown"
-            onPointerDown={(e) => {
-              if (e.button !== 0) return
-              e.preventDefault()
-              e.currentTarget.setPointerCapture(e.pointerId)
-              drag.onStart()
-            }}
-            onPointerMove={(e) => drag.onMove(e.clientY)}
-            onPointerUp={drag.onEnd}
-            onPointerCancel={drag.onCancel}
-            onKeyDown={(e) => {
-              if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return
-              e.preventDefault()
-              drag.onKey(e.key === 'ArrowUp' ? -1 : 1)
-            }}
-          >
+          <button type="button" className="grip" aria-label={m.reorder.handle(req.label)} title={m.reorder.requirementHint} {...drag.handle(req.id)}>
             <Glyph name="grip" />
           </button>
           <button

@@ -630,7 +630,19 @@ export const de: Messages = {
     betterHigher: 'Größer ist besser',
     betterHint:
       'In der Gegenüberstellung wird der beste Wert grün, der schlechteste rot. Ohne Auswahl entscheidet eine Regel auf dieses Feld (≤ 40 → kleiner).',
-    optionsPlaceholder: 'Ein Auswahlwert pro Zeile',
+    optionsPlaceholder: 'Auswahlwerte, z. B. Eiche; Buche; Weiß',
+    details: 'Vergleich / Auswahlwerte',
+    filled: 'Ausgefüllt',
+    filledHint: 'Bei wie vielen Produkten dieses Feld einen Wert hat',
+    typeHint: {
+      text: 'Beliebiger Text',
+      number: '',
+      boolean: 'Ja oder nein',
+      date: 'Ein Datum',
+      select: '',
+      rating: '1 bis 5 Sterne',
+      url: 'Eine Webadresse',
+    },
   },
   compare: {
     title: 'Gegenüberstellung',
