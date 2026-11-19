@@ -634,10 +634,43 @@ test('after an update, a long-open app reloads itself instead of going blank', a
   await page.getByRole('button', { name: 'More', exact: true }).first().click()
   await page.getByRole('button', { name: 'Add or update products' }).click()
   await expect(page.getByRole('heading', { name: 'Propario muss neu geladen werden' })).toBeVisible()
+  await expect(page.getByText(/Referenz [0-9a-f]{8}/)).toBeVisible()
   await accessible(page, 'crash screen')
   await context.unrouteAll()
   await page.getByRole('button', { name: 'Neu laden · Reload' }).click()
   await expect(page.getByRole('heading', { name: 'Add or update products' })).toBeVisible()
+})
+
+test('a start that hangs or fails says where, reports it, and resetting the browser helps', async () => {
+  const page = await ada.context.newPage()
+  // The server does not answer: after a while the page says which step hangs and reports it.
+  await page.route('**/api/session', () => {})
+  const reported = page.waitForRequest('**/api/client-error', { timeout: 20_000 })
+  await page.goto('/')
+  await expect(page.getByRole('heading', { name: 'Propario is not starting' })).toBeVisible({ timeout: 20_000 })
+  await expect(page.getByText('It stopped while checking the sign-in.')).toBeVisible()
+  const request = await reported
+  expect(request.postDataJSON()).toMatchObject({ kind: 'stuck', step: 'session' })
+  expect((await request.response())?.status()).toBe(200)
+  await page.getByText('Details for troubleshooting').click()
+  await expect(page.getByText(/Reference: [0-9a-f]{8}/)).toBeVisible()
+  await accessible(page, 'start stuck')
+
+  // A failing server is shown as that, not as the sign-in page.
+  await page.unrouteAll()
+  await page.route('**/api/session', (route) => route.fulfill({ status: 500, json: { error: 'internal', ref: 'deadbeef' } }))
+  await page.reload()
+  await expect(page.getByRole('heading', { name: 'Propario could not start' })).toBeVisible()
+
+  // Resetting this browser keeps the sign-in; the data comes back from the server.
+  await page.unrouteAll()
+  await page.getByRole('link', { name: 'Reset this browser' }).click()
+  await page.getByRole('button', { name: 'Zurücksetzen · Reset' }).click()
+  await expect(page.getByRole('status')).toContainText(/Done|Almost done/)
+  await accessible(page, 'reset page')
+  await page.getByRole('link', { name: 'Propario öffnen · Open Propario' }).click()
+  await expect(page.getByRole('link', { name: 'Kitchen cabinet' })).toBeVisible()
+  await page.close()
 })
 
 test('the recovery key gets Ada back in exactly once', async ({ browser }) => {

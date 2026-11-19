@@ -28,7 +28,9 @@ export async function api<T = unknown>(path: string, init: { method?: string; bo
   }
   let res: Response
   try {
-    res = await fetch(path, { method: init.method ?? (body ? 'POST' : 'GET'), headers, body, credentials: 'same-origin' })
+    // A request that never ends must not freeze the app: after this long it counts as offline.
+    const signal = AbortSignal.timeout(init.raw ? 120_000 : 30_000)
+    res = await fetch(path, { method: init.method ?? (body ? 'POST' : 'GET'), headers, body, credentials: 'same-origin', signal })
   } catch {
     throw new ApiError(0, 'offline')
   }

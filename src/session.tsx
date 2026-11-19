@@ -4,6 +4,7 @@ import { api, setSignedOutHandler } from './api'
 import { db, dropCache, openCache } from './db/db'
 import type { Settings } from './db/types'
 import { pull, startSync } from './sync'
+import { report, setStep } from './diagnostics'
 
 export interface SessionUser {
   id: string
@@ -12,7 +13,12 @@ export interface SessionUser {
   settings: Partial<Settings>
 }
 
-type State = { status: 'loading' } | { status: 'signed-out'; setupNeeded: boolean } | { status: 'signed-in'; user: SessionUser; imageFetch: boolean }
+type State =
+  | { status: 'loading' }
+  /** Starting failed (server unreachable, the browser's storage broken …); `ref` is in the server log. */
+  | { status: 'failed'; error: unknown; ref: string }
+  | { status: 'signed-out'; setupNeeded: boolean }
+  | { status: 'signed-in'; user: SessionUser; imageFetch: boolean }
 
 interface SessionApi {
   state: State
@@ -23,18 +29,22 @@ interface SessionApi {
 const SessionContext = createContext<SessionApi | null>(null)
 
 async function enter(user: SessionUser) {
+  setStep('cache')
   const cache = await openCache(user.id)
   // Ratings and "found by" need names; the person's own name is the sensible start.
   const settings = { people: [user.name], lastBackupAt: null, ...user.settings }
   await cache.meta.put({ key: 'settings', value: settings })
   await cache.meta.put({ key: 'me', value: { id: user.id, name: user.name, isAdmin: user.isAdmin } })
+  setStep('sync')
   if (!(await cache.meta.get('seq'))) await pull()
+  setStep('ready')
 }
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<State>({ status: 'loading' })
 
   const refresh = useCallback(async () => {
+    setStep('session')
     const s = await api<{ user: SessionUser | null; setupNeeded: boolean; imageFetch: boolean }>('/api/session')
     if (!s.user) {
       setState({ status: 'signed-out', setupNeeded: s.setupNeeded })
@@ -54,7 +64,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setSignedOutHandler(() => {
       void dropCache().then(() => setState({ status: 'signed-out', setupNeeded: false }))
     })
-    refresh().catch(() => setState({ status: 'signed-out', setupNeeded: false }))
+    // Only the server's "nobody signed in" leads to the sign-in page; anything else is shown as
+    // what it is, with a way out (src/ui/StartProblem.tsx).
+    refresh().catch((error: unknown) => setState({ status: 'failed', error, ref: report('start-failed', error) }))
   }, [refresh])
 
   const signedIn = state.status === 'signed-in'

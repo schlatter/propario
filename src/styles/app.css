@@ -3575,6 +3575,27 @@ dialog.gallery::backdrop {
   margin: 8px 0 0;
   text-wrap: balance;
 }
-.crash .btn {
+.crash-actions {
+  justify-content: center;
   margin-top: 8px;
+}
+.crash-actions .btn {
+  min-height: 44px;
+}
+.crash-details {
+  max-width: min(560px, 100%);
+  text-align: left;
+  font-size: 13px;
+  color: var(--muted);
+}
+.crash-details summary {
+  cursor: pointer;
+  text-align: center;
+}
+.crash-details pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: var(--sunken);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
 }

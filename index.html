@@ -12,9 +12,38 @@
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2f4f3" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0e1314" />
     <title>Propario</title>
+    <style>
+      .boot-fallback {
+        max-width: 440px;
+        margin: 30vh auto 0;
+        padding: 0 16px;
+        text-align: center;
+        font:
+          16px/1.6 system-ui,
+          sans-serif;
+        /* Hidden (also from screen readers) until the app has had 15 s to start. */
+        visibility: hidden;
+        animation: boot-fallback 0s 15s forwards;
+      }
+      .boot-fallback a {
+        color: inherit;
+      }
+      @keyframes boot-fallback {
+        to {
+          visibility: visible;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Replaced by the app as soon as it runs. Shown only if the app's code does not even load
+         (src/ui/StartProblem.tsx covers a start that hangs later). -->
+    <div id="root">
+      <div class="boot-fallback">
+        <p><strong>Propario startet nicht.</strong> <a href="/">Neu laden</a> · <a href="/reset.html">Browser zurücksetzen</a></p>
+        <p lang="en">Propario is not starting. <a href="/">Reload</a> · <a href="/reset.html">Reset this browser</a></p>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

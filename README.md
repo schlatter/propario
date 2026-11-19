@@ -114,6 +114,10 @@ expires after 14 days.
   key (the old one stops working). Hand it over in person.
 - **Update:** `git pull && docker compose up -d --build`. The database migrates itself on start;
   take a snapshot first.
+- **A browser that will not start Propario** (blank, loading forever): after 10 seconds the page
+  names the step it hangs at and shows a reference; `docker compose logs app | grep <reference>`
+  shows the error. _Reset this browser_ (`/reset.html`, also linked when the app's code does not
+  load at all) removes only Propario's copy in that browser – the sign-in and the data stay.
 
 ### Coming from version 0.1
 

@@ -160,3 +160,33 @@ describe('configuration', () => {
     expect(loadConfig({ NODE_ENV: 'production', ORIGIN: 'https://p.example.org/', DATA_KEY: 'x' }).origin).toBe('https://p.example.org')
   })
 })
+
+describe('error reports from the browser', () => {
+  it('writes one sanitised line to the log, from the same origin only, and not without limit', async () => {
+    const lines: string[] = []
+    const original = console.error
+    console.error = (...args: unknown[]) => void lines.push(args.join(' '))
+    try {
+      const report = {
+        ref: 'a1b2c3d4',
+        kind: 'stuck',
+        step: 'cache',
+        version: '0.9.2+abc',
+        path: '/p/x?product=y',
+        message: 'hangs\n[error] fake',
+        stack: 'at open (db.ts:1)',
+      }
+      expect((await post('/api/client-error', report)).status).toBe(200)
+      expect(lines).toHaveLength(1)
+      expect(lines[0]).toContain('[client] ref=a1b2c3d4 user=- kind=stuck step=cache version=0.9.2+abc path=/p/x ')
+      // A line break cannot start a fake log line.
+      expect(lines[0]).not.toContain('\n')
+      expect(lines[0]).toContain('message="hangs [error] fake"')
+      expect((await post('/api/client-error', report, { origin: 'https://evil.example' })).status).toBe(403)
+      for (let i = 0; i < 19; i++) await post('/api/client-error', report)
+      expect((await post('/api/client-error', report)).status).toBe(429)
+    } finally {
+      console.error = original
+    }
+  })
+})

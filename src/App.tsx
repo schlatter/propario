@@ -1,3 +1,5 @@
+import { Starting, StartProblem } from './ui/StartProblem'
+import { currentStep } from './diagnostics'
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { BrowserRouter, NavLink, Navigate, Route, Routes, Link, useLocation } from 'react-router-dom'
 import { ApiError } from './api'
@@ -41,7 +43,8 @@ export function App() {
 function Gate() {
   const { state } = useSession()
   const location = useLocation()
-  if (state.status === 'loading') return <main id="main" aria-busy="true" />
+  if (state.status === 'loading') return <Starting />
+  if (state.status === 'failed') return <StartProblem step={currentStep()} refId={state.ref} error={state.error} />
   if (state.status === 'signed-out') {
     if (location.pathname === '/join') return <JoinPage />
     return <SignInPage setupNeeded={state.setupNeeded} />

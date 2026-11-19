@@ -159,6 +159,26 @@ export function createApp(db: DB, config: Config, version: string | null = null)
         version,
       })
     }
+    // A browser reports what broke (src/diagnostics.ts), so the log tells why a page stayed blank.
+    // Also without a session: the app may hang before it knows who is signed in.
+    if (path === '/api/client-error' && method === 'POST') {
+      limit(`client-error:${ip}`, 20, 600_000)
+      const b = await readJson(req, 16 * 1024)
+      // One line per report; only printable text, nothing that could fake further log lines.
+      const field = (v: unknown, max: number) =>
+        typeof v === 'string'
+          ? v
+              .replace(/[^\x20-\x7e\u00a0-\uffff]+/g, ' ')
+              .trim()
+              .slice(0, max)
+          : ''
+      const ref = /^[0-9a-f]{8}$/.test(String(b.ref)) ? String(b.ref) : '-'
+      console.error(
+        `[client] ref=${ref} user=${user?.id ?? '-'} kind=${field(b.kind, 20) || '-'} step=${field(b.step, 20) || '-'} version=${field(b.version, 40) || '-'}` +
+          ` path=${field(b.path, 200).split('?')[0] || '-'} message=${JSON.stringify(field(b.message, 500))} stack=${JSON.stringify(field(b.stack, 1500))}`,
+      )
+      return send(res, 200, { ok: true })
+    }
     if (path === '/api/auth/register/begin' && method === 'POST') {
       limit(`register:${ip}`, 20, 600_000)
       const body = await readJson(req)

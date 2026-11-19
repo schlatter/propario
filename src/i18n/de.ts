@@ -388,6 +388,19 @@ export const de: Messages = {
     tableHint:
       'Wenn du Produkte ergänzt oder Werte änderst oder ergänzt, antworte zusätzlich mit dieser Tabelle in genau diesem Format (gleiche Spalten, Link zuerst; Unbekanntes leer lassen). Wir können sie dann wieder in unseren Vergleich einfügen.',
   },
+  start: {
+    stuckTitle: 'Propario startet nicht',
+    failedTitle: 'Propario konnte nicht starten',
+    offlineTitle: 'Propario ist nicht erreichbar',
+    offline: 'Keine Verbindung zum Server – vielleicht ist das VPN aus. Sobald die Verbindung steht, neu laden.',
+    at: (step) => `Es hing beim ${step}.`,
+    step: { session: 'Prüfen der Anmeldung', cache: 'Öffnen der Daten in diesem Browser', sync: 'Laden deiner Daten', ready: 'Anzeigen der Seite' },
+    reload: 'Neu laden',
+    reset: 'Browser zurücksetzen',
+    resetHint: 'Zurücksetzen entfernt nur die Kopie von Propario in diesem Browser. Du bleibst angemeldet; alles wird neu vom Server geladen.',
+    details: 'Details zur Fehlersuche',
+    reference: 'Referenz',
+  },
   merge: {
     title: 'Produkte einfügen oder aktualisieren',
     menu: 'Produkte einfügen oder aktualisieren',

@@ -6,6 +6,16 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- Fixed: a start that hangs no longer leaves a blank page forever. After 10 seconds Propario
+  says which step it hangs at – checking the sign-in, opening the data stored in the browser,
+  loading the data – with a reference; a failing server is shown as that instead of the
+  sign-in page; requests give up after 30 seconds.
+- Added: **Reset this browser** (`/reset.html`), linked from every error page and shown even
+  when the app's code does not load: it removes Propario's copy in this browser – cached data,
+  app files, service worker – and keeps the sign-in.
+- Added: errors and hangs in the browser are reported to the server log with the same reference
+  as on screen (`[client] ref=…`), without contents of comparisons.
+
 ## 0.9.1 — 2026-11-19
 
 - Changed: in the logo, the magnifying glass's handle now starts right at the ring.

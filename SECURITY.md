@@ -23,6 +23,10 @@ happens.** Every change is measured against this list; `npm run verify` checks m
 - No analytics, no tracking, no third-party scripts, fonts or images.
 - The service worker (`src/service-worker.js`) caches only versioned app files (`/assets/*`) and
   an offline page – never pages, API answers or pictures; each release clears the one before.
+- When the app breaks or hangs, the browser reports it to the server log (`/api/client-error`):
+  a random reference, the start-up step, the version, the page's path without query, the error
+  message and stack – no contents of comparisons. One sanitised line per report, at most 20 per
+  address in 10 minutes, same origin only.
 - People can download everything they can see and delete their account themselves; deletion
   takes the comparisons they own along.
 

@@ -385,6 +385,19 @@ export const en = {
     tableHint:
       'If you add products or change or fill in values, also answer with this table in exactly this format (same columns, link first; leave unknown values empty). We can then paste it back into our comparison.',
   },
+  start: {
+    stuckTitle: 'Propario is not starting',
+    failedTitle: 'Propario could not start',
+    offlineTitle: 'Propario cannot be reached',
+    offline: 'No connection to the server – maybe the VPN is off. Reload once you are connected.',
+    at: (step: string) => `It stopped while ${step}.`,
+    step: { session: 'checking the sign-in', cache: 'opening the data stored in this browser', sync: 'loading your data', ready: 'showing the page' },
+    reload: 'Reload',
+    reset: 'Reset this browser',
+    resetHint: 'Resetting removes only Propario’s copy in this browser. You stay signed in; everything is loaded again from the server.',
+    details: 'Details for troubleshooting',
+    reference: 'Reference',
+  },
   merge: {
     title: 'Add or update products',
     menu: 'Add or update products',
