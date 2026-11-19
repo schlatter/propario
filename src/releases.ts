@@ -11,6 +11,23 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.9.0',
+    notes: {
+      en: [
+        'New look: a new logo, and petrol and amber across the app.',
+        'Add or update products from a pasted table or a file – also your AI’s answer.',
+        '“Copy for my AI” now ends with a table the AI can answer in.',
+        'Imports read CSV, Markdown, text and JSON as well as Excel.',
+      ],
+      de: [
+        'Neuer Auftritt: neues Logo, Petrol und Bernstein in der ganzen App.',
+        'Produkte aus einer eingefügten Tabelle oder Datei ergänzen oder aktualisieren – auch die Antwort deiner KI.',
+        '„Für meine KI kopieren“ endet jetzt mit einer Tabelle, in der die KI antworten kann.',
+        'Importe lesen neben Excel auch CSV, Markdown, Text und JSON.',
+      ],
+    },
+  },
+  {
     version: '0.8.0',
     notes: {
       en: [

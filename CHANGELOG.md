@@ -6,22 +6,25 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
-- Changed: a new logo – a P whose bowl is a magnifying glass, in petrol with an amber handle –
-  in the favicon, the app icons and the top bar. It stands out on dark tabs and home screens,
-  and no longer looks like a finance chart. `scripts/icons.ts` draws all icons from one source.
-- Changed: one colour concept across the app, taken from the logo. Petrol for actions, where
-  you are and the shortlist; amber for the decision, stars, new entries and differences; green,
-  red and grey only for requirement checks. Neutrals are tinted to match, in light and dark.
-  Vision, mission and the design guide are in `docs/brand.md`.
-- Added: **Add or update products** (⋯ in a comparison). Paste a table – your AI's answer, rows
-  copied from Excel, CSV or Markdown – or choose a file (.xlsx, .csv, .md, .txt, .json). Rows
-  already in the comparison (same link, GTIN or name) update their product, the others are
-  added; new columns can become fields. A preview shows every change, and only what stays
-  ticked is saved. Empty cells clear nothing; comments and pros/cons are added to, not replaced.
-- Added: "Copy for my AI" ends with the products as a table and asks the AI to answer in it,
-  so its suggestions can be pasted straight back.
-- Changed: the table import for a new comparison also reads CSV, Markdown, text and JSON.
+## 0.9.0 — 2026-11-19
+
+- **Add or update products** (⋯ in a comparison): paste a table – your AI's answer, rows copied
+  from Excel, CSV or Markdown – or choose a file (.xlsx, .csv, .md, .txt, .json). Rows already in
+  the comparison (same link, GTIN or name) update their product, the others are added; new
+  columns can become fields. A preview shows every change, and only what stays ticked is saved.
+  Empty cells clear nothing; comments and pros/cons are added to, not replaced.
+- **Round trip with your AI:** "Copy for my AI" ends with the products as a table and asks the
+  AI to answer in it, so its suggestions can be pasted straight back.
+- **More formats:** the table import for a new comparison also reads CSV, Markdown, text and JSON.
+- **New logo:** a P whose bowl is a magnifying glass, in petrol with an amber handle – in the
+  favicon, the app icons and the top bar. It stands out on dark tabs and home screens.
+  `scripts/icons.ts` draws all icons from one source.
+- **One colour concept**, taken from the logo: petrol for actions, where you are and the
+  shortlist; amber for the decision, stars, new entries and differences; green, red and grey
+  only for requirement checks. Neutrals are tinted to match, in light and dark. Vision, mission
+  and the design guide are in `docs/brand.md`.
 - Fixed: swiping in the gallery stepped to another product instead of the next picture.
+
 ## 0.8.0 — 2026-11-19
 
 - **Further pictures:** up to eight per product besides the main one – added by file, by pasting
