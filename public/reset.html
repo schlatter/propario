@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
     <meta name="robots" content="noindex" />
-    <title>Propario – Browser zurücksetzen</title>
+    <title>Propario – zurücksetzen</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <!-- Works without the app: when Propario hangs while starting, this page still loads. -->
     <style>
@@ -56,7 +56,6 @@
       .muted {
         color: var(--muted);
       }
-      button,
       .btn {
         min-height: 44px;
         padding: 0 18px;
@@ -68,14 +67,15 @@
         align-items: center;
         text-decoration: none;
       }
-      button {
+      .btn.primary {
         background: var(--brand);
         color: var(--brand-ink);
         border: 1px solid var(--brand);
       }
-      .btn {
-        color: inherit;
-        border: 1px solid var(--line);
+      section {
+        display: grid;
+        gap: 12px;
+        justify-items: center;
       }
       [hidden] {
         display: none !important;
@@ -85,15 +85,21 @@
   <body>
     <main>
       <img src="/favicon.svg" alt="" width="56" height="56" />
-      <h1>Propario in diesem Browser zurücksetzen</h1>
-      <p lang="en">Reset Propario in this browser</p>
-      <p class="muted">
-        Entfernt nur die Kopie von Propario auf diesem Gerät: zwischengespeicherte Daten und Programmdateien. Du bleibst angemeldet; alles wird neu vom Server
-        geladen. · Removes only Propario's copy on this device. You stay signed in.
-      </p>
-      <button type="button" id="reset">Zurücksetzen · Reset</button>
-      <p id="status" role="status"></p>
-      <a class="btn" id="open" href="/" hidden>Propario öffnen · Open Propario</a>
+      <!-- German by default; public/reset.js switches to English when the browser or Propario is set to it. -->
+      <section id="start">
+        <h1 data-t="title">Propario in diesem Browser zurücksetzen</h1>
+        <p class="muted" data-t="what">
+          Hilft, wenn Propario weiß bleibt oder nicht fertig lädt. Entfernt nur die Kopie von Propario auf diesem Gerät: zwischengespeicherte Daten und
+          Programmdateien. Du bleibst angemeldet, deine Daten liegen auf dem Server.
+        </p>
+        <p class="muted" data-t="close">Schließe vorher die installierte Propario-App und andere Propario-Tabs.</p>
+        <a class="btn primary" href="/api/reset-browser" data-t="reset">Jetzt zurücksetzen</a>
+      </section>
+      <section id="done" hidden>
+        <h1 id="done-title" data-t="checking">Wird geprüft …</h1>
+        <p id="done-text" class="muted" role="status"></p>
+        <a class="btn primary" href="/" data-t="open">Propario öffnen</a>
+      </section>
     </main>
     <script src="/reset.js"></script>
   </body>

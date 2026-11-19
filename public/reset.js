@@ -1,75 +1,64 @@
-// Resets Propario in this browser (public/reset.html): service worker, cached app files and the
-// local copy of the data. The sign-in cookie stays; the data on
-// the server is untouched. Plain script, independent of the app, so it works when the app does not.
-;(function () {
-  var button = document.getElementById('reset')
-  var status = document.getElementById('status')
-  var open = document.getElementById('open')
-
-  function quietly(promise) {
-    return Promise.resolve(promise).catch(function () {})
-  }
-
-  /** Resolves with true when deleted, false when another Propario window keeps it open. */
-  function deleteDatabase(name) {
-    return new Promise(function (resolve) {
-      var request = indexedDB.deleteDatabase(name)
-      request.onsuccess = function () {
-        resolve(true)
+// public/reset.html in the person's language, and after the reset (?done=1) a check that it
+// worked. The clearing itself is done by the browser: /api/reset-browser answers with
+// Clear-Site-Data. Every check gives up after a few seconds – a storage that does not answer is
+// exactly the case this page is for – and then says what to do instead.
+;(() => {
+  const saved = (() => {
+    try {
+      return localStorage.getItem('pv.locale')
+    } catch {
+      return null
+    }
+  })()
+  const en = (saved || navigator.language || 'de').toLowerCase().indexOf('de') !== 0
+  const text = en
+    ? {
+        title: 'Reset Propario in this browser',
+        what: 'Helps when Propario stays blank or does not finish loading. Removes only Propario’s copy on this device: cached data and app files. You stay signed in; your data is on the server.',
+        close: 'Close the installed Propario app and other Propario tabs first.',
+        reset: 'Reset now',
+        checking: 'Checking …',
+        open: 'Open Propario',
+        done: 'Done',
+        doneText: 'Propario’s copy in this browser has been removed. Open Propario – it loads everything again from the server.',
+        stuck: 'The browser’s storage does not respond',
+        stuckText:
+          'This browser could not remove everything. Close the browser completely (also from the recent apps), open it again and try once more. If that does not help: browser settings → Site settings → propario → Delete data.',
       }
-      request.onerror = function () {
-        resolve(false)
+    : {
+        checking: 'Wird geprüft …',
+        done: 'Erledigt',
+        doneText: 'Die Kopie von Propario in diesem Browser ist entfernt. Öffne Propario – es lädt alles neu vom Server.',
+        stuck: 'Der Speicher des Browsers antwortet nicht',
+        stuckText:
+          'Dieser Browser konnte nicht alles entfernen. Schließe den Browser vollständig (auch aus den zuletzt verwendeten Apps), öffne ihn neu und versuche es noch einmal. Hilft das nicht: Browser-Einstellungen → Website-Einstellungen → propario → Daten löschen.',
       }
-      request.onblocked = function () {
-        resolve(false)
-      }
+  if (en) {
+    document.documentElement.lang = 'en'
+    document.title = 'Propario – reset'
+    document.querySelectorAll('[data-t]').forEach((el) => {
+      const t = text[el.getAttribute('data-t')]
+      if (t) el.textContent = t
     })
   }
+  if (!/[?&]done=1/.test(location.search)) return
 
-  button.addEventListener('click', function () {
-    button.disabled = true
-    status.textContent = 'Wird zurückgesetzt … · Resetting …'
-    var workers = 'serviceWorker' in navigator ? navigator.serviceWorker.getRegistrations() : Promise.resolve([])
-    quietly(
-      workers.then(function (registrations) {
-        return Promise.all(registrations.map((r) => quietly(r.unregister())))
-      }),
-    )
-      .then(function () {
-        return quietly(
-          'caches' in window
-            ? caches.keys().then(function (keys) {
-                return Promise.all(keys.map((k) => caches.delete(k)))
-              })
-            : null,
-        )
-      })
-      .then(function () {
-        // Only Propario's own data copies; "produktvergleich" holds data from before accounts.
-        var list = indexedDB.databases ? indexedDB.databases() : Promise.resolve([])
-        return list.then(function (dbs) {
-          return Promise.all(
-            dbs
-              .map((d) => d.name)
-              .filter((n) => n && n.indexOf('propario-') === 0)
-              .map(deleteDatabase),
-          )
-        })
-      })
-      .then(function (results) {
-        try {
-          sessionStorage.clear()
-        } catch (e) {}
-        var blocked = (results || []).indexOf(false) >= 0
-        status.textContent = blocked
-          ? 'Fast fertig: Bitte die installierte Propario-App und andere Propario-Tabs schließen, dann Propario öffnen. · Almost done: close the installed app and other Propario tabs, then open Propario.'
-          : 'Erledigt. · Done.'
-        open.hidden = false
-        open.focus()
-      })
-      .catch(function (e) {
-        status.textContent = 'Das hat nicht geklappt: ' + e + ' · This did not work.'
-        button.disabled = false
-      })
-  })
+  document.getElementById('start').hidden = true
+  document.getElementById('done').hidden = false
+  const title = document.getElementById('done-title')
+  const status = document.getElementById('done-text')
+  const atMost = (work, ms) => Promise.race([work, new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))])
+  // Left over: a service worker, cached files or a data copy of Propario.
+  const leftovers = Promise.all([
+    'serviceWorker' in navigator ? navigator.serviceWorker.getRegistrations().then((r) => r.length) : 0,
+    'caches' in window ? caches.keys().then((k) => k.length) : 0,
+    indexedDB.databases ? indexedDB.databases().then((d) => d.filter((x) => (x.name || '').indexOf('propario-') === 0).length) : 0,
+  ]).then((counts) => counts.reduce((a, b) => a + b, 0))
+  atMost(leftovers, 5000)
+    .then((left) => (left === 0 ? 'done' : 'stuck'))
+    .catch(() => 'stuck')
+    .then((result) => {
+      title.textContent = text[result]
+      status.textContent = text[result + 'Text']
+    })
 })()

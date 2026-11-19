@@ -198,6 +198,29 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await expect(picture).toHaveAttribute('src', mainSrc!)
   await page.getByRole('button', { name: 'Remove picture 2' }).click()
   await expect(page.locator('.pimg-thumb')).toHaveCount(1)
+
+  // An upright further picture – stored larger than the main one – fits the gallery whole on a
+  // laptop, and the magnifier enlarges it in the middle instead of pushing it to the left.
+  const size = page.viewportSize()!
+  await page.setViewportSize({ width: 1280, height: 720 })
+  await page.locator('.pimg-more input[type=file]').setInputFiles({ name: 'tall.png', mimeType: 'image/png', buffer: png(300, 1400) })
+  await expect(page.locator('.pimg-thumb')).toHaveCount(2)
+  await page.getByRole('button', { name: 'Picture 2: show large' }).click()
+  const stage = page.locator('.gallery-stage')
+  const shown = page.locator('.gallery-picture img')
+  await expect.poll(() => shown.evaluate((img: HTMLImageElement) => img.naturalHeight)).toBeGreaterThan(640)
+  await inside(shown, stage)
+  const drawnWidth = await shown.evaluate((img: HTMLImageElement) => (img.naturalWidth * img.clientHeight) / img.naturalHeight)
+  await page.getByRole('button', { name: 'Show at full size' }).click()
+  const [z, s] = [(await shown.boundingBox())!, (await stage.boundingBox())!]
+  expect(z.width).toBeGreaterThan(drawnWidth * 2)
+  expect(Math.abs(z.x + z.width / 2 - (s.x + s.width / 2)), 'enlarged picture centred').toBeLessThan(2)
+  await page.getByRole('button', { name: 'Fit to the screen' }).click()
+  await inside(shown, stage)
+  await page.keyboard.press('Escape')
+  await page.getByRole('button', { name: 'Remove picture 2' }).click()
+  await expect(page.locator('.pimg-thumb')).toHaveCount(1)
+  await page.setViewportSize(size)
   await accessible(page, 'further pictures')
 
   // Excluding asks for a kind of reason (filterable) and optional details.
@@ -633,11 +656,11 @@ test('after an update, a long-open app reloads itself instead of going blank', a
   await page.getByRole('link', { name: 'Kitchen cabinet' }).click()
   await page.getByRole('button', { name: 'More', exact: true }).first().click()
   await page.getByRole('button', { name: 'Add or update products' }).click()
-  await expect(page.getByRole('heading', { name: 'Propario muss neu geladen werden' })).toBeVisible()
-  await expect(page.getByText(/Referenz [0-9a-f]{8}/)).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Propario needs to be reloaded' })).toBeVisible()
+  await expect(page.getByText(/reference [0-9a-f]{8}/)).toBeVisible()
   await accessible(page, 'crash screen')
   await context.unrouteAll()
-  await page.getByRole('button', { name: 'Neu laden · Reload' }).click()
+  await page.getByRole('button', { name: 'Reload', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Add or update products' })).toBeVisible()
 })
 
@@ -665,10 +688,13 @@ test('a start that hangs or fails says where, reports it, and resetting the brow
   // Resetting this browser keeps the sign-in; the data comes back from the server.
   await page.unrouteAll()
   await page.getByRole('link', { name: 'Reset this browser' }).click()
-  await page.getByRole('button', { name: 'Zurücksetzen · Reset' }).click()
-  await expect(page.getByRole('status')).toContainText(/Done|Almost done/)
+  await expect(page.getByRole('heading', { name: 'Reset Propario in this browser' })).toBeVisible()
   await accessible(page, 'reset page')
-  await page.getByRole('link', { name: 'Propario öffnen · Open Propario' }).click()
+  await page.getByRole('link', { name: 'Reset now' }).click()
+  // The browser clears Propario's copy itself (Clear-Site-Data), and the page checks it did.
+  await expect(page.getByRole('heading', { name: 'Done' })).toBeVisible()
+  expect(await page.evaluate(async () => (await caches.keys()).length + (await navigator.serviceWorker.getRegistrations()).length)).toBe(0)
+  await page.getByRole('link', { name: 'Open Propario' }).click()
   await expect(page.getByRole('link', { name: 'Kitchen cabinet' })).toBeVisible()
   await page.close()
 })

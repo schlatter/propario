@@ -190,3 +190,13 @@ describe('error reports from the browser', () => {
     }
   })
 })
+
+describe('resetting a browser', () => {
+  it('lets the browser clear its cached files and stored data, but never the sign-in', async () => {
+    const res = await api('/api/reset-browser', { redirect: 'manual' })
+    expect(res.status).toBe(303)
+    expect(res.headers.get('location')).toBe('/reset.html?done=1')
+    expect(res.headers.get('clear-site-data')).toBe('"cache", "storage"')
+    expect(res.headers.get('clear-site-data')).not.toContain('cookies')
+  })
+})

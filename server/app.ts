@@ -159,6 +159,13 @@ export function createApp(db: DB, config: Config, version: string | null = null)
         version,
       })
     }
+    // "Reset this browser" (public/reset.html): the browser itself clears Propario's cached files,
+    // stored data and service worker – also when its storage no longer answers to scripts. The
+    // sign-in cookie stays, so the person is still signed in afterwards.
+    if (path === '/api/reset-browser' && method === 'GET') {
+      res.writeHead(303, { 'Clear-Site-Data': '"cache", "storage"', Location: '/reset.html?done=1', 'Cache-Control': 'no-store' })
+      return void res.end()
+    }
     // A browser reports what broke (src/diagnostics.ts), so the log tells why a page stayed blank.
     // Also without a session: the app may hang before it knows who is signed in.
     if (path === '/api/client-error' && method === 'POST') {
