@@ -6,6 +6,8 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+## 0.10.0 — 2026-11-19
+
 - Added: **What Propario can do** – the start page for visitors (with the sign-in in its
   opening) and a page in the menu: the way to a decision in four steps, each with a small piece
   of the real interface, plus working with your AI and what keeps the data private.

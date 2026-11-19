@@ -11,6 +11,19 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.10.0',
+    notes: {
+      en: [
+        'New: “What Propario can do” in the menu – and as the start page for visitors.',
+        'A demo with an invented comparison to try everything – nothing is saved.',
+      ],
+      de: [
+        'Neu: „Was Propario kann“ im Menü – und als Startseite für Besucher.',
+        'Eine Demo mit erfundenem Vergleich zum Ausprobieren – nichts wird gespeichert.',
+      ],
+    },
+  },
+  {
     version: '0.9.3',
     notes: {
       en: ['Upright pictures fit the gallery whole; the magnifier enlarges where you tap.', '“Reset this browser” now says clearly whether it worked.'],
