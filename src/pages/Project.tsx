@@ -22,6 +22,7 @@ import { QuickAdd } from './project/QuickAdd'
 import { ProjectDialog } from './Home'
 import { InTopbar } from '../ui/Topbar'
 import { rolesOf } from '../sync'
+import { isDemo } from '../demo'
 
 const STAGES: ProjectStatus[] = ['research', 'comparing', 'decided', 'purchased', 'archived']
 type Tab = 'products' | 'requirements' | 'fields' | 'notes'
@@ -100,7 +101,7 @@ export function ProjectPage() {
               <Glyph name="star" /> <span className="hide-narrow">{m.swipe.open}</span>
             </Link>
           )}
-          {role === 'owner' && (
+          {role === 'owner' && !isDemo() && (
             <button type="button" className="btn sm" onClick={() => setSharing(true)} title={m.share.title} aria-label={m.share.title}>
               <Glyph name="share" /> <span className="hide-narrow">{m.share.title}</span>
             </button>

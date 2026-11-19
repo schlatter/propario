@@ -12,6 +12,7 @@ export const en = {
     backup: 'Backup',
     settings: 'Settings',
     language: 'Language',
+    overview: 'What Propario can do',
   },
   common: {
     save: 'Save',
@@ -385,6 +386,50 @@ export const en = {
     tableHint:
       'If you add products or change or fill in values, also answer with this table in exactly this format (same columns, link first; leave unknown values empty). We can then paste it back into our comparison.',
   },
+  overview: {
+    title: 'Compare together. Decide well.',
+    lead: 'For the bigger purchases – the sideboard, the laptop, the bike. Instead of spreadsheets, tabs and screenshots, one calm place for your requirements, the candidates and the decision.',
+    tryDemo: 'Try the demo',
+    demoHint: 'No account yet? Look around with an invented comparison – nothing is saved.',
+    s1Title: 'One link is enough.',
+    s1Text:
+      'Paste a shop link: Propario takes the picture, price, dimensions and data sheet – without AI and without tracking. Or bring a table from Excel, CSV or your AI.',
+    s2Title: 'What it must be, what would be nice.',
+    s2Text:
+      'Must, important, wish and a budget. Every product is checked against them by itself: green met, red not met, grey not known yet – missing data never counts against it.',
+    reqs: [
+      ['Must', 'Fits the niche · width ≤ 180 cm', 'pass'],
+      ['Important', 'Not too deep · ≤ 45 cm', 'pass'],
+      ['Wish', 'Doors close quietly', 'fail'],
+      ['Wish', 'Delivered within 6 weeks', 'open'],
+    ] as [string, string, 'pass' | 'fail' | 'open'][],
+    s3Title: 'Side by side, not all over the place.',
+    s3Text:
+      'A table like a spreadsheet, filters like in Jira, the best values marked and differences highlighted. Pictures and dimension drawings in a gallery.',
+    depth: 'Depth',
+    s4Title: 'Decide together, calmly.',
+    s4Text:
+      'Favourites, a thumb up or down by swiping, stars and notes per person – then the decision, the purchase, and when the return period and warranty end.',
+    returnLine: 'Bought · return until 19 Dec · warranty until 2028',
+    aiTitle: 'With your AI, if you like.',
+    aiText:
+      '“Copy for my AI” hands the comparison to the assistant you already use. Its answer comes back as a table and updates your products – you see every change first.',
+    trustTitle: 'Private, safe, yours.',
+    trust: [
+      'Runs on your own server – your data stays with you',
+      'Passkeys instead of passwords',
+      'Stored encrypted, shared only on purpose',
+      'No tracking, no advertising, no affiliate links',
+      'Accessible (WCAG 2.1 AA), free software (AGPL)',
+    ],
+    closingTitle: 'See for yourself.',
+    closingText: 'An invented sideboard comparison with six candidates – edit, filter, compare and decide as you like. Nothing is saved.',
+    inDemo: 'You are in the demo – everything here is invented, and nothing is saved.',
+  },
+  demo: {
+    banner: 'Demo – invented data, nothing is saved.',
+    end: 'End demo',
+  },
   start: {
     stuckTitle: 'Propario is not starting',
     failedTitle: 'Propario could not start',
@@ -524,6 +569,7 @@ export const en = {
       'forbidden-address': 'Addresses in local networks are not fetched.',
       unreadable: 'This file is not a readable image.',
       failed: 'The image could not be loaded.',
+      demo: 'Not in the demo – reading shop pages needs your own account.',
     },
   },
   requirements: {
@@ -812,6 +858,7 @@ export const en = {
     forbidden: 'You can only view this comparison – the change was not saved.',
     notFound: 'This comparison is no longer available to you.',
     generic: 'The change was not saved. Please reload the page.',
+    demo: 'Not in the demo – this needs your own account.',
   },
   excel: {
     productsSheet: 'Products',

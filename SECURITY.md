@@ -23,6 +23,9 @@ happens.** Every change is measured against this list; `npm run verify` checks m
 - No analytics, no tracking, no third-party scripts, fonts or images.
 - The service worker (`src/service-worker.js`) caches only versioned app files (`/assets/*`) and
   an offline page – never pages, API answers or pictures; each release clears the one before.
+- The demo (`src/demo.ts`) runs entirely in the browser tab, in its own browser database: its
+  changes go nowhere, other server calls are refused before they are sent, and its data is
+  removed when it ends.
 - When the app breaks or hangs, the browser reports it to the server log (`/api/client-error`):
   a random reference, the start-up step, the version, the page's path without query, the error
   message and stack – no contents of comparisons. One sanitised line per report, at most 20 per

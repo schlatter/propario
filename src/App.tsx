@@ -1,3 +1,5 @@
+import { endDemo, isDemo } from './demo'
+import { Overview } from './pages/Overview'
 import { Starting, StartProblem } from './ui/StartProblem'
 import { currentStep } from './diagnostics'
 import { lazy, Suspense, useEffect, useState } from 'react'
@@ -63,7 +65,17 @@ function SaveErrors() {
       if (!(err instanceof ApiError)) return
       e.preventDefault()
       if (err.status === 401) return // the session provider shows the sign-in page
-      toast(err.code === 'offline' ? m.errors.offline : err.status === 403 ? m.errors.forbidden : err.status === 404 ? m.errors.notFound : m.errors.generic)
+      toast(
+        err.code === 'demo'
+          ? m.errors.demo
+          : err.code === 'offline'
+            ? m.errors.offline
+            : err.status === 403
+              ? m.errors.forbidden
+              : err.status === 404
+                ? m.errors.notFound
+                : m.errors.generic,
+      )
     }
     window.addEventListener('unhandledrejection', onError)
     return () => window.removeEventListener('unhandledrejection', onError)
@@ -99,6 +111,9 @@ function Shell() {
               <NavLink to="/settings" onClick={close}>
                 {m.nav.settings}
               </NavLink>
+              <NavLink to="/about" onClick={close}>
+                {m.nav.overview}
+              </NavLink>
             </nav>
           )}
         </Menu>
@@ -110,6 +125,14 @@ function Shell() {
         <div className="topbar-slot" ref={setSlot} />
       </header>
       <UpdateNotice />
+      {isDemo() && (
+        <div className="demo-bar" role="status">
+          <span>{m.demo.banner}</span>
+          <button type="button" className="btn sm" onClick={endDemo}>
+            {m.demo.end}
+          </button>
+        </div>
+      )}
       <TopbarSlot.Provider value={slot}>
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -134,6 +157,7 @@ function Shell() {
           />
           <Route path="/backup" element={<BackupPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/about" element={<Overview />} />
           <Route path="/share" element={<SharePage />} />
           <Route path="*" element={<HomePage />} />
         </Routes>

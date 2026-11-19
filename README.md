@@ -8,7 +8,9 @@ candidates, their pictures, your ratings and the final decision.
 > household comparing purchases together; contributions are welcome (see
 > [CONTRIBUTING.md](CONTRIBUTING.md)).
 
-Why it exists and how it looks and speaks: [docs/brand.md](docs/brand.md).
+Why it exists and how it looks and speaks: [docs/brand.md](docs/brand.md). Visitors see what it
+does on the start page and can try a **demo** with an invented comparison – it runs only in the
+browser tab and never touches the server's data (`src/demo.ts`).
 
 ## What it does
 

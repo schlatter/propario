@@ -12,6 +12,7 @@ export const de: Messages = {
     import: 'Import',
     backup: 'Sicherung',
     settings: 'Einstellungen',
+    overview: 'Was Propario kann',
     language: 'Sprache',
   },
   common: {
@@ -388,6 +389,51 @@ export const de: Messages = {
     tableHint:
       'Wenn du Produkte ergänzt oder Werte änderst oder ergänzt, antworte zusätzlich mit dieser Tabelle in genau diesem Format (gleiche Spalten, Link zuerst; Unbekanntes leer lassen). Wir können sie dann wieder in unseren Vergleich einfügen.',
   },
+  overview: {
+    title: 'Gemeinsam vergleichen. Gut entscheiden.',
+    lead: 'Für die größeren Anschaffungen – das Sideboard, den Laptop, das Fahrrad. Statt Tabellen, Tabs und Screenshots ein ruhiger Ort für eure Anforderungen, die Kandidaten und die Entscheidung.',
+    tryDemo: 'Demo ausprobieren',
+    demoHint: 'Noch kein Konto? Sieh dich mit einem erfundenen Vergleich um – nichts wird gespeichert.',
+    s1Title: 'Ein Link genügt.',
+    s1Text:
+      'Shop-Link einfügen: Propario übernimmt Bild, Preis, Maße und Datenblatt – ohne KI und ohne Tracking. Oder bring eine Tabelle aus Excel, CSV oder deiner KI mit.',
+    s2Title: 'Was es muss, was schön wäre.',
+    s2Text:
+      'Muss, wichtig, Wunsch und ein Budget. Jedes Produkt wird von selbst daran geprüft: grün erfüllt, rot nicht erfüllt, grau noch unbekannt – fehlende Daten zählen nie dagegen.',
+    reqs: [
+      ['Muss', 'Passt in die Nische · Breite ≤ 180 cm', 'pass'],
+      ['Wichtig', 'Nicht zu tief · ≤ 45 cm', 'pass'],
+      ['Wunsch', 'Türen schließen leise', 'fail'],
+      ['Wunsch', 'Lieferbar in 6 Wochen', 'open'],
+    ],
+    s3Title: 'Nebeneinander, nicht durcheinander.',
+    s3Text:
+      'Eine Tabelle wie in Excel, Filter wie in Jira, die besten Werte markiert und Unterschiede hervorgehoben. Bilder und Maßzeichnungen in einer Galerie.',
+    depth: 'Tiefe',
+    s4Title: 'Gemeinsam entscheiden, in Ruhe.',
+    s4Text:
+      'Favoriten, Daumen hoch oder runter per Wischen, Sterne und Notizen pro Person – dann die Entscheidung, der Kauf und wann Rückgabe und Garantie enden.',
+    returnLine: 'Gekauft · Rückgabe bis 19.12. · Garantie bis 2028',
+    aiTitle: 'Mit deiner KI, wenn du willst.',
+    aiText:
+      '„Für meine KI kopieren“ gibt den Vergleich an den Assistenten, den du schon nutzt. Seine Antwort kommt als Tabelle zurück und aktualisiert deine Produkte – jede Änderung siehst du vorher.',
+    trustTitle: 'Privat, sicher, deins.',
+    trust: [
+      'Läuft auf deinem eigenen Server – deine Daten bleiben bei dir',
+      'Passkeys statt Passwörter',
+      'Verschlüsselt gespeichert, geteilt nur mit Absicht',
+      'Kein Tracking, keine Werbung, keine Affiliate-Links',
+      'Barrierefrei (WCAG 2.1 AA), freie Software (AGPL)',
+    ],
+    closingTitle: 'Überzeug dich selbst.',
+    closingText:
+      'Ein erfundener Sideboard-Vergleich mit sechs Kandidaten – bearbeiten, filtern, vergleichen und entscheiden, wie du willst. Nichts wird gespeichert.',
+    inDemo: 'Du bist in der Demo – hier ist alles erfunden, und nichts wird gespeichert.',
+  },
+  demo: {
+    banner: 'Demo – erfundene Daten, nichts wird gespeichert.',
+    end: 'Demo beenden',
+  },
   start: {
     stuckTitle: 'Propario startet nicht',
     failedTitle: 'Propario konnte nicht starten',
@@ -530,6 +576,7 @@ export const de: Messages = {
       'forbidden-address': 'Adressen im lokalen Netz werden nicht abgerufen.',
       unreadable: 'Diese Datei ist kein lesbares Bild.',
       failed: 'Das Bild konnte nicht geladen werden.',
+      demo: 'Nicht in der Demo – Shopseiten lesen geht nur mit eigenem Konto.',
     },
   },
   requirements: {
@@ -825,6 +872,7 @@ export const de: Messages = {
     forbidden: 'Du darfst diesen Vergleich nur ansehen – die Änderung wurde nicht gespeichert.',
     notFound: 'Dieser Vergleich ist für dich nicht mehr verfügbar.',
     generic: 'Die Änderung wurde nicht gespeichert. Bitte die Seite neu laden.',
+    demo: 'Nicht in der Demo – dafür brauchst du ein eigenes Konto.',
   },
   excel: {
     productsSheet: 'Produkte',

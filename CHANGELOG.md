@@ -6,6 +6,15 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- Added: **What Propario can do** – the start page for visitors (with the sign-in in its
+  opening) and a page in the menu: the way to a decision in four steps, each with a small piece
+  of the real interface, plus working with your AI and what keeps the data private.
+- Added: **Demo** – an invented sideboard comparison with six candidates, pictures and a
+  dimension drawing, to try everything without an account. It runs entirely in the browser
+  tab: no change and no request reaches the server's data, what needs a server says so, and
+  ending the demo (or closing the tab) removes it.
+- Fixed: empty cells in the ratings and purchase columns had no name for screen readers.
+
 ## 0.9.3 — 2026-11-19
 
 - Fixed: a browser whose storage stopped answering kept Propario blank – the service worker

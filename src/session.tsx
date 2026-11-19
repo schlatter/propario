@@ -1,10 +1,12 @@
 import { startAuthentication, startRegistration } from '@simplewebauthn/browser'
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { api, setSignedOutHandler } from './api'
-import { db, dropCache, openCache } from './db/db'
+import { AppDB, db, dropCache, openCache, useCache } from './db/db'
 import type { Settings } from './db/types'
-import { pull, startSync } from './sync'
+import { applyLocal, pull, setLocalRole, startSync, useTransport } from './sync'
 import { report, setStep } from './diagnostics'
+import { clearDemo, DEMO_DB, DEMO_USER, demoChanges, demoTransport, endDemo, isDemo } from './demo'
+import { releaseOf } from './releases'
 
 export interface SessionUser {
   id: string
@@ -44,6 +46,25 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<State>({ status: 'loading' })
 
   const refresh = useCallback(async () => {
+    if (isDemo()) {
+      // The demo never asks the server: its own database, its own invented comparison.
+      setStep('cache')
+      useTransport(demoTransport)
+      const demo = new AppDB(DEMO_DB)
+      await demo.open()
+      useCache(demo)
+      await demo.meta.put({ key: 'settings', value: { people: DEMO_USER.settings.people, lastBackupAt: null, seenRelease: releaseOf(__APP_VERSION__) } })
+      await demo.meta.put({ key: 'me', value: { id: DEMO_USER.id, name: DEMO_USER.name, isAdmin: false } })
+      if (!(await demo.projects.count())) {
+        const changes = demoChanges()
+        await applyLocal(changes, demo)
+        await setLocalRole(changes[0].op === 'create' ? changes[0].record.id : '', 'owner', demo)
+      }
+      setStep('ready')
+      setState({ status: 'signed-in', user: DEMO_USER, imageFetch: false })
+      return
+    }
+    clearDemo()
     setStep('session')
     const s = await api<{ user: SessionUser | null; setupNeeded: boolean; imageFetch: boolean }>('/api/session')
     if (!s.user) {
@@ -55,6 +76,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signOut = useCallback(async () => {
+    if (isDemo()) return void endDemo()
     await api('/api/auth/logout', { method: 'POST' }).catch(() => {})
     await dropCache()
     setState({ status: 'signed-out', setupNeeded: false })

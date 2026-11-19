@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="46 99 308 165" role="img" aria-label="sideboard-linea.svg">
+<rect x="46" y="99" width="308" height="165" fill="#ffffff"/>
+<ellipse cx="200.0" cy="254" rx="154.0" ry="7" fill="#000" opacity="0.06"/>
+<path d="M78.0 210 L72.0 250" stroke="#3a2c20" stroke-width="5" stroke-linecap="round"/>
+<path d="M322.0 210 L328.0 250" stroke="#3a2c20" stroke-width="5" stroke-linecap="round"/>
+<rect x="60.0" y="115" width="280" height="95" rx="4" fill="#dcbc8e" stroke="#9a7a50" stroke-width="2"/>
+<rect x="56.0" y="109" width="288" height="8" rx="2" fill="#dcbc8e" stroke="#9a7a50" stroke-width="2"/>
+<rect x="68.0" y="123.0" width="100.32000000000001" height="23.666666666666668" rx="2" fill="none" stroke="#9a7a50" stroke-width="1.5" opacity="0.8"/>
+<rect x="104.16" y="132.83333333333334" width="28" height="4" rx="2" fill="#5b4a3a"/>
+<rect x="68.0" y="150.66666666666666" width="100.32000000000001" height="23.666666666666668" rx="2" fill="none" stroke="#9a7a50" stroke-width="1.5" opacity="0.8"/>
+<rect x="104.16" y="160.5" width="28" height="4" rx="2" fill="#5b4a3a"/>
+<rect x="68.0" y="178.33333333333334" width="100.32000000000001" height="23.666666666666668" rx="2" fill="none" stroke="#9a7a50" stroke-width="1.5" opacity="0.8"/>
+<rect x="104.16" y="188.16666666666669" width="28" height="4" rx="2" fill="#5b4a3a"/>
+<rect x="172.32" y="123" width="159.68" height="79" rx="2" fill="none" stroke="#9a7a50" stroke-width="1.5" opacity="0.8"/>
+<rect x="320.0" y="150.5" width="4" height="24" rx="2" fill="#5b4a3a"/>
+</svg>

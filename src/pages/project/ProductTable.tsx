@@ -356,9 +356,17 @@ export function ProductTable({
           .filter((r) => r.note)
           .map((r) => `${r.person}: ${r.note}`)
           .join('\n')
+        const quote = note ? `“${note.split('\n')[0]}”` : ''
         return (
-          <button type="button" className="cell" onClick={() => onOpen(p.id)} title={note || undefined}>
-            {a !== null ? <Stars value={Math.round(a)} label={m.field.rating} /> : note ? <span className="muted small">“{note.split('\n')[0]}”</span> : null}
+          <button
+            type="button"
+            className="cell"
+            onClick={() => onOpen(p.id)}
+            title={note || undefined}
+            // Also empty cells need a name: they open the details.
+            aria-label={`${m.field.ratings}: ${a !== null ? `${Math.round(a)}/5` : quote || '—'}`}
+          >
+            {a !== null ? <Stars value={Math.round(a)} label={m.field.rating} /> : quote ? <span className="muted small">{quote}</span> : null}
           </button>
         )
       },
@@ -439,11 +447,14 @@ export function ProductTable({
         optional: true,
         has: (p) => p.purchase.status !== 'none',
         sort: (p) => p.purchase.date || (p.purchase.status !== 'none' ? '0' : null),
-        render: (p) => (
-          <button type="button" className="cell" onClick={() => onOpen(p.id)}>
-            {p.purchase.status === 'none' ? '' : p.purchase.date ? fmt.date(p.purchase.date) : m.purchase[p.purchase.status]}
-          </button>
-        ),
+        render: (p) => {
+          const text = p.purchase.status === 'none' ? '' : p.purchase.date ? fmt.date(p.purchase.date) : m.purchase[p.purchase.status]
+          return (
+            <button type="button" className="cell" onClick={() => onOpen(p.id)} aria-label={`${m.field.purchaseDate}: ${text || '—'}`}>
+              {text}
+            </button>
+          )
+        },
       },
     )
     return cols

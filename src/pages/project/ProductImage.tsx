@@ -8,12 +8,13 @@ import {
   fetchRemoteImage,
   ImageError,
   imageFromTransfer,
+  isPicture,
   loadProductImage,
   productImage,
   setProductImageFromBlob,
   type ImageErrorCode,
 } from '../../images'
-import { IMAGE_PATH, MAX_PICTURES } from '../../shared/records.ts'
+import { MAX_PICTURES } from '../../shared/records.ts'
 import type { ProductFacts } from '../../shared/product-facts.ts'
 import { Glyph } from '../../ui/Glyph'
 import { Preview, Thumb } from '../../ui/Thumb'
@@ -68,7 +69,7 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
     else void run(() => ('file' in got ? setProductImageFromBlob(p, got.file) : loadProductImage(p, got.url)))
     return true
   }
-  const further = (p.images ?? []).filter((x) => IMAGE_PATH.test(x))
+  const further = (p.images ?? []).filter(isPicture)
   const moreFiles = useRef<HTMLInputElement>(null)
   /** All pictures, the main one first. */
   const pictures = src ? [src, ...further] : []

@@ -116,6 +116,53 @@ test('Ada sets up the instance with a passkey', async ({ browser }) => {
   await page.getByRole('button', { name: /saved it/ }).click()
   await expect(page.getByRole('heading', { name: 'Comparisons', exact: true })).toBeVisible()
   await accessible(page, 'home (empty)')
+  // Signed in, the overview is in the menu.
+  await page.getByRole('button', { name: 'Menu' }).click()
+  await page.getByRole('link', { name: 'What Propario can do' }).click()
+  await expect(page.getByRole('heading', { name: 'Compare together. Decide well.' })).toBeVisible()
+  await page.goto('/')
+})
+
+test('a visitor sees what Propario does and tries the demo, which never talks to the server', async ({ browser }) => {
+  const context = await browser.newContext()
+  const page = await context.newPage()
+  await page.goto('/')
+  await expect(page.getByRole('heading', { name: 'Compare together. Decide well.' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'One link is enough.' })).toBeVisible()
+  await accessible(page, 'overview')
+
+  // From here on, nothing may reach the server's data.
+  const calls: string[] = []
+  page.on('request', (r) => {
+    const path = new URL(r.url()).pathname
+    if (path.startsWith('/api/') && path !== '/api/client-error') calls.push(`${r.method()} ${path}`)
+  })
+  await page.getByRole('button', { name: 'Try the demo' }).first().click()
+  await expect(page.getByRole('status').filter({ hasText: 'Demo – invented data, nothing is saved.' })).toBeVisible()
+  await page.getByRole('link', { name: /Living-room sideboard/ }).click()
+  await expect(page.getByRole('tab', { name: /Products 6/ })).toBeVisible()
+  await accessible(page, 'demo comparison')
+
+  // Everything can be tried: a change shows at once …
+  await page.getByRole('button', { name: 'Arvika', exact: true }).click()
+  await expect(page.locator('.pimg-thumb')).toHaveCount(2)
+  await page.getByRole('textbox', { name: 'Price', exact: true }).fill('799')
+  await page.getByRole('textbox', { name: 'Price', exact: true }).press('Tab')
+  await page.locator('dialog.drawer').getByRole('button', { name: 'Close', exact: true }).click()
+  await expect(page.locator('table.grid tbody tr', { hasText: 'Arvika' }).first()).toContainText('€799')
+  // … and what needs a server says so; sharing is not offered at all.
+  await expect(page.getByRole('button', { name: 'Share comparison' })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Arvika', exact: true }).click()
+  await page.getByRole('button', { name: 'Load picture again' }).click()
+  await expect(page.getByText('Not in the demo – reading shop pages needs your own account.')).toBeVisible()
+  await page.locator('dialog.drawer').getByRole('button', { name: 'Close', exact: true }).click()
+  expect(calls).toEqual([])
+
+  // Ending the demo removes its data from the browser.
+  await page.getByRole('button', { name: 'End demo' }).click()
+  await expect(page.getByRole('heading', { name: 'Compare together. Decide well.' })).toBeVisible()
+  await expect.poll(() => page.evaluate(async () => (await indexedDB.databases()).some((d) => d.name === 'propario-demo'))).toBe(false)
+  await context.close()
 })
 
 test('Ada keeps a comparison with a product and its picture', async () => {

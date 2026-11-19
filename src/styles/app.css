@@ -2200,7 +2200,8 @@ table.map {
   border: 1px solid var(--line);
   border-radius: var(--radius);
 }
-.auth-card h1 {
+.auth-card h1,
+.auth-card h2 {
   font-family: var(--font-display);
   font-size: 28px;
   line-height: 1.15;
@@ -3607,4 +3608,431 @@ dialog.gallery::backdrop {
 /* While enlarged, the picture moves under the finger; ‹ › would scroll away with it. */
 .gallery-stage.zoomed .gallery-nav {
   display: none;
+}
+
+/* ---------- what Propario can do (src/pages/Overview.tsx) ----------
+   The stills sit on "drawing paper": a faint grid, as under a dimension drawing. */
+.overview {
+  max-width: 1120px;
+  display: grid;
+  gap: clamp(48px, 8vw, 96px);
+  padding-bottom: 96px;
+}
+.overview.landing {
+  padding-top: 0;
+}
+.overview-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 0 0;
+}
+.overview-top .link-btn[aria-pressed='true'] {
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--brand-text);
+}
+.overview-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: clamp(28px, 5vw, 64px);
+  align-items: center;
+}
+.overview-hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 6vw, 64px);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  margin: 0;
+  text-wrap: balance;
+}
+.overview-hero-words {
+  display: grid;
+  gap: 18px;
+  justify-items: start;
+}
+.overview-lead {
+  font-size: clamp(16px, 1.6vw, 19px);
+  color: var(--ink-2);
+  max-width: 56ch;
+}
+.overview-signin {
+  display: grid;
+  gap: 16px;
+  justify-items: stretch;
+}
+.overview-signin .auth-card {
+  width: 100%;
+}
+.overview-demo {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  padding: 0 4px;
+}
+.overview-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: clamp(48px, 8vw, 88px);
+}
+.overview-step {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(24px, 5vw, 64px);
+  align-items: center;
+}
+.overview-step:nth-child(even) .overview-step-words {
+  order: 2;
+}
+.overview-step-words {
+  display: grid;
+  gap: 10px;
+  max-width: 46ch;
+}
+.overview-step-n {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  color: var(--brand-text);
+}
+.overview-step h2,
+.overview-band h2,
+.overview-closing h2 {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 3vw, 34px);
+  line-height: 1.1;
+  margin: 0;
+  text-wrap: balance;
+}
+.overview-step p {
+  color: var(--ink-2);
+}
+
+/* A still: a piece of the app on drawing paper. */
+.still {
+  margin: 0;
+  padding: clamp(20px, 4vw, 36px);
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background-color: var(--surface-2);
+  background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: -1px -1px;
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+}
+.still > * {
+  width: min(100%, 420px);
+}
+.still-link {
+  font:
+    500 13px/1 ui-monospace,
+    'SF Mono',
+    Menlo,
+    Consolas,
+    monospace;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  color: var(--ink-2);
+  width: auto;
+}
+.still-product {
+  position: relative;
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  padding: 12px 14px 12px 12px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.still-product img {
+  width: 120px;
+  height: 90px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 6px;
+}
+.still-product-body {
+  display: grid;
+  gap: 4px;
+}
+.still-price {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.still-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.still-chips span {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--sunken);
+  color: var(--ink-2);
+}
+/* Favourite (petrol) and new (amber) side by side – the logo's two colours. */
+.still-fav {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 6px;
+  box-shadow:
+    inset 3px 0 0 var(--fav),
+    inset 6px 0 0 var(--new);
+}
+.still-reqs {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+.still-reqs li {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr) 28px;
+  gap: 10px;
+  align-items: center;
+  padding: 9px 8px;
+  font-size: 14px;
+}
+.still-reqs li + li {
+  border-top: 1px solid var(--line);
+}
+.still-prio {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.still-prio.p-0 {
+  color: var(--ink);
+}
+.still-check {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 13px;
+}
+.still-check.pass {
+  background: var(--pass);
+  color: #fff;
+}
+.still-check.fail {
+  background: var(--fail);
+  color: #fff;
+}
+.still-check.open {
+  border: 1.5px dashed var(--unknown);
+  color: var(--unknown);
+}
+.still-fit {
+  width: auto;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  color: var(--brand-text);
+  font-size: 14px;
+}
+.still-compare {
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.still-compare th,
+.still-compare td {
+  padding: 8px 10px;
+  text-align: center;
+  border-top: 1px solid var(--line);
+}
+.still-compare thead th {
+  border-top: 0;
+  font-weight: 650;
+  font-size: 13px;
+}
+.still-compare thead img {
+  display: block;
+  width: 72px;
+  height: 54px;
+  margin: 0 auto 4px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 4px;
+}
+.still-compare tbody th {
+  text-align: left;
+  color: var(--muted);
+  font-weight: 600;
+}
+.still-compare td.best {
+  font-weight: 700;
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+.still-compare td.differs {
+  background: var(--diff);
+}
+.still-decision {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  box-shadow: var(--shadow);
+}
+.still-decision-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent-text);
+}
+.still-ratings {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.still-ratings li {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.still-stars {
+  color: var(--star);
+  letter-spacing: 2px;
+}
+.still-stars .off {
+  color: var(--line-strong);
+}
+.still-dates {
+  color: var(--muted);
+  text-align: center;
+}
+.overview-bands {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.overview-band {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  padding: clamp(22px, 4vw, 36px);
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.overview-band p {
+  color: var(--ink-2);
+}
+.still-md {
+  margin: 4px 0 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--sunken);
+  font:
+    12.5px/1.6 ui-monospace,
+    'SF Mono',
+    Menlo,
+    Consolas,
+    monospace;
+  white-space: pre;
+  overflow-x: auto;
+}
+.overview-trust {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.overview-trust li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.overview-trust .glyph {
+  flex: none;
+  margin-top: 3px;
+  color: var(--brand-text);
+}
+.overview-closing {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  text-align: center;
+  padding: clamp(32px, 6vw, 64px) var(--gutter);
+  border-radius: 20px;
+  background: var(--brand-soft);
+}
+.overview-closing .btn {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--brand-ink);
+}
+@media (max-width: 760px) {
+  .overview-hero,
+  .overview-step,
+  .overview-bands {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .overview-step:nth-child(even) .overview-step-words {
+    order: 0;
+  }
+  .still-product {
+    grid-template-columns: 96px minmax(0, 1fr);
+  }
+  .still-product img {
+    width: 96px;
+    height: 72px;
+  }
+}
+
+/* The demo says so, all the time, and is one tap from its end. */
+.demo-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px var(--gutter);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 600;
+  font-size: 14px;
+}
+.demo-bar .btn {
+  background: transparent;
+  border-color: var(--accent-ink);
+  color: var(--accent-ink);
 }

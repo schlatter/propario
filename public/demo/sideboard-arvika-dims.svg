@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Arvika – Maße">
+<rect width="400" height="300" fill="#ffffff"/>
+<g fill="none" stroke="#2a2f33" stroke-width="2">
+<rect x="70" y="80" width="260" height="110" rx="3"/>
+<path d="M156.7 88v94M243.3 88v94"/>
+<path d="M84 190v14M316 190v14"/>
+</g>
+<g stroke="#2f6fa8" stroke-width="1.5" fill="#2f6fa8">
+<path d="M70 230h260" /><path d="M70 224v12M330 224v12"/>
+<path d="M350 80v124" /><path d="M344 80h12M344 204h12"/>
+</g>
+<g font-family="Helvetica, Arial, sans-serif" font-size="16" fill="#2f6fa8" text-anchor="middle">
+<text x="200" y="252">160 cm</text>
+<text x="372" y="146" transform="rotate(90 372 146)">80 cm</text>
+</g>
+<g font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#5b6266">
+<text x="70" y="50">Tiefe / depth 42 cm</text>
+</g>
+</svg>

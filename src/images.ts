@@ -3,6 +3,7 @@
  * browser (which also drops any metadata) and stored on this server in the comparison
  * (/api/images). Pages only ever show images from this server, so no shop learns who looks.
  */
+import { DEMO_PICTURE, isDemo } from './demo'
 import { api } from './api'
 import { takeFacts, updateProduct } from './db/repo'
 import type { Product } from './db/types'
@@ -18,7 +19,7 @@ export const IMAGE_MAX_SIDE = 640
 export const FURTHER_MAX_SIDE = 960
 
 export type ImageErrorCode =
-  'unavailable' | 'blocked' | 'not-found' | 'no-image' | 'too-large' | 'timeout' | 'invalid-url' | 'forbidden-address' | 'unreadable' | 'failed'
+  'unavailable' | 'blocked' | 'not-found' | 'no-image' | 'too-large' | 'timeout' | 'invalid-url' | 'forbidden-address' | 'unreadable' | 'failed' | 'demo'
 
 export class ImageError extends Error {
   code: ImageErrorCode
@@ -36,12 +37,17 @@ export class ImageError extends Error {
 const KNOWN: ImageErrorCode[] = ['blocked', 'not-found', 'no-image', 'too-large', 'timeout', 'invalid-url', 'forbidden-address']
 
 /** The image to show for a product: only copies stored on this server. */
+/** A stored picture: one of this server's, or one of the drawings that come with the demo. */
+export const isPicture = (src: string | undefined): src is string => !!src && (IMAGE_PATH.test(src) || (isDemo() && DEMO_PICTURE.test(src)))
+
 export function productImage(p: Pick<Product, 'image'> | null | undefined): string | null {
-  return p?.image && IMAGE_PATH.test(p.image) ? p.image : null
+  return isPicture(p?.image) ? p.image : null
 }
 
 /** Ask the server for the main image of a product page (or an image URL). */
 export async function fetchRemoteImage(url: string, signal?: AbortSignal): Promise<{ blob: Blob; source: string; facts: ProductFacts }> {
+  // The demo reads no shop pages: it talks to no server (src/demo.ts).
+  if (isDemo()) throw new ImageError('demo')
   let res: Response
   try {
     res = await fetch(`/api/product-image?url=${encodeURIComponent(url)}`, { signal })

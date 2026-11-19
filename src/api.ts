@@ -1,4 +1,5 @@
 /** Talking to the Propario server: same origin, JSON, session cookie. */
+import { isDemo } from './demo'
 
 export class ApiError extends Error {
   status: number
@@ -17,6 +18,8 @@ export function setSignedOutHandler(fn: () => void) {
 }
 
 export async function api<T = unknown>(path: string, init: { method?: string; body?: unknown; raw?: Blob } = {}): Promise<T> {
+  // The demo talks to no server (src/demo.ts): what needs one says so instead.
+  if (isDemo()) throw new ApiError(0, 'demo')
   const headers: Record<string, string> = {}
   let body: BodyInit | undefined
   if (init.raw) {

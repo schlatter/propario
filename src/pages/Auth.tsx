@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ApiError } from '../api'
 import { useI18n } from '../i18n'
 import { Field } from '../ui/inputs'
+import { Overview } from './Overview'
 import { register, signInWithPasskey, signInWithRecoveryKey, useSession } from '../session'
 
 /** Turns a failed ceremony into a sentence. */
@@ -16,6 +17,16 @@ function useAuthError() {
     if (name === 'NotSupportedError' || name === 'SecurityError' || !window.isSecureContext) return m.auth.errors.unsupported
     return m.auth.errors.generic
   }
+}
+
+/** The sign-in as a card inside the start page (src/pages/Overview.tsx). */
+function AuthCard({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="auth-card stack">
+      <h2>{title}</h2>
+      {children}
+    </div>
+  )
 }
 
 function AuthFrame({ title, children }: { title: string; children: ReactNode }) {
@@ -50,7 +61,12 @@ export function RecoveryKeyNotice({ recoveryKey, text, onDone }: { recoveryKey: 
   )
 }
 
+/** Signed out: the overview of what Propario does, with the sign-in in its opening. */
 export function SignInPage({ setupNeeded }: { setupNeeded: boolean }) {
+  return <Overview signIn={<SignInCard setupNeeded={setupNeeded} />} />
+}
+
+function SignInCard({ setupNeeded }: { setupNeeded: boolean }) {
   const { m } = useI18n()
   const { refresh } = useSession()
   const navigate = useNavigate()
@@ -75,7 +91,7 @@ export function SignInPage({ setupNeeded }: { setupNeeded: boolean }) {
 
   if (newKey) {
     return (
-      <AuthFrame title={m.auth.recoveryTitle}>
+      <AuthCard title={m.auth.recoveryTitle}>
         <RecoveryKeyNotice
           recoveryKey={newKey}
           text={m.auth.recoveryAfterUse}
@@ -84,12 +100,12 @@ export function SignInPage({ setupNeeded }: { setupNeeded: boolean }) {
             navigate('/settings', { replace: true })
           }}
         />
-      </AuthFrame>
+      </AuthCard>
     )
   }
 
   return (
-    <AuthFrame title={m.auth.signInTitle}>
+    <AuthCard title={m.auth.signInTitle}>
       {setupNeeded ? (
         <p role="status">{m.auth.setupMissing}</p>
       ) : mode === 'passkey' ? (
@@ -136,7 +152,7 @@ export function SignInPage({ setupNeeded }: { setupNeeded: boolean }) {
           {error}
         </p>
       )}
-    </AuthFrame>
+    </AuthCard>
   )
 }
 
