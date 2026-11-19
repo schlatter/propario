@@ -171,6 +171,17 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await page.locator('.pimg-drop').click()
   await expect(page.locator('dialog.gallery')).toBeVisible()
   await expect(page.locator('.gallery-count')).toHaveText('1/2')
+  // A swipe in the gallery changes the picture, not the product.
+  const productTitle = await page.locator('#drawer-title').textContent()
+  await page.locator('.gallery-inner').evaluate((el) => {
+    const at = (x: number) => [new Touch({ identifier: 1, target: el, clientX: x, clientY: 400 })]
+    el.dispatchEvent(new TouchEvent('touchstart', { bubbles: true, touches: at(300), changedTouches: at(300) }))
+    el.dispatchEvent(new TouchEvent('touchend', { bubbles: true, touches: [], changedTouches: at(120) }))
+  })
+  await expect(page.locator('.gallery-count')).toHaveText('2/2')
+  await expect(page.locator('#drawer-title')).toHaveText(productTitle!)
+  await page.keyboard.press('ArrowLeft')
+  await expect(page.locator('.gallery-count')).toHaveText('1/2')
   await page.keyboard.press('ArrowRight')
   await expect(page.locator('.gallery-count')).toHaveText('2/2')
   await page.getByRole('button', { name: 'Make main picture' }).click()

@@ -70,7 +70,7 @@ interface Step {
 
 /** Typing, choosing or a scrolling strip: there arrow keys and swipes belong to the element. */
 const ownsArrows = (target: EventTarget | null) =>
-  target instanceof Element && !!target.closest('input, textarea, select, [contenteditable], .table-wrap, .entry, .menu-list')
+  target instanceof Element && !!target.closest('input, textarea, select, [contenteditable], .table-wrap, .entry, .menu-list, dialog.gallery')
 
 function DrawerContent({
   data,

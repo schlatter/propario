@@ -64,8 +64,13 @@ export function Gallery({
     <Modal open={open} onClose={onClose} className="gallery" labelledBy="gallery-title">
       <div
         className="gallery-inner"
-        onTouchStart={(e) => (touch.current = e.touches.length === 1 && !zoomed ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null)}
+        // The gallery sits inside the details: its swipes are its own, not a step to another product.
+        onTouchStart={(e) => {
+          e.stopPropagation()
+          touch.current = e.touches.length === 1 && !zoomed ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null
+        }}
         onTouchEnd={(e) => {
+          e.stopPropagation()
           const s = touch.current
           touch.current = null
           if (!s) return

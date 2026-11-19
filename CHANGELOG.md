@@ -6,6 +6,7 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- Fixed: swiping in the gallery stepped to another product instead of the next picture.
 ## 0.8.0 — 2026-11-19
 
 - **Further pictures:** up to eight per product besides the main one – added by file, by pasting
