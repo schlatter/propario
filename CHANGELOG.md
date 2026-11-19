@@ -6,26 +6,26 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+## 0.8.0 — 2026-11-19
+
+- **Further pictures:** up to eight per product besides the main one – added by file, by pasting
+  or dropping onto the picture, or from the shop page: when a picture is loaded (or the product
+  is updated from its page), a second one from the page's gallery is kept – a dimension drawing
+  when there is one: named so in its address, or recognised without AI by its pixels (mostly
+  white, thin lines, little colour, no shading) among the last three pictures, where shops tend
+  to put it. Further pictures are stored a little larger, so figures stay legible, and travel
+  with backups.
 - **Gallery:** a click or tap on the product picture opens all pictures full screen, starting
   with the main one; ‹ ›, the arrow keys, a swipe or the thumbnails step through them, and a tap
-  shows a picture at full size – also how a phone zooms in now. The first picture is the main
-  one, marked with a star; the star in the gallery makes another one the main picture (it moves
-  to the front). A click on a thumbnail no longer makes it the main picture by accident; removing
-  the main picture lets the next one take its place.
+  shows a picture at full size – also how a phone zooms in. The first picture is the main one,
+  marked with a star; the gallery's star makes another one the main picture (it moves to the
+  front). Removing the main picture lets the next one take its place.
+- **Step through products in the details:** ‹ › in the header, the arrow keys or a swipe on a
+  phone move to the previous or next product, in the table's order with its filter and sorting.
 - **Only products still in the running by default:** the quick filter "Only eligible" is on
   unless switched off, so excluded products and those failing a must criterion do not distract.
 - Fixed: Escape in a dialog opened from the details (the gallery) closed the details too.
-- **Further pictures:** up to eight per product besides the main one – added by file, by pasting
-  or dropping onto the picture, or from the shop page: when a picture is loaded, a second one
-  from the page's gallery is kept – a dimension drawing when there is one: named so in its
-  address, or recognised without AI by its pixels (mostly white, thin lines, little colour, no
-  shading) among the last three pictures, where shops tend to put it. Thumbnails
-  grow on hover; any of them can become the main picture. Further pictures are stored a little
-  larger, so figures stay legible, and travel with backups.
-- "Update from shop page" in the details also offers a further picture for a product that has
-  none yet (before, a product with complete data got "nothing new").
-- **Step through products in the details:** ‹ › in the header, the arrow keys or a swipe on a
-  phone move to the previous or next product, in the table's order with its filter and sorting.
+
 ## 0.7.0 — 2026-11-18
 
 - **Requirements as a table**, like the products: one compact row per requirement – priority,

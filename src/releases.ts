@@ -11,6 +11,23 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.8.0',
+    notes: {
+      en: [
+        'Several pictures per product – a dimension drawing is found on the shop page where possible.',
+        'Tap the picture: a full-screen gallery; the star marks the main picture.',
+        'Step through products in the details with ‹ ›, the arrow keys or a swipe.',
+        'By default only products still in the running are shown.',
+      ],
+      de: [
+        'Mehrere Bilder pro Produkt – eine Maßzeichnung wird auf der Shopseite gesucht.',
+        'Bild antippen: Galerie im Vollbild; der Stern markiert das Hauptbild.',
+        'In den Details mit ‹ ›, Pfeiltasten oder Wischen von Produkt zu Produkt.',
+        'Standardmäßig sind nur noch infrage kommende Produkte zu sehen.',
+      ],
+    },
+  },
+  {
     version: '0.7.0',
     notes: {
       en: [
