@@ -402,6 +402,7 @@ export const de: Messages = {
     keep: 'Unverändert lassen',
     nothing: 'die Shopseite hat nichts Neues.',
     newField: 'neues Feld',
+    furtherPicture: 'Ein weiteres Bild – die Maßzeichnung, falls die Seite eine hat',
     extras: (n) => `${n} weitere ${n === 1 ? 'Datenblattzeile' : 'Datenblattzeilen'} unter „Importierte Extras“`,
     duplicateTitle: (name) => `„${name}“ ist schon in diesem Vergleich`,
     duplicateText: 'Der Link wurde schon hinzugefügt, deshalb entsteht kein zweiter Eintrag. Die Shopseite kann zum vorhandenen Folgendes beitragen:',

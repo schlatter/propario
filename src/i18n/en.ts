@@ -399,6 +399,7 @@ export const en = {
     keep: 'Keep as it is',
     nothing: 'the shop page has nothing new.',
     newField: 'new field',
+    furtherPicture: 'A further picture – the dimension drawing, if the page has one',
     extras: (n: number) => `${n} more data-sheet ${n === 1 ? 'line' : 'lines'} under “Imported extras”`,
     duplicateTitle: (name: string) => `“${name}” is already in this comparison`,
     duplicateText: 'The link was added before, so no second entry is made. The shop page has this to add to the existing one:',

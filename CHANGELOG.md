@@ -13,6 +13,8 @@ for fixes. See "Versions and releases" in the README.
   shading) among the last three pictures, where shops tend to put it. Thumbnails
   grow on hover; any of them can become the main picture. Further pictures are stored a little
   larger, so figures stay legible, and travel with backups.
+- "Update from shop page" in the details also offers a further picture for a product that has
+  none yet (before, a product with complete data got "nothing new").
 - **Step through products in the details:** ‹ › in the header, the arrow keys or a swipe on a
   phone move to the previous or next product, in the table's order with its filter and sorting.
 ## 0.7.0 — 2026-11-18

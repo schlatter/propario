@@ -6,6 +6,7 @@ import { db } from '../../db/db'
 import type { Product, PropertyDef } from '../../db/types'
 import { describePlan, filledLabels } from '../../domain/display'
 import { planFacts } from '../../domain/page-import'
+import { furtherCandidates } from '../../domain/pictures'
 import { useI18n } from '../../i18n'
 import { applyProductPage, ImageError, readProductPage } from '../../images'
 import { useConfirm, useToast } from '../../ui/Dialog'
@@ -25,6 +26,8 @@ export function usePageUpdate(properties: PropertyDef[]) {
     const current = (await db.products.get(product.id)) ?? product
     const lines = describePlan(current, planFacts(current, page.facts, properties, { refreshPrice: true }), properties, m, fmt)
     if (!current.image && page.blob) lines.push(m.field.image)
+    // A product without further pictures gets one from the page's gallery (a dimension drawing if there is one).
+    if (!current.images?.length && furtherCandidates(page.facts.images ?? [], page.source ?? '').others.length) lines.push(m.pageUpdate.furtherPicture)
     if (!lines.length) {
       toast(opts.title ? `${opts.title} – ${m.pageUpdate.nothing}` : m.pageUpdate.nothing)
       return
