@@ -50,7 +50,7 @@ apart in amber – the find.
 
 - One drawing for everything: [`scripts/icons.ts`](../scripts/icons.ts) writes the favicon
   (also shown in the top bar) and all app icons. Change the logo there, never by hand.
-- Always on its petrol tile; the P is white, the handle amber, with a clear gap to the ring.
+- Always on its petrol tile; the P is white, the handle amber, starting right at the ring.
 - Do not recolour, outline, rotate, add effects or put text inside the tile. Minimum size 16 px.
 - Next to the name the tile stands left of "Propario", set in the display face.
 

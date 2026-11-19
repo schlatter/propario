@@ -11,6 +11,19 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.9.1',
+    notes: {
+      en: [
+        'No more blank page in the installed app after an update: it reloads by itself.',
+        'The logo’s magnifying glass now has its handle right at the ring.',
+      ],
+      de: [
+        'Kein weißer Bildschirm mehr in der installierten App nach einem Update: Sie lädt sich selbst neu.',
+        'Beim Logo sitzt der Lupengriff jetzt direkt am Ring.',
+      ],
+    },
+  },
+  {
     version: '0.9.0',
     notes: {
       en: [

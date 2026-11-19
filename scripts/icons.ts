@@ -15,14 +15,14 @@ const WHITE = '#ffffff'
 const AMBER = '#f2b33d'
 
 /**
- * The mark on a 32 × 32 grid: stem and ring of the P, then the handle with a clear gap to the
- * ring (its round end stays 1 unit off the ring's edge), all shifted to sit in the middle.
+ * The mark on a 32 × 32 grid: the handle first, then stem and ring of the P on top, so the
+ * handle starts right at the ring's outer edge; all shifted to sit in the middle.
  */
 const glyph = (p: string, handle: string) =>
-  `<g transform="translate(-2.3 -0.4)">` +
+  `<g transform="translate(-2.25 -0.5)">` +
+  `<path d="M21.4 17.8l4.6 4.6" stroke="${handle}" stroke-width="3.6" stroke-linecap="round"/>` +
   `<path d="M10.5 26V7" stroke="${p}" stroke-width="3.6" stroke-linecap="round"/>` +
   `<circle cx="16.8" cy="13.2" r="6.2" fill="none" stroke="${p}" stroke-width="3.6"/>` +
-  `<path d="M24.4 20.8l3 3" stroke="${handle}" stroke-width="3.6" stroke-linecap="round"/>` +
   `</g>`
 
 const svg = (body: string) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">${body}</svg>`

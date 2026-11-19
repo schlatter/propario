@@ -6,6 +6,14 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+## 0.9.1 — 2026-11-19
+
+- Changed: in the logo, the magnifying glass's handle now starts right at the ring.
+- Fixed: the installed app on Android could show a blank page after an update – the old
+  version kept running and failed to load parts that were gone. Coming back to the app, it now
+  reloads when a newer version runs; if loading a part fails anyway, it reloads once; anything
+  else that breaks shows a page with "Reload" instead of nothing.
+
 ## 0.9.0 — 2026-11-19
 
 - **Add or update products** (⋯ in a comparison): paste a table – your AI's answer, rows copied
