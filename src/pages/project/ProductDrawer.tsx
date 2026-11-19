@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { deleteProduct, duplicateProduct, setDecision, updateProduct, updateProject } from '../../db/repo'
 import { EXCLUSION_CATEGORIES, type Candidate, type ExclusionCategory, type Product, type PurchaseStatus, type Rating } from '../../db/types'
 import { displayName } from '../../domain/display'
@@ -20,16 +20,71 @@ import { withPurchaseDate } from '../../domain/purchase'
 import { loadProductImage } from '../../images'
 import type { ProjectData } from './useProjectData'
 
-export function ProductDrawer({ data, productId, onClose }: { data: ProjectData; productId: string | null; onClose: () => void }) {
+export function ProductDrawer({
+  data,
+  productId,
+  onClose,
+  order = [],
+  onStep,
+}: {
+  data: ProjectData
+  productId: string | null
+  onClose: () => void
+  /** Product ids in the table's order (filtered and sorted): what ‹ › and swiping step through. */
+  order?: string[]
+  onStep?: (id: string) => void
+}) {
   const product = productId ? data.products.find((p) => p.id === productId) : undefined
+  const index = product ? order.indexOf(product.id) : -1
+  /** Set when the details moved to another product, so its name gets the focus. */
+  const stepped = useRef(false)
+  if (!product) stepped.current = false
+  const step: Step | undefined =
+    product && onStep && index >= 0 && order.length > 1
+      ? {
+          index,
+          total: order.length,
+          prev: index > 0 ? order[index - 1] : null,
+          next: index < order.length - 1 ? order[index + 1] : null,
+          go: (id) => {
+            stepped.current = true
+            onStep(id)
+          },
+        }
+      : undefined
   return (
     <Modal open={!!product} onClose={onClose} className="drawer" labelledBy="drawer-title">
-      {product && <DrawerContent data={data} product={product} onClose={onClose} />}
+      {/* Keyed by product: a step starts at the top, with fresh state. */}
+      {product && <DrawerContent key={product.id} data={data} product={product} onClose={onClose} step={step} focusTitle={stepped.current} />}
     </Modal>
   )
 }
 
-function DrawerContent({ data, product: p, onClose }: { data: ProjectData; product: Product; onClose: () => void }) {
+interface Step {
+  index: number
+  total: number
+  prev: string | null
+  next: string | null
+  go: (id: string) => void
+}
+
+/** Typing, choosing or a scrolling strip: there arrow keys and swipes belong to the element. */
+const ownsArrows = (target: EventTarget | null) =>
+  target instanceof Element && !!target.closest('input, textarea, select, [contenteditable], .table-wrap, .entry, .menu-list')
+
+function DrawerContent({
+  data,
+  product: p,
+  onClose,
+  step,
+  focusTitle,
+}: {
+  data: ProjectData
+  product: Product
+  onClose: () => void
+  step?: Step
+  focusTitle?: boolean
+}) {
   const { m, fmt } = useI18n()
   const confirm = useConfirm()
   const settings = useSettings()
@@ -38,6 +93,43 @@ function DrawerContent({ data, product: p, onClose }: { data: ProjectData; produ
   const href = safeHref(p.url)
   const set = (patch: Partial<Product>) => updateProduct(p, patch)
   const name = displayName(p, m)
+  const title = useRef<HTMLHeadingElement>(null)
+  const go = (id: string | null | undefined) => {
+    if (id && step) step.go(id)
+  }
+
+  // ← → step to the previous / next product – unless a field or another dialog has them.
+  useEffect(() => {
+    if (!step) return
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return
+      if (ownsArrows(e.target) || document.querySelectorAll('dialog[open]').length > 1) return
+      e.preventDefault()
+      go(e.key === 'ArrowLeft' ? step.prev : step.next)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  })
+  // After a step, the new product's name is focused, so screen readers announce it.
+  useEffect(() => {
+    if (focusTitle) title.current?.focus()
+  }, [focusTitle])
+
+  // Swipe left / right on a phone: next / previous product.
+  const touch = useRef<{ x: number; y: number; own: boolean } | null>(null)
+  const onTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0]
+    touch.current = e.touches.length === 1 ? { x: t.clientX, y: t.clientY, own: ownsArrows(e.target) } : null
+  }
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const start = touch.current
+    touch.current = null
+    if (!start || start.own || !step) return
+    const t = e.changedTouches[0]
+    const dx = t.clientX - start.x
+    const dy = t.clientY - start.y
+    if (Math.abs(dx) > 70 && Math.abs(dx) > 1.6 * Math.abs(dy)) go(dx < 0 ? step.next : step.prev)
+  }
   const pageUpdate = usePageUpdate(data.properties)
   const [updating, setUpdating] = useState(false)
   const lookups = lookupLinks(p)
@@ -48,15 +140,28 @@ function DrawerContent({ data, product: p, onClose }: { data: ProjectData; produ
   const unratedPeople = settings.people.filter((x) => !p.ratings.some((r) => r.person === x))
 
   return (
-    <div className="drawer-inner">
+    <div className="drawer-inner" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
       <div className="drawer-head">
         <div className="row" style={{ alignItems: 'flex-start', flexWrap: 'nowrap' }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             {p.brand && <div className="muted small">{p.brand}</div>}
-            <h2 id="drawer-title" style={{ overflowWrap: 'anywhere' }}>
+            <h2 id="drawer-title" ref={title} tabIndex={-1} style={{ overflowWrap: 'anywhere' }}>
               {p.model || name}
             </h2>
           </div>
+          {step && (
+            <div className="step-nav" role="group" aria-label={m.product.stepLabel}>
+              <button className="icon-btn" disabled={!step.prev} onClick={() => go(step.prev)} aria-label={m.product.prev} title={`${m.product.prev} (←)`}>
+                <Glyph name="chevronLeft" />
+              </button>
+              <span className="step-count" aria-live="polite">
+                {m.product.position(step.index + 1, step.total)}
+              </span>
+              <button className="icon-btn" disabled={!step.next} onClick={() => go(step.next)} aria-label={m.product.next} title={`${m.product.next} (→)`}>
+                <Glyph name="chevronRight" />
+              </button>
+            </div>
+          )}
           <button className="icon-btn" onClick={onClose} aria-label={m.common.close} title={m.common.close}>
             <Glyph name="close" />
           </button>

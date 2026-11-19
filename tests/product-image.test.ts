@@ -210,7 +210,11 @@ describe('fetchProductImage against a local test shop', () => {
     expect(img.source).toBe(`${base}/img.png`)
   })
   it('returns the facts of the page it read for the picture', async () => {
-    expect((await fetchProductImage(`${base}/moved`, { allowPrivate: true })).facts).toEqual({ gtin: '4006381333931' })
+    // With its gallery, for a second picture.
+    expect((await fetchProductImage(`${base}/moved`, { allowPrivate: true })).facts).toEqual({
+      gtin: '4006381333931',
+      images: [`${base}/missing.jpg`, `${base}/img.png`],
+    })
   })
   it('keeps the facts of a page that has no picture', async () => {
     await expect(fetchProductImage(`${base}/facts-only`, { allowPrivate: true })).rejects.toMatchObject({ code: 'no-image', facts: { name: 'Arvika' } })

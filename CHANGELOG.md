@@ -6,6 +6,15 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- **Further pictures:** up to eight per product besides the main one – added by file, by pasting
+  or dropping onto the picture, or from the shop page: when a picture is loaded, a second one
+  from the page's gallery is kept – a dimension drawing when there is one: named so in its
+  address, or recognised without AI by its pixels (mostly white, thin lines, little colour, no
+  shading) among the last three pictures, where shops tend to put it. Thumbnails
+  grow on hover; any of them can become the main picture. Further pictures are stored a little
+  larger, so figures stay legible, and travel with backups.
+- **Step through products in the details:** ‹ › in the header, the arrow keys or a swipe on a
+  phone move to the previous or next product, in the table's order with its filter and sorting.
 ## 0.7.0 — 2026-11-18
 
 - **Requirements as a table**, like the products: one compact row per requirement – priority,

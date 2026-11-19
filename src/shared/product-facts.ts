@@ -25,6 +25,8 @@ export interface ProductFacts {
   color?: string
   description?: string
   specs?: Spec[]
+  /** The page's pictures (gallery), best first – for a second picture such as a dimension drawing. */
+  images?: string[]
 }
 
 /** Limits for text from a page: generous for real data, small enough to keep records and headers lean. */
@@ -75,6 +77,10 @@ export function cleanFacts(raw: unknown): ProductFacts {
     const d = plain(r.description.slice(0, FACT_LIMITS.description * 2), FACT_LIMITS.description * 2)
     const cut = d.length > FACT_LIMITS.description ? `${d.slice(0, d.lastIndexOf(' ', FACT_LIMITS.description - 1))} …` : d
     if (cut) out.description = cut
+  }
+  if (Array.isArray(r.images)) {
+    const images = r.images.filter((u): u is string => typeof u === 'string' && u.length <= 500 && /^https?:\/\/[^\s"'<>]+$/i.test(u)).slice(0, 10)
+    if (images.length) out.images = images
   }
   if (Array.isArray(r.specs)) {
     const specs: Spec[] = []

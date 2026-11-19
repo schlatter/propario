@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { deleteProduct, reorder, setProductValue, updateProduct, updateProject } from '../../db/repo'
 import type { Candidate, Product, PropertyDef, Requirement, TableView } from '../../db/types'
@@ -55,6 +55,7 @@ export function ProductTable({
   setSelection,
   onOpen,
   canEdit = true,
+  onOrder,
 }: {
   data: ProjectData
   selection: Set<string>
@@ -62,6 +63,8 @@ export function ProductTable({
   onOpen: (id: string) => void
   /** Viewers can select and compare, but not update or delete. */
   canEdit?: boolean
+  /** The rows as shown (filtered and sorted), so the details can step through them in this order. */
+  onOrder?: (ids: string[]) => void
 }) {
   const { m, fmt } = useI18n()
   const navigate = useNavigate()
@@ -542,6 +545,9 @@ export function ProductTable({
       if (col) rows = [...rows].sort((a, b) => compareKeys(col.sort(a), col.sort(b), dir))
     }
   }
+
+  const rowIds = rows.map((r) => r.id).join(',')
+  useEffect(() => onOrder?.(rowIds ? rowIds.split(',') : []), [rowIds, onOrder])
 
   const toggleSort = (column: string) => {
     const s = view.sort

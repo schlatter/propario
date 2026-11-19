@@ -7,7 +7,19 @@ const PREVIEW = 320
  * Small product image that shows a large preview on hover or keyboard focus.
  * The preview is portalled to <body> so scrolling table containers cannot clip it.
  */
-export function Thumb({ src, alt, onClick, label }: { src: string | null; alt: string; onClick?: () => void; label?: string }) {
+export function Thumb({
+  src,
+  alt,
+  onClick,
+  label,
+  previewSize,
+}: {
+  src: string | null
+  alt: string
+  onClick?: () => void
+  label?: string
+  previewSize?: number
+}) {
   const ref = useRef<HTMLButtonElement>(null)
   const [open, setOpen] = useState(false)
 
@@ -34,7 +46,7 @@ export function Thumb({ src, alt, onClick, label }: { src: string | null; alt: s
       >
         <img src={src} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" draggable={false} />
       </button>
-      {open && ref.current && <Preview anchor={ref.current} src={src} alt={alt} />}
+      {open && ref.current && <Preview anchor={ref.current} src={src} alt={alt} size={previewSize} />}
     </>
   )
 }

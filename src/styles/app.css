@@ -3297,3 +3297,40 @@ textarea.cell-input:focus {
     padding: 8px 4px;
   }
 }
+
+/* Further pictures under the main one: small thumbnails with a large preview on hover. */
+.pimg-more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.pimg-thumb {
+  display: inline-flex;
+  align-items: center;
+}
+.pimg-thumb .thumb {
+  width: 52px;
+  height: 52px;
+}
+
+/* Stepping through products in the details: ‹ 3/12 ›. */
+.step-nav {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+.step-count {
+  min-width: 40px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+#drawer-title:focus {
+  outline: none;
+}
+#drawer-title:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}

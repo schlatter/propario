@@ -246,8 +246,9 @@ const TOMBSTONE_MS = 90 * 24 * 3600 * 1000
 export function collectGarbage(db: DB, now = Date.now()): { images: number; tombstones: number } {
   const used = new Set<string>()
   for (const r of db.prepare("SELECT id, data FROM records WHERE kind = 'products'").all() as { id: string; data: string }[]) {
-    const image = (JSON.parse(open(aad('products', r.id), r.data)) as { image?: string }).image
-    if (image && IMAGE_PATH.test(image)) used.add(image.slice('/api/images/'.length))
+    // The main picture and any further ones (a dimension drawing, another view).
+    const p = JSON.parse(open(aad('products', r.id), r.data)) as { image?: string; images?: string[] }
+    for (const image of [p.image, ...(p.images ?? [])]) if (image && IMAGE_PATH.test(image)) used.add(image.slice('/api/images/'.length))
   }
   let images = 0
   for (const { id } of db.prepare('SELECT id FROM images WHERE created_at < ?').all(now - 3600_000) as { id: string }[]) {

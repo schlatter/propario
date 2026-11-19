@@ -259,6 +259,10 @@ export const de: Messages = {
     noProperties: 'Dieser Vergleich hat noch keine eigenen Felder. Lege sie im Reiter „Felder“ an.',
     noRequirements: 'Keine Anforderungen festgelegt.',
     rawValue: 'Wert passt nicht zum Feldtyp und bleibt als Text erhalten',
+    stepLabel: 'Produkte in der Reihenfolge der Tabelle',
+    prev: 'Vorheriges Produkt',
+    next: 'Nächstes Produkt',
+    position: (n, total) => `${n}/${total}`,
     purchaseDatesHint:
       'Vorgeschlagen ab Kaufdatum: 14 Tage Widerruf beim Onlinekauf (ab Erhalt) und 2 Jahre gesetzliche Gewährleistung. Bitte mit den Bedingungen des Shops abgleichen.',
     priceAsOf: (date) => `Stand ${date}`,
@@ -444,6 +448,12 @@ export const de: Messages = {
         ? `${ok} Bilder geladen · ${failed} nicht verfügbar – in den Produktdetails ergänzen (einfügen, hineinziehen oder Datei wählen)`
         : `${ok} Bilder geladen`,
     fromLink: 'Bild von der Shopseite laden',
+    further: 'Weitere Bilder',
+    furtherAlt: (name, n) => `${name} – Bild ${n + 1}`,
+    makeMain: (n) => `Bild ${n + 1}: als Hauptbild verwenden`,
+    removeFurther: (n) => `Bild ${n + 1} entfernen`,
+    addFurther: 'Bild',
+    addFurtherHint: 'Ein weiteres Bild hinzufügen – am meisten hilft eine Maßzeichnung. Einfügen oder Hineinziehen aufs Hauptbild fügt auch eins hinzu.',
     reload: 'Bild erneut laden',
     chooseFile: 'Bilddatei wählen',
     remove: 'Bild entfernen',

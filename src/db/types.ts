@@ -158,6 +158,8 @@ export interface Product {
   imageUrl: string
   /** Downloaded product image, shrunk, as a data URL ('' when none). See src/images.ts. */
   image: string
+  /** Further pictures (a dimension drawing, another view), stored like `image`. Absent before 0.8. */
+  images?: string[]
   variant: string
   description: string
   comments: string

@@ -132,14 +132,16 @@ describe('images', () => {
     expect(Buffer.from(raw.data).includes(PNG.subarray(8, 24))).toBe(false)
   })
 
-  it('unreferenced images are collected after an hour', () => {
+  it('unreferenced images are collected after an hour; main and further pictures are kept', () => {
     const { project, product } = seedProject(ada)
     const kept = saveImage(db, ada, project.id, PNG)
+    const further = saveImage(db, ada, project.id, PNG)
     saveImage(db, ada, project.id, PNG)
-    applyChanges(db, ada, [{ op: 'patch', kind: 'products', id: product.id, projectId: project.id, patch: { image: kept } }])
+    applyChanges(db, ada, [{ op: 'patch', kind: 'products', id: product.id, projectId: project.id, patch: { image: kept, images: [further] } }])
     expect(collectGarbage(db).images).toBe(0)
     expect(collectGarbage(db, Date.now() + 2 * 3600_000).images).toBe(1)
     expect(readImage(db, ada, kept.split('/').pop()!)).not.toBeNull()
+    expect(readImage(db, ada, further.split('/').pop()!)).not.toBeNull()
   })
 })
 

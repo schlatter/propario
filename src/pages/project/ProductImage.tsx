@@ -3,10 +3,20 @@ import { updateProduct } from '../../db/repo'
 import type { Product } from '../../db/types'
 import { safeHref } from '../../domain/values'
 import { useI18n } from '../../i18n'
-import { ImageError, imageFromTransfer, loadProductImage, productImage, setProductImageFromBlob, type ImageErrorCode } from '../../images'
+import {
+  addImageFromBlob,
+  fetchRemoteImage,
+  ImageError,
+  imageFromTransfer,
+  loadProductImage,
+  productImage,
+  setProductImageFromBlob,
+  type ImageErrorCode,
+} from '../../images'
+import { IMAGE_PATH, MAX_PICTURES } from '../../shared/records.ts'
 import type { ProductFacts } from '../../shared/product-facts.ts'
 import { Glyph } from '../../ui/Glyph'
-import { Preview } from '../../ui/Thumb'
+import { Preview, Thumb } from '../../ui/Thumb'
 import { filledLabels } from '../../domain/display'
 
 /** Image block in the product drawer: load from link, pick a file, paste or drop, remove. */
@@ -49,11 +59,21 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
       setBusy(false)
     }
   }
+  // With a main picture in place, a pasted or dropped one is added, not swapped in.
   const take = (dt: DataTransfer | null) => {
     const got = imageFromTransfer(dt)
     if (!got) return false
-    void run(() => ('file' in got ? setProductImageFromBlob(p, got.file) : loadProductImage(p, got.url)))
+    if (stored) void run(async () => addImageFromBlob(p, 'file' in got ? got.file : (await fetchRemoteImage(got.url)).blob))
+    else void run(() => ('file' in got ? setProductImageFromBlob(p, got.file) : loadProductImage(p, got.url)))
     return true
+  }
+  const further = (p.images ?? []).filter((x) => IMAGE_PATH.test(x))
+  const moreFiles = useRef<HTMLInputElement>(null)
+  /** A further picture becomes the main one; the main one takes its place among the others. */
+  const makeMain = (i: number) => {
+    const rest = [...further]
+    const [chosen] = rest.splice(i, 1, ...(p.image ? [p.image] : []))
+    void updateProduct(p, { image: chosen, images: rest })
   }
 
   return (
@@ -125,6 +145,43 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
             }}
           />
         </div>
+        {stored && (
+          <div className="pimg-more" role="group" aria-label={m.image.further}>
+            {further.map((src, i) => (
+              <span className="pimg-thumb" key={src}>
+                <Thumb src={src} alt={m.image.furtherAlt(name, i + 1)} label={m.image.makeMain(i + 1)} onClick={() => makeMain(i)} previewSize={zoomSize()} />
+                <button
+                  type="button"
+                  className="icon-btn sm"
+                  aria-label={m.image.removeFurther(i + 1)}
+                  title={m.image.removeFurther(i + 1)}
+                  onClick={() => updateProduct(p, { images: further.filter((_, j) => j !== i) })}
+                >
+                  <Glyph name="close" />
+                </button>
+              </span>
+            ))}
+            {further.length < MAX_PICTURES && (
+              <button type="button" className="btn sm" disabled={busy} onClick={() => moreFiles.current?.click()} title={m.image.addFurtherHint}>
+                <Glyph name="plus" /> {m.image.addFurther}
+              </button>
+            )}
+            <input
+              ref={moreFiles}
+              type="file"
+              accept="image/*"
+              multiple
+              hidden
+              onChange={(e) => {
+                const files = [...(e.target.files ?? [])]
+                e.target.value = ''
+                void run(async () => {
+                  for (const f of files) await addImageFromBlob(p, f)
+                })
+              }}
+            />
+          </div>
+        )}
         <p className="muted small">{m.image.pasteHint}</p>
         {filled && (
           <p className="small" role="status">

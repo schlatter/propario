@@ -33,6 +33,8 @@ export function ProjectPage() {
   const [params, setParams] = useSearchParams()
   const tab = (params.get('tab') as Tab) || 'products'
   const openProductId = params.get('product')
+  /** The table's rows as shown, for stepping through products in the details. */
+  const [order, setOrder] = useState<string[]>([])
   const confirm = useConfirm()
   const toast = useToast()
   const navigate = useNavigate()
@@ -255,14 +257,32 @@ export function ProjectPage() {
 
       <div role="tabpanel">
         {tab === 'products' && (
-          <ProductTable data={data} selection={selection} setSelection={setSelection} onOpen={(pid) => setParam('product', pid)} canEdit={role !== 'viewer'} />
+          <ProductTable
+            data={data}
+            selection={selection}
+            setSelection={setSelection}
+            onOpen={(pid) => setParam('product', pid)}
+            canEdit={role !== 'viewer'}
+            onOrder={setOrder}
+          />
         )}
         {tab === 'requirements' && <RequirementsTab data={data} onOpen={(pid) => setParam('product', pid)} />}
         {tab === 'fields' && <FieldsTab data={data} />}
         {tab === 'notes' && <NotesTab project={project} />}
       </div>
 
-      <ProductDrawer data={data} productId={openProductId} onClose={() => setParam('product', null)} />
+      <ProductDrawer
+        data={data}
+        productId={openProductId}
+        onClose={() => setParam('product', null)}
+        order={order.length ? order : products.map((p) => p.id)}
+        onStep={(pid) => {
+          // Stepping through products replaces the address: Back still closes the details.
+          const next = new URLSearchParams(params)
+          next.set('product', pid)
+          setParams(next, { replace: true })
+        }}
+      />
       <ShareDialog projectId={project.id} open={sharing} onClose={() => setSharing(false)} />
       <ProjectDialog open={editing} project={project} categories={[]} onClose={() => setEditing(false)} />
     </main>

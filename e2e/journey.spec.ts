@@ -156,6 +156,19 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await page.mouse.move(0, 0)
   await expect(page.locator('.thumb-preview')).toHaveCount(0)
 
+  // A further picture (e.g. a dimension drawing): added, made the main one, removed.
+  const mainSrc = await picture.getAttribute('src')
+  await page.locator('.pimg-more input[type=file]').setInputFiles({ name: 'drawing.png', mimeType: 'image/png', buffer: png(600, 300) })
+  await expect(page.locator('.pimg-thumb')).toHaveCount(1)
+  await page.getByRole('button', { name: 'Picture 2: make it the main picture' }).click()
+  await expect(picture).not.toHaveAttribute('src', mainSrc!)
+  await expect(page.locator('.pimg-thumb img')).toHaveAttribute('src', mainSrc!)
+  await page.getByRole('button', { name: 'Picture 2: make it the main picture' }).click()
+  await expect(picture).toHaveAttribute('src', mainSrc!)
+  await page.getByRole('button', { name: 'Remove picture 2' }).click()
+  await expect(page.locator('.pimg-thumb')).toHaveCount(0)
+  await accessible(page, 'further pictures')
+
   // Excluding asks for a kind of reason (filterable) and optional details.
   await page.getByRole('button', { name: 'Excluded', exact: true }).click()
   await page.getByRole('combobox', { name: 'Reason', exact: true }).selectOption('size')
@@ -429,6 +442,27 @@ test('Ada moves rows and decides by swiping', async () => {
   const copied = await page.evaluate(() => navigator.clipboard.readText())
   expect(copied).toContain('# Kitchen cabinet')
   expect(copied).toContain('### Arvika')
+
+  // In the details, ← → (or a swipe on a phone) step through the products in the table's order.
+  await page.goto(page.url().replace(/\?.*$/, ''))
+  await page.locator('table.grid tbody .name-model').first().click()
+  const firstName = await page.locator('#drawer-title').textContent()
+  await expect(page.locator('.step-count')).toHaveText(/^1\//)
+  await page.keyboard.press('ArrowRight')
+  await expect(page.locator('.step-count')).toHaveText(/^2\//)
+  await expect(page.locator('#drawer-title')).not.toHaveText(firstName!)
+  await expect(page.locator('#drawer-title')).toBeFocused()
+  await page.getByRole('button', { name: 'Previous product' }).click()
+  await expect(page.locator('#drawer-title')).toHaveText(firstName!)
+  // A swipe to the left (a finger moving right to left) shows the next product.
+  await page.locator('.drawer-inner').evaluate((el) => {
+    const at = (x: number) => [new Touch({ identifier: 1, target: el, clientX: x, clientY: 400 })]
+    el.dispatchEvent(new TouchEvent('touchstart', { bubbles: true, touches: at(300), changedTouches: at(300) }))
+    el.dispatchEvent(new TouchEvent('touchend', { bubbles: true, touches: [], changedTouches: at(120) }))
+  })
+  await expect(page.locator('.step-count')).toHaveText(/^2\//)
+  await accessible(page, 'stepping through products')
+  await page.locator('dialog.drawer').getByRole('button', { name: 'Close' }).click()
 
   // Requirements: a missing field is created from the requirement's words, weights are shown,
   // and a row moves into another group with the keyboard on its handle.

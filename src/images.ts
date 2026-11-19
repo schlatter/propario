@@ -8,10 +8,14 @@ import { takeFacts, updateProduct } from './db/repo'
 import type { Product } from './db/types'
 import { safeHref } from './domain/values'
 import { cleanFacts, type ProductFacts } from './shared/product-facts.ts'
-import { IMAGE_PATH } from './shared/records.ts'
+import { furtherCandidates, looksLikeDrawing, pixelStats } from './domain/pictures'
+import { db } from './db/db'
+import { IMAGE_PATH, MAX_PICTURES } from './shared/records.ts'
 
 /** Longest side of a stored image. Big enough for the hover preview, small enough for backups (~20–60 KB). */
 export const IMAGE_MAX_SIDE = 640
+/** Further pictures are often dimension drawings: a little larger, so the figures stay legible. */
+export const FURTHER_MAX_SIDE = 960
 
 export type ImageErrorCode =
   'unavailable' | 'blocked' | 'not-found' | 'no-image' | 'too-large' | 'timeout' | 'invalid-url' | 'forbidden-address' | 'unreadable' | 'failed'
@@ -157,7 +161,74 @@ export async function loadProductImage(p: Product, from?: string, signal?: Abort
   }
   const image = await uploadImage(p.projectId, await shrinkImage(got.blob))
   await updateProduct(p, { image, imageUrl: p.imageUrl || got.source })
-  return { facts: got.facts, filled: await takeFacts(p, got.facts) }
+  const filled = await takeFacts(p, got.facts)
+  void addFurtherFromPage(p, got.facts.images ?? [], got.source)
+  return { facts: got.facts, filled }
+}
+
+/**
+ * Keeps a second picture from the page's gallery – a dimension drawing when there is one – for a
+ * product that has none yet. Best effort: a refused or broken picture is simply left out.
+ */
+async function addFurtherFromPage(p: Product, gallery: string[], mainSource: string): Promise<void> {
+  if (p.images?.length) return
+  const { named, others } = furtherCandidates(gallery, mainSource)
+  const fetched = new Map<string, Blob | null>()
+  const get = async (url: string) => {
+    if (!fetched.has(url))
+      fetched.set(
+        url,
+        await fetchRemoteImage(url).then(
+          (r) => r.blob,
+          () => null,
+        ),
+      )
+    return fetched.get(url) ?? null
+  }
+  try {
+    // 1. A picture whose address names it a dimension drawing.
+    const byName = named && (await get(named))
+    if (byName) return await addImageFromBlob(p, byName)
+    // 2. Shops tend to put the drawing last: look at up to three pictures from the end.
+    for (const url of others.slice(-3).reverse()) {
+      const blob = await get(url)
+      if (blob && (await isDrawing(blob))) return await addImageFromBlob(p, blob)
+    }
+    // 3. Otherwise the next picture of the gallery.
+    const next = others[0] && (await get(others[0]))
+    if (next) await addImageFromBlob(p, next)
+  } catch {
+    /* no second picture then */
+  }
+}
+
+/** Whether a picture looks like a dimension drawing (src/domain/pictures.ts), judged on a small copy. */
+async function isDrawing(blob: Blob): Promise<boolean> {
+  try {
+    const img = await decode(blob)
+    try {
+      const scale = Math.min(1, 200 / Math.max(img.width, img.height))
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.max(1, Math.round(img.width * scale))
+      canvas.height = Math.max(1, Math.round(img.height * scale))
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })
+      if (!ctx) return false
+      ctx.drawImage(img.source, 0, 0, canvas.width, canvas.height)
+      return looksLikeDrawing(pixelStats(ctx.getImageData(0, 0, canvas.width, canvas.height).data))
+    } finally {
+      img.close()
+    }
+  } catch {
+    return false
+  }
+}
+
+/** Adds a further picture (at most MAX_PICTURES), to the product as it is now. */
+export async function addImageFromBlob(p: Product, blob: Blob): Promise<void> {
+  const path = await uploadImage(p.projectId, await shrinkImage(blob, FURTHER_MAX_SIDE))
+  const current = (await db.products.get(p.id)) ?? p
+  const images = [...(current.images ?? []), path].slice(0, MAX_PICTURES)
+  await updateProduct(current, { images })
 }
 
 /**
@@ -184,6 +255,7 @@ export async function applyProductPage(p: Product, page: { facts: ProductFacts; 
     await updateProduct(p, { image, imageUrl: p.imageUrl || page.source || '' })
     filled.push('image')
   }
+  if (!p.images?.length && page.facts.images?.length) void addFurtherFromPage(p, page.facts.images, page.source ?? '')
   return [...filled, ...(await takeFacts(p, page.facts, { refreshPrice: true }))]
 }
 
@@ -253,37 +325,49 @@ async function dataUrlToBlob(url: string): Promise<Blob> {
  * other comparisons (duplicates) are uploaded; anything unreadable is dropped, never the product.
  */
 export async function rehostImages(products: Product[], projectId: string): Promise<Product[]> {
+  const rehost = async (src: string | undefined): Promise<string> => {
+    try {
+      if (src?.startsWith('data:image/')) return await uploadImage(projectId, await shrinkImage(await dataUrlToBlob(src), FURTHER_MAX_SIDE))
+      if (src && IMAGE_PATH.test(src)) return await uploadImage(projectId, await (await fetch(src)).blob())
+    } catch {
+      /* dropped, never the product */
+    }
+    return ''
+  }
   const out: Product[] = []
   for (const p of products) {
-    let image = ''
-    try {
-      if (p.image?.startsWith('data:image/')) image = await uploadImage(projectId, await shrinkImage(await dataUrlToBlob(p.image)))
-      else if (p.image && IMAGE_PATH.test(p.image)) image = await uploadImage(projectId, await (await fetch(p.image)).blob())
-    } catch {
-      image = ''
+    const image = await rehost(p.image)
+    const images: string[] = []
+    for (const src of p.images ?? []) {
+      const path = await rehost(src)
+      if (path) images.push(path)
     }
-    out.push({ ...p, image })
+    out.push({ ...p, image, images })
   }
   return out
 }
 
-/** For backups: replaces image paths with data URLs so the file is complete on its own. */
+/** For backups: replaces image paths (main and further pictures) with data URLs so the file is complete on its own. */
 export async function inlineImages(products: Product[]): Promise<Product[]> {
+  const inline = async (src: string): Promise<string> => {
+    if (!IMAGE_PATH.test(src)) return src
+    try {
+      const blob = await (await fetch(src)).blob()
+      return await new Promise<string>((resolve, reject) => {
+        const r = new FileReader()
+        r.onload = () => resolve(String(r.result))
+        r.onerror = () => reject(r.error)
+        r.readAsDataURL(blob)
+      })
+    } catch {
+      return src
+    }
+  }
   return Promise.all(
-    products.map(async (p) => {
-      if (!p.image || !IMAGE_PATH.test(p.image)) return p
-      try {
-        const blob = await (await fetch(p.image)).blob()
-        const image = await new Promise<string>((resolve, reject) => {
-          const r = new FileReader()
-          r.onload = () => resolve(String(r.result))
-          r.onerror = () => reject(r.error)
-          r.readAsDataURL(blob)
-        })
-        return { ...p, image }
-      } catch {
-        return p
-      }
-    }),
+    products.map(async (p) => ({
+      ...p,
+      image: p.image ? await inline(p.image) : p.image,
+      ...(p.images?.length ? { images: await Promise.all(p.images.map(inline)) } : {}),
+    })),
   )
 }

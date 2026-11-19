@@ -203,3 +203,79 @@ describe('helpers', () => {
     expect(f.specs).toEqual([{ name: 'B', value: '1' }])
   })
 })
+
+describe('a second picture from the shop page', () => {
+  it('finds a drawing named as such, never the main picture again', async () => {
+    const { furtherCandidates } = await import('../src/domain/pictures')
+    const main = 'https://cdn.shop.example/p/arvika-front.jpg?w=800'
+    const gallery = [
+      'https://cdn.shop.example/p/arvika-front.jpg?w=400',
+      'https://cdn.shop.example/p/arvika-side.jpg',
+      'https://cdn.shop.example/p/arvika-masszeichnung.jpg',
+    ]
+    expect(furtherCandidates(gallery, main).named).toBe('https://cdn.shop.example/p/arvika-masszeichnung.jpg')
+    expect(furtherCandidates(gallery.slice(0, 2), main)).toEqual({ named: null, others: ['https://cdn.shop.example/p/arvika-side.jpg'] })
+    // "Massivholz" is no dimension drawing.
+    expect(furtherCandidates(['https://x.example/massivholz-schrank.jpg'], main).named).toBeNull()
+    expect(furtherCandidates([gallery[0]], main).others).toEqual([])
+  })
+})
+
+describe('telling a dimension drawing by its pixels', () => {
+  /** A 100×100 picture painted by a function of (x, y) → [r, g, b]. */
+  const paint = (f: (x: number, y: number) => [number, number, number]) => {
+    const a = new Uint8ClampedArray(100 * 100 * 4)
+    for (let y = 0; y < 100; y++)
+      for (let x = 0; x < 100; x++) {
+        const [r, g, b] = f(x, y)
+        a.set([r, g, b, 255], (y * 100 + x) * 4)
+      }
+    return a
+  }
+  const white: [number, number, number] = [255, 255, 255]
+
+  it('says yes to thin dark lines on white, no to photographed objects', async () => {
+    const { looksLikeDrawing, pixelStats } = await import('../src/domain/pictures')
+    // Outline of a cabinet with a dimension line: 1-px dark strokes on white.
+    const drawing = paint((x, y) =>
+      ((x === 20 || x === 80) && y > 10 && y < 90) || ((y === 10 || y === 90) && x >= 20 && x <= 80) || (y === 95 && x > 20 && x < 80) ? [40, 40, 40] : white,
+    )
+    // Wooden cabinet on white: a brown block.
+    const wood = paint((x, y) => (x > 25 && x < 75 && y > 10 && y < 90 ? [150, 100, 60] : white))
+    // White cabinet on white: a block of soft grey shading.
+    const whiteCabinet = paint((x, y) => (x > 25 && x < 75 && y > 10 && y < 90 ? [215, 215, 212] : white))
+    expect(looksLikeDrawing(pixelStats(drawing))).toBe(true)
+    expect(looksLikeDrawing(pixelStats(wood))).toBe(false)
+    expect(looksLikeDrawing(pixelStats(whiteCabinet))).toBe(false)
+    expect(looksLikeDrawing(pixelStats(paint(() => white)))).toBe(false) // empty: no lines
+    // Blue dimension lines and figures, as some shops draw them, are still a drawing.
+    const blueLines = paint((x, y) => (y === 5 && x > 10 && x < 90 ? [30, 80, 200] : (x === 20 || x === 80) && y > 10 && y < 90 ? [40, 40, 40] : white))
+    expect(looksLikeDrawing(pixelStats(blueLines))).toBe(true)
+  })
+
+  it('agrees with what real shop pictures are (measured 2026-11, pictures not stored)', async () => {
+    const { looksLikeDrawing } = await import('../src/domain/pictures')
+    const drawing = [
+      { white: 0.933, colorful: 0.022, ink: 0.042, shading: 0.003 }, // cabinet, front and side view, blue dimensions
+      { white: 0.912, colorful: 0.028, ink: 0.043, shading: 0.017 },
+    ]
+    const photos = [
+      { white: 0.902, colorful: 0.026, ink: 0.003, shading: 0.069 }, // white shelf from the side, on white
+      { white: 0.874, colorful: 0.063, ink: 0.007, shading: 0.057 }, // white shelf with wood, on white
+      { white: 0.816, colorful: 0.049, ink: 0.042, shading: 0.093 },
+      { white: 0.857, colorful: 0.061, ink: 0.008, shading: 0.075 },
+      { white: 0.062, colorful: 0.13, ink: 0.156, shading: 0.652 }, // room scene
+    ]
+    expect(drawing.map(looksLikeDrawing)).toEqual([true, true])
+    expect(photos.map(looksLikeDrawing)).toEqual(photos.map(() => false))
+  })
+
+  it('lists the other pictures once and finds a drawing named as such', async () => {
+    const { furtherCandidates } = await import('../src/domain/pictures')
+    const r = furtherCandidates(
+      ['https://a.example/1.jpg?w=400', 'https://a.example/2.jpg', 'https://a.example/2.jpg?w=90', 'https://a.example/dimensions.png'],
+      'https://a.example/1.jpg',
+    )
+    expect(r).toEqual({ named: 'https://a.example/dimensions.png', others: ['https://a.example/2.jpg', 'https://a.example/dimensions.png'] })
+  })
+})

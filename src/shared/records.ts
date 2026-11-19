@@ -67,6 +67,9 @@ const URL_FIELDS = new Set(['url', 'imageUrl'])
 const MAX_STRING = 50_000
 const MAX_JSON = 512 * 1024
 
+/** Further pictures per product, besides the main one. */
+export const MAX_PICTURES = 8
+
 export const IMAGE_PATH = /^\/api\/images\/[0-9a-f-]{36}$/
 
 /** Shapes of the list entries inside a product: field → type ('number?' = number or null). */
@@ -132,6 +135,8 @@ export function checkFields(kind: Kind, fields: Record<string, unknown>): string
     if ((key === 'id' || key === 'projectId') && !UUID.test(String(value))) return `field ${key} must be a UUID`
     if (URL_FIELDS.has(key) && value !== '' && !/^https?:\/\//i.test(String(value))) return `field ${key} must be an http(s) link`
     if (key === 'image' && value !== '' && !IMAGE_PATH.test(String(value))) return 'field image must point to this server'
+    if (key === 'images' && ((value as unknown[]).length > MAX_PICTURES || !(value as unknown[]).every((v) => typeof v === 'string' && IMAGE_PATH.test(v))))
+      return `images: at most ${MAX_PICTURES} pictures from this server`
     if (key === 'better' && !['', 'lower', 'higher'].includes(String(value))) return 'field better must be lower or higher'
     if ((key === 'budget' || key === 'budgetMin') && value !== null && (value as number) < 0) return `field ${key} cannot be negative`
     if ((key === 'budgetPriority' || key === 'budgetMinPriority') && !(PRIORITIES as unknown[]).includes(value)) return `field ${key} is not a priority`
@@ -205,6 +210,7 @@ export function sanitize<T extends AnyRecord>(kind: Kind, record: T): T {
   }
   if (Array.isArray(r.links)) r.links = (r.links as unknown[]).filter((l) => typeof l === 'string' && /^https?:\/\//i.test(l))
   if (typeof r.image === 'string' && r.image !== '' && !IMAGE_PATH.test(r.image)) r.image = ''
+  if (Array.isArray(r.images)) r.images = (r.images as unknown[]).filter((v) => typeof v === 'string' && IMAGE_PATH.test(v)).slice(0, MAX_PICTURES)
   if (kind === 'products') r.extra = extra
   return r as T
 }

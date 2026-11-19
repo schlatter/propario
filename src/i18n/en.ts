@@ -257,6 +257,10 @@ export const en = {
     noProperties: 'This comparison has no custom fields yet. Add them in the “Fields” tab.',
     noRequirements: 'No requirements defined.',
     rawValue: 'Value does not match the field type and is kept as text',
+    stepLabel: 'Products in the table’s order',
+    prev: 'Previous product',
+    next: 'Next product',
+    position: (n: number, total: number) => `${n}/${total}`,
     purchaseDatesHint:
       'Suggested from the purchase date: 14 days to withdraw from an online purchase (counted from receipt) and 2 years of statutory warranty. Check the shop’s terms.',
     priceAsOf: (date: string) => `As of ${date}`,
@@ -438,6 +442,12 @@ export const en = {
     bulkResult: (ok: number, failed: number) =>
       failed ? `${ok} images loaded · ${failed} not available – add them in the product details (paste, drop or choose a file)` : `${ok} images loaded`,
     fromLink: 'Load picture from shop page',
+    further: 'Further pictures',
+    furtherAlt: (name: string, n: number) => `${name} – picture ${n + 1}`,
+    makeMain: (n: number) => `Picture ${n + 1}: make it the main picture`,
+    removeFurther: (n: number) => `Remove picture ${n + 1}`,
+    addFurther: 'Picture',
+    addFurtherHint: 'Add another picture – a dimension drawing helps most. Pasting or dropping onto the main picture adds one too.',
     reload: 'Load picture again',
     chooseFile: 'Choose picture file',
     remove: 'Remove image',

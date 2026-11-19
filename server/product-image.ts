@@ -45,6 +45,7 @@ export function encodeFacts(facts: ProductFacts): string {
   let out = enc(f)
   if (out.length > 6000) f = { ...f, specs: f.specs?.filter((s) => !s.table) }
   if ((out = enc(f)).length > 6000) f = { ...f, description: undefined }
+  if ((out = enc(f)).length > 6000) f = { ...f, images: f.images?.slice(0, 3) }
   while ((out = enc(f)).length > 6000 && f.specs?.length) f = { ...f, specs: f.specs.slice(0, -5) }
   return out
 }
@@ -562,8 +563,9 @@ export async function fetchProductImage(
   if (!page.type.includes('html')) throw new ImageFetchError('no-image', 422)
 
   const html = decodeHtml(page.body, page.type)
-  const facts = extractProductFacts(html)
-  const candidates = extractImageCandidates(html, page.url).slice(0, 3)
+  const gallery = extractImageCandidates(html, page.url)
+  const facts = { ...extractProductFacts(html), ...(gallery.length > 1 ? { images: gallery.slice(0, 10) } : {}) }
+  const candidates = gallery.slice(0, 3)
   const noImage = () => Object.assign(new ImageFetchError('no-image', 422), { facts })
   if (!candidates.length) throw noImage()
   let lastError: ImageFetchError = noImage()
