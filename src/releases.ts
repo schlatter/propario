@@ -11,6 +11,19 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.9.2',
+    notes: {
+      en: [
+        'If Propario does not start, it now says why after a few seconds instead of staying blank.',
+        '“Reset this browser” fixes a stuck start; you stay signed in.',
+      ],
+      de: [
+        'Startet Propario nicht, sagt es nach wenigen Sekunden warum, statt weiß zu bleiben.',
+        '„Browser zurücksetzen“ behebt einen hängenden Start; du bleibst angemeldet.',
+      ],
+    },
+  },
+  {
     version: '0.9.1',
     notes: {
       en: [

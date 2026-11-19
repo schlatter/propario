@@ -6,6 +6,8 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+## 0.9.2 — 2026-11-19
+
 - Fixed: a start that hangs no longer leaves a blank page forever. After 10 seconds Propario
   says which step it hangs at – checking the sign-in, opening the data stored in the browser,
   loading the data – with a reference; a failing server is shown as that instead of the
