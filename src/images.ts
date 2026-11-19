@@ -322,8 +322,15 @@ export function imageFromTransfer(dt: DataTransfer | null): { file: File } | { u
   return url ? { url } : null
 }
 
-async function dataUrlToBlob(url: string): Promise<Blob> {
-  return (await fetch(url)).blob()
+/**
+ * A picture from a backup (a data: URL) as a file. Decoded here: fetch() would be refused by
+ * the app's own Content-Security-Policy (connect-src 'self'), and the pictures would be lost.
+ */
+export async function dataUrlToBlob(url: string): Promise<Blob> {
+  const m = url.match(/^data:([^;,]*)(;base64)?,(.*)$/s)
+  if (!m) throw new ImageError('unreadable')
+  const body = m[2] ? Uint8Array.from(atob(m[3]), (c) => c.charCodeAt(0)) : new TextEncoder().encode(decodeURIComponent(m[3]))
+  return new Blob([body], { type: m[1] || 'application/octet-stream' })
 }
 
 /**

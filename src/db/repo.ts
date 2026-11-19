@@ -1,7 +1,7 @@
 /**
  * Everything the interface changes goes through here. Each function reads the current state
  * from the cache, describes the change (create / patch / delete, see src/shared/records.ts) and
- * commits it: server first, then the cache.
+ * commits it (src/sync.ts): shown at once, taken back if the server does not accept it.
  */
 import { db, newId, nowIso, type AppDB } from './db'
 import { makeProduct, makeProject, makeProperty, makeRequirement } from './factories'

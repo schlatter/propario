@@ -6,6 +6,23 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- Changed: the app no longer waits for the server before it shows a change. A change appears
+  at once and is saved in the background; if it cannot be saved (no connection, refused), it is
+  taken back and the app says so. "Saving …" shows when it takes a moment. On a phone whose
+  connection needs seconds after waking up, the app felt stuck – above all when swiping, where
+  each card waited for the last vote to be saved.
+- Added: **your verdict in the details** – the same "Like" / "Not for us" as when swiping,
+  changeable there, so a swipe in the wrong direction can be put right; others' verdicts are
+  named next to it.
+- Changed: the free-text fields of a product say what belongs in them (description, price
+  note, overall impression, pros and cons, comments, purchase note), and each person's rating
+  note is labelled. "Notes" duplicated "Comments" and is retired: it only shows while it still
+  holds text, with a button to move that into the comments.
+- Fixed: restoring a backup lost its pictures – the app's own Content-Security-Policy refused
+  how they were read.
+- Added: a save that takes longer than 15 seconds is reported to the server log
+  (`[client] … kind=slow`), to tell connection problems from others.
+
 ## 0.10.0 — 2026-11-19
 
 - Added: **What Propario can do** – the start page for visitors (with the sign-in in its

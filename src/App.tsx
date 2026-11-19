@@ -1,3 +1,4 @@
+import { onSaving } from './sync'
 import { endDemo, isDemo } from './demo'
 import { Overview } from './pages/Overview'
 import { Starting, StartProblem } from './ui/StartProblem'
@@ -55,6 +56,30 @@ function Gate() {
   return <Shell />
 }
 
+/** Changes show at once; when saving them takes a moment, this says so (src/sync.ts). */
+function Saving() {
+  const { m } = useI18n()
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const stop = onSaving((n) => {
+      clearTimeout(timer)
+      // Only when it takes a moment – a quick save shows nothing, so nothing flickers.
+      if (n > 0) timer = setTimeout(() => setVisible(true), 800)
+      else setVisible(false)
+    })
+    return () => {
+      clearTimeout(timer)
+      stop()
+    }
+  }, [])
+  return (
+    <div className="saving" role="status" aria-live="polite">
+      {visible && <span>{m.sync.saving}</span>}
+    </div>
+  )
+}
+
 /** A change the server refused or could not receive must never pass silently. */
 function SaveErrors() {
   const { m } = useI18n()
@@ -94,6 +119,7 @@ function Shell() {
   return (
     <div className="shell">
       <SaveErrors />
+      <Saving />
       <WhatsNew />
       <header className="topbar">
         <Menu label={m.nav.menu} className="icon-btn nav-toggle" listClassName="nav-menu" trigger={<Glyph name="menu" />}>

@@ -57,20 +57,23 @@ function Deck({ data }: { data: ProjectData }) {
     if (!current || leaving) return
     setLeaving(vote)
     await new Promise((r) => setTimeout(r, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 180))
-    try {
-      await setVote(current, me.id, vote)
-      setDone((d) => [...d, current.id])
-      setSkipped((s) => s.filter((x) => x !== current.id))
-    } finally {
-      setLeaving(null)
-    }
+    // The next card comes at once; the vote is saved meanwhile. If it cannot be saved, the card
+    // comes back and the app says why (src/App.tsx, SaveErrors).
+    const id = current.id
+    setDone((d) => [...d, id])
+    setSkipped((s) => s.filter((x) => x !== id))
+    setLeaving(null)
+    setVote(current, me.id, vote).catch((e: unknown) => {
+      setDone((d) => d.filter((x) => x !== id))
+      throw e
+    })
   }
   const skip = () => current && setSkipped((s) => [...s.filter((x) => x !== current.id), current.id])
   const undo = async () => {
     const last = products.find((p) => p.id === done[done.length - 1])
     if (!last) return
-    await setVote(last, me.id, null)
     setDone((d) => d.slice(0, -1))
+    await setVote(last, me.id, null)
   }
 
   useEffect(() => {

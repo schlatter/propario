@@ -4036,3 +4036,72 @@ dialog.gallery::backdrop {
   border-color: var(--accent-ink);
   color: var(--accent-ink);
 }
+
+/* "Saving …" when a change takes a moment to reach the server (src/sync.ts). */
+.saving {
+  position: fixed;
+  left: max(12px, env(safe-area-inset-left));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  z-index: 40;
+  pointer-events: none;
+}
+.saving span {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  color: var(--brand-text);
+  border: 1px solid var(--brand);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: var(--shadow);
+}
+
+/* Your verdict in the details: the swipe vote, changeable (src/pages/project/ProductDrawer.tsx). */
+.vote-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.vote-control .seg button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+}
+.vote-control .glyph {
+  width: 14px;
+  height: 14px;
+}
+.vote-control .vote-like[aria-pressed='true'] {
+  color: var(--pass);
+}
+.vote-control .vote-dislike[aria-pressed='true'] {
+  color: var(--fail);
+}
+
+/* What belongs in a field, under its label (src/ui/inputs.tsx). */
+.field-hint {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+  margin-top: -2px;
+}
+.field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.old-notes {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  padding: 12px;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+}
+.old-notes .field {
+  width: 100%;
+}

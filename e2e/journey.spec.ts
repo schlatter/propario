@@ -489,6 +489,36 @@ test('Ada moves rows and decides by swiping', async () => {
   await expect(page.locator('.vote.like')).toHaveCount(1)
   await expect(page.locator('.vote.dislike')).toHaveCount(1)
 
+  // A swipe in the wrong direction is put right in the details, where the verdict can be given too.
+  await page
+    .locator('table.grid tbody tr', { has: page.locator('.vote.dislike') })
+    .locator('.name-model')
+    .click()
+  const verdict = page.getByRole('group', { name: 'Your verdict' })
+  await expect(verdict.getByRole('button', { name: 'Not for us' })).toHaveAttribute('aria-pressed', 'true')
+  await verdict.getByRole('button', { name: 'Like' }).click()
+  await expect(verdict.getByRole('button', { name: 'Like' })).toHaveAttribute('aria-pressed', 'true')
+  // Every free-text field says what belongs in it.
+  await expect(page.getByRole('textbox', { name: 'Comments', exact: true })).toHaveAccessibleDescription(/Everything else about this product/)
+  await expect(page.getByRole('textbox', { name: 'Description', exact: true })).toHaveAccessibleDescription(/usually taken from the shop page/)
+  await expect(page.getByText('Notes (seen by everyone in this comparison)')).toHaveCount(0)
+  await accessible(page, 'details with verdict')
+  await page.locator('dialog.drawer').getByRole('button', { name: 'Close', exact: true }).click()
+  await expect(page.locator('.vote.like')).toHaveCount(2)
+  await expect(page.locator('.vote.dislike')).toHaveCount(0)
+
+  // Without a connection a change shows at once, is taken back when it cannot be saved, and the
+  // app says so – it never waits with nothing happening.
+  await page.locator('table.grid tbody .name-model').first().click()
+  const selection = page.getByRole('group', { name: 'Selection' })
+  const chosen = await selection.locator('[aria-pressed="true"]').textContent()
+  await page.context().setOffline(true)
+  await selection.getByRole('button', { name: 'Excluded' }).click()
+  await expect(page.getByText('No connection to the server – the change was not saved.')).toBeVisible()
+  await expect(selection.locator('[aria-pressed="true"]')).toHaveText(chosen!)
+  await page.context().setOffline(false)
+  await page.locator('dialog.drawer').getByRole('button', { name: 'Close', exact: true }).click()
+
   // Side by side: the best price green, the worst red, the distance to the best; more products join from there.
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.getByRole('button', { name: 'Price: —' }).click()

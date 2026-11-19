@@ -1,8 +1,10 @@
 /**
  * Keeps the browser cache in step with the server.
  *
- * - `commit(changes)`: sends changes to the server; only when it accepted them are they applied
- *   to the cache. Nothing is shown as saved that is not saved.
+ * - `commit(changes)`: shows changes at once and sends them to the server. If the server refuses
+ *   them or cannot be reached, they are taken back and the caller gets the error – nothing stays
+ *   that is not saved. While a change is on its way, `onSaving` says so, so the interface can show
+ *   it. (A phone's connection often needs seconds after waking up; the interface must not wait.)
  * - `pull()`: asks for everything that changed since the last change number this browser saw,
  *   plus the full list of comparisons it may see (with the role). Runs on start, every few
  *   seconds while the page is visible, when the window gets focus and after each commit.
@@ -12,6 +14,7 @@ import { api } from './api'
 import { db, type AppDB } from './db/db'
 import { applyPatch, KINDS, type AnyRecord, type Change, type Kind } from './shared/records.ts'
 import { nowIso } from './shared/ids.ts'
+import { report } from './diagnostics'
 
 export type Role = 'owner' | 'editor' | 'viewer'
 
@@ -78,11 +81,71 @@ async function removeProjectLocally(database: AppDB, projectId: string) {
   await database.meta.put({ key: 'roles', value: roles })
 }
 
-/** Sends changes; applies them locally once the server accepted them. */
+// ---------- changes on their way ----------
+
+let saving = 0
+const savingListeners = new Set<(n: number) => void>()
+/** Calls `fn` with the number of changes still on their way; returns a function that stops it. */
+export function onSaving(fn: (n: number) => void): () => void {
+  savingListeners.add(fn)
+  fn(saving)
+  return () => void savingListeners.delete(fn)
+}
+const setSaving = (delta: number) => {
+  saving += delta
+  for (const fn of savingListeners) fn(saving)
+}
+
+type Snapshot = { kind: Kind; id: string; record: AnyRecord | undefined }[]
+
+/** The records `changes` will touch, as they are now – to take the changes back. */
+async function snapshot(changes: Change[], database: AppDB): Promise<Snapshot> {
+  const keys = new Map<string, { kind: Kind; id: string }>()
+  for (const c of changes) {
+    const id = c.op === 'create' ? c.record.id : c.id
+    keys.set(`${c.kind}:${id}`, { kind: c.kind, id })
+    // applyLocal also marks the comparison as changed.
+    const projectId = c.op === 'create' ? (c.kind === 'projects' ? c.record.id : (c.record as { projectId: string }).projectId) : c.projectId
+    keys.set(`projects:${projectId}`, { kind: 'projects', id: projectId })
+  }
+  return Promise.all([...keys.values()].map(async (k) => ({ ...k, record: await table(database, k.kind).get(k.id) })))
+}
+
+async function restore(before: Snapshot, database: AppDB) {
+  await database.transaction('rw', [database.projects, database.products, database.properties, database.requirements], async () => {
+    for (const s of before) {
+      if (s.record) await table(database, s.kind).put(s.record)
+      else await table(database, s.kind).delete(s.id)
+    }
+  })
+}
+
+/** Shows changes at once, sends them, and takes them back if they could not be saved. */
 export async function commit(changes: Change[]): Promise<void> {
   if (!changes.length) return
-  await transport.push(changes)
-  await applyLocal(changes)
+  const database = db
+  // Deleting a whole comparison waits for the server: it is rare and cannot be put back here.
+  if (changes.some((c) => c.op === 'delete' && c.kind === 'projects')) {
+    await transport.push(changes)
+    await applyLocal(changes, database)
+    schedulePull(300)
+    return
+  }
+  const before = await snapshot(changes, database)
+  await applyLocal(changes, database)
+  setSaving(1)
+  // A save that takes this long tells, in the server log, that the connection is the problem.
+  const slow = setTimeout(() => report('slow', `saving ${changes.length} change(s) for 15 s`), 15_000)
+  try {
+    await transport.push(changes)
+  } catch (e) {
+    // Signed out or switched account meanwhile: that cache is gone anyway.
+    if (database === db) await restore(before, database)
+    throw e
+  } finally {
+    clearTimeout(slow)
+    setSaving(-1)
+  }
   schedulePull(300)
 }
 

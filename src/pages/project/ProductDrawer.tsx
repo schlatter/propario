@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { deleteProduct, duplicateProduct, setDecision, updateProduct, updateProject } from '../../db/repo'
+import { deleteProduct, duplicateProduct, setDecision, setVote, updateProduct, updateProject } from '../../db/repo'
 import { EXCLUSION_CATEGORIES, type Candidate, type ExclusionCategory, type Product, type PurchaseStatus, type Rating } from '../../db/types'
 import { displayName } from '../../domain/display'
 import { lookupLinks } from '../../domain/lookup'
@@ -19,6 +19,40 @@ import { usePageUpdate } from './usePageUpdate'
 import { withPurchaseDate } from '../../domain/purchase'
 import { loadProductImage } from '../../images'
 import type { ProjectData } from './useProjectData'
+import { useMe } from '../../session'
+import { useUsers } from '../../users'
+import type { Vote } from '../../db/types'
+
+/**
+ * The same quick verdict as in swipe mode, here too – so a swipe in the wrong direction can be
+ * put right, and a verdict given without swiping. Pressing the chosen one again takes it back.
+ */
+function VoteControl({ product: p }: { product: Product }) {
+  const { m } = useI18n()
+  const me = useMe()
+  const users = useUsers()
+  const mine = p.votes?.[me.id] ?? null
+  const others = Object.entries(p.votes ?? {}).filter(([id]) => id !== me.id)
+  const names = (vote: Vote) =>
+    others
+      .filter(([, v]) => v === vote)
+      .map(([id]) => users.get(id) ?? '?')
+      .join(', ')
+  const choose = (vote: Vote) => void setVote(p, me.id, mine === vote ? null : vote)
+  return (
+    <div className="vote-control">
+      <div className="seg" role="group" aria-label={m.swipe.yourVote}>
+        <button type="button" className="vote-like" aria-pressed={mine === 'like'} onClick={() => choose('like')}>
+          <Glyph name="star" /> {m.swipe.like}
+        </button>
+        <button type="button" className="vote-dislike" aria-pressed={mine === 'dislike'} onClick={() => choose('dislike')}>
+          <Glyph name="cross" /> {m.swipe.dislike}
+        </button>
+      </div>
+      {others.length > 0 && <span className="muted small">{m.swipe.votes(names('like'), names('dislike'))}</span>}
+    </div>
+  )
+}
 
 export function ProductDrawer({
   data,
@@ -174,6 +208,7 @@ function DrawerContent({
               </button>
             ))}
           </div>
+          <VoteControl product={p} />
           {href && (
             <a className="btn sm" href={href} target="_blank" rel="noopener noreferrer">
               <Glyph name="out" /> {hostOf(p.url) || m.common.openLink}
@@ -260,7 +295,7 @@ function DrawerContent({
                 </small>
               )}
             </div>
-            <Field label={m.field.priceNote}>
+            <Field label={m.field.priceNote} hint={m.fieldHint.priceNote}>
               <CommitInput className="input" value={p.priceNote} onCommit={(v) => set({ priceNote: v })} />
             </Field>
             <Field label={m.field.retailer}>
@@ -326,7 +361,7 @@ function DrawerContent({
               <option key={x} value={x} />
             ))}
           </datalist>
-          <Field label={m.field.description} className="">
+          <Field label={m.field.description} hint={m.fieldHint.description}>
             <CommitTextarea className="textarea" value={p.description} onCommit={(v) => set({ description: v })} />
           </Field>
         </div>
@@ -414,6 +449,7 @@ function DrawerContent({
           <h3>{m.product.assessment}</h3>
           <div className="stack">
             <div>
+              <p className="field-label">{m.fieldHint.ratings}</p>
               {p.ratings.map((r, i) => (
                 <div className="rating-row" key={i}>
                   <CommitInput
@@ -424,7 +460,13 @@ function DrawerContent({
                     onCommit={(v) => setRating(i, { person: v.trim() })}
                   />
                   <Stars value={r.stars} onChange={(n) => setRating(i, { stars: n })} label={`${m.field.rating} ${r.person}`} />
-                  <CommitInput className="input" aria-label={`${m.field.notes} ${r.person}`} value={r.note} onCommit={(v) => setRating(i, { note: v })} />
+                  <CommitInput
+                    className="input"
+                    aria-label={m.fieldHint.ratingNote(r.person)}
+                    placeholder={m.fieldHint.ratingNote(r.person)}
+                    value={r.note}
+                    onCommit={(v) => setRating(i, { note: v })}
+                  />
                   <button
                     className="icon-btn"
                     aria-label={m.common.delete}
@@ -446,23 +488,35 @@ function DrawerContent({
                 </button>
               </div>
             </div>
-            <Field label={m.field.overall}>
+            <Field label={m.field.overall} hint={m.fieldHint.overall}>
               <CommitInput className="input" value={p.overall} onCommit={(v) => set({ overall: v })} />
             </Field>
             <div className="grid-2">
-              <Field label={m.field.pros}>
+              <Field label={m.field.pros} hint={m.fieldHint.list}>
                 <CommitTextarea className="textarea" value={p.pros} onCommit={(v) => set({ pros: v })} />
               </Field>
-              <Field label={m.field.cons}>
+              <Field label={m.field.cons} hint={m.fieldHint.list}>
                 <CommitTextarea className="textarea" value={p.cons} onCommit={(v) => set({ cons: v })} />
               </Field>
             </div>
-            <Field label={m.field.comments}>
+            <Field label={m.field.comments} hint={m.fieldHint.comments}>
               <CommitTextarea className="textarea" value={p.comments} onCommit={(v) => set({ comments: v })} />
             </Field>
-            <Field label={m.field.notes}>
-              <CommitTextarea className="textarea" value={p.notes} onCommit={(v) => set({ notes: v })} />
-            </Field>
+            {/* "Notes" duplicated the comments; it only shows while it still holds text, to move it over. */}
+            {p.notes.trim() && (
+              <div className="old-notes">
+                <Field label={m.fieldHint.oldNotes} hint={m.fieldHint.oldNotesHint}>
+                  <CommitTextarea className="textarea" value={p.notes} onCommit={(v) => set({ notes: v })} />
+                </Field>
+                <button
+                  type="button"
+                  className="btn sm"
+                  onClick={() => set({ comments: [p.comments.trim(), p.notes.trim()].filter(Boolean).join('\n'), notes: '' })}
+                >
+                  {m.fieldHint.moveToComments}
+                </button>
+              </div>
+            )}
             {p.candidate !== 'excluded' && (p.exclusionReason || p.exclusionCategory) && <ExclusionFields product={p} />}
           </div>
         </div>
@@ -509,7 +563,7 @@ function DrawerContent({
                 <Field label={m.field.purchaseRetailer}>
                   <CommitInput className="input" value={p.purchase.retailer} onCommit={(v) => set({ purchase: { ...p.purchase, retailer: v } })} />
                 </Field>
-                <Field label={m.field.purchaseNote}>
+                <Field label={m.field.purchaseNote} hint={m.fieldHint.purchaseNote}>
                   <CommitInput className="input" value={p.purchase.note} onCommit={(v) => set({ purchase: { ...p.purchase, note: v } })} />
                 </Field>
                 <Field label={m.field.returnUntil}>

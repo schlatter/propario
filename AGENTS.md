@@ -39,7 +39,8 @@ chaos, without advertising, and without anyone else owning your data. Decide in 
   `users.ts`/`webauthn.ts` accounts and passkeys, `migrations.ts` the schema (append only).
 - `src/shared/records.ts`: record shapes, validation and merge rules used by browser and server.
 - Browser: Dexie is a cache of what the person may see; every write goes through
-  `src/db/repo.ts` → `commit()` in `src/sync.ts` (server first, then the cache).
+  `src/db/repo.ts` → `commit()` in `src/sync.ts`: shown at once, sent to the server, taken back
+  if the server refuses it or cannot be reached – nothing stays that is not saved.
 - Texts in `src/i18n/en.ts` (source) and `de.ts`; TypeScript enforces complete translations.
 - UI: own design tokens in `src/styles/app.css` (light and dark), no component or icon library,
   WCAG 2.1 AA, touch targets 44 px, real labels and buttons. Petrol acts, amber points out;

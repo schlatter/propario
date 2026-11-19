@@ -10,7 +10,7 @@ export const setStep = (s: Step) => void (step = s)
 export const currentStep = () => step
 
 /** Sends a report and returns its reference; never throws, never waits. */
-export function report(kind: 'crash' | 'stuck' | 'start-failed', error?: unknown): string {
+export function report(kind: 'crash' | 'stuck' | 'start-failed' | 'slow', error?: unknown): string {
   const ref = Array.from(crypto.getRandomValues(new Uint8Array(4)), (b) => b.toString(16).padStart(2, '0')).join('')
   const e = error instanceof Error ? error : null
   try {
