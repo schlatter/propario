@@ -126,6 +126,8 @@ export function RequirementsTab({ data, onOpen }: { data: ProjectData; onOpen: (
       <div className="table-wrap">
         <table className="grid req-table">
           <colgroup>
+            {/* The handle first: a row is moved right where it starts. */}
+            <col style={{ width: 36 }} />
             <col style={{ width: 112 }} />
             <col style={{ width: 240 }} />
             <col style={{ width: 84 }} />
@@ -133,10 +135,13 @@ export function RequirementsTab({ data, onOpen }: { data: ProjectData; onOpen: (
             <col style={{ width: 130 }} />
             {/* Details take the rest of the width. */}
             <col />
-            <col style={{ width: 84 }} />
+            <col style={{ width: 48 }} />
           </colgroup>
           <thead>
             <tr>
+              <th scope="col">
+                <span className="sr-only">{m.reorder.handleColumn}</span>
+              </th>
               <th scope="col">{m.field.priority}</th>
               <th scope="col">{m.field.requirement}</th>
               <th scope="col" title={m.check.fitHint}>
@@ -152,7 +157,7 @@ export function RequirementsTab({ data, onOpen }: { data: ProjectData; onOpen: (
           </thead>
           <tbody ref={drag.body}>
             <tr className="group">
-              <th colSpan={7} scope="colgroup">
+              <th colSpan={8} scope="colgroup">
                 {m.budget.title}
               </th>
             </tr>
@@ -178,7 +183,7 @@ export function RequirementsTab({ data, onOpen }: { data: ProjectData; onOpen: (
             />
             {[...groups.entries()].map(([cat, list]) => [
               <tr className="group" key={`g-${cat}`}>
-                <th colSpan={7} scope="colgroup">
+                <th colSpan={8} scope="colgroup">
                   {cat || m.requirements.general}
                 </th>
               </tr>,
@@ -233,6 +238,7 @@ function BudgetRow({
   const { m } = useI18n()
   return (
     <tr className="budget">
+      <td />
       <td>
         <PrioritySelect value={priority} onChange={onPriority} label={`${m.field.priority}: ${label}`} />
       </td>
@@ -332,6 +338,11 @@ function RequirementRow({ req, data, totalWeight, drag }: { req: Requirement; da
 
   return (
     <tr {...drag.row(req.id)}>
+      <td className="grip-cell">
+        <button type="button" className="grip" aria-label={m.reorder.handle(req.label)} title={m.reorder.requirementHint} {...drag.handle(req.id)}>
+          <Glyph name="grip" />
+        </button>
+      </td>
       <td>
         <PrioritySelect value={req.priority} onChange={(p) => set({ priority: p })} label={named(m.field.priority)} />
       </td>
@@ -427,9 +438,6 @@ function RequirementRow({ req, data, totalWeight, drag }: { req: Requirement; da
       </td>
       <td>
         <span className="row-actions">
-          <button type="button" className="grip" aria-label={m.reorder.handle(req.label)} title={m.reorder.requirementHint} {...drag.handle(req.id)}>
-            <Glyph name="grip" />
-          </button>
           <button
             className="icon-btn sm"
             aria-label={named(m.common.delete)}

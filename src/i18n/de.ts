@@ -895,6 +895,7 @@ export const de: Messages = {
     up: 'Nach oben',
     down: 'Nach unten',
     handle: (name: string) => `${name} verschieben`,
+    handleColumn: 'Verschieben',
     hint: 'Ziehen zum Verschieben, oder Pfeiltasten',
     requirementHint: 'Ziehen zum Verschieben, auch in eine andere Gruppe – oder Pfeiltasten',
     sorted: 'Sortierung aufheben, um Zeilen zu verschieben',

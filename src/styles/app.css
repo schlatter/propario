@@ -3225,8 +3225,13 @@ textarea.cell-input:focus {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.req-table .row-actions .grip {
+.req-table .grip {
   cursor: grab;
+}
+/* The handle sits first in each row, where a row is picked up. */
+.req-table .grip-cell {
+  padding: 0;
+  text-align: center;
 }
 .req-table tr.is-dragging td {
   opacity: 0.5;
@@ -4088,4 +4093,8 @@ dialog.gallery::backdrop {
 }
 .old-notes .field {
   width: 100%;
+}
+.req-table .grip-cell .grip {
+  width: 100%;
+  min-height: 40px;
 }

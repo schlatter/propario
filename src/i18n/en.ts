@@ -881,6 +881,7 @@ export const en = {
     up: 'Move up',
     down: 'Move down',
     handle: (name: string) => `Move ${name}`,
+    handleColumn: 'Move',
     hint: 'Drag to move, or use the arrow keys',
     requirementHint: 'Drag to move, also into another group – or use the arrow keys',
     sorted: 'Clear the sorting to move rows',

@@ -91,16 +91,21 @@ export function FieldsTab({ data }: { data: ProjectData }) {
         <div className="table-wrap">
           <table className="grid req-table fields-table">
             <colgroup>
+              {/* The handle first, as in the requirements. */}
+              <col style={{ width: 36 }} />
               <col style={{ width: 220 }} />
               <col style={{ width: 130 }} />
               <col style={{ width: 90 }} />
               {/* What else the type needs takes the rest. */}
               <col />
               <col style={{ width: 96 }} />
-              <col style={{ width: 84 }} />
+              <col style={{ width: 48 }} />
             </colgroup>
             <thead>
               <tr>
+                <th scope="col">
+                  <span className="sr-only">{m.reorder.handleColumn}</span>
+                </th>
                 <th scope="col">{m.field.name}</th>
                 <th scope="col">{m.field.type}</th>
                 <th scope="col">{m.field.unit}</th>
@@ -145,6 +150,11 @@ function FieldRow({ prop: p, data, drag }: { prop: PropertyDef; data: ProjectDat
   }).length
   return (
     <tr {...drag.row(p.id)}>
+      <td className="grip-cell">
+        <button type="button" className="grip" aria-label={m.reorder.handle(p.name)} title={m.reorder.hint} {...drag.handle(p.id)}>
+          <Glyph name="grip" />
+        </button>
+      </td>
       <td>
         <CommitInput
           className="cell-input strong"
@@ -212,9 +222,6 @@ function FieldRow({ prop: p, data, drag }: { prop: PropertyDef; data: ProjectDat
       </td>
       <td>
         <span className="row-actions">
-          <button type="button" className="grip" aria-label={m.reorder.handle(p.name)} title={m.reorder.hint} {...drag.handle(p.id)}>
-            <Glyph name="grip" />
-          </button>
           <button
             className="icon-btn sm"
             aria-label={named(m.common.delete)}
