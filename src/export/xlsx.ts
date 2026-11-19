@@ -1,3 +1,4 @@
+import { isFavorite, statusOf } from '../domain/verdict'
 import * as XLSX from 'xlsx'
 import type { ProjectBundle } from '../db/repo'
 import type { PropertyDef } from '../db/types'
@@ -67,7 +68,7 @@ export function bundleToWorkbook(b: ProjectBundle, m: Messages): XLSX.WorkBook {
       p.retailer,
       p.url,
       p.variant,
-      m.candidate[p.candidate],
+      isFavorite(p) ? m.verdict.favorite : m.candidate[statusOf(p)],
       exclusionText(p, m),
       p.foundBy,
       ...b.properties.map((prop) => {

@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { deleteProduct, reorder, setProductValue, updateProduct, updateProject } from '../../db/repo'
-import type { Candidate, Product, PropertyDef, Requirement, TableView } from '../../db/types'
-import { avgStars, compareKeys, displayName, exclusionText, formatValue, isNew, productName, sortKey } from '../../domain/display'
+import { STATUSES, type Product, type PropertyDef, type Requirement, type Status, type TableView } from '../../db/types'
+import { compareKeys, displayName, exclusionText, formatValue, isNew, productName, sortKey } from '../../domain/display'
 import { cellCheck, OP_SYMBOL, requirementsByColumn, WEIGHT } from '../../domain/requirements'
 import { priceHint, type PriceHint } from '../../domain/offers'
 import { compileQuery } from '../../domain/query'
@@ -22,6 +22,8 @@ import { useUsers } from '../../users'
 import { EditableCell } from './EditableCell'
 import { QuickAdd } from './QuickAdd'
 import type { ProjectData } from './useProjectData'
+import { isFavorite, statusOf, statusPatch, tally } from '../../domain/verdict'
+import { FavoriteToggle, VerdictSummary } from './Verdict'
 
 interface Col {
   id: string
@@ -37,7 +39,7 @@ interface Col {
 }
 
 /** Colour of the selection: open grey, favourite green, excluded red. */
-const PILL: Record<Candidate, string> = { open: '', favorite: 'fav', excluded: 'excl' }
+const PILL: Record<Status, string> = { open: '', checked: 'checked', excluded: 'excl' }
 
 /** Quick filters on when the address names none: only products still in the running. */
 const DEFAULT_CHIPS = 'eligible'
@@ -178,29 +180,29 @@ export function ProductTable({
         id: 'candidate',
         label: m.field.candidate,
         width: 128,
-        sort: (p) => ({ favorite: 0, open: 1, excluded: 2 })[p.candidate],
+        sort: (p) => ({ checked: 0, open: 1, excluded: 2 })[statusOf(p)],
         render: (p) => (
           <Menu
             floating
-            label={`${m.field.candidate}: ${m.candidate[p.candidate]}`}
+            label={`${m.field.candidate}: ${m.candidate[statusOf(p)]}`}
             className="cell candidate-trigger"
             listClassName="candidate-menu"
             trigger={
-              <span className={`pill ${PILL[p.candidate]}`}>
-                {m.candidate[p.candidate]}
+              <span className={`pill ${PILL[statusOf(p)]}`}>
+                {m.candidate[statusOf(p)]}
                 <Glyph name="down" />
               </span>
             }
           >
             {(close) =>
-              (['open', 'favorite', 'excluded'] as Candidate[]).map((c) => (
+              STATUSES.map((c) => (
                 <button
                   key={c}
                   type="button"
-                  aria-pressed={p.candidate === c}
+                  aria-pressed={statusOf(p) === c}
                   onClick={() => {
                     close()
-                    if (c !== p.candidate) void updateProduct(p, { candidate: c })
+                    if (c !== statusOf(p)) void updateProduct(p, statusPatch(p, c))
                   }}
                 >
                   <span className={`pill ${PILL[c]}`}>{m.candidate[c]}</span>
@@ -308,68 +310,15 @@ export function ProductTable({
     })
     cols.push({
       id: 'votes',
-      label: m.swipe.column,
-      width: 110,
+      label: m.verdict.column,
+      width: 120,
       optional: true,
       has: (p) => Object.keys(p.votes ?? {}).length > 0,
       sort: (p) => {
-        const v = Object.values(p.votes ?? {})
-        return v.length ? v.filter((x) => x === 'like').length - v.filter((x) => x === 'dislike').length : null
+        const t = tally(p)
+        return t.like + t.neutral + t.dislike ? t.like - t.dislike : null
       },
-      render: (p) => {
-        const entries = Object.entries(p.votes ?? {})
-        const names = (vote: string) =>
-          entries
-            .filter(([, v]) => v === vote)
-            .map(([id]) => users.get(id) ?? '?')
-            .join(', ')
-        const likes = entries.filter(([, v]) => v === 'like').length
-        const dislikes = entries.length - likes
-        if (!entries.length) return null
-        return (
-          <span className="votes" title={m.swipe.votes(names('like'), names('dislike'))}>
-            {likes > 0 && (
-              <span className="vote like">
-                <Glyph name="star" /> {likes}
-              </span>
-            )}
-            {dislikes > 0 && (
-              <span className="vote dislike">
-                <Glyph name="cross" /> {dislikes}
-              </span>
-            )}
-            <span className="sr-only">{m.swipe.votes(names('like'), names('dislike'))}</span>
-          </span>
-        )
-      },
-    })
-    cols.push({
-      id: 'rating',
-      label: m.project.avgRating,
-      width: 110,
-      optional: true,
-      has: (p) => p.ratings.length > 0,
-      sort: (p) => avgStars(p),
-      render: (p) => {
-        const a = avgStars(p)
-        const note = p.ratings
-          .filter((r) => r.note)
-          .map((r) => `${r.person}: ${r.note}`)
-          .join('\n')
-        const quote = note ? `“${note.split('\n')[0]}”` : ''
-        return (
-          <button
-            type="button"
-            className="cell"
-            onClick={() => onOpen(p.id)}
-            title={note || undefined}
-            // Also empty cells need a name: they open the details.
-            aria-label={`${m.field.ratings}: ${a !== null ? `${Math.round(a)}/5` : quote || '—'}`}
-          >
-            {a !== null ? <Stars value={Math.round(a)} label={m.field.rating} /> : quote ? <span className="muted small">{quote}</span> : null}
-          </button>
-        )
-      },
+      render: (p) => <VerdictSummary product={p} />,
     })
     for (const prop of properties) cols.push(propertyColumn(prop))
     cols.push(
@@ -538,7 +487,7 @@ export function ProductTable({
   let rows = products.filter((p) => {
     if (view.hideExcluded && p.candidate === 'excluded') return false
     if (onlyEligible && (data.summaries.get(p.id)?.blocked || p.candidate === 'excluded')) return false
-    if (chips.has('fav') && p.candidate !== 'favorite') return false
+    if (chips.has('fav') && !isFavorite(p)) return false
     if (chips.has('new') && !isNew(p.createdAt)) return false
     if (chips.has('mine') && (!me || p.foundBy !== me)) return false
     if (compiled.ok && !compiled.test(p)) return false
@@ -884,7 +833,7 @@ export function ProductTable({
                 const href = safeHref(p.url)
                 const cls = [
                   selection.has(p.id) && 'is-selected',
-                  p.candidate === 'favorite' && 'is-fav',
+                  isFavorite(p) && 'is-fav',
                   isNew(p.createdAt) && 'is-new',
                   p.candidate === 'excluded' && 'is-excluded',
                   project.decisionProductId === p.id && 'is-decision',
@@ -952,16 +901,7 @@ export function ProductTable({
                           </button>
                         </div>
                         <div className="name-tools">
-                          <button
-                            type="button"
-                            className="icon-btn sm fav-toggle"
-                            aria-pressed={p.candidate === 'favorite'}
-                            aria-label={m.project.toggleFavorite}
-                            title={m.project.toggleFavorite}
-                            onClick={() => updateProduct(p, { candidate: p.candidate === 'favorite' ? 'open' : 'favorite' })}
-                          >
-                            <Glyph name="star" />
-                          </button>
+                          <FavoriteToggle product={p} />
                           {href && (
                             <a
                               className="icon-btn sm"

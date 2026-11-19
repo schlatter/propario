@@ -3,6 +3,8 @@
  * by hand (or taken from the product's own data) – Propario does not fetch them, see
  * src/domain/lookup.ts for the links that help find them.
  */
+import type { LookupId, LookupLink } from '../../domain/lookup'
+import { InfoTip } from '../../ui/InfoTip'
 import { changeOffers, changeReviews } from '../../db/repo'
 import { REVIEW_SCALES, type Offer, type Product, type Review, type ReviewScale } from '../../db/types'
 import { bestOffer, offerTotal } from '../../domain/offers'
@@ -37,7 +39,27 @@ function OutLink({ url, label }: { url: string; label: string }) {
   )
 }
 
-export function OffersSection({ product: p }: { product: Product }) {
+/** Where to look further, as links under a section's heading; Propario adds no tracking. */
+function LookupRow({ links, label }: { links: LookupLink[]; label: string }) {
+  const { m } = useI18n()
+  if (!links.length) return null
+  return (
+    <p className="lookup-row small">
+      <span className="muted">{label}</span>
+      {links.map((l) => (
+        <a key={l.id} href={l.href} target="_blank" rel="noopener noreferrer">
+          {m.lookup[l.id]}
+          <Glyph name="out" />
+        </a>
+      ))}
+    </p>
+  )
+}
+
+const PRICE_SITES: LookupId[] = ['geizhals', 'idealo', 'amazon']
+const TEST_SITES: LookupId[] = ['warentest', 'trustpilot']
+
+export function OffersSection({ product: p, lookups = [] }: { product: Product; lookups?: LookupLink[] }) {
   const { m, fmt } = useI18n()
   const offers = p.offers ?? []
   const best = bestOffer(offers)
@@ -59,7 +81,10 @@ export function OffersSection({ product: p }: { product: Product }) {
 
   return (
     <div className="section">
-      <h3>{m.offer.title}</h3>
+      <h3>
+        {m.offer.title} <InfoTip text={m.offer.info} />
+      </h3>
+      <LookupRow label={m.lookup.prices} links={lookups.filter((l) => PRICE_SITES.includes(l.id))} />
       {offers.length === 0 && <p className="muted small">{m.offer.empty}</p>}
       {offers.map((o, i) => {
         const n = i + 1
@@ -123,12 +148,11 @@ export function OffersSection({ product: p }: { product: Product }) {
       <button type="button" className="chip" onClick={add}>
         + {m.offer.add}
       </button>
-      {offers.length > 0 && <p className="muted small">{m.offer.hint}</p>}
     </div>
   )
 }
 
-export function ReviewsSection({ product: p }: { product: Product }) {
+export function ReviewsSection({ product: p, lookups = [] }: { product: Product; lookups?: LookupLink[] }) {
   const { m } = useI18n()
   const reviews = p.reviews ?? []
   const change = (id: string, patch: Partial<Review>) => changeReviews(p, (list) => list.map((r) => (r.id === id ? { ...r, ...patch } : r)))
@@ -137,7 +161,10 @@ export function ReviewsSection({ product: p }: { product: Product }) {
 
   return (
     <div className="section">
-      <h3>{m.review.title}</h3>
+      <h3>
+        {m.review.title} <InfoTip text={m.review.info} />
+      </h3>
+      <LookupRow label={m.lookup.tests} links={lookups.filter((l) => TEST_SITES.includes(l.id))} />
       {(product.sources > 0 || shop.sources > 0) && (
         <p className="review-summary">
           {product.sources > 0 && <span>{m.review.summary(m.review.about.product, product.score!, product.sources)}</span>}
@@ -251,7 +278,6 @@ export function ReviewsSection({ product: p }: { product: Product }) {
       >
         + {m.review.add}
       </button>
-      <p className="muted small">{m.review.hint}</p>
     </div>
   )
 }

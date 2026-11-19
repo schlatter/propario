@@ -63,7 +63,7 @@ never hex values (exceptions: pictures sit on white, the gallery is always dark)
 | Role                  | Token                                    | Light     | Dark      | Used for                                                                          |
 | --------------------- | ---------------------------------------- | --------- | --------- | --------------------------------------------------------------------------------- |
 | **Petrol** – Propario | `--brand`                                | `#1f7a80` | `#5cbcc1` | primary buttons, where you are (navigation, steps), active filters, the shortlist |
-| **Amber** – the find  | `--accent`                               | `#f2b33d` | `#f2b33d` | the decision, stars, what is new, what differs, what needs a look                 |
+| **Amber** – the find  | `--accent`                               | `#f2b33d` | `#f2b33d` | the decision, what is new, what differs, what needs a look                        |
 | Met / not met / open  | `--pass`, `--fail`, `--unknown`          |           |           | only the result of a requirement check (and destructive actions for red)          |
 | Neutrals              | `--bg` … `--ink`, slightly petrol-tinted |           |           | everything else                                                                   |
 
@@ -74,7 +74,8 @@ Rules:
 - **Amber is rare.** At most a few amber marks per screen; amber text uses `--accent-text`,
   text on amber uses `--accent-ink`.
 - **Green, red and grey mean met, not met, unknown** – nothing else. Missing data is grey,
-  never red.
+  never red. Verdicts speak by their thumbs (up in petrol, neutral grey, down in ink); a
+  favourite is a petrol star.
 - **Contrast:** text at least 4.5 : 1, icons and lines that carry meaning at least 3 : 1, in
   both themes. Check new colour pairs before using them.
 - Light, dark and "like the device" are equal; design and check both.

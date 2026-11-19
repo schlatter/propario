@@ -6,6 +6,17 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- Changed: **one way to judge a product.** The selection is now _Open_, _Checked_ or
+  _Excluded_; a favourite is a star of its own; and everyone gives their verdict – thumbs up,
+  neutral or thumbs down – in the details, by swiping or with ↓ for neutral. Giving a verdict
+  marks an open product as checked. The separate star ratings per person are gone; ratings
+  from an import stay readable in the details. Old favourites read as checked with the star.
+- Changed: in the details the shop link sits prominently under the picture, the price shows
+  its €, "Update details" and "Final decision" are shorter, and explanations sit behind a quiet
+  ⓘ (on hover or focus) instead of under each label.
+- Changed: "Check elsewhere" is gone – Geizhals, idealo and Amazon are searched from the
+  offers, Stiftung Warentest and Trustpilot from tests & reviews; their texts are shorter.
+
 ## 0.11.0 — 2026-11-19
 
 - Changed: in the requirements and the fields, the handle for moving a row sits first in the

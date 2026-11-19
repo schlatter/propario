@@ -122,12 +122,14 @@ export function Overview({ signIn }: { signIn?: ReactNode }) {
           <ul className="still-ratings">
             <li>
               <span>Ada</span>
-              <span className="still-stars">★★★★★</span>
+              <span className="vote like">
+                <Glyph name="thumbUp" /> {m.verdict.like}
+              </span>
             </li>
             <li>
               <span>Grace</span>
-              <span className="still-stars">
-                ★★★★<span className="off">★</span>
+              <span className="vote neutral">
+                <Glyph name="neutral" /> {m.verdict.neutral}
               </span>
             </li>
           </ul>

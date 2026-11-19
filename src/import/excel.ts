@@ -476,7 +476,9 @@ export function rowToProduct(row: (Cell | null)[], draft: SheetDraft, projectId:
       }
       case 'candidate': {
         const c = candidateFor(text)
-        if (c) p.candidate = c
+        // A favourite is checked, with the star.
+        if (c === 'favorite') Object.assign(p, { candidate: 'checked', favorite: true })
+        else if (c) p.candidate = c
         else {
           keep()
         }
@@ -522,6 +524,7 @@ function candidateFor(text: string): Product['candidate'] | null {
   if (/^(favorit|favourite|favorite|top|shortlist|ja|yes|x|✓)$/.test(t)) return 'favorite'
   if (/^(nein|no|ausgeschieden|ausgeschlossen|excluded|raus|verworfen)$/.test(t)) return 'excluded'
   if (/^(offen|open|neu|new)$/.test(t)) return 'open'
+  if (/^(geprüft|geprueft|checked|angesehen|gesichtet)$/.test(t)) return 'checked'
   return null
 }
 
@@ -530,6 +533,7 @@ export interface PreviewRow {
   price: string
   url: string
   candidate: Product['candidate']
+  favorite: boolean
   purchased: boolean
   propertyCount: number
 }
@@ -544,6 +548,7 @@ export function previewProducts(wb: WorkbookDraft, draft: SheetDraft): PreviewRo
       price: p.priceNote || (p.price !== null ? String(p.price) : ''),
       url: p.url,
       candidate: p.candidate,
+      favorite: p.favorite === true,
       purchased: p.purchase.status === 'purchased',
       propertyCount: Object.keys(p.values).length,
     }
@@ -783,7 +788,7 @@ export function buildBundles(wb: WorkbookDraft): ProjectBundle[] {
       project.status = 'purchased'
       const latest = [...purchased].sort((a, b) => (a.purchase.date || '').localeCompare(b.purchase.date || '')).at(-1)!
       project.decisionProductId = latest.id
-    } else if (products.some((p) => p.candidate === 'favorite')) {
+    } else if (products.some((p) => p.favorite)) {
       project.status = 'comparing'
     }
 

@@ -130,7 +130,8 @@ describe('legacy layout (one sheet per comparison)', () => {
 
   it('reads products including links, prices, purchases and notes', () => {
     const [frostel, lg, polaris] = fridge.products
-    expect(frostel).toMatchObject({ brand: 'Frostel', price: 424, candidate: 'favorite', url: 'https://example.org/frostel' })
+    // A favourite in the sheet is checked, with the star.
+    expect(frostel).toMatchObject({ brand: 'Frostel', price: 424, candidate: 'checked', favorite: true, url: 'https://example.org/frostel' })
     expect(frostel.purchase).toMatchObject({ status: 'purchased', date: '2024-05-14' })
     expect(frostel.ratings).toEqual([{ person: 'Grace', stars: null, note: 'okay' }])
     expect(kaltmann).toMatchObject({ price: 1500, candidate: 'excluded', url: 'https://example.org/kaltmann' })
@@ -180,7 +181,14 @@ describe('separate products and requirements sheets', () => {
 
   it('reads favourites, exclusions, HYPERLINK formulas and keeps unknown values', () => {
     const [fjella, birk, oskar] = b.products
-    expect(fjella).toMatchObject({ candidate: 'favorite', favoriteRank: 1, foundBy: 'Ada', url: 'https://example.org/fjella', productType: 'Vitrine' })
+    expect(fjella).toMatchObject({
+      candidate: 'checked',
+      favorite: true,
+      favoriteRank: 1,
+      foundBy: 'Ada',
+      url: 'https://example.org/fjella',
+      productType: 'Vitrine',
+    })
     expect(birk).toMatchObject({ candidate: 'open', url: 'https://example.org/birk' })
     // Unknown assessment and a link label without target are kept, not dropped.
     expect(birk.extra).toEqual({ Einschätzung: 'Kompromiss', Produktlink: 'Produktseite öffnen' })

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { deleteProduct, duplicateProduct, setDecision, setVote, updateProduct, updateProject } from '../../db/repo'
-import { EXCLUSION_CATEGORIES, type Candidate, type ExclusionCategory, type Product, type PurchaseStatus, type Rating } from '../../db/types'
+import { deleteProduct, duplicateProduct, setDecision, updateProduct, updateProject } from '../../db/repo'
+import { EXCLUSION_CATEGORIES, STATUSES, type ExclusionCategory, type Product, type PurchaseStatus } from '../../db/types'
 import { displayName } from '../../domain/display'
 import { lookupLinks } from '../../domain/lookup'
 import { evaluate, OP_SYMBOL } from '../../domain/requirements'
@@ -19,40 +19,8 @@ import { usePageUpdate } from './usePageUpdate'
 import { withPurchaseDate } from '../../domain/purchase'
 import { loadProductImage } from '../../images'
 import type { ProjectData } from './useProjectData'
-import { useMe } from '../../session'
-import { useUsers } from '../../users'
-import type { Vote } from '../../db/types'
-
-/**
- * The same quick verdict as in swipe mode, here too – so a swipe in the wrong direction can be
- * put right, and a verdict given without swiping. Pressing the chosen one again takes it back.
- */
-function VoteControl({ product: p }: { product: Product }) {
-  const { m } = useI18n()
-  const me = useMe()
-  const users = useUsers()
-  const mine = p.votes?.[me.id] ?? null
-  const others = Object.entries(p.votes ?? {}).filter(([id]) => id !== me.id)
-  const names = (vote: Vote) =>
-    others
-      .filter(([, v]) => v === vote)
-      .map(([id]) => users.get(id) ?? '?')
-      .join(', ')
-  const choose = (vote: Vote) => void setVote(p, me.id, mine === vote ? null : vote)
-  return (
-    <div className="vote-control">
-      <div className="seg" role="group" aria-label={m.swipe.yourVote}>
-        <button type="button" className="vote-like" aria-pressed={mine === 'like'} onClick={() => choose('like')}>
-          <Glyph name="star" /> {m.swipe.like}
-        </button>
-        <button type="button" className="vote-dislike" aria-pressed={mine === 'dislike'} onClick={() => choose('dislike')}>
-          <Glyph name="cross" /> {m.swipe.dislike}
-        </button>
-      </div>
-      {others.length > 0 && <span className="muted small">{m.swipe.votes(names('like'), names('dislike'))}</span>}
-    </div>
-  )
-}
+import { FavoriteToggle, VerdictControl } from './Verdict'
+import { statusOf, statusPatch } from '../../domain/verdict'
 
 export function ProductDrawer({
   data,
@@ -170,9 +138,6 @@ function DrawerContent({
   const priceAge = p.price !== null ? daysSince(p.priceDate) : null
   const gtinInvalid = !!p.gtin && !isValidGtin(p.gtin)
 
-  const setRating = (i: number, patch: Partial<Rating>) => set({ ratings: p.ratings.map((r, j) => (j === i ? { ...r, ...patch } : r)) })
-  const unratedPeople = settings.people.filter((x) => !p.ratings.some((r) => r.person === x))
-
   return (
     <div className="drawer-inner" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
       <div className="drawer-head">
@@ -202,18 +167,14 @@ function DrawerContent({
         </div>
         <div className="row">
           <div className="seg" role="group" aria-label={m.field.candidate}>
-            {(['open', 'favorite', 'excluded'] as Candidate[]).map((c) => (
-              <button key={c} aria-pressed={p.candidate === c} onClick={() => set({ candidate: c })}>
+            {STATUSES.map((c) => (
+              <button key={c} aria-pressed={statusOf(p) === c} onClick={() => set(statusPatch(p, c))}>
                 {m.candidate[c]}
               </button>
             ))}
           </div>
-          <VoteControl product={p} />
-          {href && (
-            <a className="btn sm" href={href} target="_blank" rel="noopener noreferrer">
-              <Glyph name="out" /> {hostOf(p.url) || m.common.openLink}
-            </a>
-          )}
+          <FavoriteToggle product={p} withLabel />
+          <VerdictControl product={p} />
           {href && (
             <button
               type="button"
@@ -254,6 +215,12 @@ function DrawerContent({
 
         <div className="section">
           <ProductImage product={p} name={name} />
+          {href && (
+            // The shop page, prominent: it is where the product is bought and checked.
+            <a className="product-link" href={href} target="_blank" rel="noopener noreferrer">
+              <Glyph name="out" /> {m.product.openShop(hostOf(p.url) || m.common.openLink)}
+            </a>
+          )}
         </div>
 
         <div className="section">
@@ -267,15 +234,23 @@ function DrawerContent({
             </Field>
             {/* The note sits beside the label, not in it, so it does not become part of the field's name. */}
             <div className="field-stack">
-              <Field label={m.field.price}>
-                <CommitInput
-                  className="input"
-                  inputMode="decimal"
-                  value={p.price !== null ? String(p.price) : ''}
-                  aria-describedby={priceAge !== null ? 'price-date' : undefined}
-                  onCommit={(v) => set({ price: parseNumber(v) })}
-                />
-              </Field>
+              {/* The € sits outside the label, so the field's name stays "Price". */}
+              <div className="field">
+                <label htmlFor="product-price">{m.field.price}</label>
+                <span className="input-affix">
+                  <CommitInput
+                    id="product-price"
+                    className="input"
+                    inputMode="decimal"
+                    value={p.price !== null ? String(p.price) : ''}
+                    aria-describedby={priceAge !== null ? 'price-date' : undefined}
+                    onCommit={(v) => set({ price: parseNumber(v) })}
+                  />
+                  <span className="affix" aria-hidden="true">
+                    €
+                  </span>
+                </span>
+              </div>
               {p.price !== null && (
                 <button
                   type="button"
@@ -366,24 +341,8 @@ function DrawerContent({
           </Field>
         </div>
 
-        {lookups.length > 0 && (
-          <div className="section">
-            <h3 id="lookup-title">{m.lookup.title}</h3>
-            <ul className="lookups" aria-labelledby="lookup-title">
-              {lookups.map((l) => (
-                <li key={l.id}>
-                  <a className="btn sm" href={l.href} target="_blank" rel="noopener noreferrer">
-                    <Glyph name="out" /> {m.lookup[l.id]}
-                  </a>
-                </li>
-              ))}
-            </ul>
-            <p className="muted small">{p.gtin && isValidGtin(p.gtin) ? m.lookup.byGtin : m.lookup.byName}</p>
-          </div>
-        )}
-
-        <OffersSection product={p} />
-        <ReviewsSection product={p} />
+        <OffersSection product={p} lookups={lookups} />
+        <ReviewsSection product={p} lookups={lookups} />
 
         <div className="section">
           <h3>{m.product.properties}</h3>
@@ -448,46 +407,21 @@ function DrawerContent({
         <div className="section">
           <h3>{m.product.assessment}</h3>
           <div className="stack">
-            <div>
-              <p className="field-label">{m.fieldHint.ratings}</p>
-              {p.ratings.map((r, i) => (
-                <div className="rating-row" key={i}>
-                  <CommitInput
-                    className="input"
-                    aria-label={m.product.person}
-                    value={r.person}
-                    list="people-list"
-                    onCommit={(v) => setRating(i, { person: v.trim() })}
-                  />
-                  <Stars value={r.stars} onChange={(n) => setRating(i, { stars: n })} label={`${m.field.rating} ${r.person}`} />
-                  <CommitInput
-                    className="input"
-                    aria-label={m.fieldHint.ratingNote(r.person)}
-                    placeholder={m.fieldHint.ratingNote(r.person)}
-                    value={r.note}
-                    onCommit={(v) => setRating(i, { note: v })}
-                  />
-                  <button
-                    className="icon-btn"
-                    aria-label={m.common.delete}
-                    title={m.common.delete}
-                    onClick={() => set({ ratings: p.ratings.filter((_, j) => j !== i) })}
-                  >
-                    <Glyph name="close" />
-                  </button>
-                </div>
-              ))}
-              <div className="chips">
-                {unratedPeople.map((x) => (
-                  <button key={x} className="chip" onClick={() => set({ ratings: [...p.ratings, { person: x, stars: null, note: '' }] })}>
-                    + {x}
-                  </button>
-                ))}
-                <button className="chip" onClick={() => set({ ratings: [...p.ratings, { person: '', stars: null, note: '' }] })}>
-                  + {m.product.addRating}
-                </button>
+            {/* Stars per person were replaced by the verdicts; ratings from an import stay readable. */}
+            {p.ratings.length > 0 && (
+              <div>
+                <p className="field-label">{m.verdict.oldRatings}</p>
+                <ul className="old-ratings">
+                  {p.ratings.map((r, i) => (
+                    <li key={i}>
+                      <span>{r.person || '—'}</span>
+                      {r.stars !== null && <Stars value={r.stars} label={`${m.field.rating} ${r.person}`} />}
+                      {r.note && <span className="muted">{r.note}</span>}
+                    </li>
+                  ))}
+                </ul>
               </div>
-            </div>
+            )}
             <Field label={m.field.overall} hint={m.fieldHint.overall}>
               <CommitInput className="input" value={p.overall} onCommit={(v) => set({ overall: v })} />
             </Field>

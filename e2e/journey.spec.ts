@@ -289,6 +289,11 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await expect(page.getByLabel('GTIN / EAN')).toHaveValue('4006381333931')
   await expect(page.getByRole('link', { name: 'Geizhals' })).toHaveAttribute('href', 'https://geizhals.de/?fs=4006381333931')
   await expect(page.getByRole('link', { name: 'Stiftung Warentest' })).toHaveAttribute('rel', 'noopener noreferrer')
+  // Price searches sit with the offers, tests with tests and reviews.
+  await expect(page.locator('.section', { has: page.getByRole('heading', { name: /^Offers/ }) }).getByRole('link', { name: 'Geizhals' })).toBeVisible()
+  await expect(
+    page.locator('.section', { has: page.getByRole('heading', { name: /^Tests & reviews/ }) }).getByRole('link', { name: 'Stiftung Warentest' }),
+  ).toBeVisible()
   await expect(page.getByRole('link', { name: 'Amazon' })).toHaveAttribute('href', 'https://www.amazon.de/s?k=4006381333931')
 
   // Offers: the first one starts from the product's price; a cheaper total becomes the price.
@@ -482,7 +487,7 @@ test('Ada moves rows and decides by swiping', async () => {
   }
   await page.keyboard.press('ArrowRight')
   await expect(page.getByText('1 of 2 decided')).toBeVisible()
-  await page.getByRole('button', { name: 'Not for us' }).click()
+  await page.getByRole('button', { name: /don.t like it/ }).click()
   await expect(page.getByRole('heading', { name: 'All decided' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Arvika' })).toBeVisible()
   await page.getByRole('link', { name: 'Back to the table' }).click()
@@ -495,9 +500,19 @@ test('Ada moves rows and decides by swiping', async () => {
     .locator('.name-model')
     .click()
   const verdict = page.getByRole('group', { name: 'Your verdict' })
-  await expect(verdict.getByRole('button', { name: 'Not for us' })).toHaveAttribute('aria-pressed', 'true')
-  await verdict.getByRole('button', { name: 'Like' }).click()
-  await expect(verdict.getByRole('button', { name: 'Like' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(verdict.getByRole('button', { name: 'Dislike' })).toHaveAttribute('aria-pressed', 'true')
+  await verdict.getByRole('button', { name: 'Like', exact: true }).click()
+  await expect(verdict.getByRole('button', { name: 'Like', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  // Voting made it checked; the star is its own, for everyone.
+  await expect(page.getByRole('group', { name: 'Selection' }).getByRole('button', { name: 'Checked' })).toHaveAttribute('aria-pressed', 'true')
+  await page
+    .locator('dialog.drawer')
+    .getByRole('button', { name: /Favourite/ })
+    .click()
+  await expect(page.locator('dialog.drawer').getByRole('button', { name: /Favourite/ })).toHaveAttribute('aria-pressed', 'true')
+  // The price shows its currency.
+  await expect(page.locator('dialog.drawer .input-affix .affix')).toHaveText('€')
+  await expect(page.getByRole('textbox', { name: 'Price', exact: true })).toBeVisible()
   // Every free-text field says what belongs in it.
   await expect(page.getByRole('textbox', { name: 'Comments', exact: true })).toHaveAccessibleDescription(/Everything else about this product/)
   await expect(page.getByRole('textbox', { name: 'Description', exact: true })).toHaveAccessibleDescription(/usually taken from the shop page/)
@@ -713,7 +728,7 @@ test('troubleshooting: a detailed log on one device and a support package withou
   await page.locator('table.grid tbody .name-model').first().click()
   const selection = page.getByRole('group', { name: 'Selection' })
   const was = (await selection.locator('[aria-pressed="true"]').textContent())!
-  await selection.getByRole('button', { name: was === 'Favourite' ? 'Open' : 'Favourite', exact: true }).click()
+  await selection.getByRole('button', { name: was === 'Checked' ? 'Open' : 'Checked', exact: true }).click()
   await selection.getByRole('button', { name: was, exact: true }).click()
   await expect.poll(() => page.evaluate(() => (localStorage.getItem('pv.debug.log') ?? '').includes('saved in'))).toBe(true)
   await page.locator('dialog.drawer').getByRole('button', { name: 'Close', exact: true }).click()

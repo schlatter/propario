@@ -618,7 +618,11 @@ function SheetEditor({
                     <td>{p.name}</td>
                     <td className="num">{p.price}</td>
                     <td>
-                      {p.candidate !== 'open' && <span className={`pill${p.candidate === 'favorite' ? ' fav' : ' excl'}`}>{m.candidate[p.candidate]}</span>}
+                      {p.candidate === 'excluded' ? (
+                        <span className="pill excl">{m.candidate.excluded}</span>
+                      ) : p.favorite ? (
+                        <span className="pill fav">★ {m.verdict.favorite}</span>
+                      ) : null}
                     </td>
                     <td>{p.purchased ? m.purchase.purchased : ''}</td>
                     <td className="samples">{p.url ? '✓' : ''}</td>

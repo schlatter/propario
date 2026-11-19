@@ -156,8 +156,9 @@ export function checkFields(kind: Kind, fields: Record<string, unknown>): string
         if (v !== undefined && (typeof v !== 'string' || (v !== '' && !ISO_DATE.test(v)))) return `purchase.${d} must be yyyy-mm-dd`
       }
     }
-    if (key === 'votes' && !Object.entries(value as object).every(([k, v]) => UUID.test(k) && (v === 'like' || v === 'dislike')))
-      return 'votes must be like or dislike per account'
+    if (key === 'votes' && !Object.entries(value as object).every(([k, v]) => UUID.test(k) && (v === 'like' || v === 'neutral' || v === 'dislike')))
+      return 'votes must be like, neutral or dislike per account'
+    if (key === 'candidate' && !['open', 'checked', 'excluded', 'favorite'].includes(String(value))) return 'field candidate is unknown'
     if (!checkStrings(value)) return `field ${key} is too large or too deep`
   }
   if (JSON.stringify(fields).length > MAX_JSON) return 'record too large'

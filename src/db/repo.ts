@@ -5,7 +5,7 @@
  */
 import { db, newId, nowIso, type AppDB } from './db'
 import { makeProduct, makeProject, makeProperty, makeRequirement } from './factories'
-import type { Offer, Product, Project, PropertyDef, Requirement, Review } from './types'
+import type { Offer, Product, Project, PropertyDef, Requirement, Review, Vote } from './types'
 import { sanitize, type Change } from '../shared/records.ts'
 import { commit, setLocalRole } from '../sync'
 import { rehostImages } from '../images'
@@ -328,6 +328,9 @@ export async function uniqueProjectName(name: string, database: AppDB = db): Pro
 }
 
 /** Swipe mode: the signed-in person's verdict on a product (null takes it back). Only one's own vote merges. */
-export async function setVote(product: Product, userId: string, vote: 'like' | 'dislike' | null) {
-  await commit([patch('products', product, { votes: { [userId]: vote } })])
+/** One person's verdict; giving one marks a product not looked at yet as checked. */
+export async function setVote(product: Product, userId: string, vote: Vote | null) {
+  const fields: Partial<Product> = { votes: { [userId]: vote } as Product['votes'] }
+  if (vote && product.candidate === 'open') fields.candidate = 'checked'
+  await commit([patch('products', product, fields)])
 }

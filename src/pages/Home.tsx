@@ -1,3 +1,4 @@
+import { isFavorite } from '../domain/verdict'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -139,7 +140,7 @@ export function HomePage() {
 
 function pickOf(project: Project, items: Product[]) {
   const decision = project.decisionProductId ? items.find((i) => i.id === project.decisionProductId) : undefined
-  const favorite = items.filter((i) => i.candidate === 'favorite').sort((a, b) => (a.favoriteRank ?? 999) - (b.favoriteRank ?? 999))[0]
+  const favorite = items.filter((i) => isFavorite(i)).sort((a, b) => (a.favoriteRank ?? 999) - (b.favoriteRank ?? 999))[0]
   return { decision, favorite }
 }
 

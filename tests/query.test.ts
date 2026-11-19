@@ -36,7 +36,9 @@ describe('advanced filter', () => {
   })
 
   it('knows built-in fields and their words: selection, finder, numbers in German notation', () => {
-    expect(run('Auswahl = Favorit')).toEqual(['Bo'])
+    expect(run('Favorit = ja')).toEqual(['Bo'])
+    // A favourite from before 0.12 is checked, with the star.
+    expect(run('Auswahl = geprüft')).toEqual(['Bo'])
     expect(run('Mein = ja')).toEqual(['Arvika'])
     expect(run('Gefunden von = ada')).toEqual(['Arvika'])
     expect(run('Preis >= 1.200')).toEqual(['Bo'])

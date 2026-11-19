@@ -20,6 +20,7 @@ import { Glyph } from '../../ui/Glyph'
 import { Preview, Thumb } from '../../ui/Thumb'
 import { filledLabels } from '../../domain/display'
 import { Gallery } from './Gallery'
+import { InfoTip } from '../../ui/InfoTip'
 
 /** Image block in the product drawer: load from link, pick a file, paste or drop, remove. */
 export function ProductImage({ product: p, name }: { product: Product; name: string }) {
@@ -143,6 +144,7 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
           <button type="button" className="btn sm" disabled={busy} onClick={() => file.current?.click()}>
             <Glyph name="upload" /> {m.image.chooseFile}
           </button>
+          <InfoTip text={m.image.pasteHint} />
           {stored && (
             <button type="button" className="btn sm ghost" disabled={busy} onClick={removeMain}>
               <Glyph name="trash" /> {m.image.remove}
@@ -209,7 +211,6 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
             />
           </div>
         )}
-        <p className="muted small">{m.image.pasteHint}</p>
         {filled && (
           <p className="small" role="status">
             {filled.length ? m.pageImport.filled(filledLabels(filled, m)) : m.pageImport.nothing}

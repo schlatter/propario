@@ -49,6 +49,7 @@ export function makeProduct(projectId: string, p: Partial<Product> = {}): Produc
     comments: '',
     foundBy: '',
     candidate: 'open',
+    favorite: false,
     favoriteRank: null,
     exclusionReason: '',
     exclusionCategory: '',

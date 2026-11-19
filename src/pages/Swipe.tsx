@@ -81,7 +81,7 @@ function Deck({ data }: { data: ProjectData }) {
       if (e.target instanceof HTMLElement && e.target.closest('input, textarea, select')) return
       if (e.key === 'ArrowRight') void decide('like')
       else if (e.key === 'ArrowLeft') void decide('dislike')
-      else if (e.key === 'ArrowDown') skip()
+      else if (e.key === 'ArrowDown') void decide('neutral')
       else if (e.key === 'Backspace') void undo()
       else return
       e.preventDefault()
@@ -110,19 +110,23 @@ function Deck({ data }: { data: ProjectData }) {
           <Card key={current.id} product={current} data={data} leaving={leaving} onVote={decide} />
           <div className="swipe-actions">
             <button type="button" className="swipe-btn no" onClick={() => void decide('dislike')} aria-keyshortcuts="ArrowLeft">
-              <Glyph name="cross" />
+              <Glyph name="thumbDown" />
               <span>{m.swipe.dislike}</span>
             </button>
-            <button type="button" className="btn ghost sm" onClick={skip} aria-keyshortcuts="ArrowDown">
-              {m.swipe.skip}
+            <button type="button" className="swipe-btn neutral" onClick={() => void decide('neutral')} aria-keyshortcuts="ArrowDown">
+              <Glyph name="neutral" />
+              <span>{m.swipe.neutral}</span>
             </button>
             <button type="button" className="swipe-btn yes" onClick={() => void decide('like')} aria-keyshortcuts="ArrowRight">
-              <Glyph name="star" />
+              <Glyph name="thumbUp" />
               <span>{m.swipe.like}</span>
             </button>
           </div>
           <p className="muted small swipe-hint">
-            {m.swipe.hint}
+            {m.swipe.hint}{' '}
+            <button type="button" className="link-btn inline" onClick={skip}>
+              {m.swipe.skip}
+            </button>
             {done.length > 0 && (
               <>
                 {' '}
@@ -157,7 +161,8 @@ function Card({ product: p, data, leaving, onVote }: { product: Product; data: P
   return (
     <article
       className={`swipe-card${dx !== 0 ? ' dragging' : ''}`}
-      style={{ transform: `translateX(${offset}px) rotate(${offset / 18}deg)` }}
+      // Neutral leaves downwards, like and dislike to their side.
+      style={{ transform: leaving === 'neutral' ? 'translateY(420px)' : `translateX(${offset}px) rotate(${offset / 18}deg)` }}
       onPointerDown={(e) => {
         if ((e.target as HTMLElement).closest('a, button')) return
         start.current = { x: e.clientX, id: e.pointerId }

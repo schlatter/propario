@@ -398,7 +398,8 @@ svg.glyph {
   gap: 4px;
   min-width: 0;
 }
-.field > span {
+.field > span,
+.field > label {
   font-size: 12px;
   font-weight: 600;
   color: var(--muted);
@@ -1474,14 +1475,6 @@ textarea.cell-editor {
 .field-note.stale {
   color: var(--ink-2);
 }
-.lookups {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0 0 6px;
-  padding: 0;
-  list-style: none;
-}
 .price-cell .delta {
   font-size: 11px;
   color: var(--muted);
@@ -2338,11 +2331,19 @@ table.map {
   align-items: center;
   gap: 3px;
 }
+.vote .glyph {
+  width: 15px;
+  height: 15px;
+}
+/* Verdicts speak by their thumbs; green and red stay for requirement checks (docs/brand.md). */
 .vote.like {
-  color: var(--pass);
+  color: var(--brand-text);
+}
+.vote.neutral {
+  color: var(--muted);
 }
 .vote.dislike {
-  color: var(--fail);
+  color: var(--ink-2);
 }
 
 /* ---------- Swipe mode ---------- */
@@ -2510,10 +2511,13 @@ table.map {
   height: 22px;
 }
 .swipe-btn.no {
-  color: var(--fail);
+  color: var(--ink-2);
 }
 .swipe-btn.yes {
-  color: var(--pass);
+  color: var(--brand-text);
+}
+.swipe-btn.neutral {
+  color: var(--muted);
 }
 .swipe-btn:hover {
   background: var(--surface-2);
@@ -4046,37 +4050,6 @@ dialog.gallery::backdrop {
   box-shadow: var(--shadow);
 }
 
-/* Your verdict in the details: the swipe vote, changeable (src/pages/project/ProductDrawer.tsx). */
-.vote-control {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.vote-control .seg button {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  min-height: 32px;
-}
-.vote-control .glyph {
-  width: 14px;
-  height: 14px;
-}
-.vote-control .vote-like[aria-pressed='true'] {
-  color: var(--pass);
-}
-.vote-control .vote-dislike[aria-pressed='true'] {
-  color: var(--fail);
-}
-
-/* What belongs in a field, under its label (src/ui/inputs.tsx). */
-.field-hint {
-  font-size: 12px;
-  color: var(--muted);
-  line-height: 1.4;
-  margin-top: -2px;
-}
 .field-label {
   font-size: 12px;
   font-weight: 600;
@@ -4097,4 +4070,173 @@ dialog.gallery::backdrop {
 .req-table .grip-cell .grip {
   width: 100%;
   min-height: 40px;
+}
+
+/* A quiet ⓘ with a short explanation on hover or focus (src/ui/InfoTip.tsx). */
+.info-tip {
+  /* The text hangs from the label or heading it belongs to (positioned below), so it never
+     reaches past the left edge of a drawer. */
+  position: static;
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin-left: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  vertical-align: middle;
+  cursor: help;
+}
+button.info-tip {
+  min-width: 24px;
+  min-height: 24px;
+}
+.info-tip .glyph {
+  width: 14px;
+  height: 14px;
+}
+.info-tip:hover,
+.info-tip:focus-visible {
+  color: var(--brand-text);
+}
+.tip-text {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 6px);
+  z-index: 30;
+  width: max-content;
+  max-width: min(280px, 70vw);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--ink);
+  color: var(--bg);
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0;
+  text-align: left;
+  text-transform: none;
+  white-space: normal;
+  box-shadow: var(--shadow);
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.12s;
+  pointer-events: none;
+}
+.info-tip:hover .tip-text,
+.info-tip:focus-visible .tip-text,
+.field:focus-within .tip-text {
+  visibility: visible;
+  opacity: 1;
+}
+.field-label-row {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* How a product stands (src/pages/project/Verdict.tsx). */
+.verdict-control button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 32px;
+}
+.verdict-control .glyph {
+  width: 16px;
+  height: 16px;
+}
+.verdict-control .verdict-like[aria-pressed='true'] {
+  color: var(--brand-text);
+}
+.verdict-control .verdict-dislike[aria-pressed='true'] {
+  color: var(--ink);
+}
+.btn.fav-toggle {
+  color: var(--ink);
+}
+.btn.fav-toggle .glyph {
+  color: var(--line-strong);
+}
+.btn.fav-toggle[aria-pressed='true'] .glyph {
+  color: var(--fav);
+}
+.btn.fav-toggle[aria-pressed='true'] {
+  border-color: var(--fav);
+  background: var(--fav-soft);
+}
+.pill.checked {
+  background: var(--brand-soft);
+  color: var(--brand-text);
+}
+/* The shop page under the picture: where the product is bought and checked. */
+.product-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--brand);
+  border-radius: 8px;
+  color: var(--brand-text);
+  font-weight: 650;
+  text-decoration: none;
+}
+.product-link:hover {
+  background: var(--brand-soft);
+}
+/* A unit after the value, e.g. the price's €. */
+.input-affix {
+  position: relative;
+  display: block;
+}
+.input-affix .input {
+  width: 100%;
+  padding-right: 30px;
+}
+.input-affix .affix {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+}
+.lookup-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  margin: -2px 0 8px;
+}
+.lookup-row a {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--brand-text);
+}
+.lookup-row .glyph {
+  width: 12px;
+  height: 12px;
+}
+.old-ratings {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+.old-ratings li {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.field,
+.section > h3,
+.pimg-actions {
+  position: relative;
 }

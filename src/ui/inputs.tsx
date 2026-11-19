@@ -1,5 +1,7 @@
 import { cloneElement, type InputHTMLAttributes, isValidElement, type TextareaHTMLAttributes, useEffect, useId, useState } from 'react'
 
+import { InfoTip } from './InfoTip'
+
 /**
  * Text input that keeps its own draft and commits on blur or Enter.
  * Escape restores the stored value. Avoids a database write per keystroke.
@@ -58,21 +60,19 @@ export function CommitTextarea({
 }
 
 /**
- * A labelled control. `hint` says in a few words what belongs in it; it is shown under the
- * label and read out as the control's description.
+ * A labelled control. `hint` says in a few words what belongs in it: behind a quiet ⓘ next to
+ * the label (on hover, or while the control has focus), and read out as its description.
  */
 export function Field({ label, hint, children, className }: { label: string; hint?: string; children: React.ReactNode; className?: string }) {
   const id = useId()
   const control = hint && isValidElement<{ 'aria-describedby'?: string }>(children) ? cloneElement(children, { 'aria-describedby': id }) : children
   return (
     <label className={`field${className ? ` ${className}` : ''}`}>
-      <span>{label}</span>
-      {hint && (
-        // Not part of the control's name (it sits inside the label), but its description.
-        <small id={id} className="field-hint" aria-hidden="true">
-          {hint}
-        </small>
-      )}
+      <span className="field-label-row">
+        {label}
+        {/* Not part of the control's name (it sits inside the label), but its description. */}
+        {hint && <InfoTip text={hint} id={id} inLabel />}
+      </span>
       {control}
     </label>
   )

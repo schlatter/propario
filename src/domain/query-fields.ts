@@ -3,6 +3,7 @@
  * and English names, then the comparison's own fields by their names. Own fields come first, so
  * a field called "Farbe" means that field, not the product's variant.
  */
+import { isFavorite, statusOf } from './verdict.ts'
 import type { Product, PropertyDef } from '../db/types'
 import { splitUnit } from '../import/normalize.ts'
 import { avgStars, isNew } from './display.ts'
@@ -32,17 +33,18 @@ export function queryFields(properties: PropertyDef[], summary: (p: Product) => 
     {
       names: ['Auswahl', 'Selection', 'Status'],
       kind: 'text',
-      get: (p) => p.candidate,
+      get: (p) => statusOf(p),
       aliases: {
         offen: 'open',
         open: 'open',
-        favorit: 'favorite',
-        favourite: 'favorite',
-        favorite: 'favorite',
+        geprüft: 'checked',
+        geprueft: 'checked',
+        checked: 'checked',
         ausgeschlossen: 'excluded',
         excluded: 'excluded',
       },
     },
+    { names: ['Favorit', 'Favourite', 'Favorite'], kind: 'boolean', get: (p) => isFavorite(p) },
     {
       names: ['Ausschlussgrund', 'Grund', 'Exclusion reason', 'Reason'],
       kind: 'text',

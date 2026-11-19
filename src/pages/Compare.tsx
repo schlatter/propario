@@ -1,3 +1,4 @@
+import { isFavorite, statusOf } from '../domain/verdict'
 import { useState, type ReactNode } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import type { Product, PropertyDef } from '../db/types'
@@ -83,7 +84,7 @@ export function ComparePage() {
               .map(({ about, s }) => m.review.summary(m.review.about[about], s.score!, s.sources))
               .join(' · '),
         ),
-        simple('candidate', m.field.candidate, (p) => m.candidate[p.candidate]),
+        simple('candidate', m.field.candidate, (p) => `${m.candidate[statusOf(p)]}${isFavorite(p) ? ` ★` : ''}`),
         numeric(
           'rating',
           m.field.rating,

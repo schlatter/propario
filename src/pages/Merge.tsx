@@ -3,6 +3,7 @@
  * or Markdown, or choose a file. The plan (src/import/merge.ts) shows what is new and what
  * changes; only what stays ticked is saved.
  */
+import { statusOf } from '../domain/verdict'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
@@ -72,7 +73,7 @@ export function MergePage() {
       return prop ? formatValue(prop, v as Product['values'][string], m, fmt) : typeof v === 'boolean' ? (v ? m.common.yes : m.common.no) : String(v)
     }
     if (c.key === 'price') return fmt.money(v as number)
-    if (c.key === 'candidate') return m.candidate[v as Product['candidate']]
+    if (c.key === 'candidate') return m.candidate[statusOf({ candidate: v as Product['candidate'] })]
     return String(v)
   }
   const label = (c: MergeChange) => (c.key === 'values' ? fieldName(c.field!) : m.importer.target_[c.key as Exclude<FieldTarget, 'property'>])

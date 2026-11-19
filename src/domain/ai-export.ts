@@ -11,6 +11,7 @@
 import type { Product, Project, PropertyDef, Requirement } from '../db/types'
 import type { Formatters } from '../i18n'
 import type { Messages } from '../i18n/en'
+import { isFavorite, statusOf } from './verdict.ts'
 import { displayName, exclusionText, formatValue } from './display.ts'
 import { evaluate, OP_SYMBOL, type Summary } from './requirements.ts'
 import { reviewSummary } from './reviews.ts'
@@ -42,7 +43,10 @@ export function comparisonForAi(d: Input, m: Messages, fmt: Formatters): string 
 
   lines.push(`## ${m.ai.products(d.products.length)}`)
   for (const p of d.products) {
-    const status = p.candidate === 'excluded' ? `${m.candidate.excluded}${exclusionText(p, m) ? `: ${exclusionText(p, m)}` : ''}` : m.candidate[p.candidate]
+    const status =
+      p.candidate === 'excluded'
+        ? `${m.candidate.excluded}${exclusionText(p, m) ? `: ${exclusionText(p, m)}` : ''}`
+        : `${m.candidate[statusOf(p)]}${isFavorite(p) ? `, ${m.verdict.favorite}` : ''}`
     lines.push('', `### ${displayName(p, m)} – ${status}${d.project.decisionProductId === p.id ? ` – ${m.project.decision}` : ''}`)
     const price = p.price !== null ? `${fmt.money(p.price)}${p.priceDate ? ` (${fmt.date(p.priceDate)})` : ''}` : p.priceNote
     if (price) lines.push(`- ${m.field.price}: ${price}${p.retailer ? `, ${p.retailer}` : ''}`)

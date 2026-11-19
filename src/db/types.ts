@@ -14,9 +14,17 @@ export const PROPERTY_TYPES: PropertyType[] = ['text', 'number', 'boolean', 'dat
 /** Stored value of a custom property. Dates are ISO `yyyy-mm-dd` strings. */
 export type PropertyValue = string | number | boolean | null
 
-export type Candidate = 'open' | 'favorite' | 'excluded'
+/**
+ * Where a product stands: not looked at yet, looked at, or out. 'favorite' is how records from
+ * before 0.12 marked a favourite; read it with `statusOf` / `isFavorite` (src/domain/verdict.ts).
+ */
+export type Candidate = 'open' | 'checked' | 'excluded' | 'favorite'
+export type Status = 'open' | 'checked' | 'excluded'
+export const STATUSES: Status[] = ['open', 'checked', 'excluded']
 
-export type Vote = 'like' | 'dislike'
+/** Each person's verdict on a product: thumbs up, neutral, thumbs down. */
+export type Vote = 'like' | 'neutral' | 'dislike'
+export const VOTES: Vote[] = ['like', 'neutral', 'dislike']
 
 /** Why a product was excluded, as a choice (filterable); details go into `exclusionReason`. */
 export type ExclusionCategory = 'looks' | 'size' | 'price' | 'brand' | 'shop' | 'quality' | 'other'
@@ -165,6 +173,8 @@ export interface Product {
   comments: string
   foundBy: string
   candidate: Candidate
+  /** Marked as a favourite (a star), shared by everyone in the comparison. Absent before 0.12. */
+  favorite?: boolean
   favoriteRank: number | null
   exclusionReason: string
   /** Kind of reason ('' when none chosen). Absent in records from before 0.3. */
