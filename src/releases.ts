@@ -11,6 +11,23 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.11.0',
+    notes: {
+      en: [
+        'Changes show at once and are saved in the background – no more waiting after each tap.',
+        'Your verdict in the details: like or not, also to put a wrong swipe right.',
+        'Fields as a table like the requirements; every text field says what belongs in it.',
+        'No more hanging start; Settings → Troubleshooting for a log and a support package.',
+      ],
+      de: [
+        'Änderungen erscheinen sofort und werden im Hintergrund gespeichert – kein Warten mehr nach jedem Tippen.',
+        'Dein Urteil in den Details: gefällt mir oder nicht, auch um einen falschen Wisch zu korrigieren.',
+        'Felder als Tabelle wie die Anforderungen; jedes Textfeld sagt, was hineingehört.',
+        'Kein hängender Start mehr; Einstellungen → Fehlersuche für Protokoll und Support-Paket.',
+      ],
+    },
+  },
+  {
     version: '0.10.0',
     notes: {
       en: [

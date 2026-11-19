@@ -6,6 +6,11 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+## 0.11.0 — 2026-11-19
+
+- Changed: in the requirements and the fields, the handle for moving a row sits first in the
+  row, where it is picked up.
+
 - Added: **Troubleshooting** in Settings – a detailed log on this device (requests with status
   and duration, saving and syncing, start steps, errors, going to the background, network and
   app-file changes; the last 400 entries, kept across updates) and a **support package** to
