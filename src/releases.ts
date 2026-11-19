@@ -11,6 +11,13 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.12.1',
+    notes: {
+      en: ['Fit and verdicts have their own columns again – compact rows.', 'Set your verdict right in the table: 👍 ⊖ 👎.'],
+      de: ['Eignung und Urteile wieder in eigenen Spalten – kompakte Zeilen.', 'Dein Urteil direkt in der Tabelle setzen: 👍 ⊖ 👎.'],
+    },
+  },
+  {
     version: '0.12.0',
     notes: {
       en: [

@@ -6,6 +6,8 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+## 0.12.1 — 2026-11-19
+
 - Changed back: the fit has its own column again, and the verdicts too – the rows were too
   tall. The thumb down stays red.
 - Added: verdicts are set right in the table – 👍 ⊖ 👎 with how many gave each; one's own is
