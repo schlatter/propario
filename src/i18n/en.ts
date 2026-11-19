@@ -562,6 +562,7 @@ export const en = {
     weight: 'Weight',
     filled: (list: string) => `Taken from the shop page: ${list}`,
     nothing: 'The shop page names nothing that is still empty here.',
+    fromAddress: (list: string) => `Taken from the address instead: ${list}.`,
   },
   lookup: {
     geizhals: 'Geizhals',

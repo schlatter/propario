@@ -3,6 +3,7 @@
  * browser (which also drops any metadata) and stored on this server in the comparison
  * (/api/images). Pages only ever show images from this server, so no shop learns who looks.
  */
+import { factsFromUrl } from './domain/url-facts'
 import { DEMO_PICTURE, isDemo } from './demo'
 import { api } from './api'
 import { takeFacts, updateProduct } from './db/repo'
@@ -162,7 +163,11 @@ export async function loadProductImage(p: Product, from?: string, signal?: Abort
   try {
     got = await fetchRemoteImage(target, signal)
   } catch (e) {
-    if (e instanceof ImageError && e.facts) e.filled = await takeFacts(p, e.facts)
+    if (e instanceof ImageError) {
+      // A page that refuses to be read still has an address that names the product.
+      const facts = e.facts ?? (target === safeHref(p.url) ? factsFromUrl(target) : undefined)
+      if (facts && (facts.name || facts.specs?.length)) e.filled = await takeFacts(p, facts)
+    }
     throw e
   }
   const image = await uploadImage(p.projectId, await shrinkImage(got.blob))

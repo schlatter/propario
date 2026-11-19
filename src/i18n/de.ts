@@ -566,6 +566,7 @@ export const de: Messages = {
     weight: 'Gewicht',
     filled: (list) => `Von der Shopseite übernommen: ${list}`,
     nothing: 'Die Shopseite nennt nichts, was hier noch leer ist.',
+    fromAddress: (list) => `Stattdessen aus der Adresse übernommen: ${list}.`,
   },
   lookup: {
     geizhals: 'Geizhals',

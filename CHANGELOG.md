@@ -6,6 +6,11 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- Fixed: adding a product by a link whose shop refuses automated access (Otto answers with a
+  bot check) gave no word at all. The app now says why nothing came, and takes what the address
+  itself names – the product name and, as in Otto's addresses, width, depth and height – without
+  any further request. Only empty fields are filled.
+
 - Changed: **one way to judge a product.** The selection is now _Open_, _Checked_ or
   _Excluded_; a favourite is a star of its own; and everyone gives their verdict – thumbs up,
   neutral or thumbs down – in the details, by swiping or with ↓ for neutral. Giving a verdict

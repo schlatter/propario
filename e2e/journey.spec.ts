@@ -333,6 +333,19 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await addLink('https://www.shop.example/regal-1.html/?utm_source=mail')
   await expect.poll(countRows).toBe(2)
 
+  // A shop that refuses automated access (Otto answers with a bot check): the app says so instead
+  // of staying silent, and takes what the address itself names – without any further request.
+  await page.route('**/api/product-image?**', (route) => route.fulfill({ status: 422, json: { error: 'blocked' } }))
+  await addLink('https://www.moebel.example/p/nordhaus-sideboard-mit-led-beleuchtung-in-landhaus-stil-1-st-AB12CD34/?variationId=AB12CD34EF')
+  await page.unroute('**/api/product-image?**')
+  await expect(page.getByText(/moebel\.example: The shop refuses automated access.*Taken from the address instead/)).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Nordhaus Sideboard mit Led Beleuchtung in Landhaus Stil', exact: true })).toBeVisible()
+  await page.getByRole('checkbox', { name: /Select for comparison: Nordhaus Sideboard/ }).check()
+  await page.getByRole('button', { name: 'Delete', exact: true }).click()
+  await page.getByRole('button', { name: 'Delete', exact: true }).last().click()
+  await page.getByRole('button', { name: 'Delete for good' }).click()
+  await expect.poll(countRows).toBe(2)
+
   // The selection opens as a small menu of coloured choices; an excluded row is washed in red.
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.getByRole('button', { name: 'Selection: Open' }).last().click()

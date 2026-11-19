@@ -74,7 +74,12 @@ function QuickAddForm({ data, onOpen, autoFocus }: { data: ProjectData; onOpen: 
       const tell = (filled: string[] | undefined) => filled?.length && toast(m.pageImport.filled(filledLabels(filled, m)))
       void loadProductImage(created)
         .then((r) => tell(r.filled))
-        .catch((e) => tell(e instanceof ImageError ? e.filled : undefined))
+        // Never silent: say why nothing came, and what the address gave instead.
+        .catch((e) => {
+          const filled = e instanceof ImageError && e.filled?.length ? ` ${m.pageImport.fromAddress(filledLabels(e.filled, m))}` : ''
+          const why = e instanceof ImageError ? m.image.error[e.code] : m.image.error.failed
+          toast(`${hostOf(url)}: ${why}${filled}`)
+        })
       setText('')
       onOpen(created.id)
     } else {
