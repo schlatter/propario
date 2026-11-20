@@ -897,9 +897,9 @@ export const en = {
   duel: {
     open: 'Duel',
     openHint: 'Two at a time: which one is better? Gives your ranking – the first place after a few duels',
-    question: (place: number) => (place === 1 ? 'Which one is better – for first place?' : `Which one is better – for place ${place}?`),
-    toFirst: (n: number) => (n === 1 ? 'One more duel to your first place.' : `${n} more duels to your first place.`),
-    toAll: (n: number) => (n === 1 ? 'One more duel to a complete ranking.' : `${n} more duels to a complete ranking.`),
+    question: 'Which is better?',
+    toFirst: (n: number) => (n === 1 ? '1 duel to first place' : `${n} duels to first place`),
+    toAll: (n: number) => (n === 1 ? '1 duel to the ranking' : `${n} duels to the ranking`),
     undo: 'Undo',
     skip: 'Later',
     done: 'Your ranking is complete.',

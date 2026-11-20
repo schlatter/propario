@@ -77,6 +77,17 @@ export function remaining(r: Ranking): { toFirst: number; toAll: number } {
 }
 
 /**
+ * How far along, for the progress bar: towards the first place while it is open, then towards
+ * the complete ranking.
+ */
+export function progress(r: Ranking): { done: number; total: number } {
+  const n = r.order.length
+  if (r.settled === 0) return { done: Math.max(0, r.next - 1), total: Math.max(0, n - 1) }
+  const total = (n * (n - 1)) / 2
+  return { done: total - remaining(r).toAll, total }
+}
+
+/**
  * A joint ranking of everyone's own: products by their average place (1 = best); a product a
  * person has not ranked counts as their last place. Ties keep `fallback` order.
  */

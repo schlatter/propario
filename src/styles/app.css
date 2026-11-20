@@ -4612,19 +4612,30 @@ button.info-tip {
   background: linear-gradient(to bottom, transparent, var(--bg) 30%);
 }
 .duel-question {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
   margin: 0;
+}
+.duel-bar .swipe-progress {
+  margin: 4px 0 0;
 }
 .duel-choices {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
   gap: 8px;
+}
+/* Quiet and grey: putting off is no answer, just a pause. */
+.btn.duel-later {
+  background: var(--sunken);
+  border-color: transparent;
+  color: var(--ink-2);
 }
 .duel-choices .btn {
   min-height: 44px;
   min-width: 0;
-}
-.duel-choices .btn:last-child {
-  justify-content: flex-end;
 }
 .duel-name {
   overflow: hidden;

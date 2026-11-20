@@ -3,7 +3,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import type { Product, PropertyDef, Ranking } from '../db/types'
 import { setDecision, updateProject } from '../db/repo'
-import { current, decide, everyone, finished, joint, normalize, remaining, skip, startOrder, type Side } from '../domain/duel'
+import { current, decide, everyone, finished, joint, normalize, progress, remaining, skip, startOrder, type Side } from '../domain/duel'
 import { useUsers } from '../users'
 import { Gallery } from './project/Gallery'
 import { avgStars, displayName, exclusionText, formatValue } from '../domain/display'
@@ -363,11 +363,15 @@ export function ComparePage() {
       </div>
       {duelMode && mine && pair && (
         // Which of the two is better: the answer moves the winner up (src/domain/duel.ts).
+        // The question in one line with what is left, and the same progress bar as when swiping.
         <div className="duel-bar">
           <p className="duel-question">
-            <b>{m.duel.question(mine.settled + 1)}</b>
-            <span className="muted small"> {remaining(mine).toFirst > 0 ? m.duel.toFirst(remaining(mine).toFirst) : m.duel.toAll(remaining(mine).toAll)}</span>
+            <b>{m.duel.question}</b>
+            <span className="muted small">{remaining(mine).toFirst > 0 ? m.duel.toFirst(remaining(mine).toFirst) : m.duel.toAll(remaining(mine).toAll)}</span>
           </p>
+          <div className="swipe-progress" aria-hidden="true">
+            <i style={{ width: `${progress(mine).total ? (progress(mine).done / progress(mine).total) * 100 : 0}%` }} />
+          </div>
         </div>
       )}
       <div className={`compare-wrap${duelMode ? ' duel' : ''}`}>
@@ -466,34 +470,30 @@ export function ComparePage() {
       </div>
       {duelMode && mine && pair && (
         // The choice sits at the bottom of the screen, where the thumb is – like when swiping.
-        <div className="duel-actions" role="group" aria-label={m.duel.question(mine.settled + 1)}>
+        <div className="duel-actions" role="group" aria-label={m.duel.question}>
+          {/* ✓ = take this one: a choice, not a swipe. "Later" sits quietly between the two. */}
           <div className="duel-choices">
-            {products.map((p, i) => (
-              <button
-                key={p.id}
-                type="button"
-                className="btn primary"
-                onClick={() => choose(i === 0 ? 'left' : 'right')}
-                aria-keyshortcuts={i === 0 ? 'ArrowLeft' : 'ArrowRight'}
-              >
-                {i === 0 && <Glyph name="chevronLeft" />}
-                <span className="duel-name">{p.model || displayName(p, m)}</span>
-                {i === 1 && <Glyph name="chevronRight" />}
+            <button type="button" className="btn primary" onClick={() => choose('left')} aria-keyshortcuts="ArrowLeft">
+              <Glyph name="check" />
+              <span className="duel-name">{products[0].model || displayName(products[0], m)}</span>
+            </button>
+            {later ? (
+              <button type="button" className="btn sm duel-later" onClick={putOff} aria-keyshortcuts="ArrowDown">
+                {m.duel.skip}
               </button>
-            ))}
+            ) : (
+              <span />
+            )}
+            <button type="button" className="btn primary" onClick={() => choose('right')} aria-keyshortcuts="ArrowRight">
+              <Glyph name="check" />
+              <span className="duel-name">{products[1].model || displayName(products[1], m)}</span>
+            </button>
           </div>
-          {(later || history.length > 0) && (
+          {history.length > 0 && (
             <div className="duel-more">
-              {later && (
-                <button type="button" className="link-btn small" onClick={putOff} aria-keyshortcuts="ArrowDown">
-                  {m.duel.skip}
-                </button>
-              )}
-              {history.length > 0 && (
-                <button type="button" className="link-btn small" onClick={undo}>
-                  {m.duel.undo}
-                </button>
-              )}
+              <button type="button" className="link-btn small" onClick={undo}>
+                {m.duel.undo}
+              </button>
             </div>
           )}
         </div>

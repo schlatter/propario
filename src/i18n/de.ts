@@ -910,9 +910,9 @@ export const de: Messages = {
   duel: {
     open: 'Duell',
     openHint: 'Je zwei nebeneinander: Welches ist besser? Ergibt deine Rangfolge – Platz 1 nach wenigen Duellen',
-    question: (place: number) => (place === 1 ? 'Welches ist besser – für Platz 1?' : `Welches ist besser – für Platz ${place}?`),
-    toFirst: (n: number) => (n === 1 ? 'Noch ein Duell bis zu deinem Platz 1.' : `Noch ${n} Duelle bis zu deinem Platz 1.`),
-    toAll: (n: number) => (n === 1 ? 'Noch ein Duell bis zur vollständigen Rangfolge.' : `Noch ${n} Duelle bis zur vollständigen Rangfolge.`),
+    question: 'Welches ist besser?',
+    toFirst: (n: number) => (n === 1 ? '1 Duell bis Platz 1' : `${n} Duelle bis Platz 1`),
+    toAll: (n: number) => (n === 1 ? '1 Duell bis zur Rangfolge' : `${n} Duelle bis zur Rangfolge`),
     undo: 'Rückgängig',
     skip: 'Später',
     done: 'Deine Rangfolge steht.',

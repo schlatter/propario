@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { current, decide, finished, joint, normalize, places, remaining, skip, startOrder } from '../src/domain/duel'
+import { current, decide, finished, joint, normalize, places, progress, remaining, skip, startOrder } from '../src/domain/duel'
 import { makeProduct } from '../src/db/factories'
 
 const ids = ['a', 'b', 'c', 'd']
@@ -22,6 +22,17 @@ describe('ranking by duels', () => {
     expect(current(decide(r, 'left'))).toEqual({ left: 'a', right: 'c' })
     // The challenger wins: it takes the place and stays on the left.
     expect(current(decide(r, 'right'))).toEqual({ left: 'b', right: 'c' })
+  })
+
+  it('measures progress towards the first place, then towards the whole ranking', () => {
+    let r = normalize(undefined, ids)
+    expect(progress(r)).toEqual({ done: 0, total: 3 })
+    r = decide(r, 'left')
+    expect(progress(r)).toEqual({ done: 1, total: 3 })
+    r = decide(decide(r, 'left'), 'left')
+    // First place decided: 3 of all 6 duels are played.
+    expect(progress(r)).toEqual({ done: 3, total: 6 })
+    expect(progress(play(['a', 'b', 'c', 'd']).r)).toEqual({ done: 6, total: 6 })
   })
 
   it('decides the first place after n − 1 duels', () => {

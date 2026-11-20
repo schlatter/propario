@@ -641,7 +641,8 @@ test('Ada moves rows and decides by swiping', async () => {
   // winner takes the place. Two products: one duel decides – and can become the decision.
   const tableUrl = page.url()
   await page.goto(tableUrl.replace(/\?.*$/, '') + '/compare?mode=duel')
-  await expect(page.getByText('Which one is better – for first place?')).toBeVisible()
+  await expect(page.getByText('Which is better?')).toBeVisible()
+  await expect(page.getByText('1 duel to first place')).toBeVisible()
   const [leftName, rightName] = await page.locator('.duel-choices .duel-name').allTextContents()
   await accessible(page, 'duel')
   // With two products there is no other duel to play first: nothing to skip.
