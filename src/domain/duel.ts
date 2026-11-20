@@ -106,20 +106,25 @@ export function joint(rankings: Ranking[], fallback: string[]): { id: string; av
 }
 
 /**
- * What a person duels: their own preselection – the products they starred or liked, nothing
- * excluded – starred ones first, table order within.
+ * What goes into the duels – the narrow choice, so a decision comes fast: products someone
+ * starred, and products everyone who gave verdicts in this comparison likes (with two people:
+ * both). Nothing excluded. The same for everyone; one's own stars first, then the others',
+ * then the liked ones, table order within.
  */
 export function startOrder(products: Product[], userId: string): string[] {
+  const voters = new Set(products.flatMap((p) => Object.keys(p.votes ?? {})))
+  const likedByAll = (p: Product) => voters.size > 0 && [...voters].every((id) => p.votes?.[id] === 'like')
+  const weight = (p: Product) => (isFavorite(p, userId) ? 0 : isFavorite(p) ? 1 : 2)
   return products
-    .filter((p) => p.candidate !== 'excluded' && (isFavorite(p, userId) || p.votes?.[userId] === 'like'))
-    .map((p, i) => ({ id: p.id, w: isFavorite(p, userId) ? 0 : 1, i }))
+    .filter((p) => p.candidate !== 'excluded' && (isFavorite(p) || likedByAll(p)))
+    .map((p, i) => ({ id: p.id, w: weight(p), i }))
     .sort((a, b) => a.w - b.w || a.i - b.i)
     .map((x) => x.id)
 }
 
 /**
- * Everyone's rankings, each over that person's own preselection, and all products in any of them
- * (in table order) – what the joint ranking is about.
+ * Everyone's rankings over the duel set, and all products in any of them (in table order) – what
+ * the joint ranking is about.
  */
 export function everyone(rankings: Record<string, Ranking> | undefined, products: Product[]): { states: [string, Ranking][]; all: string[] } {
   const states = Object.entries(rankings ?? {}).map(([id, r]): [string, Ranking] => [id, normalize(r, startOrder(products, id))])

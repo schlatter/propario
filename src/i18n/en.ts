@@ -903,7 +903,7 @@ export const en = {
     undo: 'Undo',
     skip: 'Later',
     done: 'Your ranking is complete.',
-    tooFew: 'Duels are between the products you starred or liked – you need at least two.',
+    tooFew: 'Duels are between favourites and what everyone likes – at least two such products are needed.',
     yourTitle: 'Your ranking',
     jointTitle: 'Joint ranking',
     yourHint: '✓ = decided in duels; the rest is your order so far.',

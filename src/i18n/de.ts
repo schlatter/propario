@@ -916,7 +916,7 @@ export const de: Messages = {
     undo: 'Rückgängig',
     skip: 'Später',
     done: 'Deine Rangfolge steht.',
-    tooFew: 'Duelliert wird zwischen deinen Favoriten und denen, die dir gefallen – dafür braucht es mindestens zwei.',
+    tooFew: 'Ins Duell kommen Favoriten und was allen gefällt – dafür braucht es mindestens zwei solche Produkte.',
     yourTitle: 'Deine Rangfolge',
     jointTitle: 'Gemeinsame Rangfolge',
     yourHint: '✓ = in Duellen entschieden; der Rest ist deine bisherige Reihenfolge.',

@@ -99,15 +99,22 @@ describe('ranking by duels', () => {
     expect(play(['b', 'd', 'a', 'c'], later).r.order).toEqual(['b', 'd', 'a', 'c'])
   })
 
-  it('duels only one’s own preselection: starred first, then liked; nothing excluded', () => {
+  it('duels only the narrow choice: starred by someone, or liked by everyone who judged; nothing excluded', () => {
     const pid = '00000000-0000-4000-8000-000000000000'
-    const liked = makeProduct(pid, { votes: { ada: 'like' } })
-    const starred = makeProduct(pid, { favorites: { ada: true } })
-    const neutral = makeProduct(pid, { votes: { ada: 'neutral' } })
-    const theirs = makeProduct(pid, { votes: { grace: 'like' } })
-    const out = makeProduct(pid, { votes: { ada: 'like' }, candidate: 'excluded' })
-    expect(startOrder([liked, starred, neutral, theirs, out], 'ada')).toEqual([starred.id, liked.id])
-    expect(startOrder([liked, starred, neutral, theirs, out], 'grace')).toEqual([theirs.id])
+    const both = makeProduct(pid, { votes: { ada: 'like', grace: 'like' } })
+    const onlyAda = makeProduct(pid, { votes: { ada: 'like', grace: 'neutral' } })
+    const graceStar = makeProduct(pid, { favorites: { grace: true }, votes: { ada: 'dislike' } })
+    const adaStar = makeProduct(pid, { favorites: { ada: true } })
+    const oldStar = makeProduct(pid, { favorite: true })
+    const out = makeProduct(pid, { votes: { ada: 'like', grace: 'like' }, candidate: 'excluded' })
+    const all = [both, onlyAda, graceStar, adaStar, oldStar, out]
+    // Ada's own stars first, then everyone else's (an old shared star too), then what all like.
+    expect(startOrder(all, 'ada')).toEqual([adaStar.id, oldStar.id, graceStar.id, both.id])
+    // The same products for Grace, her star first.
+    expect(new Set(startOrder(all, 'grace'))).toEqual(new Set(startOrder(all, 'ada')))
+    expect(startOrder(all, 'grace').slice(0, 2)).toEqual([graceStar.id, oldStar.id])
+    // Alone in a comparison, one's own like is everyone's.
+    expect(startOrder([makeProduct(pid, { votes: { ada: 'like' } })], 'ada')).toHaveLength(1)
   })
 
   it('gives the table a place per product: joint, or from the one ranking there is', () => {

@@ -44,7 +44,7 @@ export function ComparePage() {
   const duelMode = params.get('mode') === 'duel'
 
   // Duels: the products that take part, in the person's order so far (src/domain/duel.ts).
-  // Only one's own preselection takes part: the products one starred or liked.
+  // Only the narrow choice takes part: what someone starred and what everyone likes.
   const eligible = data ? startOrder(data.products, me.id) : []
   const mine = data ? normalize(data.project.rankings?.[me.id], eligible) : null
   const pair = duelMode && mine ? current(mine) : null
@@ -375,28 +375,6 @@ export function ComparePage() {
           </div>
         </div>
       )}
-      {duelMode && (
-        // In a duel the two pictures get the full width – larger than in the table, smaller than when swiping.
-        <div className="duel-pics">
-          {products.map((p) => {
-            const img = productImage(p)
-            return img ? (
-              <button
-                key={p.id}
-                type="button"
-                className="head-pic"
-                onClick={() => setGallery({ product: p, at: 0 })}
-                aria-label={m.image.openGallery(picturesOf(p).length)}
-              >
-                <img src={img} alt="" referrerPolicy="no-referrer" />
-                {picturesOf(p).length > 1 && <span className="head-count">{picturesOf(p).length}</span>}
-              </button>
-            ) : (
-              <span key={p.id} />
-            )
-          })}
-        </div>
-      )}
       <div className={`compare-wrap${duelMode ? ' duel' : ''}`}>
         <table className={`compare${duelMode ? ' duel' : ''}`}>
           {!duelMode && (
@@ -415,7 +393,7 @@ export function ComparePage() {
                 const img = productImage(p)
                 return (
                   <th key={p.id} scope="col" className={p.candidate === 'excluded' ? 'is-excluded' : undefined}>
-                    {img && !duelMode && (
+                    {img && (
                       // The pictures decide a lot: a tap shows them large, all of them.
                       <button
                         type="button"

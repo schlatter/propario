@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs'
 import { afterEach, describe, expect, it } from 'vitest'
 import { DEMO_PICTURE, demoChanges } from '../src/demo'
+import { startOrder } from '../src/domain/duel'
 import type { Product, PropertyDef, Requirement } from '../src/db/types'
 
 afterEach(() => localStorage.clear())
@@ -19,6 +20,11 @@ describe('the demo comparison', () => {
       // Each product, field and requirement belongs to one of the three.
       const ids = new Set(projects.map((p) => p.id))
       for (const r of [...products, ...records('properties'), ...records('requirements')] as { projectId: string }[]) expect(ids.has(r.projectId)).toBe(true)
+      // Each comparison has something to duel: at least two starred or liked by everyone.
+      for (const project of projects) {
+        const own = products.filter((p) => p.projectId === project.id)
+        expect(startOrder(own, 'demo').length, (project as { name: string }).name).toBeGreaterThanOrEqual(2)
+      }
       for (const p of products) {
         for (const key of Object.keys(p.values)) expect(props.has(key)).toBe(true)
         for (const pic of [p.image, ...(p.images ?? [])]) {
