@@ -6,6 +6,11 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+## 0.15.2 — 2026-11-20
+
+- Changed: in duels the pictures are larger, and side by side each product shows your star and the
+  verdicts as in the product table – seen and set right there.
+
 ## 0.15.1 — 2026-11-20
 
 - Changed: duels say less – "Which is better?" and "12 duels to first place" in one line – with the
