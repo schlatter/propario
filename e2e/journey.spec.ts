@@ -199,7 +199,7 @@ test('Ada keeps a comparison with a product and its picture', async () => {
 
   await page.getByRole('button', { name: 'Arvika', exact: true }).click()
   // A tall cabinet: 200×1400 px. It must fit its box, not cover the text below.
-  await page.locator('.pimg input[data-pick=main]').setInputFiles({ name: 'cabinet.png', mimeType: 'image/png', buffer: png(200, 1400) })
+  await page.locator('.pimg input[data-pick=add]').setInputFiles({ name: 'cabinet.png', mimeType: 'image/png', buffer: png(200, 1400) })
   const picture = page.locator('.pimg-slide img').first()
   await expect(picture).toHaveAttribute('src', /^\/api\/images\/[0-9a-f-]{36}$/)
   await expect.poll(() => picture.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0)
@@ -268,6 +268,28 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await page.getByRole('button', { name: 'Show picture 2' }).click()
   await page.getByRole('button', { name: 'Update pictures' }).click()
   await page.getByRole('button', { name: 'Remove picture 2' }).click()
+  await expect(page.locator('.pimg-slide')).toHaveCount(1)
+
+  // Ctrl+V anywhere in the details adds a picture – two quick pastes add two; the main picture
+  // is never replaced. A paste into a text field stays text.
+  const paste = (target: string, width: number) =>
+    page.locator(target).evaluate((el, b64) => {
+      const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))
+      const data = new DataTransfer()
+      data.items.add(new File([bytes], 'pasted.png', { type: 'image/png' }))
+      el.dispatchEvent(new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true }))
+    }, png(width, 200).toString('base64'))
+  await paste('#drawer-title', 400)
+  await paste('#drawer-title', 500)
+  await expect(page.locator('.pimg-slide')).toHaveCount(3)
+  await expect(picture).toHaveAttribute('src', mainSrc!)
+  await paste('dialog.drawer textarea >> nth=0', 300)
+  await expect(page.locator('.pimg-slide')).toHaveCount(3)
+  for (const n of [3, 2]) {
+    await page.getByRole('button', { name: `Show picture ${n}` }).click()
+    await page.getByRole('button', { name: 'Update pictures' }).click()
+    await page.getByRole('button', { name: `Remove picture ${n}` }).click()
+  }
   await expect(page.locator('.pimg-slide')).toHaveCount(1)
 
   // An upright further picture – stored larger than the main one – fits the gallery whole on a

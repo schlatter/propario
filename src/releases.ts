@@ -11,6 +11,16 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.13.2',
+    notes: {
+      en: ['Pictures: pasting, dropping or choosing always adds a picture – none is replaced any more.', 'Ctrl+V adds a picture anywhere in the details.'],
+      de: [
+        'Bilder: Einfügen, Hineinziehen oder Wählen fügt immer ein Bild hinzu – keins wird mehr ersetzt.',
+        'Strg+V fügt überall in den Details ein Bild hinzu.',
+      ],
+    },
+  },
+  {
     version: '0.13.1',
     notes: {
       en: ['Details: the shop link stands out; with a mouse, arrows at the picture’s edges step through the pictures.'],

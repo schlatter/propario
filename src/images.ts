@@ -10,7 +10,7 @@ import { takeFacts, updateProduct } from './db/repo'
 import type { Product } from './db/types'
 import { safeHref } from './domain/values'
 import { cleanFacts, type ProductFacts } from './shared/product-facts.ts'
-import { furtherCandidates, looksLikeDrawing, pixelStats } from './domain/pictures'
+import { furtherCandidates, looksLikeDrawing, pixelStats, type Pictures, withAdded, withMain, without } from './domain/pictures'
 import { db } from './db/db'
 import { IMAGE_PATH, MAX_PICTURES } from './shared/records.ts'
 
@@ -20,7 +20,18 @@ export const IMAGE_MAX_SIDE = 640
 export const FURTHER_MAX_SIDE = 960
 
 export type ImageErrorCode =
-  'unavailable' | 'blocked' | 'not-found' | 'no-image' | 'too-large' | 'timeout' | 'invalid-url' | 'forbidden-address' | 'unreadable' | 'failed' | 'demo'
+  | 'unavailable'
+  | 'blocked'
+  | 'not-found'
+  | 'no-image'
+  | 'too-large'
+  | 'timeout'
+  | 'invalid-url'
+  | 'forbidden-address'
+  | 'unreadable'
+  | 'failed'
+  | 'demo'
+  | 'full'
 
 export class ImageError extends Error {
   code: ImageErrorCode
@@ -170,8 +181,13 @@ export async function loadProductImage(p: Product, from?: string, signal?: Abort
     }
     throw e
   }
+  await roomFor(p, 'main')
   const image = await uploadImage(p.projectId, await shrinkImage(got.blob))
-  await updateProduct(p, { image, imageUrl: p.imageUrl || got.source })
+  await changePictures(p, (c) => {
+    const next = withMain(c, image, MAX_PICTURES)
+    if (!next) throw new ImageError('full')
+    return { ...next, imageUrl: c.imageUrl || got.source }
+  })
   const filled = await takeFacts(p, got.facts)
   void addFurtherFromPage(p, got.facts.images ?? [], got.source)
   return { facts: got.facts, filled }
@@ -234,12 +250,56 @@ async function isDrawing(blob: Blob): Promise<boolean> {
   }
 }
 
-/** Adds a further picture (at most MAX_PICTURES), to the product as it is now. */
-export async function addImageFromBlob(p: Product, blob: Blob): Promise<void> {
+/**
+ * Picture changes of all products run one after another, each from the record as it is then –
+ * not from what a screen showed when it started. So a paste while the shop picture is still
+ * loading, two quick pastes or a drop during an update all end up as pictures, none replaced.
+ */
+let pictureQueue: Promise<unknown> = Promise.resolve()
+function changePictures(p: Product, change: (current: Product) => Partial<Product> | null): Promise<void> {
+  const run = pictureQueue.then(async () => {
+    const current = (await db.products.get(p.id)) ?? p
+    const patch = change(current)
+    if (patch && Object.keys(patch).length) await updateProduct(current, patch)
+  })
+  pictureQueue = run.catch(() => {})
+  return run
+}
+
+const picturesOf = (p: Product): Pictures => ({ image: isPicture(p.image) ? p.image : '', images: (p.images ?? []).filter(isPicture) })
+
+/** Says early – before anything is uploaded – when a product has no room for another picture. */
+async function roomFor(p: Product, as: 'main' | 'further'): Promise<boolean> {
+  const now = picturesOf((await db.products.get(p.id)) ?? p)
+  const free = now.image ? MAX_PICTURES - (now.images?.length ?? 0) : 1
+  if (free <= 0) throw new ImageError('full')
+  return as === 'main' ? true : !!now.image
+}
+
+/**
+ * Adds a picture someone chose, pasted or dropped. The first picture of a product becomes its
+ * main one; after that every picture is added – a new picture never replaces another.
+ */
+export async function addPicture(p: Product, blob: Blob): Promise<void> {
+  const further = await roomFor(p, 'further')
+  const path = await uploadImage(p.projectId, await shrinkImage(blob, further ? FURTHER_MAX_SIDE : IMAGE_MAX_SIDE))
+  await changePictures(p, (c) => {
+    const next = withAdded(picturesOf(c), path, MAX_PICTURES)
+    if (!next) throw new ImageError('full')
+    return next
+  })
+}
+
+/** Makes one of a product's pictures the main one; the former main one stays as a further picture. */
+export const makeMainPicture = (p: Product, path: string) => changePictures(p, (c) => withMain(picturesOf(c), path, MAX_PICTURES))
+
+/** Removes one picture; when it was the main one, the next takes its place. */
+export const removePicture = (p: Product, path: string) => changePictures(p, (c) => without(picturesOf(c), path))
+
+/** Adds a further picture from a shop page – best effort: without room it is left out. */
+async function addImageFromBlob(p: Product, blob: Blob): Promise<void> {
   const path = await uploadImage(p.projectId, await shrinkImage(blob, FURTHER_MAX_SIDE))
-  const current = (await db.products.get(p.id)) ?? p
-  const images = [...(current.images ?? []), path].slice(0, MAX_PICTURES)
-  await updateProduct(current, { images })
+  await changePictures(p, (c) => (picturesOf(c).image ? withAdded(picturesOf(c), path, MAX_PICTURES) : null))
 }
 
 /**
@@ -263,16 +323,12 @@ export async function applyProductPage(p: Product, page: { facts: ProductFacts; 
   const filled: string[] = []
   if (!p.image && page.blob) {
     const image = await uploadImage(p.projectId, await shrinkImage(page.blob))
-    await updateProduct(p, { image, imageUrl: p.imageUrl || page.source || '' })
+    // Only while the product still has no picture: one pasted meanwhile stays the main one.
+    await changePictures(p, (c) => (picturesOf(c).image ? null : { image, imageUrl: c.imageUrl || page.source || '' }))
     filled.push('image')
   }
   if (!p.images?.length && page.facts.images?.length) void addFurtherFromPage(p, page.facts.images, page.source ?? '')
   return [...filled, ...(await takeFacts(p, page.facts, { refreshPrice: true }))]
-}
-
-/** Store an image the user picked, pasted or dropped. */
-export async function setProductImageFromBlob(p: Product, blob: Blob): Promise<void> {
-  await updateProduct(p, { image: await uploadImage(p.projectId, await shrinkImage(blob)) })
 }
 
 export interface BulkResult {

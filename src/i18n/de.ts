@@ -596,7 +596,7 @@ export const de: Messages = {
         : 'Produktbild – groß öffnen. Ein Bild hier einfügen oder hineinziehen fügt es hinzu.',
     removeFurther: (n) => `Bild ${n + 1} entfernen`,
     addFurther: 'Bild hinzufügen',
-    addFurtherHint: 'Ein weiteres Bild hinzufügen – am meisten hilft eine Maßzeichnung. Einfügen oder Hineinziehen aufs Hauptbild fügt auch eins hinzu.',
+    addFurtherHint: 'Ein weiteres Bild hinzufügen – am meisten hilft eine Maßzeichnung. Strg+V in den Details oder Hineinziehen fügt auch eins hinzu.',
     reload: 'Bild aktualisieren',
     chooseFile: 'Bild wählen',
     remove: 'Bild entfernen',
@@ -605,7 +605,8 @@ export const de: Messages = {
     working: 'Lädt …',
     dropLabel: 'Produktbild. Bild hier einfügen oder hineinziehen.',
     dropHint: 'Bild einfügen oder hineinziehen',
-    pasteHint: 'Tipp: Im Shop mit Rechtsklick auf das Bild → „Bild kopieren“, dann das Feld anklicken und Strg+V drücken. Hineinziehen funktioniert auch.',
+    pasteHint:
+      'Tipp: Im Shop mit Rechtsklick auf das Bild → „Bild kopieren“, dann hier in den Details Strg+V drücken. Jedes Bild kommt dazu, keins wird ersetzt. Hineinziehen geht auch.',
     pagePrice: (price) => `Preis auf der Shopseite: ${price}`,
     takePrice: 'Diesen Preis übernehmen',
     error: {
@@ -620,6 +621,7 @@ export const de: Messages = {
       unreadable: 'Diese Datei ist kein lesbares Bild.',
       failed: 'Das Bild konnte nicht geladen werden.',
       demo: 'Nicht in der Demo – Shopseiten lesen geht nur mit eigenem Konto.',
+      full: 'Dieses Produkt hat schon 9 Bilder, mehr passen nicht. Entferne zuerst eins.',
     },
   },
   requirements: {

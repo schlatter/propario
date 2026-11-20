@@ -590,7 +590,7 @@ export const en = {
         : 'Product picture – open large. Paste or drop an image here to add one.',
     removeFurther: (n: number) => `Remove picture ${n + 1}`,
     addFurther: 'Add picture',
-    addFurtherHint: 'Add another picture – a dimension drawing helps most. Pasting or dropping onto the main picture adds one too.',
+    addFurtherHint: 'Add another picture – a dimension drawing helps most. Ctrl+V in the details or dropping adds one too.',
     reload: 'Update picture',
     chooseFile: 'Choose picture',
     remove: 'Remove picture',
@@ -599,7 +599,8 @@ export const en = {
     working: 'Loading…',
     dropLabel: 'Product image. Paste or drop an image here.',
     dropHint: 'Paste or drop an image',
-    pasteHint: 'Tip: on the shop page, right-click the picture → Copy image, then click the box and press Ctrl+V. Dragging the picture over also works.',
+    pasteHint:
+      'Tip: on the shop page, right-click the picture → Copy image, then press Ctrl+V here in the details. Every picture is added, none is replaced. Dragging it over works too.',
     pagePrice: (price: string) => `Price on the shop page: ${price}`,
     takePrice: 'Use this price',
     error: {
@@ -614,6 +615,7 @@ export const en = {
       unreadable: 'This file is not a readable image.',
       failed: 'The image could not be loaded.',
       demo: 'Not in the demo – reading shop pages needs your own account.',
+      full: 'This product has 9 pictures, the most it can hold. Remove one first.',
     },
   },
   requirements: {

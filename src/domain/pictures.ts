@@ -73,3 +73,35 @@ export function pixelStats(rgba: Uint8ClampedArray): PixelStats {
 export function looksLikeDrawing(s: PixelStats): boolean {
   return s.white >= 0.8 && s.colorful < 0.06 && s.ink >= 0.004 && s.ink <= 0.15 && s.shading < 0.05
 }
+
+/**
+ * How a product's pictures change: `image` is the main picture, `images` the further ones. A new
+ * picture never pushes another one out – it is added, and whoever makes a picture the main one
+ * keeps the former main one as a further picture. `null` means there is no room left.
+ */
+export interface Pictures {
+  image: string
+  images?: string[]
+}
+
+const allOf = (p: Pictures) => [p.image, ...(p.images ?? [])].filter(Boolean)
+
+/** Adds a picture: a product's first picture becomes its main one. */
+export function withAdded(p: Pictures, path: string, max: number): Partial<Pictures> | null {
+  if (allOf(p).includes(path)) return {}
+  if (!p.image) return { image: path }
+  const images = p.images ?? []
+  return images.length >= max ? null : { images: [...images, path] }
+}
+
+/** Makes `path` – a new picture or one of the further ones – the main picture; the former main one moves to the front of the others. */
+export function withMain(p: Pictures, path: string, max: number): Pictures | null {
+  const rest = allOf(p).filter((x) => x !== path)
+  return rest.length > max ? null : { image: path, images: rest }
+}
+
+/** Removes a picture; when it was the main one, the next takes its place. */
+export function without(p: Pictures, path: string): Pictures {
+  const rest = allOf(p).filter((x) => x !== path)
+  return { image: rest[0] ?? '', images: rest.slice(1) }
+}

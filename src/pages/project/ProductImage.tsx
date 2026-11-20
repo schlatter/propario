@@ -1,17 +1,18 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { updateProduct } from '../../db/repo'
 import type { Product } from '../../db/types'
 import { hostOf, safeHref } from '../../domain/values'
 import { useI18n } from '../../i18n'
 import {
-  addImageFromBlob,
+  addPicture,
   fetchRemoteImage,
   ImageError,
   imageFromTransfer,
   isPicture,
   loadProductImage,
+  makeMainPicture,
   productImage,
-  setProductImageFromBlob,
+  removePicture,
   type ImageErrorCode,
 } from '../../images'
 import { MAX_PICTURES } from '../../shared/records.ts'
@@ -25,12 +26,12 @@ import { Menu } from '../../ui/Menu'
 /**
  * Pictures in the product drawer: a strip as wide as the drawer that a finger swipes through
  * (a swipe here changes the picture, never the product), dots below, a tap opens the gallery.
- * One menu loads, chooses, adds or removes pictures; pasting or dropping works on the strip.
+ * One menu loads, adds or removes pictures. Ctrl+V anywhere in the details (outside a text field)
+ * or dropping on the strip adds a picture; a new picture never replaces one (src/images.ts).
  */
 export function ProductImage({ product: p, name }: { product: Product; name: string }) {
   const { m, fmt } = useI18n()
   const file = useRef<HTMLInputElement>(null)
-  const moreFiles = useRef<HTMLInputElement>(null)
   const track = useRef<HTMLDivElement>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<ImageErrorCode | null>(null)
@@ -51,7 +52,10 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
   const stored = !!p.image
   const link = safeHref(p.url)
 
+  /** How many picture jobs run; several may, they are queued in src/images.ts. */
+  const jobs = useRef(0)
   const run = async (job: () => Promise<{ facts: ProductFacts; filled: string[] } | void>) => {
+    jobs.current++
     setBusy(true)
     setError(null)
     setPagePrice(null)
@@ -65,38 +69,62 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
       setError(e instanceof ImageError ? e.code : 'failed')
       if (e instanceof ImageError && e.filled) setFilled(e.filled)
     } finally {
-      setBusy(false)
+      if (--jobs.current === 0) setBusy(false)
     }
   }
-  // With a main picture in place, a pasted or dropped one is added, not swapped in.
+  /** A pasted or dropped picture is always added – the first one becomes the main picture. */
   const take = (dt: DataTransfer | null) => {
     const got = imageFromTransfer(dt)
     if (!got) return false
-    if (stored) void run(async () => addImageFromBlob(p, 'file' in got ? got.file : (await fetchRemoteImage(got.url)).blob))
-    else void run(() => ('file' in got ? setProductImageFromBlob(p, got.file) : loadProductImage(p, got.url)))
+    void run(async () => addPicture(p, 'file' in got ? got.file : (await fetchRemoteImage(got.url)).blob))
     return true
   }
+  const addFiles = (files: File[]) =>
+    run(async () => {
+      for (const f of files) await addPicture(p, f)
+    })
+  // Ctrl+V anywhere in the details adds a picture – not only with the strip focused (a click on
+  // it opens the gallery). Text fields keep their own paste.
+  const takeRef = useRef(take)
+  takeRef.current = take
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      const t = e.target
+      if (t instanceof Element && t.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"])')) return
+      if (takeRef.current(e.clipboardData)) e.preventDefault()
+    }
+    document.addEventListener('paste', onPaste)
+    return () => document.removeEventListener('paste', onPaste)
+  }, [])
   const further = (p.images ?? []).filter(isPicture)
   /** All pictures, the main one first. */
   const pictures = src ? [src, ...further] : []
   /** The picture in view: follows the strip's scroll position. */
   const [shownAt, setShownAt] = useState(0)
   const at = Math.min(shownAt, Math.max(0, pictures.length - 1))
+  /** Set while the strip scrolls to a chosen picture: its passing positions are not choices. */
+  const heading = useRef<number | null>(null)
   const show = (i: number) => {
     const t = track.current
+    heading.current = t && Math.round(t.scrollLeft / t.clientWidth) !== i ? i : null
     if (t) t.scrollTo({ left: i * t.clientWidth })
     setShownAt(i)
   }
+  const onTrackScroll = (t: HTMLDivElement) => {
+    const i = Math.round(t.scrollLeft / t.clientWidth)
+    if (heading.current !== null) {
+      if (i !== heading.current) return
+      heading.current = null
+    }
+    setShownAt(i)
+  }
   const [gallery, setGallery] = useState<number | null>(null)
-  /** Picture `i` becomes the main one and moves to the front; the others keep their order. */
+  /** Picture `i` becomes the main one; the former main one stays as a further picture. By path, not position: the list may have changed meanwhile. */
   const makeMain = (i: number) => {
-    const rest = pictures.filter((_, j) => j !== i)
-    void updateProduct(p, { image: pictures[i], images: rest })
+    void makeMainPicture(p, pictures[i])
     show(0)
   }
-  /** Removes picture `i`; removing the main one lets the next take its place. */
-  const remove = (i: number) =>
-    i === 0 ? updateProduct(p, { image: further[0] ?? '', images: further.slice(1) }) : updateProduct(p, { images: further.filter((_, j) => j !== i - 1) })
+  const remove = (i: number) => removePicture(p, pictures[i])
   const openGallery = () => {
     if (!src) return
     setZoom(false)
@@ -136,9 +164,6 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
         aria-roledescription={pictures.length > 1 ? 'carousel' : undefined}
         aria-label={src ? m.image.openGallery(pictures.length) : m.image.dropLabel}
         aria-busy={busy}
-        onPaste={(e) => {
-          if (take(e.clipboardData)) e.preventDefault()
-        }}
         onDragOver={(e) => {
           e.preventDefault()
           setOver(true)
@@ -151,7 +176,7 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
         }}
       >
         {src ? (
-          <div ref={track} className="pimg-track" onScroll={(e) => setShownAt(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}>
+          <div ref={track} className="pimg-track" onScroll={(e) => onTrackScroll(e.currentTarget)}>
             {pictures.map((pic, i) => (
               <div className="pimg-slide" key={pic} aria-hidden={i !== at}>
                 <img src={pic} alt={i === 0 ? name : m.gallery.alt(name, i + 1, pictures.length)} referrerPolicy="no-referrer" draggable={false} />
@@ -233,12 +258,10 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
                     <Glyph name="download" /> {stored ? m.image.reload : m.image.fromLink}
                   </button>
                 )}
-                <button type="button" disabled={busy} onClick={act(() => file.current?.click())}>
-                  <Glyph name="upload" /> {m.image.chooseFile}
-                </button>
-                {stored && further.length < MAX_PICTURES && (
-                  <button type="button" disabled={busy} title={m.image.addFurtherHint} onClick={act(() => moreFiles.current?.click())}>
-                    <Glyph name="plus" /> {m.image.addFurther}
+                {/* Choosing never replaces: without a picture it becomes the main one, otherwise it is added. */}
+                {(!stored || further.length < MAX_PICTURES) && (
+                  <button type="button" title={m.image.addFurtherHint} onClick={act(() => file.current?.click())}>
+                    <Glyph name={stored ? 'plus' : 'upload'} /> {stored ? m.image.addFurther : m.image.chooseFile}
                   </button>
                 )}
                 {stored && at > 0 && (
@@ -247,7 +270,7 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
                   </button>
                 )}
                 {stored && (
-                  <button type="button" className="danger" disabled={busy} onClick={act(() => void remove(at))}>
+                  <button type="button" className="danger" onClick={act(() => void remove(at))}>
                     <Glyph name="trash" /> {pictures.length > 1 ? m.image.removeFurther(at) : m.image.remove}
                   </button>
                 )}
@@ -266,27 +289,13 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
           ref={file}
           type="file"
           accept="image/*"
-          hidden
-          data-pick="main"
-          onChange={(e) => {
-            const f = e.target.files?.[0]
-            e.target.value = ''
-            if (f) void run(() => setProductImageFromBlob(p, f))
-          }}
-        />
-        <input
-          ref={moreFiles}
-          type="file"
-          accept="image/*"
           multiple
           hidden
           data-pick="add"
           onChange={(e) => {
             const files = [...(e.target.files ?? [])]
             e.target.value = ''
-            void run(async () => {
-              for (const f of files) await addImageFromBlob(p, f)
-            })
+            void addFiles(files)
           }}
         />
       </div>
