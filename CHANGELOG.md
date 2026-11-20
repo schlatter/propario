@@ -6,6 +6,12 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+## 0.13.1 — 2026-11-20
+
+- Changed: the link to the shop page in the details is a filled petrol button, easier to find.
+- Added: with a mouse, quiet arrows at the left and right edge of the picture step through a
+  product's pictures; the dots below stay.
+
 ## 0.13.0 — 2026-11-20
 
 - Changed: the product details fit more into less room. Pictures fill the width of the details
