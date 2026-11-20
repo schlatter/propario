@@ -6,6 +6,13 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+## 0.13.3 — 2026-11-20
+
+- Fixed: after an update the app could hang at the start ("still at cache") on a phone. Another
+  window of the app, frozen in the background in the middle of saving, held this browser's copy;
+  it opened, but every write waited. The copy now counts as open only once a first write went
+  through; otherwise a fresh copy is used after five seconds and filled from the server.
+
 ## 0.13.2 — 2026-11-20
 
 - Fixed: a new picture could replace the main picture instead of being added – above all with

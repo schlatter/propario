@@ -11,6 +11,13 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.13.3',
+    notes: {
+      en: ['After an update the app no longer hangs at the start when another window of it is frozen in the background.'],
+      de: ['Kein Hängen mehr beim Start nach einem Update, wenn ein anderes App-Fenster im Hintergrund eingefroren ist.'],
+    },
+  },
+  {
     version: '0.13.2',
     notes: {
       en: ['Pictures: pasting, dropping or choosing always adds a picture – none is replaced any more.', 'Ctrl+V adds a picture anywhere in the details.'],
