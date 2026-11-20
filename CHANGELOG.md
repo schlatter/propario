@@ -6,6 +6,13 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+## 0.15.3 — 2026-11-20
+
+- Changed: duels take only the narrow choice – products someone starred, and products everyone
+  who gave verdicts likes (with two people: both). The same for everyone, so the joint ranking
+  compares like with like.
+- Changed back: the duel's pictures sit in the table again, as in 0.15.1; star and verdicts stay.
+
 ## 0.15.2 — 2026-11-20
 
 - Changed: in duels the pictures are larger, and side by side each product shows your star and the

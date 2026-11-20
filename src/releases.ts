@@ -11,6 +11,13 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.15.3',
+    notes: {
+      en: ['Duels only between favourites and what everyone likes – the decision comes faster.'],
+      de: ['Duelle nur zwischen Favoriten und dem, was allen gefällt – die Entscheidung kommt schneller.'],
+    },
+  },
+  {
     version: '0.15.2',
     notes: {
       en: ['Duels: larger pictures; star and verdicts on each product, as in the table.'],
