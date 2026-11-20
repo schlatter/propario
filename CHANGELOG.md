@@ -6,6 +6,19 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+## 0.13.2 — 2026-11-20
+
+- Fixed: a new picture could replace the main picture instead of being added – above all with
+  Ctrl+V while the shop picture was still loading, with "Choose picture", or with two quick
+  pastes. Every picture change now starts from the product as it is at that moment, one after
+  another; a picture someone adds, pastes or drops is always added (the first one becomes the
+  main picture). Loading the picture from the shop page again keeps the former one as a further
+  picture. With no room left (9 pictures) the details say so instead of dropping the picture.
+- Changed: Ctrl+V adds a picture anywhere in the details, not only with the picture selected;
+  text fields keep their own paste.
+- Changed: the server keeps the newest 7 snapshots instead of 14; older ones belong in the
+  server backup.
+
 ## 0.13.1 — 2026-11-20
 
 - Changed: the link to the shop page in the details is a filled petrol button, easier to find.
