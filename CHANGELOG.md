@@ -6,6 +6,21 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+## 0.14.0 — 2026-11-20
+
+- Added: duels. "Duel" in a comparison puts the product holding first place on the left and a
+  challenger on the right; choosing the better one moves it up. After n − 1 duels the first place
+  is decided, the rest follows if wanted. Everyone duels for themselves; with two or more people a
+  joint ranking by the average place is shown, and its first place can become the decision.
+- Changed: favourites are personal – everyone stars for themselves (also right on the swipe card).
+  Stars set before count for everyone until they change their own.
+- Changed: the verdict in the table and the details shows the others' verdicts beside one's own,
+  as initials in their verdict's colour.
+- Changed: swiping gives the picture more room; a tap shows all pictures large. Dimensions on one
+  line, smaller buttons, and what the others said.
+- Changed: side by side, every number gets a bar as long as its value and its difference – to the
+  best where there is a better direction, otherwise to the first product.
+
 ## 0.13.3 — 2026-11-20
 
 - Fixed: after an update the app could hang at the start ("still at cache") on a phone. Another

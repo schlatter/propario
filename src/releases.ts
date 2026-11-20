@@ -11,6 +11,23 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.14.0',
+    notes: {
+      en: [
+        'Duels: two side by side, the better one moves up – your first place after a few taps.',
+        'Favourites are personal now; star right while swiping.',
+        'Swiping: a larger picture, all pictures on a tap, and what the others said.',
+        'Side by side: a bar and the difference for every number.',
+      ],
+      de: [
+        'Duelle: zwei nebeneinander, das bessere steigt auf – dein Platz 1 nach wenigen Tipps.',
+        'Favoriten sind jetzt persönlich; Stern direkt beim Swipen.',
+        'Swipen: größeres Bild, alle Bilder auf Tipp, und was die anderen sagen.',
+        'Vergleich: Balken und Differenz für jede Zahl.',
+      ],
+    },
+  },
+  {
     version: '0.13.3',
     notes: {
       en: ['After an update the app no longer hangs at the start when another window of it is frozen in the background.'],
