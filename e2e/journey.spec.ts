@@ -565,10 +565,10 @@ test('Ada moves rows and decides by swiping', async () => {
     await page.keyboard.press('ArrowDown')
     await page.keyboard.press('Escape')
     await expect(page.locator('dialog.gallery')).toBeHidden()
-    await expect(page.getByText('0 of 2 decided')).toBeVisible()
+    await expect(page.getByRole('status', { name: '0 of 2 decided' })).toBeVisible()
   }
   await page.keyboard.press('ArrowRight')
-  await expect(page.getByText('1 of 2 decided')).toBeVisible()
+  await expect(page.getByRole('status', { name: '1 of 2 decided' })).toBeVisible()
   await page.getByRole('button', { name: 'Dislike', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'All decided' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Arvika' })).toBeVisible()
@@ -634,16 +634,22 @@ test('Ada moves rows and decides by swiping', async () => {
   await expect(page.getByText('Which one is better – for first place?')).toBeVisible()
   const [leftName, rightName] = await page.locator('.duel-choices .duel-name').allTextContents()
   await accessible(page, 'duel')
+  // With two products there is no other duel to play first: nothing to skip.
+  await expect(page.getByRole('button', { name: 'Later' })).toHaveCount(0)
   await page.keyboard.press('ArrowRight')
   await expect(page.getByText('Your ranking is complete.')).toBeVisible()
   await expect(page.locator('.ranking-table tbody tr').first()).toContainText(rightName)
-  await page.getByRole('button', { name: 'Take the last choice back' }).click()
+  await page.getByRole('button', { name: 'Undo' }).click()
   await expect(page.locator('.duel-choices .duel-name')).toHaveText([leftName, rightName])
   await page.locator('.duel-choices .btn').first().click()
   await expect(page.locator('.ranking-table tbody tr').first()).toContainText(leftName)
   await page.getByRole('button', { name: `${leftName} as the decision` }).click()
   await expect(page.locator('.ranking-table tr.is-decision')).toContainText(leftName)
   await page.goto(tableUrl)
+  // The table now shows the place and is sorted by it; from "Place", the manual order can return.
+  await expect(page.locator('table.grid tbody tr').first()).toContainText(leftName)
+  await expect(page.locator('table.grid tbody tr').first().locator('.rank-cell')).toHaveText('1')
+  await expect(page.locator('table.grid thead th[data-fit="rank"]')).toHaveAttribute('aria-sort', 'ascending')
 
   // Without a connection a change shows at once, is taken back when it cannot be saved, and the
   // app says so – it never waits with nothing happening.

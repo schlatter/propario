@@ -6,7 +6,8 @@
  *
  * The state is small and survives products being added, excluded or deleted (`normalize`).
  */
-import type { Ranking } from '../db/types'
+import type { Product, Ranking } from '../db/types'
+import { isFavorite } from './verdict'
 
 export type Side = 'left' | 'right'
 
@@ -45,6 +46,17 @@ export function decide(r: Ranking, winner: Side): Ranking {
   return finish({ order, settled: r.settled, next: r.next + 1 })
 }
 
+/**
+ * Puts the current duel off: the challenger goes to the end and comes back once the others of
+ * this place were played. Null when there is nothing to put off (it is the last challenger).
+ */
+export function skip(r: Ranking): Ranking | null {
+  if (!current(r) || r.next >= r.order.length - 1) return null
+  const order = [...r.order]
+  order.push(...order.splice(r.next, 1))
+  return { ...r, order }
+}
+
 /** Moves on to the next place once everyone after the current one was compared. */
 function finish(r: Ranking): Ranking {
   let { settled, next } = r
@@ -80,4 +92,42 @@ export function joint(rankings: Ranking[], fallback: string[]): { id: string; av
     })
     .sort((a, b) => a.average - b.average || a.i - b.i)
     .map(({ id, average }) => ({ id, average }))
+}
+
+/**
+ * What a person duels: their own preselection – the products they starred or liked, nothing
+ * excluded – starred ones first, table order within.
+ */
+export function startOrder(products: Product[], userId: string): string[] {
+  return products
+    .filter((p) => p.candidate !== 'excluded' && (isFavorite(p, userId) || p.votes?.[userId] === 'like'))
+    .map((p, i) => ({ id: p.id, w: isFavorite(p, userId) ? 0 : 1, i }))
+    .sort((a, b) => a.w - b.w || a.i - b.i)
+    .map((x) => x.id)
+}
+
+/**
+ * Everyone's rankings, each over that person's own preselection, and all products in any of them
+ * (in table order) – what the joint ranking is about.
+ */
+export function everyone(rankings: Record<string, Ranking> | undefined, products: Product[]): { states: [string, Ranking][]; all: string[] } {
+  const states = Object.entries(rankings ?? {}).map(([id, r]): [string, Ranking] => [id, normalize(r, startOrder(products, id))])
+  const inAny = new Set(states.flatMap(([, r]) => r.order))
+  return { states, all: products.filter((p) => inAny.has(p.id)).map((p) => p.id) }
+}
+
+/**
+ * Each product's place for the table: jointly when several people have duelled, else from the
+ * one ranking there is. Empty when nobody has duelled yet; products in nobody's preselection
+ * (and excluded ones) have no place.
+ */
+export function places(rankings: Record<string, Ranking> | undefined, products: Product[]): Map<string, number> {
+  const { states, all } = everyone(rankings, products)
+  if (!states.length) return new Map()
+  return new Map(
+    joint(
+      states.map(([, r]) => r),
+      all,
+    ).map((x, i) => [x.id, i + 1]),
+  )
 }

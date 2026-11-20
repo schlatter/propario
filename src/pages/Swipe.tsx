@@ -7,7 +7,6 @@ import { safeHref, hostOf } from '../domain/values'
 import { useI18n } from '../i18n'
 import { isPicture, productImage } from '../images'
 import { meaning } from '../domain/page-import'
-import { useUsers } from '../users'
 import { Gallery } from './project/Gallery'
 import { FavoriteToggle } from './project/Verdict'
 import { useMe } from '../session'
@@ -101,10 +100,12 @@ function Deck({ data }: { data: ProjectData }) {
       <Link to={`/p/${project.id}`} className="crumb">
         <Glyph name="chevronLeft" /> {project.name}
       </Link>
+      {/* One line: the question and how far along – the card gets the screen. Others' verdicts stay
+          out of sight here, so each judges for themselves. */}
       <div className="swipe-head">
         <h1>{m.swipe.title}</h1>
-        <span className="muted" role="status">
-          {m.swipe.progress(voted, open.length)}
+        <span className="swipe-count" role="status" aria-label={m.swipe.progress(voted, open.length)}>
+          {voted}/{open.length}
         </span>
       </div>
       <div className="swipe-progress" aria-hidden="true">
@@ -152,8 +153,6 @@ function Deck({ data }: { data: ProjectData }) {
 
 function Card({ product: p, data, leaving, onVote }: { product: Product; data: ProjectData; leaving: Vote | null; onVote: (v: Vote) => void }) {
   const { m, fmt } = useI18n()
-  const me = useMe()
-  const users = useUsers()
   const [dx, setDx] = useState(0)
   const start = useRef<{ x: number; id: number; onPicture: boolean } | null>(null)
   const [gallery, setGallery] = useState(false)
@@ -168,9 +167,6 @@ function Card({ product: p, data, leaving, onVote }: { product: Product; data: P
     .map((prop) => ({ prop, text: formatValue(prop, p.values?.[prop.id], m, fmt) }))
     .filter((f) => f.text)
     .slice(0, 4)
-  const others = Object.entries(p.votes ?? {})
-    .filter(([id]) => id !== me.id)
-    .map(([id, v]) => ({ id, v, name: users.get(id) ?? '?' }))
 
   const offset = leaving === 'like' ? 700 : leaving === 'dislike' ? -700 : dx
   const hint = offset > 40 ? 'like' : offset < -40 ? 'dislike' : null
@@ -261,19 +257,6 @@ function Card({ product: p, data, leaving, onVote }: { product: Product; data: P
               </div>
             ))}
           </dl>
-        )}
-        {others.length > 0 && (
-          // What the others said: the joint view while swiping.
-          <p className="swipe-others small">
-            {others.map((o) => (
-              <span key={o.id}>
-                <span className={`verdict-other ${o.v}`} aria-hidden="true">
-                  {o.name.slice(0, 1).toUpperCase()}
-                </span>{' '}
-                {o.name}: {m.verdict[o.v]}
-              </span>
-            ))}
-          </p>
         )}
       </div>
       {pictures.length > 0 && <Gallery pictures={pictures} name={displayName(p, m)} start={0} open={gallery} onClose={() => setGallery(false)} />}

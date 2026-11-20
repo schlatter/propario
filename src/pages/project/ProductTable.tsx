@@ -8,6 +8,7 @@ import { priceHint, type PriceHint } from '../../domain/offers'
 import { compileQuery } from '../../domain/query'
 import { queryFields } from '../../domain/query-fields'
 import { useSession } from '../../session'
+import { places } from '../../domain/duel'
 import { reviewSummary } from '../../domain/reviews'
 import { coerceValue, daysSince, hostOf, isTyped, parseNumber, safeHref, STALE_DAYS } from '../../domain/values'
 import { useI18n, type Formatters } from '../../i18n'
@@ -175,8 +176,24 @@ export function ProductTable({
 
   const saveView = (patch: Partial<TableView>) => updateProject(project.id, { tableView: { ...view, ...patch } })
 
+  /** Each product's place from the duels (joint when several duelled); empty before any duel. */
+  const placeOf = useMemo(() => places(project.rankings, products), [project.rankings, products])
+  const ranked = placeOf.size > 0
+  /** Sorted by rank unless someone chose otherwise; "manual" is the stored order (rows can move). */
+  const sorting: TableView['sort'] = view.sort ?? (ranked ? { column: 'rank', dir: 'asc' } : undefined)
+
   const columns: Col[] = useMemo(() => {
     const cols: Col[] = [
+      {
+        id: 'rank',
+        label: m.duel.place,
+        width: 72,
+        align: 'right',
+        optional: true,
+        has: (p) => placeOf.has(p.id),
+        sort: (p) => placeOf.get(p.id) ?? null,
+        render: (p) => <span className="cell rank-cell">{placeOf.get(p.id) ?? ''}</span>,
+      },
       {
         id: 'candidate',
         label: m.field.candidate,
@@ -442,13 +459,15 @@ export function ProductTable({
         render: (p) => <PropertyCell prop={prop} product={p} />,
       }
     }
-  }, [m, fmt, properties, data, products, project, onOpen, users])
+  }, [m, fmt, properties, data, products, project, onOpen, users, placeOf])
 
   // Column order chosen by dragging headers (or the arrows in the Columns menu).
   const ordered = useMemo(() => {
     const order = view.columnOrder ?? []
     const rank = (id: string) => {
       const i = order.indexOf(id)
+      // The place from the duels is new (0.14.1): first, until someone moves it.
+      if (i < 0 && id === 'rank') return -1
       return i < 0 ? order.length : i
     }
     return columns
@@ -501,12 +520,12 @@ export function ProductTable({
       .toLowerCase()
     return hay.includes(q)
   })
-  if (view.sort) {
-    const dir = view.sort.dir === 'asc' ? 1 : -1
-    if (view.sort.column === 'name')
+  if (sorting && sorting.column !== 'manual') {
+    const dir = sorting.dir === 'asc' ? 1 : -1
+    if (sorting.column === 'name')
       rows = [...rows].sort((a, b) => compareKeys(productName(a, '').toLowerCase() || null, productName(b, '').toLowerCase() || null, dir))
     else {
-      const col = columns.find((c) => c.id === view.sort!.column)
+      const col = columns.find((c) => c.id === sorting.column)
       if (col) rows = [...rows].sort((a, b) => compareKeys(col.sort(a), col.sort(b), dir))
     }
   }
@@ -515,8 +534,10 @@ export function ProductTable({
   useEffect(() => onOrder?.(rowIds ? rowIds.split(',') : []), [rowIds, onOrder])
 
   const toggleSort = (column: string) => {
-    const s = view.sort
-    const next: TableView['sort'] = !s || s.column !== column ? { column, dir: 'asc' } : s.dir === 'asc' ? { column, dir: 'desc' } : undefined
+    const s = sorting
+    // Ascending, descending, then back to the rank – or, from the rank itself, the manual order.
+    const off: TableView['sort'] = ranked && column === 'rank' ? { column: 'manual', dir: 'asc' } : undefined
+    const next: TableView['sort'] = !s || s.column !== column ? { column, dir: 'asc' } : s.dir === 'asc' ? { column, dir: 'desc' } : off
     void saveView({ sort: next })
   }
 
@@ -560,7 +581,7 @@ export function ProductTable({
 
   // ---- moving rows (drag the handle, or arrow keys on it) ----
   // The table order is the stored order; while a column sorts the table, rows cannot be moved.
-  const canMove = !view.sort
+  const canMove = !sorting || sorting.column === 'manual'
   const tbodyRef = useRef<HTMLTableSectionElement>(null)
   const [drag, setDrag] = useState<{ id: string; target: string | null; after: boolean } | null>(null)
   const moveTo = (id: string, targetId: string, after: boolean) => {
@@ -780,7 +801,7 @@ export function ProductTable({
                   id="name"
                   label={m.field.product}
                   className="sticky col-name"
-                  sort={view.sort}
+                  sort={sorting}
                   onSort={toggleSort}
                   width={widthOf('name', showThumbs ? 300 : 260)}
                   onResize={(w) => setWidths((s) => ({ ...s, name: w }))}
@@ -793,7 +814,7 @@ export function ProductTable({
                     id={c.id}
                     label={c.label}
                     unit={c.unit}
-                    sort={view.sort}
+                    sort={sorting}
                     onSort={toggleSort}
                     width={widthOf(c.id, c.width)}
                     onResize={(w) => setWidths((s) => ({ ...s, [c.id]: w }))}

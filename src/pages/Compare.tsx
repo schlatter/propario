@@ -3,7 +3,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import type { Product, PropertyDef, Ranking } from '../db/types'
 import { setDecision, updateProject } from '../db/repo'
-import { current, decide, finished, joint, normalize, remaining, type Side } from '../domain/duel'
+import { current, decide, everyone, finished, joint, normalize, remaining, skip, startOrder, type Side } from '../domain/duel'
 import { useUsers } from '../users'
 import { Gallery } from './project/Gallery'
 import { avgStars, displayName, exclusionText, formatValue } from '../domain/display'
@@ -43,13 +43,21 @@ export function ComparePage() {
   const duelMode = params.get('mode') === 'duel'
 
   // Duels: the products that take part, in the person's order so far (src/domain/duel.ts).
-  const eligible = data ? data.products.filter((p) => p.candidate !== 'excluded') : []
-  const mine = data ? normalize(data.project.rankings?.[me.id], startOrder(eligible, me.id)) : null
+  // Only one's own preselection takes part: the products one starred or liked.
+  const eligible = data ? startOrder(data.products, me.id) : []
+  const mine = data ? normalize(data.project.rankings?.[me.id], eligible) : null
   const pair = duelMode && mine ? current(mine) : null
   const choose = (side: Side) => {
     if (!data || !mine || !pair) return
     setHistory((h) => [...h, mine])
     void updateProject(data.project.id, { rankings: { [me.id]: decide(mine, side) } })
+  }
+  /** Puts the current duel off: its challenger comes back at the end of this place. */
+  const later = mine && pair ? skip(mine) : null
+  const putOff = () => {
+    if (!data || !mine || !later) return
+    setHistory((h) => [...h, mine])
+    void updateProject(data.project.id, { rankings: { [me.id]: later } })
   }
   const undo = () => {
     const last = history[history.length - 1]
@@ -64,6 +72,7 @@ export function ComparePage() {
       if (e.altKey || e.ctrlKey || e.metaKey || (e.target instanceof Element && e.target.closest('input, textarea, select, dialog'))) return
       if (e.key === 'ArrowLeft') choose('left')
       else if (e.key === 'ArrowRight') choose('right')
+      else if (e.key === 'ArrowDown' && later) putOff()
       else if (e.key === 'Backspace') undo()
       else return
       e.preventDefault()
@@ -93,7 +102,7 @@ export function ComparePage() {
           <Glyph name="chevronLeft" /> {data.project.name}
         </Link>
         <div className="page-head">
-          <h1>{m.duel.title}</h1>
+          <h1>{m.duel.open}</h1>
         </div>
         <p className="muted">{eligible.length < 2 ? m.duel.tooFew : m.duel.done}</p>
         {history.length > 0 && (
@@ -101,7 +110,7 @@ export function ComparePage() {
             {m.duel.undo}
           </button>
         )}
-        {mine && eligible.length > 1 && <RankingList data={data} mine={mine} meId={me.id} users={users} fallback={startOrder(eligible, me.id)} />}
+        {mine && eligible.length > 1 && <RankingList data={data} mine={mine} meId={me.id} users={users} />}
       </main>
     )
   }
@@ -317,7 +326,7 @@ export function ComparePage() {
         <Glyph name="chevronLeft" /> {data.project.name}
       </Link>
       <div className="page-head">
-        <h1>{duelMode ? m.duel.title : m.compare.title}</h1>
+        <h1>{duelMode ? m.duel.open : m.compare.title}</h1>
         {!duelMode && <span className="count">{products.length}</span>}
         <span className="spacer" />
         {!duelMode && others.length > 0 && (
@@ -354,31 +363,11 @@ export function ComparePage() {
       </div>
       {duelMode && mine && pair && (
         // Which of the two is better: the answer moves the winner up (src/domain/duel.ts).
-        <div className="duel-bar" role="group" aria-label={m.duel.question(mine.settled + 1)}>
+        <div className="duel-bar">
           <p className="duel-question">
             <b>{m.duel.question(mine.settled + 1)}</b>
             <span className="muted small"> {remaining(mine).toFirst > 0 ? m.duel.toFirst(remaining(mine).toFirst) : m.duel.toAll(remaining(mine).toAll)}</span>
           </p>
-          <div className="duel-choices">
-            {products.map((p, i) => (
-              <button
-                key={p.id}
-                type="button"
-                className="btn primary"
-                onClick={() => choose(i === 0 ? 'left' : 'right')}
-                aria-keyshortcuts={i === 0 ? 'ArrowLeft' : 'ArrowRight'}
-              >
-                {i === 0 && <Glyph name="chevronLeft" />}
-                <span className="duel-name">{p.model || displayName(p, m)}</span>
-                {i === 1 && <Glyph name="chevronRight" />}
-              </button>
-            ))}
-          </div>
-          {history.length > 0 && (
-            <button type="button" className="link-btn small" onClick={undo}>
-              {m.duel.undo}
-            </button>
-          )}
         </div>
       )}
       <div className={`compare-wrap${duelMode ? ' duel' : ''}`}>
@@ -475,7 +464,41 @@ export function ComparePage() {
           </tbody>
         </table>
       </div>
-      {duelMode && mine && <RankingList data={data} mine={mine} meId={me.id} users={users} fallback={startOrder(eligible, me.id)} />}
+      {duelMode && mine && pair && (
+        // The choice sits at the bottom of the screen, where the thumb is – like when swiping.
+        <div className="duel-actions" role="group" aria-label={m.duel.question(mine.settled + 1)}>
+          <div className="duel-choices">
+            {products.map((p, i) => (
+              <button
+                key={p.id}
+                type="button"
+                className="btn primary"
+                onClick={() => choose(i === 0 ? 'left' : 'right')}
+                aria-keyshortcuts={i === 0 ? 'ArrowLeft' : 'ArrowRight'}
+              >
+                {i === 0 && <Glyph name="chevronLeft" />}
+                <span className="duel-name">{p.model || displayName(p, m)}</span>
+                {i === 1 && <Glyph name="chevronRight" />}
+              </button>
+            ))}
+          </div>
+          {(later || history.length > 0) && (
+            <div className="duel-more">
+              {later && (
+                <button type="button" className="link-btn small" onClick={putOff} aria-keyshortcuts="ArrowDown">
+                  {m.duel.skip}
+                </button>
+              )}
+              {history.length > 0 && (
+                <button type="button" className="link-btn small" onClick={undo}>
+                  {m.duel.undo}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+      {duelMode && mine && <RankingList data={data} mine={mine} meId={me.id} users={users} />}
       {gallery && (
         <Gallery pictures={picturesOf(gallery.product)} name={displayName(gallery.product, m)} start={gallery.at} open onClose={() => setGallery(null)} />
       )}
@@ -484,18 +507,6 @@ export function ComparePage() {
 }
 
 const picturesOf = (p: Product) => [productImage(p), ...(p.images ?? []).filter(isPicture)].filter((x): x is string => !!x)
-
-/** Where a person's duels start: their stars, then 👍, no verdict, neutral, 👎 – table order within. */
-function startOrder(products: Product[], meId: string): string[] {
-  const weight = (p: Product) => {
-    const v = p.votes?.[meId]
-    return (isFavorite(p, meId) ? 0 : 10) + (v === 'like' ? 0 : !v ? 1 : v === 'neutral' ? 2 : 3)
-  }
-  return products
-    .map((p, i) => ({ id: p.id, w: weight(p), i }))
-    .sort((a, b) => a.w - b.w || a.i - b.i)
-    .map((x) => x.id)
-}
 
 /**
  * The rankings so far: one's own (decided places marked) and everyone else's who has duelled,
@@ -506,21 +517,21 @@ function RankingList({
   mine,
   meId,
   users,
-  fallback,
 }: {
   data: NonNullable<ReturnType<typeof useProjectData>>
   mine: Ranking
   meId: string
   users: Map<string, string>
-  fallback: string[]
 }) {
   const { m } = useI18n()
-  const others = Object.entries(data.project.rankings ?? {})
+  // Each person ranks their own preselection; the joint ranking covers what is in anyone's.
+  const { states, all } = everyone({ ...data.project.rankings, [meId]: mine }, data.products)
+  const others = states
     .filter(([id]) => id !== meId)
-    .map(([id, r]) => ({ id, name: users.get(id) ?? '?', r: normalize(r, fallback) }))
+    .map(([id, r]) => ({ id, name: users.get(id) ?? '?', r }))
     .sort((a, b) => a.name.localeCompare(b.name))
   const together = others.length > 0
-  const order = together ? joint([mine, ...others.map((o) => o.r)], fallback).map((x) => x.id) : mine.order
+  const order = together ? joint([mine, ...others.map((o) => o.r)], all).map((x) => x.id) : mine.order
   const byId = new Map(data.products.map((p) => [p.id, p]))
   const place = (r: Ranking, id: string) => {
     const at = r.order.indexOf(id)

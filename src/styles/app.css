@@ -2592,16 +2592,24 @@ table.map {
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  flex-wrap: wrap;
 }
 .swipe-head h1 {
   font-family: var(--font-display);
-  font-size: clamp(26px, 6vw, 34px);
+  font-size: clamp(20px, 5vw, 28px);
   margin: 0;
 }
+.swipe-count {
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.swipe-page .crumb {
+  margin-bottom: 4px;
+}
 .swipe-progress {
-  height: 4px;
-  margin: 8px 0 12px;
+  height: 3px;
+  margin: 6px 0 10px;
   border-radius: 999px;
   background: var(--sunken);
   overflow: hidden;
@@ -2631,7 +2639,8 @@ table.map {
 /* The picture decides most: it gets the room, the text keeps to a few lines. */
 .swipe-media {
   position: relative;
-  height: clamp(220px, 44vh, 480px);
+  /* What is left of a phone screen once heading, text and buttons have their place. */
+  height: clamp(200px, calc(100dvh - 450px), 520px);
   display: grid;
   grid-template: minmax(0, 1fr) / minmax(0, 1fr);
   place-items: center;
@@ -4504,23 +4513,32 @@ button.info-tip {
   color: var(--fail);
 }
 
-/* The others' verdicts beside one's own: an initial each, in its verdict's colour. */
+/* Beside one's own verdict: how many agree, and the others' differing verdicts as small symbols. */
+.verdict-count {
+  margin-left: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
 .verdict-others {
   display: inline-flex;
-  gap: 3px;
+  gap: 4px;
   margin-left: 6px;
 }
 .verdict-other {
-  display: inline-grid;
-  place-items: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  padding: 1px 4px;
+  border-radius: 9px;
   font-size: 11px;
   font-weight: 700;
-  line-height: 1;
   background: var(--sunken);
   color: var(--ink-2);
+}
+.verdict-trigger .verdict-other .glyph {
+  width: 12px;
+  height: 12px;
 }
 .verdict-other.like {
   background: var(--brand-soft);
@@ -4539,18 +4557,18 @@ button.info-tip {
 /* ---------- duels (Compare.tsx, mode=duel) ---------- */
 /* The question and the two choices stay in view while the rows below are read. */
 .duel-bar {
-  position: sticky;
-  /* Below the app's top bar (52 px). */
-  top: 60px;
-  z-index: 5;
   display: grid;
-  gap: 8px;
+  gap: 4px;
   margin: 0 0 12px;
-  padding: 12px 14px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+}
+/* Floating at the bottom of the screen while the rows are read, like the swipe buttons. */
+.duel-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  margin-top: 8px;
+  padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
+  background: linear-gradient(to bottom, transparent, var(--bg) 30%);
 }
 .duel-question {
   margin: 0;
@@ -4572,8 +4590,11 @@ button.info-tip {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.duel-bar .link-btn {
-  justify-self: start;
+.duel-more {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 4px;
 }
 /* Two columns that share the width, also on a phone. */
 .compare-wrap.duel {
@@ -4659,4 +4680,11 @@ table.compare.duel {
 }
 .ranking-table tr.is-decision td {
   box-shadow: inset 3px 0 0 var(--accent);
+}
+
+/* The place from the duels in the table: a plain number, bold for the first. */
+.rank-cell {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  cursor: default;
 }

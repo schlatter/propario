@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import { addProduct, createProject, setVote, updateProduct } from '../src/db/repo'
 import { makeProduct } from '../src/db/factories'
-import { favoritePatch, isFavorite, statusOf, statusPatch, tally } from '../src/domain/verdict'
+import { favoritePatch, isFavorite, statusOf, statusPatch, tally, together } from '../src/domain/verdict'
 import { testServer } from './helpers/server'
 
 describe('how a product stands', () => {
@@ -30,6 +30,15 @@ describe('how a product stands', () => {
     // Without a person (exports): anyone's star.
     expect(isFavorite(graceStar)).toBe(true)
     expect(isFavorite(plain)).toBe(false)
+  })
+
+  it('shows agreement as a number and a differing verdict as its own symbol', () => {
+    expect(together({ ada: 'like', grace: 'like' }, 'ada')).toEqual({ agree: 1, differ: [] })
+    expect(together({ ada: 'like', grace: 'dislike' }, 'ada')).toEqual({ agree: 0, differ: [['dislike', 1]] })
+    expect(together({ ada: 'like', b: 'like', c: 'neutral', d: 'neutral' }, 'ada')).toEqual({ agree: 1, differ: [['neutral', 2]] })
+    // No verdict of one's own yet: everyone else's shows as it is.
+    expect(together({ grace: 'like' }, 'ada')).toEqual({ agree: 0, differ: [['like', 1]] })
+    expect(together(undefined, 'ada')).toEqual({ agree: 0, differ: [] })
   })
 
   it('counts verdicts', () => {

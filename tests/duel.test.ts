@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { current, decide, finished, joint, normalize, remaining } from '../src/domain/duel'
+import { current, decide, finished, joint, normalize, places, remaining, skip, startOrder } from '../src/domain/duel'
+import { makeProduct } from '../src/db/factories'
 
 const ids = ['a', 'b', 'c', 'd']
 
@@ -74,5 +75,48 @@ describe('ranking by duels', () => {
     ])
     // Someone who has not ranked a product counts it last.
     expect(joint([ada, { order: ['b'], settled: 0, next: 1 }], ['a', 'b', 'c'])[0]).toEqual({ id: 'b', average: 1.5 })
+  })
+
+  it('puts a duel off: the challenger comes back last in this place', () => {
+    const r = normalize(undefined, ids)
+    const later = skip(r)!
+    expect(current(later)).toEqual({ left: 'a', right: 'c' })
+    expect(later.order).toEqual(['a', 'c', 'd', 'b'])
+    // Nothing to put off when it is the last challenger of the place.
+    expect(skip(decide(decide(r, 'left'), 'left'))).toBeNull()
+    // Putting off loses nothing: the order still ends as the taste says.
+    expect(play(['b', 'd', 'a', 'c'], later).r.order).toEqual(['b', 'd', 'a', 'c'])
+  })
+
+  it('duels only one’s own preselection: starred first, then liked; nothing excluded', () => {
+    const pid = '00000000-0000-4000-8000-000000000000'
+    const liked = makeProduct(pid, { votes: { ada: 'like' } })
+    const starred = makeProduct(pid, { favorites: { ada: true } })
+    const neutral = makeProduct(pid, { votes: { ada: 'neutral' } })
+    const theirs = makeProduct(pid, { votes: { grace: 'like' } })
+    const out = makeProduct(pid, { votes: { ada: 'like' }, candidate: 'excluded' })
+    expect(startOrder([liked, starred, neutral, theirs, out], 'ada')).toEqual([starred.id, liked.id])
+    expect(startOrder([liked, starred, neutral, theirs, out], 'grace')).toEqual([theirs.id])
+  })
+
+  it('gives the table a place per product: joint, or from the one ranking there is', () => {
+    const pid = '00000000-0000-4000-8000-000000000000'
+    const [a, b, c] = [0, 1, 2].map(() => makeProduct(pid, { votes: { grace: 'like', ada: 'like' } }))
+    const x = makeProduct(pid, { candidate: 'excluded', votes: { grace: 'like' } })
+    const other = makeProduct(pid)
+    const list = [a, b, c, x, other]
+    expect(places(undefined, list).size).toBe(0)
+    const grace = { order: [c.id, a.id, b.id], settled: 2, next: 3 }
+    expect([...places({ grace }, list)]).toEqual([
+      [c.id, 1],
+      [a.id, 2],
+      [b.id, 3],
+    ])
+    // Excluded or in nobody's preselection: no place.
+    expect(places({ grace }, list).has(x.id)).toBe(false)
+    expect(places({ grace }, list).has(other.id)).toBe(false)
+    // Two people: by the average place; Ada has not ranked yet – her order is her preselection.
+    const ada = { order: [a.id, b.id, c.id], settled: 0, next: 1 }
+    expect(places({ grace, ada }, list).get(a.id)).toBe(1)
   })
 })

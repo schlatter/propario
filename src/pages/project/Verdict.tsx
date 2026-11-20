@@ -5,7 +5,7 @@
  */
 import { setVote, updateProduct } from '../../db/repo'
 import { VOTES, type Product, type Vote } from '../../db/types'
-import { favoritePatch, isFavorite, tally } from '../../domain/verdict'
+import { favoritePatch, isFavorite, tally, together } from '../../domain/verdict'
 import { useI18n } from '../../i18n'
 import { useMe } from '../../session'
 import { Glyph, type GlyphName } from '../../ui/Glyph'
@@ -34,9 +34,9 @@ export function FavoriteToggle({ product: p, inDetails = false }: { product: Pro
 }
 
 /**
- * One's own verdict as a symbol – neutral, paler, while none is given – and beside it the others'
- * as small initials in their verdict's colour, so the joint verdict is seen at a glance; in the
- * table and the details alike. A tap opens the three choices with how many gave each (names on
+ * One's own verdict as a symbol – neutral, paler, while none is given. Beside it the joint
+ * verdict at a glance: how many agree as a number ("👍 2"), a different verdict as its own small
+ * symbol; in the table and the details alike. A tap opens the three choices with how many gave each (names on
  * hover); choosing the marked one again takes it back.
  */
 export function VerdictCell({ product: p, inDetails = false }: { product: Product; inDetails?: boolean }) {
@@ -50,6 +50,7 @@ export function VerdictCell({ product: p, inDetails = false }: { product: Produc
     .filter(([id]) => id !== me.id)
     .map(([id, v]) => ({ id, v, name: users.get(id) ?? '?' }))
     .sort((a, b) => a.name.localeCompare(b.name))
+  const { agree, differ } = together(p.votes, me.id)
   const names = (v: Vote) =>
     Object.entries(p.votes ?? {})
       .filter(([, x]) => x === v)
@@ -64,11 +65,18 @@ export function VerdictCell({ product: p, inDetails = false }: { product: Produc
       trigger={
         <>
           <Glyph name={VOTE_GLYPH[shown]} />
-          {others.length > 0 && (
+          {/* Agreement is a number (2 = both like it); a different verdict shows as its own symbol. */}
+          {agree > 0 && (
+            <span className="verdict-count" aria-hidden="true">
+              {agree + 1}
+            </span>
+          )}
+          {differ.length > 0 && (
             <span className="verdict-others" aria-hidden="true">
-              {others.map((o) => (
-                <span key={o.id} className={`verdict-other ${o.v}`}>
-                  {o.name.slice(0, 1).toUpperCase()}
+              {differ.map(([v, n]) => (
+                <span key={v} className={`verdict-other ${v}`}>
+                  <Glyph name={VOTE_GLYPH[v]} />
+                  {n > 1 && n}
                 </span>
               ))}
             </span>

@@ -6,7 +6,7 @@
  * - each person's verdict: thumbs up, neutral, thumbs down (`votes`, keyed by account).
  * Records from before 0.12 kept a favourite as status 'favorite': that reads as checked + star.
  */
-import type { Product, Status, Vote } from '../db/types'
+import { VOTES, type Product, type Status, type Vote } from '../db/types'
 
 export const statusOf = (p: Pick<Product, 'candidate'>): Status => (p.candidate === 'favorite' ? 'checked' : p.candidate)
 
@@ -38,4 +38,21 @@ export function tally(p: Pick<Product, 'votes'>): Record<Vote, number> {
   const t = { like: 0, neutral: 0, dislike: 0 }
   for (const v of Object.values(p.votes ?? {})) if (v in t) t[v]++
   return t
+}
+
+/**
+ * The joint verdict beside one's own: how many others agree, and the others' differing verdicts
+ * with how many gave each. Without one's own verdict every other counts as differing.
+ */
+export function together(votes: Record<string, Vote> | undefined, me: string): { agree: number; differ: [Vote, number][] } {
+  const mine = votes?.[me]
+  const others = Object.entries(votes ?? {})
+    .filter(([id]) => id !== me)
+    .map(([, v]) => v)
+  return {
+    agree: mine ? others.filter((v) => v === mine).length : 0,
+    differ: VOTES.filter((v) => v !== mine)
+      .map((v): [Vote, number] => [v, others.filter((x) => x === v).length])
+      .filter(([, n]) => n > 0),
+  }
 }

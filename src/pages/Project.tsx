@@ -98,11 +98,11 @@ export function ProjectPage() {
           {role === 'viewer' && <span className="role-badge">{m.share.readOnly}</span>}
           {products.length > 0 && role !== 'viewer' && (
             <Link className="btn sm primary" to={`/p/${project.id}/swipe`} title={m.swipe.openHint} aria-label={m.swipe.open}>
-              <Glyph name="star" /> <span className="hide-narrow">{m.swipe.open}</span>
+              <Glyph name="swipe" /> <span className="hide-narrow">{m.swipe.open}</span>
             </Link>
           )}
           {products.length > 1 && role !== 'viewer' && (
-            <Link className="btn sm" to={`/p/${project.id}/compare?mode=duel`} title={m.duel.openHint} aria-label={m.duel.open}>
+            <Link className="btn sm primary" to={`/p/${project.id}/compare?mode=duel`} title={m.duel.openHint} aria-label={m.duel.open}>
               <Glyph name="duel" /> <span className="hide-narrow">{m.duel.open}</span>
             </Link>
           )}
