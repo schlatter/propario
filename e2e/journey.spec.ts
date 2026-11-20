@@ -145,7 +145,7 @@ test('a visitor sees what Propario does and tries the demo, which never talks to
 
   // Everything can be tried: a change shows at once …
   await page.getByRole('button', { name: 'Arvika', exact: true }).click()
-  await expect(page.locator('.pimg-thumb')).toHaveCount(2)
+  await expect(page.locator('.pimg-slide')).toHaveCount(2)
   await page.getByRole('textbox', { name: 'Price', exact: true }).fill('799')
   await page.getByRole('textbox', { name: 'Price', exact: true }).press('Tab')
   await page.locator('dialog.drawer').getByRole('button', { name: 'Close', exact: true }).click()
@@ -153,7 +153,8 @@ test('a visitor sees what Propario does and tries the demo, which never talks to
   // … and what needs a server says so; sharing is not offered at all.
   await expect(page.getByRole('button', { name: 'Share comparison' })).toHaveCount(0)
   await page.getByRole('button', { name: 'Arvika', exact: true }).click()
-  await page.getByRole('button', { name: 'Load picture again' }).click()
+  await page.getByRole('button', { name: 'Update pictures' }).click()
+  await page.getByRole('button', { name: 'Update picture', exact: true }).click()
   await expect(page.getByText('Not in the demo – reading shop pages needs your own account.')).toBeVisible()
   await page.locator('dialog.drawer').getByRole('button', { name: 'Close', exact: true }).click()
   expect(calls).toEqual([])
@@ -198,14 +199,14 @@ test('Ada keeps a comparison with a product and its picture', async () => {
 
   await page.getByRole('button', { name: 'Arvika', exact: true }).click()
   // A tall cabinet: 200×1400 px. It must fit its box, not cover the text below.
-  await page.locator('.pimg input[type=file]').setInputFiles({ name: 'cabinet.png', mimeType: 'image/png', buffer: png(200, 1400) })
-  const picture = page.locator('.pimg-drop img')
+  await page.locator('.pimg input[data-pick=main]').setInputFiles({ name: 'cabinet.png', mimeType: 'image/png', buffer: png(200, 1400) })
+  const picture = page.locator('.pimg-slide img').first()
   await expect(picture).toHaveAttribute('src', /^\/api\/images\/[0-9a-f-]{36}$/)
   await expect.poll(() => picture.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0)
-  await inside(picture, page.locator('.pimg-drop'))
+  await inside(picture, page.locator('.pimg-stage'))
 
   // The picture grows on hover; Escape closes the large view, not the details.
-  await page.locator('.pimg-drop').hover()
+  await page.locator('.pimg-stage').hover()
   await expect(page.locator('dialog .thumb-preview img')).toBeVisible()
   await page.mouse.move(0, 0)
   await expect(page.locator('.thumb-preview')).toHaveCount(0)
@@ -213,9 +214,21 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   // A further picture (e.g. a dimension drawing): added; the gallery opens at the main picture,
   // steps on, and its star makes another picture the main one. Escape closes only the gallery.
   const mainSrc = await picture.getAttribute('src')
-  await page.locator('.pimg-more input[type=file]').setInputFiles({ name: 'drawing.png', mimeType: 'image/png', buffer: png(600, 300) })
-  await expect(page.locator('.pimg-thumb')).toHaveCount(2)
-  await page.locator('.pimg-drop').click()
+  await page.locator('.pimg input[data-pick=add]').setInputFiles({ name: 'drawing.png', mimeType: 'image/png', buffer: png(600, 300) })
+  await expect(page.locator('.pimg-slide')).toHaveCount(2)
+  // A swipe on the pictures shows the next picture, not the next product.
+  const titleBefore = await page.locator('#drawer-title').textContent()
+  await page.locator('.pimg-track').evaluate((el) => el.scrollTo({ left: el.clientWidth, behavior: 'instant' }))
+  await expect(page.getByRole('button', { name: 'Show picture 2' })).toHaveAttribute('aria-current', 'true')
+  await page.locator('.pimg-stage').evaluate((el) => {
+    const at = (x: number) => [new Touch({ identifier: 1, target: el, clientX: x, clientY: 200 })]
+    el.dispatchEvent(new TouchEvent('touchstart', { bubbles: true, touches: at(300), changedTouches: at(300) }))
+    el.dispatchEvent(new TouchEvent('touchend', { bubbles: true, touches: [], changedTouches: at(120) }))
+  })
+  await expect(page.locator('#drawer-title')).toHaveText(titleBefore!)
+  await page.getByRole('button', { name: 'Show picture 1' }).click()
+  await expect(page.getByRole('button', { name: 'Show picture 1' })).toHaveAttribute('aria-current', 'true')
+  await page.locator('.pimg-stage').click()
   await expect(page.locator('dialog.gallery')).toBeVisible()
   await expect(page.locator('.gallery-count')).toHaveText('1/2')
   // A swipe in the gallery changes the picture, not the product.
@@ -239,20 +252,24 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await expect(page.locator('dialog.gallery')).toBeHidden()
   await expect(page.locator('dialog.drawer')).toBeVisible()
   await expect(picture).not.toHaveAttribute('src', mainSrc!)
-  await page.getByRole('button', { name: 'Picture 2: show large' }).click()
+  await page.getByRole('button', { name: 'Show picture 2' }).click()
+  await page.locator('.pimg-stage').click()
   await page.getByRole('button', { name: 'Make main picture' }).click()
   await page.keyboard.press('Escape')
   await expect(picture).toHaveAttribute('src', mainSrc!)
+  await page.getByRole('button', { name: 'Show picture 2' }).click()
+  await page.getByRole('button', { name: 'Update pictures' }).click()
   await page.getByRole('button', { name: 'Remove picture 2' }).click()
-  await expect(page.locator('.pimg-thumb')).toHaveCount(1)
+  await expect(page.locator('.pimg-slide')).toHaveCount(1)
 
   // An upright further picture – stored larger than the main one – fits the gallery whole on a
   // laptop, and the magnifier enlarges it in the middle instead of pushing it to the left.
   const size = page.viewportSize()!
   await page.setViewportSize({ width: 1280, height: 720 })
-  await page.locator('.pimg-more input[type=file]').setInputFiles({ name: 'tall.png', mimeType: 'image/png', buffer: png(300, 1400) })
-  await expect(page.locator('.pimg-thumb')).toHaveCount(2)
-  await page.getByRole('button', { name: 'Picture 2: show large' }).click()
+  await page.locator('.pimg input[data-pick=add]').setInputFiles({ name: 'tall.png', mimeType: 'image/png', buffer: png(300, 1400) })
+  await expect(page.locator('.pimg-slide')).toHaveCount(2)
+  await page.getByRole('button', { name: 'Show picture 2' }).click()
+  await page.locator('.pimg-stage').click()
   const stage = page.locator('.gallery-stage')
   const shown = page.locator('.gallery-picture img')
   await expect.poll(() => shown.evaluate((img: HTMLImageElement) => img.naturalHeight)).toBeGreaterThan(640)
@@ -265,8 +282,10 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await page.getByRole('button', { name: 'Fit to the screen' }).click()
   await inside(shown, stage)
   await page.keyboard.press('Escape')
+  await page.getByRole('button', { name: 'Show picture 2' }).click()
+  await page.getByRole('button', { name: 'Update pictures' }).click()
   await page.getByRole('button', { name: 'Remove picture 2' }).click()
-  await expect(page.locator('.pimg-thumb')).toHaveCount(1)
+  await expect(page.locator('.pimg-slide')).toHaveCount(1)
   await page.setViewportSize(size)
   await accessible(page, 'further pictures')
 
@@ -412,6 +431,7 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await expect(page.getByText('€96 under budget')).toBeVisible()
   // A product can be the price reference instead.
   await page.getByRole('button', { name: 'Arvika', exact: true }).click()
+  await page.locator('dialog.drawer').getByRole('button', { name: 'More' }).click()
   await page.getByRole('button', { name: 'Use as price reference' }).click()
   await page.locator('dialog.drawer').getByRole('button', { name: 'Close' }).click()
   await expect(page.locator('.price-cell').getByText('price reference')).toBeVisible()
@@ -487,7 +507,14 @@ test('Ada moves rows and decides by swiping', async () => {
   await expect(page.getByRole('button', { name: 'Favourites' })).toBeVisible()
   await page.getByRole('button', { name: /^Filter/ }).click()
   const nameWidth = await page.locator('table.grid thead th.col-name').evaluate((th) => th.getBoundingClientRect().width)
-  expect(nameWidth).toBeLessThanOrEqual(140)
+  // Wide enough for a picture people can recognise (52 px), still under half the screen.
+  expect(nameWidth).toBeLessThanOrEqual(176)
+  expect(
+    await page
+      .locator('table.grid tbody .name-cell .thumb')
+      .first()
+      .evaluate((t) => t.getBoundingClientRect().width),
+  ).toBeGreaterThanOrEqual(52)
   await accessible(page, 'table on a phone')
 
   await page.getByRole('link', { name: 'Swipe' }).click()
@@ -513,10 +540,15 @@ test('Ada moves rows and decides by swiping', async () => {
     .locator('table.grid tbody tr', { has: page.locator('.verdict-trigger.dislike') })
     .locator('.name-model')
     .click()
-  const verdict = page.getByRole('group', { name: 'Your verdict' })
-  await expect(verdict.getByRole('button', { name: 'Dislike' })).toHaveAttribute('aria-pressed', 'true')
-  await verdict.getByRole('button', { name: 'Like', exact: true }).click()
-  await expect(verdict.getByRole('button', { name: 'Like', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  // The details show one's own verdict as in the table; a tap opens the three choices.
+  const verdict = page.locator('dialog.drawer .verdict-trigger')
+  await expect(verdict).toHaveAccessibleName('Your verdict: I don’t like it')
+  await verdict.click()
+  await page
+    .locator('.verdict-menu')
+    .getByRole('button', { name: /^I like it/ })
+    .click()
+  await expect(verdict).toHaveAccessibleName('Your verdict: I like it')
   // Voting made it checked; the star is its own, for everyone.
   await expect(page.getByRole('group', { name: 'Selection' }).getByRole('button', { name: 'Checked' })).toHaveAttribute('aria-pressed', 'true')
   await page
@@ -614,6 +646,11 @@ test('Ada moves rows and decides by swiping', async () => {
   // "Copy for my AI": the comparison as text for one's own AI, without names of people.
   await page.context().grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.getByRole('button', { name: 'More', exact: true }).first().click()
+  // One "Export" entry opens the formats.
+  await expect(page.getByRole('button', { name: 'Copy for my AI' })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Export', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Export as Excel' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Export as JSON' })).toBeVisible()
   await page.getByRole('button', { name: 'Copy for my AI' }).click()
   await expect(page.getByText('Copied – paste it into the AI you use.')).toBeVisible()
   const copied = await page.evaluate(() => navigator.clipboard.readText())

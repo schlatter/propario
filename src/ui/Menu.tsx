@@ -31,6 +31,8 @@ export function Menu({
     }
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        // Only the menu closes, not a dialog it sits in (the product details).
+        e.preventDefault()
         setOpen(false)
         btn.current?.focus()
       }
@@ -57,10 +59,11 @@ export function Menu({
     const r = btn.current.getBoundingClientRect()
     // Below the trigger, or above it when there is no room below.
     const below = window.innerHeight - r.bottom > 180
+    // Opens towards the side with room, so it never runs off the screen.
+    const fromRight = r.left > window.innerWidth / 2
     setPlace({
       position: 'fixed',
-      left: Math.max(8, r.left),
-      right: 'auto',
+      ...(fromRight ? { left: 'auto', right: Math.max(8, window.innerWidth - r.right) } : { left: Math.max(8, r.left), right: 'auto' }),
       ...(below ? { top: r.bottom + 4 } : { top: 'auto', bottom: window.innerHeight - r.top + 4 }),
     })
   }, [open, floating])

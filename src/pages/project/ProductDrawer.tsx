@@ -19,7 +19,9 @@ import { usePageUpdate } from './usePageUpdate'
 import { withPurchaseDate } from '../../domain/purchase'
 import { loadProductImage } from '../../images'
 import type { ProjectData } from './useProjectData'
-import { FavoriteToggle, VerdictControl } from './Verdict'
+import { FavoriteToggle, VerdictCell } from './Verdict'
+import { Menu } from '../../ui/Menu'
+import { meaning } from '../../domain/page-import'
 import { statusOf, statusPatch } from '../../domain/verdict'
 
 export function ProductDrawer({
@@ -70,9 +72,11 @@ interface Step {
   go: (id: string) => void
 }
 
+const DIMS = ['width', 'height', 'depth'] as const
+
 /** Typing, choosing or a scrolling strip: there arrow keys and swipes belong to the element. */
 const ownsArrows = (target: EventTarget | null) =>
-  target instanceof Element && !!target.closest('input, textarea, select, [contenteditable], .table-wrap, .entry, .menu-list, dialog.gallery')
+  target instanceof Element && !!target.closest('input, textarea, select, [contenteditable], .table-wrap, .entry, .menu-list, dialog.gallery, .pimg-stage')
 
 function DrawerContent({
   data,
@@ -137,13 +141,30 @@ function DrawerContent({
   const lookups = lookupLinks(p)
   const priceAge = p.price !== null ? daysSince(p.priceDate) : null
   const gtinInvalid = !!p.gtin && !isValidGtin(p.gtin)
+  /** Width, height and depth, shown together on one line under the price. */
+  const dimsFound = DIMS.map((d) => [d, data.properties.find((prop) => meaning(prop.name) === d)] as const).filter(([, prop]) => prop !== undefined)
+  const dims = dimsFound.map(([, prop]) => prop!)
 
   return (
     <div className="drawer-inner" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
       <div className="drawer-head">
         <div className="row" style={{ alignItems: 'flex-start', flexWrap: 'nowrap' }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            {p.brand && <div className="muted small">{p.brand}</div>}
+            {(p.brand || isDecision || updating) && (
+              <div className="drawer-kicker small">
+                {p.brand && <span className="muted">{p.brand}</span>}
+                {isDecision && (
+                  <span className="decision-mark">
+                    <Glyph name="flag" /> {m.product.markDecision}
+                  </span>
+                )}
+                {updating && (
+                  <span className="muted" role="status">
+                    {m.product.updating}
+                  </span>
+                )}
+              </div>
+            )}
             <h2 id="drawer-title" ref={title} tabIndex={-1} style={{ overflowWrap: 'anywhere' }}>
               {p.model || name}
             </h2>
@@ -161,11 +182,69 @@ function DrawerContent({
               </button>
             </div>
           )}
+          <Menu label={m.common.more} trigger={<Glyph name="moreVertical" />}>
+            {(close) => {
+              const act = (job: () => unknown) => () => {
+                close()
+                void job()
+              }
+              return (
+                <>
+                  <button type="button" aria-pressed={isDecision} onClick={act(() => setDecision(project, isDecision ? null : p.id))}>
+                    <Glyph name="flag" /> {isDecision ? m.product.unmarkDecision : m.product.markDecision}
+                  </button>
+                  {href && (
+                    <button
+                      type="button"
+                      disabled={updating}
+                      title={m.pageUpdate.hint}
+                      onClick={act(async () => {
+                        setUpdating(true)
+                        try {
+                          await pageUpdate(p)
+                        } finally {
+                          setUpdating(false)
+                        }
+                      })}
+                    >
+                      <Glyph name="download" /> {m.pageUpdate.button}
+                    </button>
+                  )}
+                  {p.price !== null && (
+                    <button
+                      type="button"
+                      title={m.priceRef.hint}
+                      onClick={act(() => updateProject(project.id, { priceReference: project.priceReference === p.id ? '' : p.id }))}
+                    >
+                      <Glyph name="euro" /> {project.priceReference === p.id ? m.priceRef.unset : m.priceRef.set}
+                    </button>
+                  )}
+                  <hr />
+                  <button type="button" onClick={act(() => duplicateProduct(p))}>
+                    <Glyph name="copy" /> {m.product.duplicate}
+                  </button>
+                  <button
+                    type="button"
+                    className="danger"
+                    onClick={act(async () => {
+                      const ok = await confirm({ title: m.product.deleteTitle(name), text: m.product.deleteText, confirmLabel: m.common.delete, danger: true })
+                      if (ok) {
+                        onClose()
+                        await deleteProduct(p)
+                      }
+                    })}
+                  >
+                    <Glyph name="trash" /> {m.common.delete}
+                  </button>
+                </>
+              )
+            }}
+          </Menu>
           <button className="icon-btn" onClick={onClose} aria-label={m.common.close} title={m.common.close}>
             <Glyph name="close" />
           </button>
         </div>
-        <div className="row">
+        <div className="drawer-controls">
           <div className="seg" role="group" aria-label={m.field.candidate}>
             {STATUSES.map((c) => (
               <button key={c} aria-pressed={statusOf(p) === c} onClick={() => set(statusPatch(p, c))}>
@@ -173,36 +252,8 @@ function DrawerContent({
               </button>
             ))}
           </div>
-          <FavoriteToggle product={p} withLabel />
-          <VerdictControl product={p} />
-          {href && (
-            <button
-              type="button"
-              className="btn sm"
-              disabled={updating}
-              title={m.pageUpdate.hint}
-              aria-busy={updating}
-              onClick={async () => {
-                setUpdating(true)
-                try {
-                  await pageUpdate(p)
-                } finally {
-                  setUpdating(false)
-                }
-              }}
-            >
-              <Glyph name="download" /> {updating ? m.image.working : m.pageUpdate.button}
-            </button>
-          )}
-          <span className="spacer" />
-          <button
-            className={`btn sm${isDecision ? ' primary' : ''}`}
-            aria-pressed={isDecision}
-            onClick={() => setDecision(project, isDecision ? null : p.id)}
-            title={isDecision ? m.product.unmarkDecision : m.product.markDecision}
-          >
-            <Glyph name="flag" /> {isDecision ? m.product.isDecision : m.product.markDecision}
-          </button>
+          <FavoriteToggle product={p} inDetails />
+          <VerdictCell product={p} inDetails />
         </div>
       </div>
 
@@ -215,12 +266,54 @@ function DrawerContent({
 
         <div className="section">
           <ProductImage product={p} name={name} />
-          {href && (
-            // The shop page, prominent: it is where the product is bought and checked.
-            <a className="product-link" href={href} target="_blank" rel="noopener noreferrer">
-              <Glyph name="out" /> {m.product.openShop(hostOf(p.url) || m.common.openLink)}
-            </a>
-          )}
+          {/* What is compared first, each on one line: the price with its date, then the dimensions. */}
+          <div className="key-facts">
+            <div className="key-fact">
+              {/* The € sits outside the label, so the field's name stays "Price". */}
+              <label htmlFor="product-price">{m.field.price}</label>
+              <span className="input-affix">
+                <CommitInput
+                  id="product-price"
+                  className="input"
+                  inputMode="decimal"
+                  value={p.price !== null ? String(p.price) : ''}
+                  aria-describedby={priceAge !== null ? 'price-date' : undefined}
+                  onCommit={(v) => set({ price: parseNumber(v) })}
+                />
+                <span className="affix" aria-hidden="true">
+                  €
+                </span>
+              </span>
+              {priceAge !== null && (
+                <small id="price-date" className={`field-note${priceAge > STALE_DAYS ? ' stale' : ''}`}>
+                  {priceAge > STALE_DAYS && <span className="warn-dot" aria-hidden="true" />}
+                  {m.product.priceAsOf(fmt.date(p.priceDate))}
+                  {priceAge > STALE_DAYS && ` · ${m.product.priceStale}`}
+                </small>
+              )}
+            </div>
+            {dims.length > 0 && (
+              <div className="key-fact">
+                <span className="key-label">{m.product.dimensions}</span>
+                <span className="dims">
+                  {dimsFound.map(([d, prop], i) => (
+                    <span key={prop!.id} className="dim">
+                      {i > 0 && (
+                        <span className="dim-x" aria-hidden="true">
+                          ×
+                        </span>
+                      )}
+                      {/* The letter is only seen; the field's own name says it to screen readers. */}
+                      <span className="dim-letter" aria-hidden="true">
+                        {m.product.dimLetter[d]}
+                      </span>
+                      <PropertyCell prop={prop!} product={p} />
+                    </span>
+                  ))}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="section">
@@ -231,47 +324,6 @@ function DrawerContent({
             </Field>
             <Field label={m.field.model}>
               <CommitInput className="input" value={p.model} onCommit={(v) => set({ model: v.trim() })} />
-            </Field>
-            {/* The note sits beside the label, not in it, so it does not become part of the field's name. */}
-            <div className="field-stack">
-              {/* The € sits outside the label, so the field's name stays "Price". */}
-              <div className="field">
-                <label htmlFor="product-price">{m.field.price}</label>
-                <span className="input-affix">
-                  <CommitInput
-                    id="product-price"
-                    className="input"
-                    inputMode="decimal"
-                    value={p.price !== null ? String(p.price) : ''}
-                    aria-describedby={priceAge !== null ? 'price-date' : undefined}
-                    onCommit={(v) => set({ price: parseNumber(v) })}
-                  />
-                  <span className="affix" aria-hidden="true">
-                    €
-                  </span>
-                </span>
-              </div>
-              {p.price !== null && (
-                <button
-                  type="button"
-                  className="link-btn small"
-                  aria-pressed={project.priceReference === p.id}
-                  title={m.priceRef.hint}
-                  onClick={() => updateProject(project.id, { priceReference: project.priceReference === p.id ? '' : p.id })}
-                >
-                  {project.priceReference === p.id ? m.priceRef.unset : m.priceRef.set}
-                </button>
-              )}
-              {priceAge !== null && (
-                <small id="price-date" className={`field-note${priceAge > STALE_DAYS ? ' stale' : ''}`}>
-                  {priceAge > STALE_DAYS && <span className="warn-dot" aria-hidden="true" />}
-                  {m.product.priceAsOf(fmt.date(p.priceDate))}
-                  {priceAge > STALE_DAYS && ` · ${m.product.priceStale}`}
-                </small>
-              )}
-            </div>
-            <Field label={m.field.priceNote} hint={m.fieldHint.priceNote}>
-              <CommitInput className="input" value={p.priceNote} onCommit={(v) => set({ priceNote: v })} />
             </Field>
             <Field label={m.field.retailer}>
               <CommitInput className="input" value={p.retailer} onCommit={(v) => set({ retailer: v.trim() })} />
@@ -349,18 +401,20 @@ function DrawerContent({
           {data.properties.length === 0 ? (
             <p className="muted small">{m.product.noProperties}</p>
           ) : (
-            <dl className="kv" style={{ alignItems: 'center' }}>
-              {data.properties.map((prop) => (
-                <div key={prop.id} style={{ display: 'contents' }}>
-                  <dt>
-                    {prop.name}
-                    {prop.unit && <span className="muted"> ({prop.unit})</span>}
-                  </dt>
-                  <dd style={{ border: '1px solid var(--line)', borderRadius: 6 }}>
-                    <PropertyCell prop={prop} product={p} />
-                  </dd>
-                </div>
-              ))}
+            <dl className="facts">
+              {data.properties
+                .filter((prop) => !dims.includes(prop))
+                .map((prop) => (
+                  <div key={prop.id} className="fact">
+                    <dt>
+                      {prop.name}
+                      {prop.unit && <span> ({prop.unit})</span>}
+                    </dt>
+                    <dd>
+                      <PropertyCell prop={prop} product={p} />
+                    </dd>
+                  </div>
+                ))}
             </dl>
           )}
         </div>
@@ -563,31 +617,6 @@ function DrawerContent({
             </dl>
           </div>
         )}
-
-        <div className="section row">
-          <button
-            className="btn sm"
-            onClick={async () => {
-              await duplicateProduct(p)
-            }}
-          >
-            <Glyph name="copy" /> {m.product.duplicate}
-          </button>
-          <span className="spacer" />
-          <button
-            className="btn sm ghost"
-            style={{ color: 'var(--fail)' }}
-            onClick={async () => {
-              const ok = await confirm({ title: m.product.deleteTitle(name), text: m.product.deleteText, confirmLabel: m.common.delete, danger: true })
-              if (ok) {
-                onClose()
-                await deleteProduct(p)
-              }
-            }}
-          >
-            <Glyph name="trash" /> {m.common.delete}
-          </button>
-        </div>
       </div>
     </div>
   )

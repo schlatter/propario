@@ -40,6 +40,7 @@ export const de: Messages = {
     moveUp: 'Nach oben',
     moveDown: 'Nach unten',
     confirm: 'Bestätigen',
+    export: 'Exportieren',
     exportJson: 'Als JSON exportieren',
     exportExcel: 'Als Excel exportieren',
     copySuffix: 'Kopie',
@@ -255,7 +256,6 @@ export const de: Messages = {
   },
   product: {
     openPage: 'Produktseite öffnen',
-    openShop: (shop) => `Bei ${shop} ansehen`,
     title: 'Produkt',
     basics: 'Grunddaten',
     assessment: 'Einschätzung',
@@ -265,7 +265,6 @@ export const de: Messages = {
     imported: 'Importierte Zusatzangaben',
     markDecision: 'Finale Entscheidung',
     unmarkDecision: 'Entscheidung aufheben',
-    isDecision: 'Finale Entscheidung ✓',
     addRating: 'Bewertung hinzufügen',
     person: 'Person',
     stars: (n) => `${n} von 5 Sternen`,
@@ -285,6 +284,9 @@ export const de: Messages = {
       'Vorgeschlagen ab Kaufdatum: 14 Tage Widerruf beim Onlinekauf (ab Erhalt) und 2 Jahre gesetzliche Gewährleistung. Bitte mit den Bedingungen des Shops abgleichen.',
     priceAsOf: (date) => `Stand ${date}`,
     priceStale: 'älter als eine Woche – neu prüfen',
+    dimensions: 'Maße',
+    dimLetter: { width: 'B', height: 'H', depth: 'T' },
+    updating: 'Aktualisiere …',
     gtinInvalid: 'Die Prüfziffer passt nicht – bitte mit Verpackung oder Shopseite vergleichen.',
   },
   offer: {
@@ -449,7 +451,6 @@ export const de: Messages = {
   },
   fieldHint: {
     description: 'Was das Produkt ist – meist von der Shopseite übernommen.',
-    priceNote: 'Wenn der Preis keine einzelne Zahl ist, z. B. „830–900 €“ oder „nur im Set“.',
     purchaseNote: 'Z. B. Bestellnummer oder Liefertermin.',
     ratings: 'Sterne und eine kurze Notiz pro Person',
     ratingNote: (person) => (person ? `Notiz von ${person}` : 'Notiz'),
@@ -587,19 +588,20 @@ export const de: Messages = {
         ? `${ok} Bilder geladen · ${failed} nicht verfügbar – in den Produktdetails ergänzen (einfügen, hineinziehen oder Datei wählen)`
         : `${ok} Bilder geladen`,
     fromLink: 'Bild von der Shopseite laden',
-    further: 'Weitere Bilder',
     furtherAlt: (name, n) => `${name} – Bild ${n + 1}`,
-    view: (n, main) => `Bild ${n}${main ? ' (Hauptbild)' : ''}: groß anzeigen`,
+    view: (n) => `Bild ${n} zeigen`,
     openGallery: (n) =>
       n > 1
         ? `Produktbild, ${n} Bilder – groß öffnen. Ein Bild hier einfügen oder hineinziehen fügt es hinzu.`
         : 'Produktbild – groß öffnen. Ein Bild hier einfügen oder hineinziehen fügt es hinzu.',
     removeFurther: (n) => `Bild ${n + 1} entfernen`,
-    addFurther: 'Bild',
+    addFurther: 'Bild hinzufügen',
     addFurtherHint: 'Ein weiteres Bild hinzufügen – am meisten hilft eine Maßzeichnung. Einfügen oder Hineinziehen aufs Hauptbild fügt auch eins hinzu.',
-    reload: 'Bild erneut laden',
-    chooseFile: 'Bilddatei wählen',
+    reload: 'Bild aktualisieren',
+    chooseFile: 'Bild wählen',
     remove: 'Bild entfernen',
+    menu: 'Bilder',
+    menuLabel: 'Bilder aktualisieren',
     working: 'Lädt …',
     dropLabel: 'Produktbild. Bild hier einfügen oder hineinziehen.',
     dropHint: 'Bild einfügen oder hineinziehen',

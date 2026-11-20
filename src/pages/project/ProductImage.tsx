@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { updateProduct } from '../../db/repo'
 import type { Product } from '../../db/types'
-import { safeHref } from '../../domain/values'
+import { hostOf, safeHref } from '../../domain/values'
 import { useI18n } from '../../i18n'
 import {
   addImageFromBlob,
@@ -17,19 +17,25 @@ import {
 import { MAX_PICTURES } from '../../shared/records.ts'
 import type { ProductFacts } from '../../shared/product-facts.ts'
 import { Glyph } from '../../ui/Glyph'
-import { Preview, Thumb } from '../../ui/Thumb'
+import { Preview } from '../../ui/Thumb'
 import { filledLabels } from '../../domain/display'
 import { Gallery } from './Gallery'
-import { InfoTip } from '../../ui/InfoTip'
+import { Menu } from '../../ui/Menu'
 
-/** Image block in the product drawer: load from link, pick a file, paste or drop, remove. */
+/**
+ * Pictures in the product drawer: a strip as wide as the drawer that a finger swipes through
+ * (a swipe here changes the picture, never the product), dots below, a tap opens the gallery.
+ * One menu loads, chooses, adds or removes pictures; pasting or dropping works on the strip.
+ */
 export function ProductImage({ product: p, name }: { product: Product; name: string }) {
   const { m, fmt } = useI18n()
   const file = useRef<HTMLInputElement>(null)
+  const moreFiles = useRef<HTMLInputElement>(null)
+  const track = useRef<HTMLDivElement>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<ImageErrorCode | null>(null)
   const [over, setOver] = useState(false)
-  // Large view: on hover or keyboard focus, and by tapping on touch screens.
+  // Large view beside the drawer: on hover or keyboard focus (a tap opens the gallery instead).
   const box = useRef<HTMLDivElement>(null)
   const [zoom, setZoom] = useState(false)
   /** As large as the stored copy (640 px) allows and the screen has room for beside the drawer. */
@@ -71,49 +77,63 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
     return true
   }
   const further = (p.images ?? []).filter(isPicture)
-  const moreFiles = useRef<HTMLInputElement>(null)
   /** All pictures, the main one first. */
   const pictures = src ? [src, ...further] : []
+  /** The picture in view: follows the strip's scroll position. */
+  const [shownAt, setShownAt] = useState(0)
+  const at = Math.min(shownAt, Math.max(0, pictures.length - 1))
+  const show = (i: number) => {
+    const t = track.current
+    if (t) t.scrollTo({ left: i * t.clientWidth })
+    setShownAt(i)
+  }
   const [gallery, setGallery] = useState<number | null>(null)
   /** Picture `i` becomes the main one and moves to the front; the others keep their order. */
   const makeMain = (i: number) => {
     const rest = pictures.filter((_, j) => j !== i)
     void updateProduct(p, { image: pictures[i], images: rest })
+    show(0)
   }
-  /** Removing the main picture lets the next one take its place. */
-  const removeMain = () => updateProduct(p, { image: further[0] ?? '', images: further.slice(1) })
+  /** Removes picture `i`; removing the main one lets the next take its place. */
+  const remove = (i: number) =>
+    i === 0 ? updateProduct(p, { image: further[0] ?? '', images: further.slice(1) }) : updateProduct(p, { images: further.filter((_, j) => j !== i - 1) })
+  const openGallery = () => {
+    if (!src) return
+    setZoom(false)
+    setGallery(at)
+  }
 
   return (
     <div className="pimg">
       <div
         ref={box}
-        className={`pimg-drop${over ? ' over' : ''}${src ? ' zoomable' : ' empty'}`}
+        className={`pimg-stage${over ? ' over' : ''}${src ? ' zoomable' : ' empty'}`}
         tabIndex={0}
         onPointerEnter={(e) => src && e.pointerType === 'mouse' && setZoom(true)}
         // Also when the picture appears under a resting pointer (e.g. right after opening the details).
         onPointerMove={(e) => src && e.pointerType === 'mouse' && !zoom && setZoom(true)}
         onPointerLeave={() => setZoom(false)}
-        // A click or tap opens the gallery – on a phone that is how a picture gets large.
-        onClick={() => {
-          if (!src) return
-          setZoom(false)
-          setGallery(0)
-        }}
+        // A tap opens the gallery; a swipe scrolls the strip and is no tap.
+        onClick={openGallery}
         onFocus={(e) => src && e.currentTarget.matches(':focus-visible') && setZoom(true)}
         onBlur={() => setZoom(false)}
         onKeyDown={(e) => {
+          if (e.target !== e.currentTarget) return
           if (e.key === 'Escape' && zoom) {
             // Close the large view, not the drawer.
             e.preventDefault()
             e.stopPropagation()
             setZoom(false)
-          } else if ((e.key === 'Enter' || e.key === ' ') && src && e.target === e.currentTarget) {
+          } else if ((e.key === 'Enter' || e.key === ' ') && src) {
             e.preventDefault()
-            setZoom(false)
-            setGallery(0)
+            openGallery()
+          } else if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && pictures.length > 1) {
+            e.preventDefault()
+            show(Math.min(pictures.length - 1, Math.max(0, at + (e.key === 'ArrowLeft' ? -1 : 1))))
           }
         }}
         role="group"
+        aria-roledescription={pictures.length > 1 ? 'carousel' : undefined}
         aria-label={src ? m.image.openGallery(pictures.length) : m.image.dropLabel}
         aria-busy={busy}
         onPaste={(e) => {
@@ -130,113 +150,134 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
           take(e.dataTransfer)
         }}
       >
-        {src ? <img src={src} alt={name} referrerPolicy="no-referrer" /> : <span className="pimg-hint">{m.image.dropHint}</span>}
+        {src ? (
+          <div ref={track} className="pimg-track" onScroll={(e) => setShownAt(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}>
+            {pictures.map((pic, i) => (
+              <div className="pimg-slide" key={pic} aria-hidden={i !== at}>
+                <img src={pic} alt={i === 0 ? name : m.gallery.alt(name, i + 1, pictures.length)} referrerPolicy="no-referrer" draggable={false} />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <span className="pimg-hint">{m.image.dropHint}</span>
+        )}
         {busy && <span className="pimg-busy">{m.image.working}</span>}
       </div>
-      {zoom && src && box.current && <Preview anchor={box.current} src={src} alt={name} size={zoomSize()} />}
-      <div className="pimg-side">
-        <div className="pimg-actions">
-          {link && (
-            <button type="button" className="btn sm" disabled={busy} onClick={() => run(() => loadProductImage(p, link))}>
-              <Glyph name="download" /> {stored ? m.image.reload : m.image.fromLink}
-            </button>
-          )}
-          <button type="button" className="btn sm" disabled={busy} onClick={() => file.current?.click()}>
-            <Glyph name="upload" /> {m.image.chooseFile}
-          </button>
-          <InfoTip text={m.image.pasteHint} />
-          {stored && (
-            <button type="button" className="btn sm ghost" disabled={busy} onClick={removeMain}>
-              <Glyph name="trash" /> {m.image.remove}
-            </button>
-          )}
-          <input
-            ref={file}
-            type="file"
-            accept="image/*"
-            hidden
-            onChange={(e) => {
-              const f = e.target.files?.[0]
-              e.target.value = ''
-              if (f) void run(() => setProductImageFromBlob(p, f))
-            }}
-          />
-        </div>
-        {stored && (
-          <div className="pimg-more" role="group" aria-label={m.image.further}>
+      {zoom && src && box.current && <Preview anchor={box.current} src={pictures[at]} alt={name} size={zoomSize()} />}
+      <div className="pimg-bar">
+        {pictures.length > 1 && (
+          <div className="pimg-dots" role="group" aria-label={m.gallery.all}>
             {pictures.map((pic, i) => (
-              <span className={`pimg-thumb${i === 0 ? ' is-main' : ''}`} key={pic}>
-                <Thumb
-                  src={pic}
-                  alt={m.image.furtherAlt(name, i)}
-                  label={m.image.view(i + 1, i === 0)}
-                  onClick={() => setGallery(i)}
-                  previewSize={zoomSize()}
-                />
-                {i === 0 ? (
-                  <span className="pimg-star" title={m.gallery.isMain} aria-hidden="true">
-                    <Glyph name="star" />
-                  </span>
-                ) : (
-                  <button
-                    type="button"
-                    className="icon-btn sm"
-                    aria-label={m.image.removeFurther(i)}
-                    title={m.image.removeFurther(i)}
-                    onClick={() => updateProduct(p, { images: further.filter((_, j) => j !== i - 1) })}
-                  >
-                    <Glyph name="close" />
-                  </button>
-                )}
-              </span>
-            ))}
-            {further.length < MAX_PICTURES && (
-              <button type="button" className="btn sm" disabled={busy} onClick={() => moreFiles.current?.click()} title={m.image.addFurtherHint}>
-                <Glyph name="plus" /> {m.image.addFurther}
+              <button key={pic} type="button" aria-label={m.image.view(i + 1)} aria-current={i === at} onClick={() => show(i)}>
+                <span />
               </button>
-            )}
-            <input
-              ref={moreFiles}
-              type="file"
-              accept="image/*"
-              multiple
-              hidden
-              onChange={(e) => {
-                const files = [...(e.target.files ?? [])]
-                e.target.value = ''
-                void run(async () => {
-                  for (const f of files) await addImageFromBlob(p, f)
-                })
-              }}
-            />
+            ))}
           </div>
         )}
-        {filled && (
-          <p className="small" role="status">
-            {filled.length ? m.pageImport.filled(filledLabels(filled, m)) : m.pageImport.nothing}
-          </p>
+        <span className="spacer" />
+        <Menu
+          label={m.image.menuLabel}
+          className="btn sm"
+          trigger={
+            <>
+              <Glyph name="image" /> {m.image.menu}
+            </>
+          }
+        >
+          {(close) => {
+            const act = (job: () => void) => () => {
+              close()
+              job()
+            }
+            return (
+              <>
+                {link && (
+                  <button type="button" disabled={busy} onClick={act(() => void run(() => loadProductImage(p, link)))}>
+                    <Glyph name="download" /> {stored ? m.image.reload : m.image.fromLink}
+                  </button>
+                )}
+                <button type="button" disabled={busy} onClick={act(() => file.current?.click())}>
+                  <Glyph name="upload" /> {m.image.chooseFile}
+                </button>
+                {stored && further.length < MAX_PICTURES && (
+                  <button type="button" disabled={busy} title={m.image.addFurtherHint} onClick={act(() => moreFiles.current?.click())}>
+                    <Glyph name="plus" /> {m.image.addFurther}
+                  </button>
+                )}
+                {stored && at > 0 && (
+                  <button type="button" onClick={act(() => makeMain(at))}>
+                    <Glyph name="star" /> {m.gallery.makeMain}
+                  </button>
+                )}
+                {stored && (
+                  <button type="button" className="danger" disabled={busy} onClick={act(() => void remove(at))}>
+                    <Glyph name="trash" /> {pictures.length > 1 ? m.image.removeFurther(at) : m.image.remove}
+                  </button>
+                )}
+                <p className="menu-note">{m.image.pasteHint}</p>
+              </>
+            )
+          }}
+        </Menu>
+        {link && (
+          // The shop page, at hand: it is where the product is bought and checked.
+          <a className="btn sm product-link" href={link} target="_blank" rel="noopener noreferrer">
+            <Glyph name="out" /> {hostOf(p.url) || m.common.openLink}
+          </a>
         )}
-        {pagePrice !== null && (
-          <p className="small row" role="status">
-            {m.image.pagePrice(fmt.money(pagePrice))}
-            <button
-              type="button"
-              className="btn sm"
-              onClick={async () => {
-                await updateProduct(p, { price: pagePrice })
-                setPagePrice(null)
-              }}
-            >
-              {m.image.takePrice}
-            </button>
-          </p>
-        )}
-        {error && (
-          <p className="small pimg-error" role="alert">
-            {m.image.error[error]}
-          </p>
-        )}
+        <input
+          ref={file}
+          type="file"
+          accept="image/*"
+          hidden
+          data-pick="main"
+          onChange={(e) => {
+            const f = e.target.files?.[0]
+            e.target.value = ''
+            if (f) void run(() => setProductImageFromBlob(p, f))
+          }}
+        />
+        <input
+          ref={moreFiles}
+          type="file"
+          accept="image/*"
+          multiple
+          hidden
+          data-pick="add"
+          onChange={(e) => {
+            const files = [...(e.target.files ?? [])]
+            e.target.value = ''
+            void run(async () => {
+              for (const f of files) await addImageFromBlob(p, f)
+            })
+          }}
+        />
       </div>
+      {filled && (
+        <p className="small" role="status">
+          {filled.length ? m.pageImport.filled(filledLabels(filled, m)) : m.pageImport.nothing}
+        </p>
+      )}
+      {pagePrice !== null && (
+        <p className="small row" role="status">
+          {m.image.pagePrice(fmt.money(pagePrice))}
+          <button
+            type="button"
+            className="btn sm"
+            onClick={async () => {
+              await updateProduct(p, { price: pagePrice })
+              setPagePrice(null)
+            }}
+          >
+            {m.image.takePrice}
+          </button>
+        </p>
+      )}
+      {error && (
+        <p className="small pimg-error" role="alert">
+          {m.image.error[error]}
+        </p>
+      )}
       <Gallery pictures={pictures} name={name} start={gallery ?? 0} open={gallery !== null} onClose={() => setGallery(null)} onMakeMain={makeMain} />
     </div>
   )

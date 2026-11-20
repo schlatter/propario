@@ -2,6 +2,7 @@
 const paths = {
   plus: 'M8 3v10M3 8h10',
   more: 'M3.5 8h.01M8 8h.01M12.5 8h.01',
+  moreVertical: 'M8 3.5h.01M8 8h.01M8 12.5h.01',
   close: 'M4 4l8 8M12 4l-8 8',
   chevronLeft: 'M10 3L5 8l5 5',
   chevronRight: 'M6 3l5 5-5 5',
@@ -28,6 +29,7 @@ const paths = {
   thumbUp: 'M5 7v6.5H2.5V7zM5 7.2l2.6-4.4c.6-.9 1.9-.5 1.9.6V6h3c.9 0 1.5.8 1.3 1.6l-1 4.6c-.2.7-.8 1.3-1.5 1.3H5',
   thumbDown: 'M5 9V2.5H2.5V9zM5 8.8l2.6 4.4c.6.9 1.9.5 1.9-.6V10h3c.9 0 1.5-.8 1.3-1.6l-1-4.6c-.2-.7-.8-1.3-1.5-1.3H5',
   neutral: 'M8 13.5A5.5 5.5 0 1 0 8 2.5a5.5 5.5 0 0 0 0 11zM5.5 8h5',
+  euro: 'M11.5 4.3A4.4 4.4 0 1 0 11.5 11.7M3 7h6.5M3 9.2h6.5',
   info: 'M8 14A6 6 0 1 0 8 2a6 6 0 0 0 0 12zM8 7.3V11M8 5h.01',
 }
 
@@ -48,7 +50,7 @@ export function Glyph({ name, title }: { name: GlyphName; title?: string }) {
       viewBox="0 0 16 16"
       fill="none"
       stroke="currentColor"
-      strokeWidth={name === 'more' || name === 'grip' ? 2.6 : 1.5}
+      strokeWidth={name === 'more' || name === 'moreVertical' || name === 'grip' ? 2.6 : 1.5}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden={title ? undefined : true}

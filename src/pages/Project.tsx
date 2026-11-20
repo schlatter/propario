@@ -7,7 +7,7 @@ import { productName } from '../domain/display'
 import { exportProjectExcel, exportProjectJson } from '../hooks'
 import { useI18n } from '../i18n'
 import { useConfirm, useToast } from '../ui/Dialog'
-import { Glyph } from '../ui/Glyph'
+import { Glyph, type GlyphName } from '../ui/Glyph'
 import { CommitInput } from '../ui/inputs'
 import { Menu } from '../ui/Menu'
 import { FieldsTab } from './project/FieldsTab'
@@ -117,33 +117,22 @@ export function ProjectPage() {
                 >
                   <Glyph name="edit" /> {m.project.editDetails}
                 </button>
-                <button
-                  onClick={() => {
-                    close()
-                    void exportProjectExcel(project.id, m)
-                  }}
-                >
-                  <Glyph name="download" /> {m.common.exportExcel}
-                </button>
-                <button
-                  onClick={() => {
-                    close()
-                    void exportProjectJson(project.id)
-                  }}
-                >
-                  <Glyph name="download" /> {m.common.exportJson}
-                </button>
-                <button
-                  onClick={() => {
-                    close()
-                    navigator.clipboard
-                      .writeText(comparisonForAi(data, m, fmt))
-                      .then(() => toast(m.ai.copied))
-                      .catch(() => toast(m.ai.failed))
-                  }}
-                >
-                  <Glyph name="copy" /> {m.ai.copy}
-                </button>
+                <ExportChoice
+                  close={close}
+                  choices={[
+                    { glyph: 'download', label: m.common.exportExcel, run: () => void exportProjectExcel(project.id, m) },
+                    { glyph: 'download', label: m.common.exportJson, run: () => void exportProjectJson(project.id) },
+                    {
+                      glyph: 'copy',
+                      label: m.ai.copy,
+                      run: () =>
+                        navigator.clipboard
+                          .writeText(comparisonForAi(data, m, fmt))
+                          .then(() => toast(m.ai.copied))
+                          .catch(() => toast(m.ai.failed)),
+                    },
+                  ]}
+                />
                 {role !== 'viewer' && (
                   <button
                     onClick={() => {
@@ -297,5 +286,33 @@ export function ProjectPage() {
       <ShareDialog projectId={project.id} open={sharing} onClose={() => setSharing(false)} />
       <ProjectDialog open={editing} project={project} categories={[]} onClose={() => setEditing(false)} />
     </main>
+  )
+}
+
+/** One "Export" entry in a menu; it opens the formats in place, so the menu stays short. */
+function ExportChoice({ close, choices }: { close: () => void; choices: { glyph: GlyphName; label: string; run: () => void }[] }) {
+  const { m } = useI18n()
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <button type="button" aria-expanded={open} onClick={() => setOpen(!open)}>
+        <Glyph name="download" /> {m.common.export}
+        <Glyph name={open ? 'up' : 'down'} />
+      </button>
+      {open &&
+        choices.map((c) => (
+          <button
+            key={c.label}
+            type="button"
+            className="sub"
+            onClick={() => {
+              close()
+              c.run()
+            }}
+          >
+            <Glyph name={c.glyph} /> {c.label}
+          </button>
+        ))}
+    </>
   )
 }

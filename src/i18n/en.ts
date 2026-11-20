@@ -39,6 +39,7 @@ export const en = {
     moveUp: 'Move up',
     moveDown: 'Move down',
     confirm: 'Confirm',
+    export: 'Export',
     exportJson: 'Export as JSON',
     exportExcel: 'Export as Excel',
     copySuffix: 'copy',
@@ -253,7 +254,6 @@ export const en = {
   },
   product: {
     openPage: 'Open product page',
-    openShop: (shop: string) => `View at ${shop}`,
     title: 'Product',
     basics: 'Basics',
     assessment: 'Assessment',
@@ -263,7 +263,6 @@ export const en = {
     imported: 'Imported extras',
     markDecision: 'Final decision',
     unmarkDecision: 'Remove decision',
-    isDecision: 'Final decision ✓',
     addRating: 'Add rating',
     person: 'Person',
     stars: (n: number) => `${n} of 5 stars`,
@@ -283,6 +282,9 @@ export const en = {
       'Suggested from the purchase date: 14 days to withdraw from an online purchase (counted from receipt) and 2 years of statutory warranty. Check the shop’s terms.',
     priceAsOf: (date: string) => `As of ${date}`,
     priceStale: 'older than a week – worth checking',
+    dimensions: 'Dimensions',
+    dimLetter: { width: 'W', height: 'H', depth: 'D' },
+    updating: 'Updating…',
     gtinInvalid: 'The check digit does not match – please compare with the packaging or shop page.',
   },
   offer: {
@@ -445,7 +447,6 @@ export const en = {
   },
   fieldHint: {
     description: 'What the product is – usually taken from the shop page.',
-    priceNote: 'When the price is not one number, e.g. “830–900 €” or “only as a set”.',
     purchaseNote: 'E.g. order number or delivery date.',
     ratings: 'Stars and a short note per person',
     ratingNote: (person: string) => (person ? `Note from ${person}` : 'Note'),
@@ -581,19 +582,20 @@ export const en = {
     bulkResult: (ok: number, failed: number) =>
       failed ? `${ok} images loaded · ${failed} not available – add them in the product details (paste, drop or choose a file)` : `${ok} images loaded`,
     fromLink: 'Load picture from shop page',
-    further: 'Further pictures',
     furtherAlt: (name: string, n: number) => `${name} – picture ${n + 1}`,
-    view: (n: number, main: boolean) => `Picture ${n}${main ? ' (main picture)' : ''}: show large`,
+    view: (n: number) => `Show picture ${n}`,
     openGallery: (n: number) =>
       n > 1
         ? `Product picture, ${n} pictures – open large. Paste or drop an image here to add one.`
         : 'Product picture – open large. Paste or drop an image here to add one.',
     removeFurther: (n: number) => `Remove picture ${n + 1}`,
-    addFurther: 'Picture',
+    addFurther: 'Add picture',
     addFurtherHint: 'Add another picture – a dimension drawing helps most. Pasting or dropping onto the main picture adds one too.',
-    reload: 'Load picture again',
-    chooseFile: 'Choose picture file',
-    remove: 'Remove image',
+    reload: 'Update picture',
+    chooseFile: 'Choose picture',
+    remove: 'Remove picture',
+    menu: 'Pictures',
+    menuLabel: 'Update pictures',
     working: 'Loading…',
     dropLabel: 'Product image. Paste or drop an image here.',
     dropHint: 'Paste or drop an image',
