@@ -6,6 +6,7 @@ import { setDecision, updateProject } from '../db/repo'
 import { current, decide, everyone, finished, joint, normalize, progress, remaining, skip, startOrder, type Side } from '../domain/duel'
 import { useUsers } from '../users'
 import { Gallery } from './project/Gallery'
+import { FavoriteToggle, VerdictCell } from './project/Verdict'
 import { avgStars, displayName, exclusionText, formatValue } from '../domain/display'
 import { evaluate, WEIGHT } from '../domain/requirements'
 import { reviewSummary } from '../domain/reviews'
@@ -374,6 +375,28 @@ export function ComparePage() {
           </div>
         </div>
       )}
+      {duelMode && (
+        // In a duel the two pictures get the full width – larger than in the table, smaller than when swiping.
+        <div className="duel-pics">
+          {products.map((p) => {
+            const img = productImage(p)
+            return img ? (
+              <button
+                key={p.id}
+                type="button"
+                className="head-pic"
+                onClick={() => setGallery({ product: p, at: 0 })}
+                aria-label={m.image.openGallery(picturesOf(p).length)}
+              >
+                <img src={img} alt="" referrerPolicy="no-referrer" />
+                {picturesOf(p).length > 1 && <span className="head-count">{picturesOf(p).length}</span>}
+              </button>
+            ) : (
+              <span key={p.id} />
+            )
+          })}
+        </div>
+      )}
       <div className={`compare-wrap${duelMode ? ' duel' : ''}`}>
         <table className={`compare${duelMode ? ' duel' : ''}`}>
           {!duelMode && (
@@ -392,7 +415,7 @@ export function ComparePage() {
                 const img = productImage(p)
                 return (
                   <th key={p.id} scope="col" className={p.candidate === 'excluded' ? 'is-excluded' : undefined}>
-                    {img && (
+                    {img && !duelMode && (
                       // The pictures decide a lot: a tap shows them large, all of them.
                       <button
                         type="button"
@@ -427,6 +450,11 @@ export function ComparePage() {
                       )}
                     </div>
                     {href && <div className="muted small">{hostOf(p.url)}</div>}
+                    {/* Star and verdict as in the product table: seen and set right here. */}
+                    <div className="head-verdict">
+                      <FavoriteToggle product={p} inDetails />
+                      <VerdictCell product={p} inDetails />
+                    </div>
                     {data.project.decisionProductId === p.id && (
                       <span className="pill fav" style={{ marginTop: 6 }}>
                         {m.project.decision}
