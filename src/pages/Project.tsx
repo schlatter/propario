@@ -35,7 +35,8 @@ export function ProjectPage() {
   const tab = (params.get('tab') as Tab) || 'products'
   const openProductId = params.get('product')
   /** The table's rows as shown, for stepping through products in the details. */
-  const [order, setOrder] = useState<string[]>([])
+  /** The rows the table shows (filtered and sorted); null until the table has said. */
+  const [order, setOrder] = useState<string[] | null>(null)
   const confirm = useConfirm()
   const toast = useToast()
   const navigate = useNavigate()
@@ -220,7 +221,12 @@ export function ProjectPage() {
           {(['products', 'requirements', 'fields', 'notes'] as Tab[]).map((t) => (
             <button key={t} role="tab" aria-selected={tab === t} onClick={() => setParam('tab', t === 'products' ? null : t)}>
               {m.project.tabs[t]}
-              {t === 'products' && <span className="badge">{products.length}</span>}
+              {t === 'products' && (
+                // Filtered: how many are shown of all ("14/66"); otherwise just how many there are.
+                <span className="badge">
+                  {tab === 'products' && order && order.length !== products.length ? `${order.length}/${products.length}` : products.length}
+                </span>
+              )}
               {t === 'requirements' && <span className="badge">{data.requirements.length}</span>}
               {t === 'fields' && <span className="badge">{data.properties.length}</span>}
             </button>
@@ -280,7 +286,7 @@ export function ProjectPage() {
         data={data}
         productId={openProductId}
         onClose={() => setParam('product', null)}
-        order={order.length ? order : products.map((p) => p.id)}
+        order={order?.length ? order : products.map((p) => p.id)}
         onStep={(pid) => {
           // Stepping through products replaces the address: Back still closes the details.
           const next = new URLSearchParams(params)

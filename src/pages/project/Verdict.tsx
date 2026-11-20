@@ -58,7 +58,13 @@ export function VerdictCell({ product: p, inDetails = false }: { product: Produc
   return (
     <Menu
       floating
-      label={[`${m.verdict.yours}: ${mine ? m.verdict[mine] : m.verdict.none}`, ...others.map((o) => `${o.name}: ${m.verdict[o.v]}`)].join(' · ')}
+      // The name carries the numbers that are shown, so voice control and screen readers match the screen.
+      label={[
+        `${m.verdict.yours}: ${mine ? m.verdict[mine] : m.verdict.none}`,
+        ...(agree > 0 ? [m.verdict.agree(agree + 1)] : []),
+        ...differ.filter(([, n]) => n > 1).map(([v, n]) => `${n}× ${m.verdict[v]}`),
+        ...others.map((o) => `${o.name}: ${m.verdict[o.v]}`),
+      ].join(' · ')}
       className={`${inDetails ? 'btn sm verdict-btn' : 'cell'} verdict-trigger ${mine ?? 'unset'}`}
       listClassName="candidate-menu verdict-menu"
       trigger={

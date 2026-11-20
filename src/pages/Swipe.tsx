@@ -296,7 +296,7 @@ function Done({ data }: { data: ProjectData }) {
           <Glyph name="duel" /> {m.swipe.toDuel}
         </Link>
         <Link to={`/p/${data.project.id}`} className="btn">
-          {m.swipe.toTable}
+          {m.compare.backToTable}
         </Link>
       </div>
     </div>

@@ -49,6 +49,9 @@ describe('advanced filter', () => {
     const out = [makeProduct('p', { model: 'Dora', candidate: 'excluded', exclusionCategory: 'size' }), ...products]
     const c = compileQuery<Product>('Grund = Maße OR Reason = looks', fields)
     expect(c.ok && out.filter(c.test).map((p) => p.model)).toEqual(['Dora'])
+    const byReviews = [makeProduct('p', { model: 'Eve', candidate: 'excluded', exclusionCategory: 'reviews' }), ...products]
+    const r = compileQuery<Product>('Grund = Bewertung', fields)
+    expect(r.ok && byReviews.filter(r.test).map((p) => p.model)).toEqual(['Eve'])
   })
 
   it('treats missing values as in JQL: only IS EMPTY matches them', () => {

@@ -221,7 +221,7 @@ function DrawerContent({
                   )}
                   <hr />
                   <button type="button" onClick={act(() => duplicateProduct(p))}>
-                    <Glyph name="copy" /> {m.product.duplicate}
+                    <Glyph name="copy" /> {m.common.duplicate}
                   </button>
                   <button
                     type="button"

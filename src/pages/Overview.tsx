@@ -60,7 +60,8 @@ export function Overview({ signIn }: { signIn?: ReactNode }) {
         )}
       </section>
 
-      <ol className="overview-steps">
+      {/* On a phone a row to swipe: focusable, so the keyboard can scroll it too. */}
+      <ol className="overview-steps" tabIndex={0} aria-label={o.stepsLabel}>
         <Step n={1} title={o.s1Title} text={o.s1Text}>
           <div className="still-link">shop.example/nordhaus-arvika</div>
           <ProductStill fmt={fmt} />

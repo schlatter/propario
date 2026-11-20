@@ -58,7 +58,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       if (!(await demo.projects.count())) {
         const changes = demoChanges()
         await applyLocal(changes, demo)
-        await setLocalRole(changes[0].op === 'create' ? changes[0].record.id : '', 'owner', demo)
+        for (const c of changes) if (c.op === 'create' && c.kind === 'projects') await setLocalRole(c.record.id, 'owner', demo)
       }
       setStep('ready')
       setState({ status: 'signed-in', user: DEMO_USER, imageFetch: false })

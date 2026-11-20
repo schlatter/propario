@@ -46,7 +46,7 @@ export function StartProblem({ step, refId, error }: { step: Step; refId: string
         </p>
         {error !== undefined && <pre className="small">{errorText(error)}</pre>}
         <button type="button" className="btn sm" onClick={() => void downloadSupportPackage()}>
-          {m.start.support}
+          {m.debug.download}
         </button>
       </details>
     </main>

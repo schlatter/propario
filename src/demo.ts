@@ -7,7 +7,7 @@
  */
 import Dexie from 'dexie'
 import { makeProduct, makeProject, makeProperty, makeRequirement } from './db/factories'
-import type { Product } from './db/types'
+import type { Product, Project, PropertyDef, Requirement } from './db/types'
 import { initialLocale } from './i18n/active'
 import type { Change } from './shared/records.ts'
 import type { SyncResult, Transport } from './sync'
@@ -61,11 +61,30 @@ export const demoTransport: Transport = {
   },
 }
 
-/** The invented comparison, in the interface language: a sideboard for the living room. */
+type T = (deText: string, enText: string) => string
+
+/**
+ * The invented comparisons, in the interface language: a sideboard for the living room,
+ * headphones for the commute and a robot vacuum for the ground floor – three kinds of decision,
+ * each with its fields, requirements, verdicts and pictures (drawn by scripts/demo-pictures.ts).
+ */
 export function demoChanges(): Change[] {
   const de = initialLocale() === 'de'
-  const t = (deText: string, enText: string) => (de ? deText : enText)
-  const today = todayIso()
+  const t: T = (deText, enText) => (de ? deText : enText)
+  return [...sideboards(t), ...headphones(t), ...vacuums(t)]
+}
+
+/** Creates for one comparison: the project first, then its fields, requirements and products. */
+const creates = (project: Project, properties: PropertyDef[], requirements: Requirement[], products: Product[]): Change[] => [
+  { op: 'create', kind: 'projects', record: project },
+  ...properties.map((record): Change => ({ op: 'create', kind: 'properties', record })),
+  ...requirements.map((record): Change => ({ op: 'create', kind: 'requirements', record })),
+  ...products.map((record): Change => ({ op: 'create', kind: 'products', record })),
+]
+
+const days = (n: number) => shiftDate(todayIso(), { days: -n })
+
+function sideboards(t: T): Change[] {
   const project = makeProject({
     name: t('Sideboard fürs Wohnzimmer', 'Living-room sideboard'),
     category: t('Möbel', 'Furniture'),
@@ -126,7 +145,6 @@ export function demoChanges(): Change[] {
     }),
   ]
 
-  const days = (n: number) => shiftDate(today, { days: -n })
   const product = (p: Partial<Product>, v: [number, number, number, string, boolean | null, number | null], order: number) =>
     makeProduct(pid, {
       ...p,
@@ -159,7 +177,7 @@ export function demoChanges(): Change[] {
         images: ['/demo/sideboard-arvika-dims.svg'],
         candidate: 'checked',
         favorite: true,
-        votes: { demo: 'like' },
+        votes: { demo: 'like', grace: 'like' },
         pros: t('Massivholz, leise Türen', 'Solid wood, quiet doors'),
         cons: t('Lieferzeit 4 Wochen', 'Four weeks to deliver'),
         reviews: [
@@ -181,7 +199,7 @@ export function demoChanges(): Change[] {
         image: '/demo/sideboard-bo.svg',
         pros: t('Schöne Maserung', 'Beautiful grain'),
         candidate: 'checked',
-        votes: { demo: 'neutral' },
+        votes: { demo: 'neutral', grace: 'dislike' },
       },
       [180, 75, 45, walnut, true, 6],
       1,
@@ -242,10 +260,230 @@ export function demoChanges(): Change[] {
       5,
     ),
   ]
-  return [
-    { op: 'create', kind: 'projects', record: project },
-    ...properties.map((record): Change => ({ op: 'create', kind: 'properties', record })),
-    ...requirements.map((record): Change => ({ op: 'create', kind: 'requirements', record })),
-    ...products.map((record): Change => ({ op: 'create', kind: 'products', record })),
+  return creates(project, properties, requirements, products)
+}
+
+function headphones(t: T): Change[] {
+  const project = makeProject({
+    name: t('Kopfhörer fürs Pendeln', 'Headphones for the commute'),
+    category: t('Technik', 'Tech'),
+    status: 'comparing',
+    description: t(
+      'Für Zug und Büro: gute Geräuschunterdrückung, ein langer Akku, leicht genug für den ganzen Tag.',
+      'For train and office: good noise cancelling, a long battery, light enough for a whole day.',
+    ),
+    budget: 350,
+    budgetPriority: 'must',
+  })
+  const pid = project.id
+  const prop = (name: string, p: Parameters<typeof makeProperty>[1]) => makeProperty(pid, { name, ...p })
+  const battery = prop(t('Akkulaufzeit', 'Battery life'), { type: 'number', unit: 'h', better: 'higher', order: 0 })
+  const weight = prop(t('Gewicht', 'Weight'), { type: 'number', unit: 'g', better: 'lower', order: 1 })
+  const anc = prop(t('Geräuschunterdrückung', 'Noise cancelling'), { type: 'boolean', order: 2 })
+  const codec = prop('Codec', { type: 'select', order: 3, options: ['AAC', 'aptX Adaptive', 'LDAC'] })
+  const foldable = prop(t('Faltbar', 'Foldable'), { type: 'boolean', order: 4 })
+  const properties = [battery, weight, anc, codec, foldable]
+  const req = (label: string, p: Parameters<typeof makeRequirement>[1]) => makeRequirement(pid, { label, ...p })
+  const requirements = [
+    req(t('Hält den Zug draußen', 'Shuts out the train'), {
+      category: t('Klang', 'Sound'),
+      priority: 'must',
+      order: 0,
+      condition: { target: { kind: 'property', propertyId: anc.id }, op: 'isTrue' },
+    }),
+    req(t('Hält die Woche durch', 'Lasts the week'), {
+      category: 'Akku',
+      priority: 'important',
+      order: 1,
+      condition: { target: { kind: 'property', propertyId: battery.id }, op: 'gte', value: 30 },
+    }),
+    req(t('Leicht genug für den Tag', 'Light enough for the day'), {
+      category: t('Komfort', 'Comfort'),
+      priority: 'wish',
+      order: 2,
+      condition: { target: { kind: 'property', propertyId: weight.id }, op: 'lte', value: 260 },
+    }),
   ]
+  const product = (p: Partial<Product>, v: [number, number, boolean, string, boolean], order: number) =>
+    makeProduct(pid, {
+      productType: t('Kopfhörer', 'Headphones'),
+      ...p,
+      priceDate: days(order + 2),
+      foundBy: order % 2 ? 'Ada' : 'Grace',
+      order,
+      values: { [battery.id]: v[0], [weight.id]: v[1], [anc.id]: v[2], [codec.id]: v[3], [foldable.id]: v[4] },
+    })
+  const [aac, aptx, ldac] = codec.options
+  const products = [
+    product(
+      {
+        brand: 'Sonora',
+        model: 'Aura 4',
+        price: 329,
+        retailer: 'Klangraum',
+        url: 'https://shop.example/sonora-aura-4',
+        image: '/demo/headphones-aura.svg',
+        candidate: 'checked',
+        favorite: true,
+        votes: { demo: 'like', grace: 'like' },
+        pros: t('Beste Geräuschunterdrückung im Test', 'Best noise cancelling in the test'),
+        reviews: [{ id: 'h1', source: 'Stiftung Warentest', about: 'product', value: 1.7, scale: 'grade', count: null, date: days(30), url: '' }],
+      },
+      [30, 250, true, ldac, true],
+      0,
+    ),
+    product(
+      {
+        brand: 'Kestrel',
+        model: 'Q35',
+        price: 279,
+        retailer: 'Technikhaus',
+        url: 'https://shop.example/kestrel-q35',
+        image: '/demo/headphones-kestrel.svg',
+        candidate: 'checked',
+        votes: { demo: 'like', grace: 'neutral' },
+        pros: t('40 Stunden Akku', '40 hours of battery'),
+      },
+      [40, 265, true, aptx, true],
+      1,
+    ),
+    product(
+      {
+        brand: 'Ondo',
+        model: 'Studio Pro',
+        price: 399,
+        retailer: 'Klangraum',
+        url: 'https://shop.example/ondo-studio-pro',
+        image: '/demo/headphones-ondo.svg',
+        cons: t('Schwer und über dem Budget', 'Heavy and over budget'),
+      },
+      [24, 310, true, ldac, false],
+      2,
+    ),
+    product(
+      {
+        brand: 'Lumen',
+        model: 'Air',
+        price: 149,
+        retailer: 'Technikhaus',
+        url: 'https://shop.example/lumen-air',
+        image: '/demo/headphones-lumen.svg',
+        candidate: 'excluded',
+        exclusionCategory: 'quality',
+        exclusionReason: t('Keine Geräuschunterdrückung', 'No noise cancelling'),
+      },
+      [60, 230, false, aac, true],
+      3,
+    ),
+    product(
+      {
+        brand: 'Halden',
+        model: 'H7',
+        price: 349,
+        retailer: 'Klangraum',
+        url: 'https://shop.example/halden-h7',
+        image: '/demo/headphones-halden.svg',
+        votes: { grace: 'like' },
+      },
+      [35, 254, true, aac, true],
+      4,
+    ),
+  ]
+  return creates(project, properties, requirements, products)
+}
+
+function vacuums(t: T): Change[] {
+  const project = makeProject({
+    name: t('Saugroboter fürs Erdgeschoss', 'Robot vacuum for the ground floor'),
+    category: t('Haushalt', 'Household'),
+    status: 'research',
+    description: t(
+      'Muss unters Sofa passen (9,5 cm) und sich selbst leeren; leise genug für abends.',
+      'Has to fit under the sofa (9.5 cm) and empty itself; quiet enough for the evening.',
+    ),
+    budget: 700,
+    budgetPriority: 'important',
+  })
+  const pid = project.id
+  const prop = (name: string, p: Parameters<typeof makeProperty>[1]) => makeProperty(pid, { name, ...p })
+  const height = prop(t('Höhe', 'Height'), { type: 'number', unit: 'cm', better: 'lower', order: 0 })
+  const suction = prop(t('Saugkraft', 'Suction'), { type: 'number', unit: 'Pa', better: 'higher', order: 1 })
+  const noise = prop(t('Lautstärke', 'Noise'), { type: 'number', unit: 'dB', better: 'lower', order: 2 })
+  const station = prop(t('Absaugstation', 'Self-emptying'), { type: 'boolean', order: 3 })
+  const mop = prop(t('Wischt', 'Mops'), { type: 'boolean', order: 4 })
+  const properties = [height, suction, noise, station, mop]
+  const req = (label: string, p: Parameters<typeof makeRequirement>[1]) => makeRequirement(pid, { label, ...p })
+  const requirements = [
+    req(t('Passt unters Sofa', 'Fits under the sofa'), {
+      category: t('Maße', 'Size'),
+      priority: 'must',
+      order: 0,
+      condition: { target: { kind: 'property', propertyId: height.id }, op: 'lte', value: 9.5 },
+    }),
+    req(t('Leert sich selbst', 'Empties itself'), {
+      category: t('Komfort', 'Comfort'),
+      priority: 'important',
+      order: 1,
+      condition: { target: { kind: 'property', propertyId: station.id }, op: 'isTrue' },
+    }),
+    req(t('Leise genug für abends', 'Quiet enough for the evening'), {
+      category: t('Komfort', 'Comfort'),
+      priority: 'wish',
+      order: 2,
+      condition: { target: { kind: 'property', propertyId: noise.id }, op: 'lte', value: 65 },
+    }),
+  ]
+  const product = (p: Partial<Product>, v: [number, number, number, boolean, boolean], order: number) =>
+    makeProduct(pid, {
+      productType: t('Saugroboter', 'Robot vacuum'),
+      ...p,
+      priceDate: days(order + 1),
+      foundBy: order % 2 ? 'Grace' : 'Ada',
+      order,
+      values: { [height.id]: v[0], [suction.id]: v[1], [noise.id]: v[2], [station.id]: v[3], [mop.id]: v[4] },
+    })
+  const products = [
+    product(
+      {
+        brand: 'Tidy',
+        model: 'T9 Max',
+        price: 649,
+        retailer: 'Haushaltsprofi',
+        url: 'https://shop.example/tidy-t9-max',
+        image: '/demo/vacuum-tidy.svg',
+        images: ['/demo/vacuum-tidy-dims.svg'],
+        votes: { grace: 'like' },
+      },
+      [9.2, 6000, 63, true, true],
+      0,
+    ),
+    product(
+      { brand: 'Robin', model: 'S8', price: 549, retailer: 'Technikhaus', url: 'https://shop.example/robin-s8', image: '/demo/vacuum-robin.svg' },
+      [9.6, 5000, 66, true, false],
+      1,
+    ),
+    product(
+      {
+        brand: 'Nimbus',
+        model: 'X2 Omni',
+        price: 899,
+        retailer: 'Haushaltsprofi',
+        url: 'https://shop.example/nimbus-x2-omni',
+        image: '/demo/vacuum-nimbus.svg',
+      },
+      [8.1, 8000, 60, true, true],
+      2,
+    ),
+    product(
+      { brand: 'Pebble', model: 'Lite', price: 249, retailer: 'Technikhaus', url: 'https://shop.example/pebble-lite', image: '/demo/vacuum-pebble.svg' },
+      [7.8, 2700, 68, false, false],
+      3,
+    ),
+    product(
+      { brand: 'Orbit', model: '30', price: 449, retailer: 'Haushaltsprofi', url: 'https://shop.example/orbit-30', image: '/demo/vacuum-orbit.svg' },
+      [10.3, 5500, 64, true, false],
+      4,
+    ),
+  ]
+  return creates(project, properties, requirements, products)
 }

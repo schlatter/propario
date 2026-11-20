@@ -27,8 +27,8 @@ export type Vote = 'like' | 'neutral' | 'dislike'
 export const VOTES: Vote[] = ['like', 'neutral', 'dislike']
 
 /** Why a product was excluded, as a choice (filterable); details go into `exclusionReason`. */
-export type ExclusionCategory = 'looks' | 'size' | 'price' | 'brand' | 'shop' | 'quality' | 'other'
-export const EXCLUSION_CATEGORIES: ExclusionCategory[] = ['looks', 'size', 'price', 'brand', 'shop', 'quality', 'other']
+export type ExclusionCategory = 'looks' | 'size' | 'price' | 'brand' | 'shop' | 'quality' | 'reviews' | 'other'
+export const EXCLUSION_CATEGORIES: ExclusionCategory[] = ['looks', 'size', 'price', 'brand', 'shop', 'quality', 'reviews', 'other']
 
 export type PurchaseStatus = 'none' | 'ordered' | 'purchased'
 

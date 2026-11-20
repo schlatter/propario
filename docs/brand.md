@@ -93,6 +93,9 @@ Rules:
 - Borders separate, shadows only for things that float (menus, dialogs, the drawer).
 - Touch targets 44 px; generous white space over extra lines and boxes.
 - Product pictures are the stars: on white, uncropped, never tinted.
+- The demo's pictures are drawn by [`scripts/demo-pictures.ts`](../scripts/demo-pictures.ts):
+  invented products as studio shots in vector – no photo of a real product is shipped. Change
+  them there, never in the SVGs.
 - Icons are our own simple line glyphs ([`src/ui/Glyph.tsx`](../src/ui/Glyph.tsx)); no icon
   library, no emoji as icons.
 
@@ -102,6 +105,11 @@ Rules:
   1 updated".
 - Name things as people know them: _comparison_, _product_, _requirement_ – not the code's
   words ([GLOSSARY.md](../GLOSSARY.md)).
+- **One action, one name.** The same action has the same label and symbol wherever it appears –
+  "Details aktualisieren" in the details and for several products, "Duplizieren", "Löschen",
+  "Bild hinzufügen". People recognise it at once, and one text key means one place to change:
+  reuse the existing key (`common.*` for actions found in several places) instead of adding a
+  second one with the same words. Buttons of one bar share one style.
 - Errors say what went wrong and what to do. No blame, no exclamation marks, no jokes in
   error messages.
 - Never claim more than we know: a guess is shown as a guess, missing data as missing.
@@ -112,4 +120,5 @@ Rules:
 - [ ] Uses tokens; petrol acts, amber points out; check colours only for checks.
 - [ ] Light and dark, 390 px and desktop, English and German looked at.
 - [ ] Keyboard, screen reader labels and contrast fine (`npm run verify` runs axe).
-- [ ] Texts plain and in both languages; a line in `CHANGELOG.md`.
+- [ ] Texts plain and in both languages; an action that exists elsewhere uses its label and key.
+- [ ] A line in `CHANGELOG.md`.

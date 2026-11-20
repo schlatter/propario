@@ -166,7 +166,7 @@ export function ProductTable({
   /** Deleting several products asks twice; the second time it names them. */
   const bulkDelete = async () => {
     const n = selected.length
-    if (!(await confirm({ title: m.bulk.deleteTitle(n), text: m.bulk.deleteText, confirmLabel: m.bulk.delete, danger: true }))) return
+    if (!(await confirm({ title: m.bulk.deleteTitle(n), text: m.bulk.deleteText, confirmLabel: m.common.delete, danger: true }))) return
     const names = selected.map((p) => displayName(p, m)).join(', ')
     if (!(await confirm({ title: m.bulk.deleteAgainTitle, text: m.bulk.deleteAgainText(names), confirmLabel: m.bulk.deleteFinal, danger: true }))) return
     for (const p of selected) await deleteProduct(p)
@@ -929,8 +929,8 @@ export function ProductTable({
                               href={href}
                               target="_blank"
                               rel="noopener noreferrer"
-                              aria-label={`${m.product.openPage}: ${displayName(p, m)}`}
-                              title={`${m.product.openPage} (${p.retailer || hostOf(p.url)})`}
+                              aria-label={`${m.common.openLink}: ${displayName(p, m)}`}
+                              title={`${m.common.openLink} (${p.retailer || hostOf(p.url)})`}
                             >
                               <Glyph name="out" />
                             </a>
@@ -974,8 +974,8 @@ export function ProductTable({
       {selection.size > 0 && (
         <div className="compare-bar" role="region" aria-label={m.compare.title}>
           <span>{m.project.selected(selection.size)}</span>
-          <button className="btn ghost sm" onClick={() => setSelection(new Set())}>
-            {m.project.clearSelection}
+          <button className="btn sm outline" onClick={() => setSelection(new Set())}>
+            <Glyph name="close" /> {m.project.clearSelection}
           </button>
           <button className="btn sm" disabled={selection.size < 2} onClick={() => navigate(`/p/${project.id}/compare?ids=${[...selection].join(',')}`)}>
             {m.project.compare(selection.size)}
@@ -983,10 +983,10 @@ export function ProductTable({
           {canEdit && (
             <>
               <button className="btn sm outline" disabled={!!bulk} onClick={bulkUpdate} aria-live="polite" title={m.pageUpdate.hint}>
-                <Glyph name="download" /> {bulk ? m.bulk.updating(bulk.done, bulk.total) : m.bulk.update}
+                <Glyph name="download" /> {bulk ? m.bulk.updating(bulk.done, bulk.total) : m.pageUpdate.button}
               </button>
               <button className="btn sm outline" disabled={!!bulk} onClick={bulkDelete}>
-                <Glyph name="trash" /> {m.bulk.delete}
+                <Glyph name="trash" /> {m.common.delete}
               </button>
             </>
           )}

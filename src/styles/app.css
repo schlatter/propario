@@ -3856,8 +3856,8 @@ dialog.gallery::backdrop {
 .overview {
   max-width: 1120px;
   display: grid;
-  gap: clamp(48px, 8vw, 96px);
-  padding-bottom: 96px;
+  gap: clamp(28px, 5vw, 56px);
+  padding-bottom: 56px;
 }
 .overview.landing {
   padding-top: 0;
@@ -3912,26 +3912,28 @@ dialog.gallery::backdrop {
   justify-items: start;
   padding: 0 4px;
 }
+/* The way to a decision as cards side by side; on a phone a row to swipe through. */
 .overview-steps {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  gap: clamp(48px, 8vw, 88px);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
 }
 .overview-step {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: clamp(24px, 5vw, 64px);
-  align-items: center;
-}
-.overview-step:nth-child(even) .overview-step-words {
-  order: 2;
+  grid-template-rows: auto 1fr;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
 }
 .overview-step-words {
   display: grid;
-  gap: 10px;
-  max-width: 46ch;
+  gap: 6px;
+  align-content: start;
 }
 .overview-step-n {
   font-family: var(--font-display);
@@ -3940,32 +3942,57 @@ dialog.gallery::backdrop {
   letter-spacing: 0.08em;
   color: var(--brand-text);
 }
-.overview-step h2,
 .overview-band h2,
 .overview-closing h2 {
   font-family: var(--font-display);
-  font-size: clamp(24px, 3vw, 34px);
+  font-size: clamp(22px, 2.6vw, 30px);
   line-height: 1.1;
   margin: 0;
   text-wrap: balance;
 }
+.overview-step h2 {
+  font-family: var(--font-display);
+  font-size: 18px;
+  line-height: 1.2;
+  margin: 0;
+  text-wrap: balance;
+}
 .overview-step p {
+  margin: 0;
+  font-size: 14px;
   color: var(--ink-2);
 }
 
-/* A still: a piece of the app on drawing paper. */
+/* A still: a piece of the app on a quiet plate. */
 .still {
   margin: 0;
-  padding: clamp(20px, 4vw, 36px);
-  border-radius: 16px;
-  border: 1px solid var(--line);
-  background-color: var(--surface-2);
-  background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
-  background-size: 24px 24px;
-  background-position: -1px -1px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--surface-2);
   display: grid;
-  gap: 12px;
+  gap: 10px;
+  align-content: center;
   justify-items: center;
+}
+.still-card {
+  padding: clamp(18px, 3vw, 28px);
+  border: 1px solid var(--line);
+}
+/* In the step cards the pieces of the app are drawn smaller, whole – not squeezed. */
+.overview-step .still > * {
+  zoom: 0.72;
+}
+.overview-step .still {
+  overflow: hidden;
+}
+.overview-step .still-compare {
+  width: 100%;
+  table-layout: fixed;
+}
+@media (max-width: 760px) {
+  .overview-step .still > * {
+    zoom: 0.8;
+  }
 }
 .still > * {
   width: min(100%, 420px);
@@ -4241,14 +4268,27 @@ dialog.gallery::backdrop {
   border-color: var(--brand);
   color: var(--brand-ink);
 }
+@media (max-width: 980px) {
+  .overview-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 @media (max-width: 760px) {
   .overview-hero,
-  .overview-step,
   .overview-bands {
     grid-template-columns: minmax(0, 1fr);
   }
-  .overview-step:nth-child(even) .overview-step-words {
-    order: 0;
+  .overview-steps {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    margin-inline: calc(-1 * var(--gutter));
+    padding: 0 var(--gutter) 6px;
+    scroll-padding-inline: var(--gutter);
+  }
+  .overview-step {
+    flex: 0 0 82%;
+    scroll-snap-align: start;
   }
   .still-product {
     grid-template-columns: 96px minmax(0, 1fr);

@@ -70,6 +70,7 @@ export const de: Messages = {
     dislike: 'Gefällt mir nicht',
     short: { like: 'Gefällt', neutral: 'Neutral', dislike: 'Gefällt nicht' },
     yours: 'Dein Urteil',
+    agree: (n: number) => `${n} einig`,
     none: 'noch keins',
     column: 'Urteile',
     others: (parts) => parts.join(' · '),
@@ -255,7 +256,6 @@ export const de: Messages = {
     avgRating: 'Bewertung',
   },
   product: {
-    openPage: 'Produktseite öffnen',
     title: 'Produkt',
     basics: 'Grunddaten',
     assessment: 'Einschätzung',
@@ -271,7 +271,6 @@ export const de: Messages = {
     clearStars: 'Keine Sterne',
     deleteTitle: (name) => `Produkt „${name}“ löschen?`,
     deleteText: 'Das Produkt und seine Bewertungen werden entfernt.',
-    duplicate: 'Produkt duplizieren',
     unnamed: 'Unbenanntes Produkt',
     noProperties: 'Dieser Vergleich hat noch keine eigenen Felder. Lege sie im Reiter „Felder“ an.',
     noRequirements: 'Keine Anforderungen festgelegt.',
@@ -360,7 +359,7 @@ export const de: Messages = {
     category: 'Grund',
     none: '— auswählen —',
     details: 'Details (optional)',
-    categories: { looks: 'Optik', size: 'Maße', price: 'Preis', brand: 'Marke', shop: 'Shop', quality: 'Qualität', other: 'Sonstiges' },
+    categories: { looks: 'Optik', size: 'Maße', price: 'Preis', brand: 'Marke', shop: 'Shop', quality: 'Qualität', reviews: 'Bewertung', other: 'Sonstiges' },
   },
   filter: {
     quick: 'Schnellfilter',
@@ -412,7 +411,8 @@ export const de: Messages = {
     title: 'Gemeinsam vergleichen. Gut entscheiden.',
     lead: 'Für die größeren Anschaffungen – das Sideboard, den Laptop, das Fahrrad. Statt Tabellen, Tabs und Screenshots ein ruhiger Ort für eure Anforderungen, die Kandidaten und die Entscheidung.',
     tryDemo: 'Demo ausprobieren',
-    demoHint: 'Noch kein Konto? Sieh dich mit einem erfundenen Vergleich um – nichts wird gespeichert.',
+    stepsLabel: 'So entscheidet ihr',
+    demoHint: 'Noch kein Konto? Sieh dich mit drei erfundenen Vergleichen um – nichts wird gespeichert.',
     s1Title: 'Ein Link genügt.',
     s1Text:
       'Shop-Link einfügen: Propario übernimmt Bild, Preis, Maße und Datenblatt – ohne KI und ohne Tracking. Oder bring eine Tabelle aus Excel, CSV oder deiner KI mit.',
@@ -446,7 +446,7 @@ export const de: Messages = {
     ],
     closingTitle: 'Überzeug dich selbst.',
     closingText:
-      'Ein erfundener Sideboard-Vergleich mit sechs Kandidaten – bearbeiten, filtern, vergleichen und entscheiden, wie du willst. Nichts wird gespeichert.',
+      'Drei erfundene Vergleiche – ein Sideboard, Kopfhörer und ein Saugroboter: bearbeiten, filtern, swipen, entscheiden, wie du willst. Nichts wird gespeichert.',
     inDemo: 'Du bist in der Demo – hier ist alles erfunden, und nichts wird gespeichert.',
   },
   fieldHint: {
@@ -486,7 +486,6 @@ export const de: Messages = {
     reload: 'Neu laden',
     reset: 'Browser zurücksetzen',
     resetHint: 'Zurücksetzen entfernt nur die Kopie von Propario in diesem Browser. Du bleibst angemeldet; alles wird neu vom Server geladen.',
-    support: 'Support-Paket herunterladen',
     details: 'Details zur Fehlersuche',
     reference: 'Referenz',
   },
@@ -548,12 +547,10 @@ export const de: Messages = {
     duplicateText: 'Der Link wurde schon hinzugefügt, deshalb entsteht kein zweiter Eintrag. Die Shopseite kann zum vorhandenen Folgendes beitragen:',
   },
   bulk: {
-    update: 'Von den Shopseiten aktualisieren',
     updating: (done, total) => `Aktualisiere ${done}/${total} …`,
     updated: (ok, prices, failed) =>
       `${ok} aktualisiert${prices ? ` · ${prices} ${prices === 1 ? 'Preis' : 'Preise'} geändert` : ''}${failed ? ` · ${failed} nicht lesbar` : ''}`,
     noLinks: 'Keins der markierten Produkte hat einen Shop-Link.',
-    delete: 'Löschen',
     deleteTitle: (n) => `${n} ${n === 1 ? 'Produkt' : 'Produkte'} löschen?`,
     deleteText: 'Sie werden samt Bewertungen, Angeboten und Bildern entfernt – für alle, mit denen der Vergleich geteilt ist.',
     deleteAgainTitle: 'Wirklich löschen?',
@@ -907,7 +904,6 @@ export const de: Messages = {
     likedByAll: (n: number) => (n === 1 ? 'Allen, die abgestimmt haben, gefällt dieses:' : `Allen, die abgestimmt haben, gefallen diese ${n}:`),
     likedByYou: (n: number) => (n === 1 ? 'Dir gefällt dieses:' : `Dir gefallen diese ${n}:`),
     noneShared: 'Noch nichts, das allen gefällt.',
-    toTable: 'Zurück zur Tabelle',
     toDuel: 'Weiter zu den Duellen: Welches ist das beste?',
     hint: 'Nach rechts oder links wischen oder die Pfeiltasten nutzen; ↓ für neutral.',
   },

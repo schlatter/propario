@@ -139,8 +139,17 @@ test('a visitor sees what Propario does and tries the demo, which never talks to
   })
   await page.getByRole('button', { name: 'Try the demo' }).first().click()
   await expect(page.getByRole('status').filter({ hasText: 'Demo – invented data, nothing is saved.' })).toBeVisible()
+  // Three invented comparisons of different kinds.
+  await expect(page.getByRole('link', { name: /Headphones for the commute/ })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Robot vacuum for the ground floor/ })).toBeVisible()
   await page.getByRole('link', { name: /Living-room sideboard/ }).click()
-  await expect(page.getByRole('tab', { name: /Products 6/ })).toBeVisible()
+  // Filtered, the tab says how many of all are shown; without a filter just how many there are.
+  await expect(page.getByRole('tab', { name: /^Products \d\/6$/ })).toBeVisible()
+  await page.getByRole('button', { name: /^Filter/ }).click()
+  await page.getByRole('button', { name: 'Only eligible' }).click()
+  await expect(page.getByRole('tab', { name: /^Products 6$/ })).toBeVisible()
+  await page.getByRole('button', { name: 'Only eligible' }).click()
+  await page.getByRole('button', { name: /^Filter/ }).click()
   await accessible(page, 'demo comparison')
 
   // Everything can be tried: a change shows at once …
