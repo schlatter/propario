@@ -11,6 +11,21 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.13.0',
+    notes: {
+      en: [
+        'Details: large pictures you swipe through, price and dimensions on one line each.',
+        'One “Pictures” menu and one ⋮ menu instead of many buttons; the verdict works like in the table.',
+        'Export is one entry with Excel, JSON and “Copy for my AI”.',
+      ],
+      de: [
+        'Details: große Bilder zum Durchwischen, Preis und Maße je in einer Zeile.',
+        'Ein Menü „Bilder“ und ein ⋮-Menü statt vieler Knöpfe; das Urteil funktioniert wie in der Tabelle.',
+        'Exportieren ist ein Eintrag mit Excel, JSON und „Für meine KI kopieren“.',
+      ],
+    },
+  },
+  {
     version: '0.12.2',
     notes: {
       en: ['The table shows only your verdict – neutral until you give one; a tap changes it.'],

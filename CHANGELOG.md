@@ -6,6 +6,24 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+## 0.13.0 — 2026-11-20
+
+- Changed: the product details fit more into less room. Pictures fill the width of the details
+  and are swiped through with a finger – a swipe on a picture shows the next picture, no longer
+  the next product. Dots show where you are; a tap opens the gallery.
+- Changed: one "Pictures" menu replaces the picture buttons: update picture (from the shop page),
+  choose picture, add picture, make main picture, remove.
+- Changed: price and its date share one line; width × height × depth follow on one line right
+  under it instead of three rows. The fields show as small tiles, two or three side by side; the
+  basics sit two side by side on a phone too. The price note field is gone from the details
+  (imported notes stay in the table and the exports).
+- Changed: the verdict in the details works like in the table – your verdict as a symbol, a tap
+  opens 👍 ⊖ 👎 with how many gave each. Final decision, update details, price reference,
+  duplicate and delete moved into a ⋮ menu; a decided product is marked in amber under its name.
+- Changed: "Export" is one entry in the comparison's menu that opens Excel, JSON and "Copy for
+  my AI". Pictures in the table are larger on a phone. Escape in a menu inside the details now
+  closes only the menu.
+
 ## 0.12.2 — 2026-11-19
 
 - Changed: the verdict column shows only your own verdict as its symbol – neutral and paler while
