@@ -6,6 +6,18 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+## 0.15.0 — 2026-11-20
+
+- Changed: the product tab says how many are shown of all while a filter is on ("14/66").
+- Changed: one action, one name – "Details aktualisieren" also for several products, "Duplizieren",
+  "Löschen", "Back to the table" alike everywhere; "Clear selection" is a button like the others in
+  its bar. The design guide holds this as a rule.
+- Added: "Reviews" as a kind of exclusion reason.
+- Changed: the demo has three comparisons – the sideboard, headphones and a robot vacuum – with
+  pictures drawn as studio shots instead of flat drawings.
+- Changed: the start page is shorter: the four steps sit side by side (on a phone a row to swipe),
+  without the grid paper behind them.
+
 ## 0.14.2 — 2026-11-20
 
 - Changed: a product not judged yet shows a grey question mark in a dashed ring instead of the

@@ -11,6 +11,23 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.15.0',
+    notes: {
+      en: [
+        'The demo has three comparisons – sideboard, headphones, robot vacuum – with new pictures.',
+        'Filtered, the product tab shows how many of all ("14/66").',
+        '"Reviews" is a new kind of exclusion reason.',
+        'Same action, same name everywhere; a shorter start page.',
+      ],
+      de: [
+        'Die Demo hat drei Vergleiche – Sideboard, Kopfhörer, Saugroboter – mit neuen Bildern.',
+        'Gefiltert zeigt der Produkte-Reiter, wie viele von allen („14/66“).',
+        '„Bewertung“ ist eine neue Art von Ausschlussgrund.',
+        'Gleiche Aktion, gleicher Name überall; eine kürzere Startseite.',
+      ],
+    },
+  },
+  {
     version: '0.14.2',
     notes: {
       en: ['Not judged yet shows a question mark – no longer the neutral symbol.'],
