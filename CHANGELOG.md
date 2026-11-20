@@ -6,6 +6,12 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+## 0.15.1 — 2026-11-20
+
+- Changed: duels say less – "Which is better?" and "12 duels to first place" in one line – with the
+  same progress bar as swiping. The choices carry a ✓ (take this one) instead of arrows, and
+  "Later" sits small and grey between them.
+
 ## 0.15.0 — 2026-11-20
 
 - Changed: the product tab says how many are shown of all while a filter is on ("14/66").

@@ -1,6 +1,6 @@
 {
   "name": "propario",
-  "version": "0.15.0",
+  "version": "0.15.1",
   "description": "Compare products together and decide – a self-hostable web app.",
   "license": "AGPL-3.0-or-later",
   "private": true,

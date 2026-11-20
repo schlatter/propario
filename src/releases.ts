@@ -11,6 +11,13 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.15.1',
+    notes: {
+      en: ['Duels: shorter texts, a progress bar, ✓ to choose and "Later" in the middle.'],
+      de: ['Duelle: kürzere Texte, ein Fortschrittsbalken, ✓ zum Wählen und „Später“ in der Mitte.'],
+    },
+  },
+  {
     version: '0.15.0',
     notes: {
       en: [
