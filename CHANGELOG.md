@@ -6,6 +6,21 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+## 0.14.1 — 2026-11-20
+
+- Changed: beside one's own verdict, agreement shows as a number ("👍 2") and a different verdict
+  as its own small symbol, instead of initials.
+- Changed: swiping no longer shows the others' verdicts, so each judges for themselves. The
+  heading is smaller with the progress (13/19) beside it; on a phone the card fits one screen.
+- Changed: the swipe button has its own symbol; the duel button is petrol like it. In a duel the
+  two choices float at the bottom of the screen, where the thumb is.
+- Changed: duels are only between one's own preselection – the products one starred or liked
+  (starred first); nothing else, nothing excluded. The joint ranking covers what is in anyone's.
+- Added: a duel can be put off ("Later", or ↓): its challenger comes back at the end of the place.
+- Changed: the table shows each product's place from the duels (joint when several duelled) and is
+  sorted by it unless another column is chosen; clicking "Place" twice more returns to the manual
+  order, where rows can be moved.
+
 ## 0.14.0 — 2026-11-20
 
 - Added: duels. "Duel" in a comparison puts the product holding first place on the left and a

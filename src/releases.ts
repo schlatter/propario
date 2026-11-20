@@ -11,6 +11,23 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.14.1',
+    notes: {
+      en: [
+        'Duels only between your starred and liked products; "Later" puts one off.',
+        'The table is sorted by the place from the duels.',
+        'Verdicts: agreement as a number, a different verdict as its symbol.',
+        'Swiping fits one screen, without the others’ verdicts.',
+      ],
+      de: [
+        'Duelle nur zwischen deinen Favoriten und Gefällt-mir; „Später“ schiebt eins auf.',
+        'Die Tabelle ist nach dem Platz aus den Duellen sortiert.',
+        'Urteile: Übereinstimmung als Zahl, ein anderes Urteil als Symbol.',
+        'Swipen passt auf einen Bildschirm, ohne die Urteile der anderen.',
+      ],
+    },
+  },
+  {
     version: '0.14.0',
     notes: {
       en: [
