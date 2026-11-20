@@ -55,19 +55,29 @@ function cacheName(userId: string): string {
 /**
  * Opens this browser's copy of the person's data. A browser database cannot open while its
  * removal is pending, and the removal waits for every other window to let go of it – which an
- * app frozen in the background on a phone may never do. Then the start hung for good. The copy
- * is only a cache: if it does not open in a few seconds, a fresh one under a new name is used
- * and the data comes again from the server; the old one is removed once nothing holds it.
+ * app frozen in the background on a phone may never do. Then the start hung for good. Likewise a
+ * window frozen in the middle of a write: the copy opens, but every write waits for that window
+ * (seen after updates on Android). So the copy counts as open only once a first write went
+ * through. It is only a cache: if that does not happen in a few seconds, a fresh one under a new
+ * name is used and the data comes again from the server; the old one is removed once nothing
+ * holds it.
  */
 export async function openCache(userId: string, wait = OPEN_WAIT): Promise<AppDB> {
   const name = cacheName(userId)
   if (db.name === name && db.isOpen()) return db
   db.close()
   const next = new AppDB(name)
-  const opening = next.open().then(
-    () => true,
-    () => false,
-  )
+  let phase = 'open'
+  const opening = next
+    .open()
+    .then(() => {
+      phase = 'write'
+      return next.meta.put({ key: 'opened', value: Date.now() })
+    })
+    .then(
+      () => true,
+      () => false,
+    )
   const opened = await Promise.race([opening, new Promise<false>((resolve) => setTimeout(() => resolve(false), wait))])
   if (opened) {
     db = next
@@ -75,7 +85,7 @@ export async function openCache(userId: string, wait = OPEN_WAIT): Promise<AppDB
   }
   // Whenever the stuck one opens after all, let it go again.
   void opening.then((ok) => ok && next.close())
-  report('stuck', `cache ${name} did not open in ${wait} ms; using a fresh copy`)
+  report('stuck', `cache ${name}: ${phase} did not finish in ${wait} ms; using a fresh copy`)
   const fresh = `propario-${userId}-${Date.now().toString(36)}`
   try {
     localStorage.setItem(nameKey(userId), fresh)
