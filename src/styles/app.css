@@ -2193,15 +2193,67 @@ table.map {
   gap: 6px;
   min-width: 0;
 }
+/* The shop page is where the product is bought and checked: a filled petrol button. */
 .pimg-bar .product-link {
   min-width: 0;
-  max-width: 45%;
-}
-.pimg-bar .product-link {
+  max-width: 50%;
+  text-decoration: none;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   display: inline-flex;
+}
+/* Edge zones with a quiet arrow: faint while the pointer is on the picture, clear on the edge. */
+.pimg-nav {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 64px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 120ms ease-out;
+}
+.pimg-nav[hidden] {
+  display: none;
+}
+.pimg-nav.prev {
+  left: 0;
+}
+.pimg-nav.next {
+  right: 0;
+}
+.pimg-nav span {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  /* Pictures sit on white in both themes, so the arrow does too. */
+  background: rgb(255 255 255 / 0.92);
+  border: 1px solid #d5dbdb;
+  color: #15181c;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.12);
+}
+.pimg-stage:hover .pimg-nav {
+  opacity: 0.45;
+}
+.pimg-stage .pimg-nav:hover {
+  opacity: 1;
+}
+@media (hover: none) {
+  .pimg-nav {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pimg-nav {
+    transition: none;
+  }
 }
 .pimg-dots {
   display: flex;

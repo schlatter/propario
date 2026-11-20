@@ -11,6 +11,13 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.13.1',
+    notes: {
+      en: ['Details: the shop link stands out; with a mouse, arrows at the picture’s edges step through the pictures.'],
+      de: ['Details: Der Shop-Link fällt mehr auf; mit der Maus blättern Pfeile am Bildrand durch die Bilder.'],
+    },
+  },
+  {
     version: '0.13.0',
     notes: {
       en: [

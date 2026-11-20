@@ -161,6 +161,43 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
         ) : (
           <span className="pimg-hint">{m.image.dropHint}</span>
         )}
+        {/* With a mouse: quiet arrows at the edges; a finger swipes, the keyboard uses ← →. */}
+        {pictures.length > 1 && (
+          <>
+            <button
+              type="button"
+              className="pimg-nav prev"
+              tabIndex={-1}
+              hidden={at === 0}
+              aria-label={m.gallery.prev}
+              title={m.gallery.prev}
+              onClick={(e) => {
+                e.stopPropagation()
+                show(at - 1)
+              }}
+            >
+              <span>
+                <Glyph name="chevronLeft" />
+              </span>
+            </button>
+            <button
+              type="button"
+              className="pimg-nav next"
+              tabIndex={-1}
+              hidden={at === pictures.length - 1}
+              aria-label={m.gallery.next}
+              title={m.gallery.next}
+              onClick={(e) => {
+                e.stopPropagation()
+                show(at + 1)
+              }}
+            >
+              <span>
+                <Glyph name="chevronRight" />
+              </span>
+            </button>
+          </>
+        )}
         {busy && <span className="pimg-busy">{m.image.working}</span>}
       </div>
       {zoom && src && box.current && <Preview anchor={box.current} src={pictures[at]} alt={name} size={zoomSize()} />}
@@ -221,7 +258,7 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
         </Menu>
         {link && (
           // The shop page, at hand: it is where the product is bought and checked.
-          <a className="btn sm product-link" href={link} target="_blank" rel="noopener noreferrer">
+          <a className="btn sm primary product-link" href={link} target="_blank" rel="noopener noreferrer">
             <Glyph name="out" /> {hostOf(p.url) || m.common.openLink}
           </a>
         )}
