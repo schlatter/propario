@@ -12,7 +12,8 @@ import type { Summary } from './requirements.ts'
 
 type F = Omit<QueryField, 'get'> & { get: (p: Product) => unknown }
 
-export function queryFields(properties: PropertyDef[], summary: (p: Product) => Summary | undefined, me = ''): QueryField[] {
+/** `me` is the person's name ("found by"), `meId` their account (their own star). */
+export function queryFields(properties: PropertyDef[], summary: (p: Product) => Summary | undefined, me = '', meId = ''): QueryField[] {
   const own: F[] = properties.map((prop) => ({
     names: [prop.name, splitUnit(prop.name).name],
     kind: prop.type === 'number' || prop.type === 'rating' ? 'number' : prop.type === 'boolean' ? 'boolean' : prop.type === 'date' ? 'date' : 'text',
@@ -44,7 +45,7 @@ export function queryFields(properties: PropertyDef[], summary: (p: Product) => 
         excluded: 'excluded',
       },
     },
-    { names: ['Favorit', 'Favourite', 'Favorite'], kind: 'boolean', get: (p) => isFavorite(p) },
+    { names: ['Favorit', 'Favourite', 'Favorite'], kind: 'boolean', get: (p) => isFavorite(p, meId || undefined) },
     {
       names: ['Ausschlussgrund', 'Grund', 'Exclusion reason', 'Reason'],
       kind: 'text',

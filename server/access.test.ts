@@ -213,6 +213,28 @@ describe('changes and sync', () => {
     expect((sync(db, ada, 0).records.find((r) => r.kind === 'products')!.data as { votes: object }).votes).toEqual({ [grace]: 'dislike' })
   })
 
+  it('stars and rankings: everyone sets only their own, and those of two people merge', () => {
+    const { project, product } = seedProject(ada)
+    setMember(db, ada, project.id, grace, 'editor')
+    const star = (who: string, favorites: Record<string, unknown>) =>
+      applyChanges(db, who, [{ op: 'patch', kind: 'products', id: product.id, projectId: project.id, patch: { favorites } }])
+    const rank = (who: string, rankings: Record<string, unknown>) =>
+      applyChanges(db, who, [{ op: 'patch', kind: 'projects', id: project.id, projectId: project.id, patch: { rankings } }])
+    star(ada, { [ada]: true })
+    star(grace, { [grace]: false })
+    expect(() => star(grace, { [ada]: false })).toThrow('own favorites only')
+    expect(() => star(ada, { [ada]: 'yes' })).toThrow('true or false')
+    expect(sync(db, ada, 0).records.find((r) => r.kind === 'products')!.data).toMatchObject({ favorites: { [ada]: true, [grace]: false } })
+
+    const order = { order: [product.id], settled: 0, next: 1 }
+    rank(ada, { [ada]: order })
+    rank(grace, { [grace]: order })
+    expect(() => rank(grace, { [ada]: order })).toThrow('own rankings only')
+    expect(() => rank(ada, { [ada]: { order: ['not-an-id'], settled: 0, next: 1 } })).toThrow('order of products')
+    expect(() => rank(ada, { [ada]: { order: [], settled: -1, next: 0 } })).toThrow('order of products')
+    expect(sync(db, ada, 0).records.find((r) => r.kind === 'projects')!.data).toMatchObject({ rankings: { [ada]: order, [grace]: order } })
+  })
+
   it('keeps record contents encrypted at rest', () => {
     seedProject(ada)
     const rows = db.prepare('SELECT data FROM records').all() as { data: string }[]

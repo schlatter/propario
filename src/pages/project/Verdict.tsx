@@ -14,10 +14,11 @@ import { useUsers } from '../../users'
 
 export const VOTE_GLYPH: Record<Vote, GlyphName> = { like: 'thumbUp', neutral: 'neutral', dislike: 'thumbDown' }
 
-/** The favourite star; in the details it sits on a button like the verdict beside it. */
+/** One's own favourite star; in the details it sits on a button like the verdict beside it. */
 export function FavoriteToggle({ product: p, inDetails = false }: { product: Product; inDetails?: boolean }) {
   const { m } = useI18n()
-  const on = isFavorite(p)
+  const me = useMe()
+  const on = isFavorite(p, me.id)
   return (
     <button
       type="button"
@@ -25,7 +26,7 @@ export function FavoriteToggle({ product: p, inDetails = false }: { product: Pro
       aria-pressed={on}
       aria-label={m.verdict.favorite}
       title={on ? m.verdict.unmakeFavorite : m.verdict.makeFavorite}
-      onClick={() => updateProduct(p, favoritePatch(p, !on))}
+      onClick={() => updateProduct(p, favoritePatch(p, me.id, !on))}
     >
       <Glyph name="star" />
     </button>
@@ -33,9 +34,10 @@ export function FavoriteToggle({ product: p, inDetails = false }: { product: Pro
 }
 
 /**
- * One's own verdict as a symbol – neutral, paler, while none is given – in the table and the
- * details alike. A tap opens the three choices with how many gave each (names on hover); choosing
- * the marked one again takes it back.
+ * One's own verdict as a symbol – neutral, paler, while none is given – and beside it the others'
+ * as small initials in their verdict's colour, so the joint verdict is seen at a glance; in the
+ * table and the details alike. A tap opens the three choices with how many gave each (names on
+ * hover); choosing the marked one again takes it back.
  */
 export function VerdictCell({ product: p, inDetails = false }: { product: Product; inDetails?: boolean }) {
   const { m } = useI18n()
@@ -44,6 +46,10 @@ export function VerdictCell({ product: p, inDetails = false }: { product: Produc
   const t = tally(p)
   const mine = p.votes?.[me.id] ?? null
   const shown = mine ?? 'neutral'
+  const others = Object.entries(p.votes ?? {})
+    .filter(([id]) => id !== me.id)
+    .map(([id, v]) => ({ id, v, name: users.get(id) ?? '?' }))
+    .sort((a, b) => a.name.localeCompare(b.name))
   const names = (v: Vote) =>
     Object.entries(p.votes ?? {})
       .filter(([, x]) => x === v)
@@ -52,10 +58,23 @@ export function VerdictCell({ product: p, inDetails = false }: { product: Produc
   return (
     <Menu
       floating
-      label={`${m.verdict.yours}: ${mine ? m.verdict[mine] : m.verdict.none}`}
-      className={`${inDetails ? 'btn sm square' : 'cell'} verdict-trigger ${shown}${mine ? '' : ' unset'}`}
+      label={[`${m.verdict.yours}: ${mine ? m.verdict[mine] : m.verdict.none}`, ...others.map((o) => `${o.name}: ${m.verdict[o.v]}`)].join(' · ')}
+      className={`${inDetails ? 'btn sm verdict-btn' : 'cell'} verdict-trigger ${shown}${mine ? '' : ' unset'}`}
       listClassName="candidate-menu verdict-menu"
-      trigger={<Glyph name={VOTE_GLYPH[shown]} />}
+      trigger={
+        <>
+          <Glyph name={VOTE_GLYPH[shown]} />
+          {others.length > 0 && (
+            <span className="verdict-others" aria-hidden="true">
+              {others.map((o) => (
+                <span key={o.id} className={`verdict-other ${o.v}`}>
+                  {o.name.slice(0, 1).toUpperCase()}
+                </span>
+              ))}
+            </span>
+          )}
+        </>
+      }
     >
       {(close) =>
         VOTES.map((v) => (

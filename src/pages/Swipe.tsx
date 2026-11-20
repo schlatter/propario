@@ -5,7 +5,11 @@ import type { Product, Vote } from '../db/types'
 import { displayName, formatValue } from '../domain/display'
 import { safeHref, hostOf } from '../domain/values'
 import { useI18n } from '../i18n'
-import { productImage } from '../images'
+import { isPicture, productImage } from '../images'
+import { meaning } from '../domain/page-import'
+import { useUsers } from '../users'
+import { Gallery } from './project/Gallery'
+import { FavoriteToggle } from './project/Verdict'
 import { useMe } from '../session'
 import { Glyph } from '../ui/Glyph'
 import { CheckStrip, Verdict } from '../ui/Marks'
@@ -79,6 +83,8 @@ function Deck({ data }: { data: ProjectData }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLElement && e.target.closest('input, textarea, select')) return
+      // The gallery has its own keys; a vote must not slip through behind it.
+      if (document.querySelector('dialog[open]')) return
       if (e.key === 'ArrowRight') void decide('like')
       else if (e.key === 'ArrowLeft') void decide('dislike')
       else if (e.key === 'ArrowDown') void decide('neutral')
@@ -109,17 +115,17 @@ function Deck({ data }: { data: ProjectData }) {
         <>
           <Card key={current.id} product={current} data={data} leaving={leaving} onVote={decide} />
           <div className="swipe-actions">
-            <button type="button" className="swipe-btn no" onClick={() => void decide('dislike')} aria-keyshortcuts="ArrowLeft">
+            <button type="button" className="swipe-btn no" title={m.swipe.dislike} onClick={() => void decide('dislike')} aria-keyshortcuts="ArrowLeft">
               <Glyph name="thumbDown" />
-              <span>{m.swipe.dislike}</span>
+              <span>{m.verdict.short.dislike}</span>
             </button>
-            <button type="button" className="swipe-btn neutral" onClick={() => void decide('neutral')} aria-keyshortcuts="ArrowDown">
+            <button type="button" className="swipe-btn neutral" title={m.swipe.neutral} onClick={() => void decide('neutral')} aria-keyshortcuts="ArrowDown">
               <Glyph name="neutral" />
-              <span>{m.swipe.neutral}</span>
+              <span>{m.verdict.short.neutral}</span>
             </button>
-            <button type="button" className="swipe-btn yes" onClick={() => void decide('like')} aria-keyshortcuts="ArrowRight">
+            <button type="button" className="swipe-btn yes" title={m.swipe.like} onClick={() => void decide('like')} aria-keyshortcuts="ArrowRight">
               <Glyph name="thumbUp" />
-              <span>{m.swipe.like}</span>
+              <span>{m.verdict.short.like}</span>
             </button>
           </div>
           <p className="muted small swipe-hint">
@@ -146,14 +152,25 @@ function Deck({ data }: { data: ProjectData }) {
 
 function Card({ product: p, data, leaving, onVote }: { product: Product; data: ProjectData; leaving: Vote | null; onVote: (v: Vote) => void }) {
   const { m, fmt } = useI18n()
+  const me = useMe()
+  const users = useUsers()
   const [dx, setDx] = useState(0)
-  const start = useRef<{ x: number; id: number } | null>(null)
-  const img = productImage(p)
+  const start = useRef<{ x: number; id: number; onPicture: boolean } | null>(null)
+  const [gallery, setGallery] = useState(false)
+  const pictures = [productImage(p), ...(p.images ?? []).filter(isPicture)].filter((x): x is string => !!x)
   const href = safeHref(p.url)
+  // Width × height × depth on one line, like in the details; then a few other fields.
+  const dims = DIMS.map((d) => ({ d, prop: data.properties.find((prop) => meaning(prop.name) === d) }))
+    .map(({ d, prop }) => ({ d, text: prop ? formatValue(prop, p.values?.[prop.id], m, fmt) : '', id: prop?.id }))
+    .filter((x) => x.text)
   const facts = data.properties
+    .filter((prop) => !dims.some((x) => x.id === prop.id))
     .map((prop) => ({ prop, text: formatValue(prop, p.values?.[prop.id], m, fmt) }))
     .filter((f) => f.text)
     .slice(0, 4)
+  const others = Object.entries(p.votes ?? {})
+    .filter(([id]) => id !== me.id)
+    .map(([id, v]) => ({ id, v, name: users.get(id) ?? '?' }))
 
   const offset = leaving === 'like' ? 700 : leaving === 'dislike' ? -700 : dx
   const hint = offset > 40 ? 'like' : offset < -40 ? 'dislike' : null
@@ -165,16 +182,19 @@ function Card({ product: p, data, leaving, onVote }: { product: Product; data: P
       style={{ transform: leaving === 'neutral' ? 'translateY(420px)' : `translateX(${offset}px) rotate(${offset / 18}deg)` }}
       onPointerDown={(e) => {
         if ((e.target as HTMLElement).closest('a, button')) return
-        start.current = { x: e.clientX, id: e.pointerId }
+        start.current = { x: e.clientX, id: e.pointerId, onPicture: !!(e.target as HTMLElement).closest('.swipe-media') }
         e.currentTarget.setPointerCapture(e.pointerId)
       }}
       onPointerMove={(e) => start.current?.id === e.pointerId && setDx(e.clientX - start.current.x)}
       onPointerUp={() => {
         const d = dx
+        const s = start.current
         start.current = null
         setDx(0)
         if (d > THRESHOLD) onVote('like')
         else if (d < -THRESHOLD) onVote('dislike')
+        // A tap on the picture – no swipe – shows it large.
+        else if (s?.onPicture && Math.abs(d) < 8 && pictures.length) setGallery(true)
       }}
       onPointerCancel={() => {
         start.current = null
@@ -188,23 +208,48 @@ function Card({ product: p, data, leaving, onVote }: { product: Product; data: P
         </span>
       )}
       <div className="swipe-media">
-        {img ? <img src={img} alt="" draggable={false} /> : <span className="monogram">{(p.brand || p.model || '?').slice(0, 2)}</span>}
+        {pictures.length ? <img src={pictures[0]} alt="" draggable={false} /> : <span className="monogram">{(p.brand || p.model || '?').slice(0, 2)}</span>}
+        <span className="swipe-media-tools">
+          <FavoriteToggle product={p} inDetails />
+          {pictures.length > 0 && (
+            <button type="button" className="btn sm swipe-zoom" onClick={() => setGallery(true)} aria-label={m.image.openGallery(pictures.length)}>
+              <Glyph name="image" /> {pictures.length > 1 ? pictures.length : ''}
+            </button>
+          )}
+        </span>
       </div>
       <div className="swipe-body">
-        {p.brand && <div className="muted small">{p.brand}</div>}
-        <h2>{p.model || displayName(p, m)}</h2>
-        <div className="row" style={{ gap: 12 }}>
+        <div className="swipe-title">
+          <div style={{ minWidth: 0 }}>
+            {p.brand && <div className="muted small">{p.brand}</div>}
+            <h2>{p.model || displayName(p, m)}</h2>
+          </div>
           {p.price !== null && <b className="swipe-price">{fmt.money(p.price)}</b>}
-          {href && (
-            <a href={href} target="_blank" rel="noopener noreferrer" className="small">
-              {p.retailer || hostOf(p.url)} <Glyph name="out" />
-            </a>
-          )}
         </div>
-        {data.checkable.length > 0 && (
+        {dims.length > 0 && (
+          <p className="swipe-dims">
+            <span className="muted">{m.product.dimensions}</span>{' '}
+            {dims.map((x, i) => (
+              <span key={x.d}>
+                {i > 0 && <span className="dim-x">×</span>}
+                <span className="dim-letter">{m.product.dimLetter[x.d]}</span> {x.text}
+              </span>
+            ))}
+          </p>
+        )}
+        {(data.checkable.length > 0 || href) && (
           <div className="row" style={{ gap: 10 }}>
-            <Verdict summary={data.summaries.get(p.id)!} />
-            <CheckStrip items={data.results(p)} />
+            {data.checkable.length > 0 && (
+              <>
+                <Verdict summary={data.summaries.get(p.id)!} />
+                <CheckStrip items={data.results(p)} />
+              </>
+            )}
+            {href && (
+              <a href={href} target="_blank" rel="noopener noreferrer" className="small">
+                {p.retailer || hostOf(p.url)} <Glyph name="out" />
+              </a>
+            )}
           </div>
         )}
         {facts.length > 0 && (
@@ -217,11 +262,26 @@ function Card({ product: p, data, leaving, onVote }: { product: Product; data: P
             ))}
           </dl>
         )}
-        {p.description && <p className="small swipe-desc">{p.description}</p>}
+        {others.length > 0 && (
+          // What the others said: the joint view while swiping.
+          <p className="swipe-others small">
+            {others.map((o) => (
+              <span key={o.id}>
+                <span className={`verdict-other ${o.v}`} aria-hidden="true">
+                  {o.name.slice(0, 1).toUpperCase()}
+                </span>{' '}
+                {o.name}: {m.verdict[o.v]}
+              </span>
+            ))}
+          </p>
+        )}
       </div>
+      {pictures.length > 0 && <Gallery pictures={pictures} name={displayName(p, m)} start={0} open={gallery} onClose={() => setGallery(false)} />}
     </article>
   )
 }
+
+const DIMS = ['width', 'height', 'depth'] as const
 
 /** All voted: what everyone liked, and the way back. */
 function Done({ data }: { data: ProjectData }) {
@@ -248,9 +308,14 @@ function Done({ data }: { data: ProjectData }) {
       ) : (
         <p className="muted">{m.swipe.noneShared}</p>
       )}
-      <Link to={`/p/${data.project.id}`} className="btn primary">
-        {m.swipe.toTable}
-      </Link>
+      <div className="row" style={{ justifyContent: 'center' }}>
+        <Link to={`/p/${data.project.id}/compare?mode=duel`} className="btn primary">
+          <Glyph name="duel" /> {m.swipe.toDuel}
+        </Link>
+        <Link to={`/p/${data.project.id}`} className="btn">
+          {m.swipe.toTable}
+        </Link>
+      </div>
     </div>
   )
 }

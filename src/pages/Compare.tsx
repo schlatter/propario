@@ -1,14 +1,19 @@
 import { isFavorite, statusOf } from '../domain/verdict'
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
-import type { Product, PropertyDef } from '../db/types'
+import type { Product, PropertyDef, Ranking } from '../db/types'
+import { setDecision, updateProject } from '../db/repo'
+import { current, decide, finished, joint, normalize, remaining, type Side } from '../domain/duel'
+import { useUsers } from '../users'
+import { Gallery } from './project/Gallery'
 import { avgStars, displayName, exclusionText, formatValue } from '../domain/display'
 import { evaluate, WEIGHT } from '../domain/requirements'
 import { reviewSummary } from '../domain/reviews'
 import { directionOf, rank, type Better } from '../domain/ranking'
 import { hostOf, safeHref } from '../domain/values'
 import { useI18n } from '../i18n'
-import { productImage } from '../images'
+import { useMe } from '../session'
+import { isPicture, productImage } from '../images'
 import { Glyph } from '../ui/Glyph'
 import { Menu } from '../ui/Menu'
 import { CheckMark, PriorityTag, Stars, Verdict } from '../ui/Marks'
@@ -29,7 +34,43 @@ export function ComparePage() {
   const [params, setParams] = useSearchParams()
   const data = useProjectData(id)
   const { m, fmt } = useI18n()
+  const me = useMe()
+  const users = useUsers()
   const [onlyDiff, setOnlyDiff] = useState(false)
+  /** Rankings before each duel of this visit, for taking one back. */
+  const [history, setHistory] = useState<Ranking[]>([])
+  const [gallery, setGallery] = useState<{ product: Product; at: number } | null>(null)
+  const duelMode = params.get('mode') === 'duel'
+
+  // Duels: the products that take part, in the person's order so far (src/domain/duel.ts).
+  const eligible = data ? data.products.filter((p) => p.candidate !== 'excluded') : []
+  const mine = data ? normalize(data.project.rankings?.[me.id], startOrder(eligible, me.id)) : null
+  const pair = duelMode && mine ? current(mine) : null
+  const choose = (side: Side) => {
+    if (!data || !mine || !pair) return
+    setHistory((h) => [...h, mine])
+    void updateProject(data.project.id, { rankings: { [me.id]: decide(mine, side) } })
+  }
+  const undo = () => {
+    const last = history[history.length - 1]
+    if (!data || !last) return
+    setHistory((h) => h.slice(0, -1))
+    void updateProject(data.project.id, { rankings: { [me.id]: last } })
+  }
+  // ← → choose in a duel, Backspace takes the last choice back.
+  useEffect(() => {
+    if (!duelMode) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.altKey || e.ctrlKey || e.metaKey || (e.target instanceof Element && e.target.closest('input, textarea, select, dialog'))) return
+      if (e.key === 'ArrowLeft') choose('left')
+      else if (e.key === 'ArrowRight') choose('right')
+      else if (e.key === 'Backspace') undo()
+      else return
+      e.preventDefault()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  })
 
   if (data === undefined) return <main aria-busy="true" />
   if (data === null)
@@ -39,11 +80,31 @@ export function ComparePage() {
       </main>
     )
 
-  const ids = (params.get('ids') ?? '').split(',').filter(Boolean)
+  const ids = duelMode ? (pair ? [pair.left, pair.right] : []) : (params.get('ids') ?? '').split(',').filter(Boolean)
   const products = ids.map((x) => data.products.find((p) => p.id === x)).filter((p): p is Product => !!p)
   const back = `/p/${data.project.id}`
   /** Products of the comparison not yet side by side, the ones still in the running first. */
   const others = data.products.filter((p) => !ids.includes(p.id)).sort((a, b) => Number(a.candidate === 'excluded') - Number(b.candidate === 'excluded'))
+
+  if (duelMode && products.length < 2) {
+    return (
+      <main className="wide">
+        <Link to={back} className="crumb">
+          <Glyph name="chevronLeft" /> {data.project.name}
+        </Link>
+        <div className="page-head">
+          <h1>{m.duel.title}</h1>
+        </div>
+        <p className="muted">{eligible.length < 2 ? m.duel.tooFew : m.duel.done}</p>
+        {history.length > 0 && (
+          <button type="button" className="btn sm" onClick={undo}>
+            {m.duel.undo}
+          </button>
+        )}
+        {mine && eligible.length > 1 && <RankingList data={data} mine={mine} meId={me.id} users={users} fallback={startOrder(eligible, me.id)} />}
+      </main>
+    )
+  }
 
   if (products.length < 2) {
     return (
@@ -84,7 +145,7 @@ export function ComparePage() {
               .map(({ about, s }) => m.review.summary(m.review.about[about], s.score!, s.sources))
               .join(' · '),
         ),
-        simple('candidate', m.field.candidate, (p) => `${m.candidate[statusOf(p)]}${isFavorite(p) ? ` ★` : ''}`),
+        simple('candidate', m.field.candidate, (p) => `${m.candidate[statusOf(p)]}${isFavorite(p, me.id) ? ` ★` : ''}`),
         numeric(
           'rating',
           m.field.rating,
@@ -159,9 +220,10 @@ export function ComparePage() {
   }
 
   /**
-   * A row of numbers placed side by side: with a direction the best value is green, the worst red
-   * and the others show their distance to the best; without one a small bar shows where each
-   * value lies between the smallest and the largest – no judgement.
+   * A row of numbers placed side by side, each with a bar as long as its value (so 160 next to 180
+   * looks like it) and its difference: with a direction the best value is green, the worst red and
+   * the others show their distance to the best; without one the distance to the first product –
+   * in a duel the one holding the place.
    */
   function numeric(
     key: string,
@@ -175,6 +237,12 @@ export function ComparePage() {
     const nums = products.map(get)
     const r = rank(nums, better)
     const signed = (d: number) => (d > 0 ? `+${show(d)}` : `−${show(-d)}`)
+    const known = nums.filter((n): n is number => typeof n === 'number' && Number.isFinite(n))
+    const top = Math.max(...known.map(Math.abs))
+    // From zero when all values are positive (lengths, prices); otherwise between smallest and largest.
+    const share = (n: number, i: number) => (Math.min(...known) >= 0 ? (top > 0 ? n / top : 0) : r.scale[i])
+    const first = nums[0]
+    const firstName = products[0].model || displayName(products[0], m)
     return {
       key,
       label,
@@ -183,18 +251,19 @@ export function ComparePage() {
         const n = nums[i]
         if (n === null || n === undefined) return fallback(p)
         const mark = r.best.has(i) ? 'best' : r.worst.has(i) ? 'worst' : ''
-        const d = r.delta[i]
-        const s = r.scale[i]
+        const d = better ? r.delta[i] : i > 0 && typeof first === 'number' ? Math.round((n - first) * 1000) / 1000 : null
+        const s = known.length > 1 ? share(n, i) : null
         return (
           <span className={`num-cell ${mark}`}>
             <span className="num-value">{render ? render(p) : show(n)}</span>
             {mark && <span className="sr-only"> ({m.compare[mark]})</span>}
-            {d !== null && d !== 0 && <span className="num-delta">{m.compare.toBest(signed(d))}</span>}
-            {!better && s !== null && (
-              <span className="num-scale" aria-hidden="true">
-                <i style={{ left: `${s * 100}%` }} />
+            {s !== null && (
+              <span className="num-bar" aria-hidden="true">
+                <i style={{ width: `${Math.max(2, s * 100)}%` }} />
               </span>
             )}
+            {d !== null && d !== 0 && <span className="num-delta">{better ? m.compare.toBest(signed(d)) : m.compare.toFirst(signed(d), firstName)}</span>}
+            {d === 0 && !better && i > 0 && <span className="num-delta">{m.compare.sameAsFirst(firstName)}</span>}
           </span>
         )
       }),
@@ -248,10 +317,10 @@ export function ComparePage() {
         <Glyph name="chevronLeft" /> {data.project.name}
       </Link>
       <div className="page-head">
-        <h1>{m.compare.title}</h1>
-        <span className="count">{products.length}</span>
+        <h1>{duelMode ? m.duel.title : m.compare.title}</h1>
+        {!duelMode && <span className="count">{products.length}</span>}
         <span className="spacer" />
-        {others.length > 0 && (
+        {!duelMode && others.length > 0 && (
           <Menu
             label={m.compare.add}
             className="btn sm"
@@ -283,14 +352,45 @@ export function ComparePage() {
           {m.compare.onlyDifferences}
         </label>
       </div>
-      <div className="compare-wrap">
-        <table className="compare">
-          <colgroup>
-            <col style={{ width: 200 }} />
-            {products.map((p) => (
-              <col key={p.id} style={{ width: 260 }} />
+      {duelMode && mine && pair && (
+        // Which of the two is better: the answer moves the winner up (src/domain/duel.ts).
+        <div className="duel-bar" role="group" aria-label={m.duel.question(mine.settled + 1)}>
+          <p className="duel-question">
+            <b>{m.duel.question(mine.settled + 1)}</b>
+            <span className="muted small"> {remaining(mine).toFirst > 0 ? m.duel.toFirst(remaining(mine).toFirst) : m.duel.toAll(remaining(mine).toAll)}</span>
+          </p>
+          <div className="duel-choices">
+            {products.map((p, i) => (
+              <button
+                key={p.id}
+                type="button"
+                className="btn primary"
+                onClick={() => choose(i === 0 ? 'left' : 'right')}
+                aria-keyshortcuts={i === 0 ? 'ArrowLeft' : 'ArrowRight'}
+              >
+                {i === 0 && <Glyph name="chevronLeft" />}
+                <span className="duel-name">{p.model || displayName(p, m)}</span>
+                {i === 1 && <Glyph name="chevronRight" />}
+              </button>
             ))}
-          </colgroup>
+          </div>
+          {history.length > 0 && (
+            <button type="button" className="link-btn small" onClick={undo}>
+              {m.duel.undo}
+            </button>
+          )}
+        </div>
+      )}
+      <div className={`compare-wrap${duelMode ? ' duel' : ''}`}>
+        <table className={`compare${duelMode ? ' duel' : ''}`}>
+          {!duelMode && (
+            <colgroup>
+              <col style={{ width: 200 }} />
+              {products.map((p) => (
+                <col key={p.id} style={{ width: 260 }} />
+              ))}
+            </colgroup>
+          )}
           <thead>
             <tr>
               <th className="rowhead" />
@@ -299,7 +399,18 @@ export function ComparePage() {
                 const img = productImage(p)
                 return (
                   <th key={p.id} scope="col" className={p.candidate === 'excluded' ? 'is-excluded' : undefined}>
-                    {img && <img className="head-img" src={img} alt="" referrerPolicy="no-referrer" />}
+                    {img && (
+                      // The pictures decide a lot: a tap shows them large, all of them.
+                      <button
+                        type="button"
+                        className="head-pic"
+                        onClick={() => setGallery({ product: p, at: 0 })}
+                        aria-label={m.image.openGallery(picturesOf(p).length)}
+                      >
+                        <img className="head-img" src={img} alt="" referrerPolicy="no-referrer" />
+                        {picturesOf(p).length > 1 && <span className="head-count">{picturesOf(p).length}</span>}
+                      </button>
+                    )}
                     {p.brand && <div className="muted small">{p.brand}</div>}
                     <div className="row" style={{ alignItems: 'flex-start', flexWrap: 'nowrap' }}>
                       <span className="head-name" style={{ flex: 1 }}>
@@ -311,14 +422,16 @@ export function ComparePage() {
                           p.model || displayName(p, m)
                         )}
                       </span>
-                      <button
-                        className="icon-btn sm"
-                        aria-label={m.compare.remove}
-                        title={m.compare.remove}
-                        onClick={() => setParams({ ids: ids.filter((x) => x !== p.id).join(',') })}
-                      >
-                        <Glyph name="close" />
-                      </button>
+                      {!duelMode && (
+                        <button
+                          className="icon-btn sm"
+                          aria-label={m.compare.remove}
+                          title={m.compare.remove}
+                          onClick={() => setParams({ ids: ids.filter((x) => x !== p.id).join(',') })}
+                        >
+                          <Glyph name="close" />
+                        </button>
+                      )}
                     </div>
                     {href && <div className="muted small">{hostOf(p.url)}</div>}
                     {data.project.decisionProductId === p.id && (
@@ -362,6 +475,102 @@ export function ComparePage() {
           </tbody>
         </table>
       </div>
+      {duelMode && mine && <RankingList data={data} mine={mine} meId={me.id} users={users} fallback={startOrder(eligible, me.id)} />}
+      {gallery && (
+        <Gallery pictures={picturesOf(gallery.product)} name={displayName(gallery.product, m)} start={gallery.at} open onClose={() => setGallery(null)} />
+      )}
     </main>
+  )
+}
+
+const picturesOf = (p: Product) => [productImage(p), ...(p.images ?? []).filter(isPicture)].filter((x): x is string => !!x)
+
+/** Where a person's duels start: their stars, then 👍, no verdict, neutral, 👎 – table order within. */
+function startOrder(products: Product[], meId: string): string[] {
+  const weight = (p: Product) => {
+    const v = p.votes?.[meId]
+    return (isFavorite(p, meId) ? 0 : 10) + (v === 'like' ? 0 : !v ? 1 : v === 'neutral' ? 2 : 3)
+  }
+  return products
+    .map((p, i) => ({ id: p.id, w: weight(p), i }))
+    .sort((a, b) => a.w - b.w || a.i - b.i)
+    .map((x) => x.id)
+}
+
+/**
+ * The rankings so far: one's own (decided places marked) and everyone else's who has duelled,
+ * joined into one by the average place. The joint first place can become the decision.
+ */
+function RankingList({
+  data,
+  mine,
+  meId,
+  users,
+  fallback,
+}: {
+  data: NonNullable<ReturnType<typeof useProjectData>>
+  mine: Ranking
+  meId: string
+  users: Map<string, string>
+  fallback: string[]
+}) {
+  const { m } = useI18n()
+  const others = Object.entries(data.project.rankings ?? {})
+    .filter(([id]) => id !== meId)
+    .map(([id, r]) => ({ id, name: users.get(id) ?? '?', r: normalize(r, fallback) }))
+    .sort((a, b) => a.name.localeCompare(b.name))
+  const together = others.length > 0
+  const order = together ? joint([mine, ...others.map((o) => o.r)], fallback).map((x) => x.id) : mine.order
+  const byId = new Map(data.products.map((p) => [p.id, p]))
+  const place = (r: Ranking, id: string) => {
+    const at = r.order.indexOf(id)
+    return at < 0 ? '–' : `${at + 1}${at < r.settled || finished(r) ? ' ✓' : ''}`
+  }
+  const top = byId.get(order[0])
+  const decided = data.project.decisionProductId
+  return (
+    <section className="ranking" aria-labelledby="ranking-title">
+      <div className="row">
+        <h2 id="ranking-title">{together ? m.duel.jointTitle : m.duel.yourTitle}</h2>
+        <span className="spacer" />
+        {top && decided !== top.id && (mine.settled > 0 || finished(mine)) && (
+          <button type="button" className="btn sm" onClick={() => void setDecision(data.project, top.id)}>
+            <Glyph name="flag" /> {m.duel.makeDecision(top.model || displayName(top, m))}
+          </button>
+        )}
+      </div>
+      <p className="muted small">{together ? m.duel.jointHint : m.duel.yourHint}</p>
+      <table className="ranking-table">
+        <thead>
+          <tr>
+            <th scope="col">{m.duel.place}</th>
+            <th scope="col">{m.field.product}</th>
+            {together && <th scope="col">{m.duel.you}</th>}
+            {together &&
+              others.map((o) => (
+                <th key={o.id} scope="col">
+                  {o.name}
+                </th>
+              ))}
+          </tr>
+        </thead>
+        <tbody>
+          {order.map((id, i) => {
+            const p = byId.get(id)
+            if (!p) return null
+            return (
+              <tr key={id} className={decided === id ? 'is-decision' : undefined}>
+                <td className="place">{together ? i + 1 : place(mine, id)}</td>
+                <td>
+                  <Link to={`/p/${data.project.id}?product=${id}`}>{displayName(p, m)}</Link>
+                </td>
+                {together && <td>{place(mine, id)}</td>}
+                {together && others.map((o) => <td key={o.id}>{place(o.r, id)}</td>)}
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </section>
   )
 }

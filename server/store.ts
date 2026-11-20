@@ -1,7 +1,7 @@
 import { tx, type DB } from './db.ts'
 import { open, openBytes, seal, sealBytes } from './crypto.ts'
 import { newId, nowIso } from '../src/shared/ids.ts'
-import { applyPatch, checkChange, IMAGE_PATH, KINDS, type AnyRecord, type Change, type Kind } from '../src/shared/records.ts'
+import { applyPatch, checkChange, IMAGE_PATH, KINDS, PERSONAL, type AnyRecord, type Change, type Kind } from '../src/shared/records.ts'
 
 /**
  * Comparisons and everything in them. Private by default, shared on purpose:
@@ -115,8 +115,10 @@ export function applyChanges(db: DB, userId: string, changes: unknown): number {
         }
       } else if (c.op === 'patch') {
         requireRole(db, c.projectId, userId, 'edit')
-        // Each person casts only their own vote.
-        if (c.patch.votes && Object.keys(c.patch.votes as object).some((k) => k !== userId)) throw new AccessError('own vote only', 403)
+        // Each person casts only their own vote, sets only their own star and ranking.
+        for (const key of PERSONAL)
+          if (c.patch[key] && Object.keys(c.patch[key] as object).some((k) => k !== userId))
+            throw new AccessError(key === 'votes' ? 'own vote only' : `own ${key} only`, 403)
         const current = readRecord(db, c.kind, c.id)
         if (!current || current.projectId !== c.projectId) throw new AccessError('not found')
         writeRecord(db, c.kind, applyPatch(current.record, c.patch), c.projectId, seq)

@@ -104,7 +104,8 @@ export function ProductTable({
   const [filtersOpen, setFiltersOpen] = useState(false)
   const session = useSession()
   const me = session.state.status === 'signed-in' ? session.state.user.name : ''
-  const fields = useMemo(() => queryFields(properties, (p) => data.summaries.get(p.id), me), [properties, data.summaries, me])
+  const meId = session.state.status === 'signed-in' ? session.state.user.id : ''
+  const fields = useMemo(() => queryFields(properties, (p) => data.summaries.get(p.id), me, meId), [properties, data.summaries, me, meId])
   const compiled = useMemo(() => compileQuery<Product>(query, fields), [query, fields])
   /** Columns filtered by their requirements' verdict (the values themselves stay as they are). */
   const [reqFilter, setReqFilter] = useState<Record<string, 'pass' | 'fail'>>({})
@@ -486,7 +487,7 @@ export function ProductTable({
   let rows = products.filter((p) => {
     if (view.hideExcluded && p.candidate === 'excluded') return false
     if (onlyEligible && (data.summaries.get(p.id)?.blocked || p.candidate === 'excluded')) return false
-    if (chips.has('fav') && !isFavorite(p)) return false
+    if (chips.has('fav') && !isFavorite(p, meId)) return false
     if (chips.has('new') && !isNew(p.createdAt)) return false
     if (chips.has('mine') && (!me || p.foundBy !== me)) return false
     if (compiled.ok && !compiled.test(p)) return false
@@ -832,7 +833,7 @@ export function ProductTable({
                 const href = safeHref(p.url)
                 const cls = [
                   selection.has(p.id) && 'is-selected',
-                  isFavorite(p) && 'is-fav',
+                  isFavorite(p, meId) && 'is-fav',
                   isNew(p.createdAt) && 'is-new',
                   p.candidate === 'excluded' && 'is-excluded',
                   project.decisionProductId === p.id && 'is-decision',

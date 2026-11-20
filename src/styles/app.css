@@ -1764,23 +1764,30 @@ table.compare {
   color: var(--ink-2);
   font-variant-numeric: tabular-nums;
 }
-/* Without a "better" direction: where the value lies between the smallest and the largest. */
-.num-scale {
-  position: relative;
-  height: 4px;
-  margin: 6px 4px 2px;
-  border-radius: 2px;
-  background: var(--line);
-  max-width: 160px;
+/* A bar as long as the value: lengths and prices compared by eye. Best green, worst red. */
+.num-bar {
+  display: block;
+  height: 8px;
+  margin: 4px 0 2px;
+  border-radius: 4px;
+  background: var(--sunken);
+  max-width: 200px;
+  overflow: hidden;
 }
-.num-scale i {
-  position: absolute;
-  top: -3px;
-  width: 10px;
-  height: 10px;
-  margin-left: -5px;
-  border-radius: 50%;
+.num-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
   background: var(--ink-2);
+  opacity: 0.55;
+}
+.num-cell.best .num-bar i {
+  background: var(--pass);
+  opacity: 1;
+}
+.num-cell.worst .num-bar i {
+  background: var(--fail);
+  opacity: 1;
 }
 
 /* ---------- import ---------- */
@@ -2594,7 +2601,7 @@ table.map {
 }
 .swipe-progress {
   height: 4px;
-  margin: 10px 0 18px;
+  margin: 8px 0 12px;
   border-radius: 999px;
   background: var(--sunken);
   overflow: hidden;
@@ -2621,8 +2628,10 @@ table.map {
   transition: none;
   cursor: grabbing;
 }
+/* The picture decides most: it gets the room, the text keeps to a few lines. */
 .swipe-media {
-  height: clamp(150px, 30vh, 280px);
+  position: relative;
+  height: clamp(220px, 44vh, 480px);
   display: grid;
   grid-template: minmax(0, 1fr) / minmax(0, 1fr);
   place-items: center;
@@ -2646,15 +2655,43 @@ table.map {
   color: #c9cbc5;
   text-transform: uppercase;
 }
+.swipe-media-tools {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 6px;
+}
+.swipe-zoom {
+  min-height: 32px;
+  padding: 0 8px;
+}
 .swipe-body {
   display: grid;
-  gap: 10px;
-  padding: 16px 18px 20px;
+  gap: 8px;
+  padding: 12px 16px 14px;
+}
+.swipe-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.swipe-dims,
+.swipe-others {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.swipe-others {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  color: var(--ink-2);
 }
 .swipe-body h2 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1.2;
 }
 .swipe-price {
@@ -2664,7 +2701,7 @@ table.map {
 .swipe-facts {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px 14px;
+  gap: 4px 14px;
   margin: 0;
 }
 .swipe-facts dt {
@@ -2715,18 +2752,20 @@ table.map {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 18px;
-  margin-top: 12px;
-  padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
   background: linear-gradient(to bottom, transparent, var(--bg) 30%);
 }
 .swipe-btn {
   display: inline-flex;
-  flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  min-width: 96px;
-  padding: 10px 14px;
+  min-height: 44px;
+  padding: 6px 10px;
+  font-size: 13px;
+  white-space: nowrap;
   border: 2px solid currentColor;
   border-radius: 999px;
   background: var(--surface);
@@ -2735,8 +2774,8 @@ table.map {
   cursor: pointer;
 }
 .swipe-btn .glyph {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
 }
 .swipe-btn.no {
   color: var(--fail);
@@ -2752,7 +2791,7 @@ table.map {
 }
 .swipe-hint {
   text-align: center;
-  margin-top: 12px;
+  margin-top: 4px;
 }
 .link-btn.inline {
   min-height: 0;
@@ -4463,4 +4502,161 @@ button.info-tip {
 }
 .verdict-menu .verdict-dislike .glyph {
   color: var(--fail);
+}
+
+/* The others' verdicts beside one's own: an initial each, in its verdict's colour. */
+.verdict-others {
+  display: inline-flex;
+  gap: 3px;
+  margin-left: 6px;
+}
+.verdict-other {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  background: var(--sunken);
+  color: var(--ink-2);
+}
+.verdict-other.like {
+  background: var(--brand-soft);
+  color: var(--brand-text);
+}
+.verdict-other.dislike {
+  background: var(--fail-soft);
+  color: var(--fail);
+}
+.btn.verdict-btn {
+  min-height: 32px;
+  min-width: 32px;
+  padding: 0 7px;
+}
+
+/* ---------- duels (Compare.tsx, mode=duel) ---------- */
+/* The question and the two choices stay in view while the rows below are read. */
+.duel-bar {
+  position: sticky;
+  /* Below the app's top bar (52 px). */
+  top: 60px;
+  z-index: 5;
+  display: grid;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.duel-question {
+  margin: 0;
+}
+.duel-choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.duel-choices .btn {
+  min-height: 44px;
+  min-width: 0;
+}
+.duel-choices .btn:last-child {
+  justify-content: flex-end;
+}
+.duel-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.duel-bar .link-btn {
+  justify-self: start;
+}
+/* Two columns that share the width, also on a phone. */
+.compare-wrap.duel {
+  max-height: none;
+}
+table.compare.duel {
+  width: 100%;
+}
+.compare.duel th,
+.compare.duel td {
+  width: auto;
+}
+.compare.duel th.rowhead {
+  width: 28%;
+}
+@media (max-width: 600px) {
+  .compare.duel th,
+  .compare.duel td {
+    padding: 8px;
+  }
+  .compare.duel th.rowhead {
+    position: static;
+    width: 32%;
+    font-size: 12px;
+    overflow-wrap: break-word;
+  }
+  .compare.duel .head-img {
+    height: 150px;
+  }
+}
+.compare.duel .head-img {
+  height: 200px;
+}
+.head-pic {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}
+.head-count {
+  position: absolute;
+  right: 6px;
+  bottom: 14px;
+  min-width: 22px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: rgb(21 24 28 / 0.75);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+}
+.ranking {
+  margin-top: 20px;
+}
+.ranking h2 {
+  margin: 0;
+  font-size: 18px;
+}
+.ranking-table {
+  width: 100%;
+  max-width: 640px;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.ranking-table th,
+.ranking-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+}
+.ranking-table th {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.ranking-table .place {
+  font-weight: 700;
+  width: 64px;
+}
+.ranking-table tr.is-decision td {
+  box-shadow: inset 3px 0 0 var(--accent);
 }

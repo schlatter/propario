@@ -28,7 +28,10 @@ export type Change =
   | { op: 'delete'; kind: Kind; id: string; projectId: string }
 
 /** Fields merged per key instead of replaced as a whole. */
-const DEEP = new Set(['values', 'checks', 'votes'])
+const DEEP = new Set(['values', 'checks', 'votes', 'favorites', 'rankings'])
+
+/** Fields where each person writes only their own entry, keyed by account. */
+export const PERSONAL = ['votes', 'favorites', 'rankings'] as const
 
 export function applyPatch<T extends object>(record: T, patch: Record<string, unknown>): T {
   const next = { ...record } as Record<string, unknown>
@@ -158,11 +161,32 @@ export function checkFields(kind: Kind, fields: Record<string, unknown>): string
     }
     if (key === 'votes' && !Object.entries(value as object).every(([k, v]) => UUID.test(k) && (v === 'like' || v === 'neutral' || v === 'dislike')))
       return 'votes must be like, neutral or dislike per account'
+    if (key === 'favorites' && !Object.entries(value as object).every(([k, v]) => UUID.test(k) && typeof v === 'boolean'))
+      return 'favorites must be true or false per account'
+    if (key === 'rankings' && !Object.entries(value as object).every(([k, v]) => UUID.test(k) && isRanking(v)))
+      return 'rankings must be an order of products per account'
     if (key === 'candidate' && !['open', 'checked', 'excluded', 'favorite'].includes(String(value))) return 'field candidate is unknown'
     if (!checkStrings(value)) return `field ${key} is too large or too deep`
   }
   if (JSON.stringify(fields).length > MAX_JSON) return 'record too large'
   return null
+}
+
+const MAX_RANKED = 1000
+
+/** A ranking as src/domain/duel.ts keeps it: product ids best first and two positions in it. */
+function isRanking(v: unknown): boolean {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return false
+  const r = v as Record<string, unknown>
+  const pos = (n: unknown) => Number.isInteger(n) && (n as number) >= 0 && (n as number) <= MAX_RANKED
+  return (
+    Object.keys(r).every((k) => ['order', 'settled', 'next'].includes(k)) &&
+    Array.isArray(r.order) &&
+    r.order.length <= MAX_RANKED &&
+    r.order.every((id) => typeof id === 'string' && UUID.test(id)) &&
+    pos(r.settled) &&
+    pos(r.next)
+  )
 }
 
 /** Structural check of one change as it arrives from a client. */

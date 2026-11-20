@@ -101,6 +101,11 @@ export function ProjectPage() {
               <Glyph name="star" /> <span className="hide-narrow">{m.swipe.open}</span>
             </Link>
           )}
+          {products.length > 1 && role !== 'viewer' && (
+            <Link className="btn sm" to={`/p/${project.id}/compare?mode=duel`} title={m.duel.openHint} aria-label={m.duel.open}>
+              <Glyph name="duel" /> <span className="hide-narrow">{m.duel.open}</span>
+            </Link>
+          )}
           {role === 'owner' && !isDemo() && (
             <button type="button" className="btn sm" onClick={() => setSharing(true)} title={m.share.title} aria-label={m.share.title}>
               <Glyph name="share" /> <span className="hide-narrow">{m.share.title}</span>

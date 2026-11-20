@@ -75,9 +75,22 @@ export interface Project {
   budgetMinPriority?: Priority
   /** Product whose price the others are measured against ('' = budget or cheapest). Absent before 0.5. */
   priceReference?: string
+  /** Each person's ranking from duels, keyed by account (src/domain/duel.ts). Absent before 0.14. */
+  rankings?: Record<string, Ranking>
   tableView: TableView
   createdAt: string
   updatedAt: string
+}
+
+/**
+ * One person's ranking: products best first. The first `settled` places are decided; the
+ * product at `settled` holds its place until `next` (and every product after it) was compared
+ * with it. See src/domain/duel.ts.
+ */
+export interface Ranking {
+  order: string[]
+  settled: number
+  next: number
 }
 
 export interface PropertyDef {
@@ -173,8 +186,10 @@ export interface Product {
   comments: string
   foundBy: string
   candidate: Candidate
-  /** Marked as a favourite (a star), shared by everyone in the comparison. Absent before 0.12. */
+  /** A star from before stars were personal (0.12–0.13): counts for everyone who has not chosen yet. */
   favorite?: boolean
+  /** Each person's own star, keyed by account; false = taken back. Absent before 0.14. */
+  favorites?: Record<string, boolean>
   favoriteRank: number | null
   exclusionReason: string
   /** Kind of reason ('' when none chosen). Absent in records from before 0.3. */

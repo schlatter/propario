@@ -555,9 +555,21 @@ test('Ada moves rows and decides by swiping', async () => {
     await expect.poll(() => card.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0)
     await inside(card, page.locator('.swipe-media'))
   }
+  // A star of one's own right on the card; the picture opens large without casting a vote.
+  const cardStar = page.locator('.swipe-card').getByRole('button', { name: 'Favourite' })
+  await cardStar.click()
+  await expect(cardStar).toHaveAttribute('aria-pressed', 'true')
+  if (await card.count()) {
+    await page.locator('.swipe-zoom').click()
+    await expect(page.locator('dialog.gallery')).toBeVisible()
+    await page.keyboard.press('ArrowDown')
+    await page.keyboard.press('Escape')
+    await expect(page.locator('dialog.gallery')).toBeHidden()
+    await expect(page.getByText('0 of 2 decided')).toBeVisible()
+  }
   await page.keyboard.press('ArrowRight')
   await expect(page.getByText('1 of 2 decided')).toBeVisible()
-  await page.getByRole('button', { name: /don.t like it/ }).click()
+  await page.getByRole('button', { name: 'Dislike', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'All decided' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Arvika' })).toBeVisible()
   await page.getByRole('link', { name: 'Back to the table' }).click()
@@ -614,6 +626,24 @@ test('Ada moves rows and decides by swiping', async () => {
     .getByRole('button', { name: /^I like it/ })
     .click()
   await expect(trigger).toHaveAccessibleName('Your verdict: I like it')
+
+  // Duels: the product holding first place on the left, the challenger on the right; the
+  // winner takes the place. Two products: one duel decides – and can become the decision.
+  const tableUrl = page.url()
+  await page.goto(tableUrl.replace(/\?.*$/, '') + '/compare?mode=duel')
+  await expect(page.getByText('Which one is better – for first place?')).toBeVisible()
+  const [leftName, rightName] = await page.locator('.duel-choices .duel-name').allTextContents()
+  await accessible(page, 'duel')
+  await page.keyboard.press('ArrowRight')
+  await expect(page.getByText('Your ranking is complete.')).toBeVisible()
+  await expect(page.locator('.ranking-table tbody tr').first()).toContainText(rightName)
+  await page.getByRole('button', { name: 'Take the last choice back' }).click()
+  await expect(page.locator('.duel-choices .duel-name')).toHaveText([leftName, rightName])
+  await page.locator('.duel-choices .btn').first().click()
+  await expect(page.locator('.ranking-table tbody tr').first()).toContainText(leftName)
+  await page.getByRole('button', { name: `${leftName} as the decision` }).click()
+  await expect(page.locator('.ranking-table tr.is-decision')).toContainText(leftName)
+  await page.goto(tableUrl)
 
   // Without a connection a change shows at once, is taken back when it cannot be saved, and the
   // app says so – it never waits with nothing happening.

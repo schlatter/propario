@@ -7,6 +7,7 @@ import { createProject, deleteProject, duplicateProject, updateProject, uniquePr
 import { PROJECT_STATUSES, type Product, type Project, type ProjectStatus } from '../db/types'
 import { exportProjectJson } from '../hooks'
 import { useI18n } from '../i18n'
+import { useMe } from '../session'
 import { productImage } from '../images'
 import { Modal, useConfirm, useToast } from '../ui/Dialog'
 import { Glyph } from '../ui/Glyph'
@@ -138,9 +139,9 @@ export function HomePage() {
   )
 }
 
-function pickOf(project: Project, items: Product[]) {
+function pickOf(project: Project, items: Product[], meId: string) {
   const decision = project.decisionProductId ? items.find((i) => i.id === project.decisionProductId) : undefined
-  const favorite = items.filter((i) => isFavorite(i)).sort((a, b) => (a.favoriteRank ?? 999) - (b.favoriteRank ?? 999))[0]
+  const favorite = items.filter((i) => isFavorite(i, meId)).sort((a, b) => (a.favoriteRank ?? 999) - (b.favoriteRank ?? 999))[0]
   return { decision, favorite }
 }
 
@@ -149,7 +150,8 @@ function ProjectCard({ project, items, hits, onEdit }: { project: Project; items
   const confirm = useConfirm()
   const toast = useToast()
   const navigate = useNavigate()
-  const { decision, favorite } = pickOf(project, items)
+  const me = useMe()
+  const { decision, favorite } = pickOf(project, items, me.id)
   const image = productImage(decision) || productImage(favorite) || items.map(productImage).find(Boolean)
   const pick = decision ?? favorite
   const archived = project.status === 'archived'
