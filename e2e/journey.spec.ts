@@ -618,7 +618,8 @@ test('Ada moves rows and decides by swiping', async () => {
     .getByRole('button', { name: /^I like it/ })
     .click()
   await expect(trigger).toHaveAccessibleName('Your verdict: none yet')
-  await expect(trigger).toHaveClass(/neutral.*unset/)
+  await expect(trigger).toHaveClass(/unset/)
+  await expect(trigger).not.toHaveClass(/neutral/)
   await trigger.click()
   await accessible(page, 'table with verdict menu')
   await page

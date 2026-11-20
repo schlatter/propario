@@ -34,7 +34,7 @@ export function FavoriteToggle({ product: p, inDetails = false }: { product: Pro
 }
 
 /**
- * One's own verdict as a symbol – neutral, paler, while none is given. Beside it the joint
+ * One's own verdict as a symbol – a dashed question while none is given. Beside it the joint
  * verdict at a glance: how many agree as a number ("👍 2"), a different verdict as its own small
  * symbol; in the table and the details alike. A tap opens the three choices with how many gave each (names on
  * hover); choosing the marked one again takes it back.
@@ -45,7 +45,6 @@ export function VerdictCell({ product: p, inDetails = false }: { product: Produc
   const users = useUsers()
   const t = tally(p)
   const mine = p.votes?.[me.id] ?? null
-  const shown = mine ?? 'neutral'
   const others = Object.entries(p.votes ?? {})
     .filter(([id]) => id !== me.id)
     .map(([id, v]) => ({ id, v, name: users.get(id) ?? '?' }))
@@ -60,11 +59,12 @@ export function VerdictCell({ product: p, inDetails = false }: { product: Produc
     <Menu
       floating
       label={[`${m.verdict.yours}: ${mine ? m.verdict[mine] : m.verdict.none}`, ...others.map((o) => `${o.name}: ${m.verdict[o.v]}`)].join(' · ')}
-      className={`${inDetails ? 'btn sm verdict-btn' : 'cell'} verdict-trigger ${shown}${mine ? '' : ' unset'}`}
+      className={`${inDetails ? 'btn sm verdict-btn' : 'cell'} verdict-trigger ${mine ?? 'unset'}`}
       listClassName="candidate-menu verdict-menu"
       trigger={
         <>
-          <Glyph name={VOTE_GLYPH[shown]} />
+          {/* Not decided yet: a question, not "neutral" – neutral is a verdict of its own. */}
+          <Glyph name={mine ? VOTE_GLYPH[mine] : 'undecided'} />
           {/* Agreement is a number (2 = both like it); a different verdict shows as its own symbol. */}
           {agree > 0 && (
             <span className="verdict-count" aria-hidden="true">

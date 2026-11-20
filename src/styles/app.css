@@ -4479,7 +4479,7 @@ button.info-tip {
   position: relative;
 }
 
-/* The verdict in the table: one's own as a symbol, neutral and paler while none is given. */
+/* The verdict in the table: one's own as a symbol, a dashed question while none is given. */
 .cell.verdict-trigger {
   display: flex;
   align-items: center;
@@ -4499,6 +4499,7 @@ button.info-tip {
 .verdict-trigger.dislike {
   color: var(--fail);
 }
+/* Not decided yet: a dashed question in grey, clearly apart from the three verdicts. */
 .verdict-trigger.unset {
   color: var(--unknown);
 }
