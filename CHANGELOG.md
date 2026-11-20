@@ -6,6 +6,11 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+## 0.14.2 — 2026-11-20
+
+- Changed: a product not judged yet shows a grey question mark in a dashed ring instead of the
+  neutral symbol, so "not decided" and "neutral" are no longer confused.
+
 ## 0.14.1 — 2026-11-20
 
 - Changed: beside one's own verdict, agreement shows as a number ("👍 2") and a different verdict

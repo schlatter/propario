@@ -11,6 +11,13 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.14.2',
+    notes: {
+      en: ['Not judged yet shows a question mark – no longer the neutral symbol.'],
+      de: ['Noch nicht beurteilt zeigt ein Fragezeichen – nicht mehr das Neutral-Symbol.'],
+    },
+  },
+  {
     version: '0.14.1',
     notes: {
       en: [
