@@ -406,7 +406,7 @@ export const en = {
   },
   overview: {
     title: 'Compare together. Decide well.',
-    lead: 'For the bigger purchases – the sideboard, the laptop, the bike. Instead of spreadsheets, tabs and screenshots, one calm place for your requirements, the candidates and the decision.',
+    lead: 'For the bigger purchases – the sideboard, the laptop, the bike. Propario takes you from many candidates to one decision everyone stands behind: set what matters, sort out, compare, settle it in duels.',
     tryDemo: 'Try the demo',
     stepsLabel: 'How you decide',
     demoHint: 'No account yet? Look around with three invented comparisons – nothing is saved.',
@@ -422,13 +422,20 @@ export const en = {
       ['Wish', 'Doors close quietly', 'fail'],
       ['Wish', 'Delivered within 6 weeks', 'open'],
     ] as [string, string, 'pass' | 'fail' | 'open'][],
-    s3Title: 'Side by side, not all over the place.',
-    s3Text:
-      'A table like a spreadsheet, filters like in Jira, the best values marked and differences highlighted. Pictures and dimension drawings in a gallery.',
-    depth: 'Depth',
-    s4Title: 'Decide together, calmly.',
+    s3Title: 'Sort out quickly.',
+    s3Text: 'Swipe card by card: thumb up, neutral or down, each person on their own. What nobody likes is out of the running fast – without a discussion.',
+    swipeCount: '4 of 12',
+    s4Title: 'Side by side, not all over the place.',
     s4Text:
-      'Everyone gives a thumb up, neutral or down – by swiping or in the details – and favourites get a star. Then the decision, the purchase, and when the return period and warranty end.',
+      'The candidates next to each other: the best values marked, differences highlighted, what is the same hidden if you like. Behind it a table like a spreadsheet and filters like in Jira.',
+    depth: 'Depth',
+    s5Title: 'Settle it in duels.',
+    s5Text:
+      'Only ever two: which is better? Propario asks until your ranking stands – and shows both to scale, side by side or one over the other, with the space you have.',
+    room: 'Space 180 cm',
+    s6Title: 'Decide together, calmly.',
+    s6Text:
+      'Everyone’s rankings become one joint ranking, and its first place can become the decision. Then the purchase, and when the return period and warranty end.',
     returnLine: 'Bought · return until 19 Dec · warranty until 2028',
     aiTitle: 'With your AI, if you like.',
     aiText:
@@ -442,7 +449,8 @@ export const en = {
       'Accessible (WCAG 2.1 AA), free software (AGPL)',
     ],
     closingTitle: 'See for yourself.',
-    closingText: 'Three invented comparisons – a sideboard, headphones and a robot vacuum: edit, filter, swipe and decide as you like. Nothing is saved.',
+    closingText:
+      'Three invented comparisons – a sideboard, headphones and a robot vacuum: edit, filter, swipe, settle it in duels and decide as you like. Nothing is saved.',
     inDemo: 'You are in the demo – everything here is invented, and nothing is saved.',
   },
   fieldHint: {
@@ -692,6 +700,24 @@ export const en = {
     automatic: 'Part found automatically.',
     auto: 'Find automatically',
     whole: 'Whole picture',
+  },
+  model3d: {
+    open: '3D',
+    openLabel: 'Show the products in 3D',
+    title: '3D view',
+    hint: 'Drag to turn, pinch or scroll to zoom.',
+    label: (names: string) => `The products in 3D, to scale next to a person 1.75 m tall: ${names}`,
+    left: 'Turn left',
+    right: 'Turn right',
+    reset: 'Back to the start',
+    noWebgl: 'This browser cannot show 3D graphics.',
+    ar: 'View in your room',
+    arWhich: 'Product for the room',
+    arHint: 'Point the phone at the floor and wait for the ring, then tap to place the product.',
+    arPlaced: 'Tap elsewhere on the floor to move it.',
+    arTurn: 'Turn',
+    arEnd: 'End',
+    arFailed: 'The room view could not start on this device.',
   },
   size: {
     title: 'Size',

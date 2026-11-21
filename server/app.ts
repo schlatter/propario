@@ -38,7 +38,8 @@ export function securityHeaders(res: ServerResponse, https: boolean, csp = CSP):
   res.setHeader('X-Frame-Options', 'DENY')
   res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
   res.setHeader('Cross-Origin-Resource-Policy', 'same-origin')
-  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()')
+  // AR in the room (Model3D.tsx): the browser shows the camera itself; the page gets no camera picture.
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=(), xr-spatial-tracking=(self)')
   if (https) res.setHeader('Strict-Transport-Security', 'max-age=31536000')
 }
 

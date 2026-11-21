@@ -47,6 +47,9 @@ describe('every response', () => {
       expect(res.headers.get('x-content-type-options')).toBe('nosniff')
       expect(res.headers.get('cross-origin-opener-policy')).toBe('same-origin')
       expect(res.headers.get('referrer-policy')).toBe('no-referrer')
+      // The page never gets the camera; WebXR (the room view) only for this origin.
+      expect(res.headers.get('permissions-policy')).toContain('camera=()')
+      expect(res.headers.get('permissions-policy')).toContain('xr-spatial-tracking=(self)')
     }
   })
   it('never caches API answers', async () => {

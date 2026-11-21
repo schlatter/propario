@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef, useState, type RefObject } from 'react'
+import { lazy, Suspense, useLayoutEffect, useMemo, useRef, useState, type RefObject } from 'react'
 import type { Product } from '../../db/types'
 import { displayName } from '../../domain/display'
 import {
@@ -19,6 +19,10 @@ import { useI18n } from '../../i18n'
 import { productImage } from '../../images'
 import type { ProjectData } from './useProjectData'
 import { useMeasured } from './useMeasured'
+import { Glyph } from '../../ui/Glyph'
+
+/** three.js is large: loaded only when someone opens the 3D view. */
+const Model3D = lazy(() => import('./Model3D'))
 
 /** Height of the reference person, cm. */
 const PERSON = 175
@@ -49,6 +53,7 @@ export function SizeCompare({ products, data }: { products: Product[]; data: Pro
   const limits = useMemo(() => sizeLimits(data.rules, fields), [data.rules, fields])
   const [chosen, setChosen] = useState<View>('front')
   const [layout, setLayout] = useState<Layout>('beside')
+  const [show3d, setShow3d] = useState(false)
   const [width, ref] = useWidth<HTMLDivElement>()
 
   const items = products.map((p) => ({ product: p, size: sizeOf(p, fields), name: p.model || displayName(p, m) }))
@@ -139,6 +144,12 @@ export function SizeCompare({ products, data }: { products: Product[]; data: Pro
             ))}
           </div>
         )}
+        {/* A box needs all three sides. */}
+        {items.some((i) => i.size.width && i.size.height && i.size.depth) && (
+          <button type="button" className="btn sm" onClick={() => setShow3d(true)} aria-label={m.model3d.openLabel}>
+            <Glyph name="cube" /> {m.model3d.open}
+          </button>
+        )}
         <p className="muted small">
           {overlay ? m.size.hintOverlay : m.size.hint}
           {(acrossMax || upMax) && ` ${m.size.hintLimits}`}
@@ -198,6 +209,23 @@ export function SizeCompare({ products, data }: { products: Product[]; data: Pro
         </p>
       )}
       {missing.length > 0 && <p className="muted small size-note">{m.size.missing(missing.map((i) => i.name).join(', '))}</p>}
+      {show3d && (
+        <Suspense fallback={null}>
+          <Model3D
+            onClose={() => setShow3d(false)}
+            items={items.map((i) => ({
+              id: i.product.id,
+              name: i.name,
+              size: i.size,
+              pictures: {
+                front: pictureFor(i.product, productImage(i.product), 'front') ?? undefined,
+                side: pictureFor(i.product, null, 'side') ?? undefined,
+                back: pictureFor(i.product, null, 'back') ?? undefined,
+              },
+            }))}
+          />
+        </Suspense>
+      )}
     </details>
   )
 }

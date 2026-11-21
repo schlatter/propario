@@ -13,6 +13,13 @@ for fixes. See "Versions and releases" in the README.
 - Added: a picture can be set as the product's front, side or back, with the part that shows the
   product framed by hand or found by itself – a dimension drawing then stands to scale next to the
   others. The marks travel with backups and copies.
+- Added: the products in 3D – boxes of their real size, turned with a finger or the mouse, the
+  marked pictures on their faces, a person beside them for scale. On phones that support it (Chrome
+  on Android with ARCore), one product can be placed in the room through the camera; this is still
+  being tried out. three.js is loaded only when the 3D view opens.
+- Changed: the start page tells the way to a decision in six steps, with sorting out by swiping
+  and settling it in duels with the sizes to scale.
+- Security: the Permissions-Policy allows WebXR for this origin only; camera access stays off.
 
 ## 0.15.3 — 2026-11-20
 

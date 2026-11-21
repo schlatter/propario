@@ -33,6 +33,12 @@ export function useMeasured(src: string | null): Measured | null {
   return src ? (measured.get(src) ?? null) : null
 }
 
+/** The same, outside React (the 3D view): measured once, then from the cache. */
+export async function measureOnce(src: string): Promise<Measured | null> {
+  if (!measured.has(src)) measured.set(src, await measure(src))
+  return measured.get(src) ?? null
+}
+
 async function measure(src: string): Promise<Measured | null> {
   try {
     const img = new Image()

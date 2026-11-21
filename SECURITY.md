@@ -63,6 +63,9 @@ happens.** Every change is measured against this list; `npm run verify` checks m
   `img-src 'self' data: blob:`, `frame-ancestors 'none'`), plus `X-Content-Type-Options`,
   `Referrer-Policy: no-referrer`, `Cross-Origin-Opener-Policy`, `Cross-Origin-Resource-Policy`,
   `Permissions-Policy` – on every response, refusals included. API answers are `private, no-store`.
+  The policy allows WebXR (`xr-spatial-tracking`) for this origin only, for viewing a product in the
+  room: the browser composes the camera picture itself; the page never gets camera access
+  (`camera=()`), and nothing of it leaves the device.
 - Session cookie `HttpOnly`, `SameSite=Strict`, `Secure` and `__Host-` prefixed on https.
 - CSRF: every state-changing request must carry this instance's `Origin` (and JSON or an image).
 - All input is validated before it reaches the database (`src/shared/records.ts`): only known

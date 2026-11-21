@@ -129,6 +129,9 @@ test('a visitor sees what Propario does and tries the demo, which never talks to
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'Compare together. Decide well.' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'One link is enough.' })).toBeVisible()
+  // The way to a decision: sorting out by swiping and duels with sizes to scale are part of it.
+  await expect(page.getByRole('heading', { name: 'Sort out quickly.' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Settle it in duels.' })).toBeVisible()
   await accessible(page, 'overview')
 
   // From here on, nothing may reach the server's data.
@@ -226,6 +229,17 @@ test('a visitor sees what Propario does and tries the demo, which never talks to
   await expect(size.locator('.size-col.overlay .size-cap')).toHaveCount(2)
   await expect(size.locator('.size-col.overlay .size-body')).toHaveCount(2)
   await accessible(page, 'sizes overlaid')
+  // In 3D: boxes of the real size to turn; three.js loads only now. No AR on this device: no button for it.
+  await size.getByRole('button', { name: 'Show the products in 3D' }).click()
+  const model = page.getByRole('dialog', { name: '3D view' })
+  await expect(model).toBeVisible()
+  await expect(model.locator('canvas')).toHaveCount(1)
+  await expect(model.getByRole('img', { name: /next to a person 1.75 m tall: Arvika, Kanto/ })).toBeVisible()
+  await model.getByRole('button', { name: 'Turn left' }).click()
+  await expect(model.getByRole('button', { name: 'View in your room' })).toHaveCount(0)
+  await accessible(page, '3D view')
+  await model.getByRole('button', { name: 'Close' }).click()
+  await expect(model).toBeHidden()
   expect(calls).toEqual([])
 
   // Ending the demo removes its data from the browser.

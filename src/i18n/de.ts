@@ -409,7 +409,7 @@ export const de: Messages = {
   },
   overview: {
     title: 'Gemeinsam vergleichen. Gut entscheiden.',
-    lead: 'Für die größeren Anschaffungen – das Sideboard, den Laptop, das Fahrrad. Statt Tabellen, Tabs und Screenshots ein ruhiger Ort für eure Anforderungen, die Kandidaten und die Entscheidung.',
+    lead: 'Für die größeren Anschaffungen – das Sideboard, den Laptop, das Fahrrad. Propario bringt euch von vielen Kandidaten zu einer Entscheidung, hinter der alle stehen: festlegen, was zählt, aussortieren, vergleichen, im Duell klären.',
     tryDemo: 'Demo ausprobieren',
     stepsLabel: 'So entscheidet ihr',
     demoHint: 'Noch kein Konto? Sieh dich mit drei erfundenen Vergleichen um – nichts wird gespeichert.',
@@ -425,13 +425,20 @@ export const de: Messages = {
       ['Wunsch', 'Türen schließen leise', 'fail'],
       ['Wunsch', 'Lieferbar in 6 Wochen', 'open'],
     ],
-    s3Title: 'Nebeneinander, nicht durcheinander.',
+    s3Title: 'Schnell aussortieren.',
     s3Text:
-      'Eine Tabelle wie in Excel, Filter wie in Jira, die besten Werte markiert und Unterschiede hervorgehoben. Bilder und Maßzeichnungen in einer Galerie.',
-    depth: 'Tiefe',
-    s4Title: 'Gemeinsam entscheiden, in Ruhe.',
+      'Karte für Karte wischen: Daumen hoch, neutral oder runter, jede Person für sich. Was niemandem gefällt, ist schnell aus dem Rennen – ohne Diskussion.',
+    swipeCount: '4 von 12',
+    s4Title: 'Nebeneinander, nicht durcheinander.',
     s4Text:
-      'Alle geben Daumen hoch, neutral oder runter – per Wischen oder in den Details –, Favoriten bekommen einen Stern. Dann die Entscheidung, der Kauf und wann Rückgabe und Garantie enden.',
+      'Die Kandidaten nebeneinander: beste Werte markiert, Unterschiede hervorgehoben, Gleiches auf Wunsch ausgeblendet. Dahinter eine Tabelle wie in Excel und Filter wie in Jira.',
+    depth: 'Tiefe',
+    s5Title: 'Im Duell klären.',
+    s5Text:
+      'Immer nur zwei: Welches ist besser? Propario fragt, bis eure Rangliste steht – und zeigt beide maßstabsgetreu, nebeneinander oder übereinander, mit dem Platz, den ihr habt.',
+    room: 'Platz 180 cm',
+    s6Title: 'Gemeinsam entscheiden, in Ruhe.',
+    s6Text: 'Aus den Ranglisten aller wird eine gemeinsame, ihr Erster kann die Entscheidung werden. Dann der Kauf und wann Rückgabe und Garantie enden.',
     returnLine: 'Gekauft · Rückgabe bis 19.12. · Garantie bis 2028',
     aiTitle: 'Mit deiner KI, wenn du willst.',
     aiText:
@@ -446,7 +453,7 @@ export const de: Messages = {
     ],
     closingTitle: 'Überzeug dich selbst.',
     closingText:
-      'Drei erfundene Vergleiche – ein Sideboard, Kopfhörer und ein Saugroboter: bearbeiten, filtern, swipen, entscheiden, wie du willst. Nichts wird gespeichert.',
+      'Drei erfundene Vergleiche – ein Sideboard, Kopfhörer und ein Saugroboter: bearbeiten, filtern, wischen, im Duell klären und entscheiden, wie du willst. Nichts wird gespeichert.',
     inDemo: 'Du bist in der Demo – hier ist alles erfunden, und nichts wird gespeichert.',
   },
   fieldHint: {
@@ -699,6 +706,24 @@ export const de: Messages = {
     automatic: 'Ausschnitt automatisch gefunden.',
     auto: 'Automatisch finden',
     whole: 'Ganzes Bild',
+  },
+  model3d: {
+    open: '3D',
+    openLabel: 'Produkte in 3D zeigen',
+    title: '3D-Ansicht',
+    hint: 'Ziehen zum Drehen, zwei Finger oder Mausrad zum Zoomen.',
+    label: (names) => `Die Produkte in 3D, maßstabsgetreu neben einer 1,75 m großen Person: ${names}`,
+    left: 'Nach links drehen',
+    right: 'Nach rechts drehen',
+    reset: 'Zurück zum Anfang',
+    noWebgl: 'Dieser Browser kann keine 3D-Grafik zeigen.',
+    ar: 'Im Raum ansehen',
+    arWhich: 'Produkt für den Raum',
+    arHint: 'Richte das Handy auf den Boden und warte auf den Ring, dann tippe, um das Produkt hinzustellen.',
+    arPlaced: 'Tippe woanders auf den Boden, um es zu versetzen.',
+    arTurn: 'Drehen',
+    arEnd: 'Beenden',
+    arFailed: 'Die Raumansicht ließ sich auf diesem Gerät nicht starten.',
   },
   size: {
     title: 'Größe',

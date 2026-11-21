@@ -1,7 +1,7 @@
 /**
- * What Propario does, told as the way to a purchase decision: collect, set requirements,
- * compare, decide – each with a small still made of the app's own parts and the demo's invented
- * sideboards. Signed out it is the start page (with the sign-in in the opening); signed in it is
+ * What Propario does, told as the way to a purchase decision: collect, set requirements, sort
+ * out by swiping, compare, settle it in duels (sizes to scale), decide together – each with a
+ * small still made of the app's own parts and the demo's invented sideboards. Signed out it is the start page (with the sign-in in the opening); signed in it is
  * "What Propario can do" in the menu. Either way it leads into the demo (src/demo.ts).
  */
 import type { ReactNode } from 'react'
@@ -81,6 +81,27 @@ export function Overview({ signIn }: { signIn?: ReactNode }) {
           </p>
         </Step>
         <Step n={3} title={o.s3Title} text={o.s3Text}>
+          <div className="still-swipe">
+            <div className="still-swipe-card">
+              <img src="/demo/sideboard-kanto.svg" alt="" />
+              <b>Fjell Kanto</b>
+              <span className="still-price">{fmt.money(549)}</span>
+            </div>
+            <div className="still-swipe-buttons">
+              <span className="vote dislike">
+                <Glyph name="thumbDown" />
+              </span>
+              <span className="vote neutral">
+                <Glyph name="neutral" />
+              </span>
+              <span className="vote like">
+                <Glyph name="thumbUp" />
+              </span>
+            </div>
+            <span className="still-swipe-count">{o.swipeCount}</span>
+          </div>
+        </Step>
+        <Step n={4} title={o.s4Title} text={o.s4Text}>
           <table className="still-compare">
             <thead>
               <tr>
@@ -115,7 +136,21 @@ export function Overview({ signIn }: { signIn?: ReactNode }) {
             </tbody>
           </table>
         </Step>
-        <Step n={4} title={o.s4Title} text={o.s4Text}>
+        <Step n={5} title={o.s5Title} text={o.s5Text}>
+          <div className="still-duel">
+            <b className="still-duel-question">{m.duel.question}</b>
+            <SizeStill room={o.room} />
+            <div className="still-duel-choices">
+              <span>
+                <Glyph name="check" /> Arvika
+              </span>
+              <span>
+                <Glyph name="check" /> Mira
+              </span>
+            </div>
+          </div>
+        </Step>
+        <Step n={6} title={o.s6Title} text={o.s6Text}>
           <div className="still-decision">
             <span className="still-decision-label">{m.project.decision}</span>
             <b>Nordhaus Arvika</b>
@@ -181,6 +216,52 @@ function Step({ n, title, text, children }: { n: number; title: string; text: st
         {children}
       </figure>
     </li>
+  )
+}
+
+/**
+ * The sizes to scale as in a duel (src/pages/project/SizeCompare.tsx), drawn once: 1 px = 1 cm.
+ * Arvika (160 × 80) fits the 180 cm niche, Mira (200 × 78) sticks out on both sides.
+ */
+function SizeStill({ room }: { room: string }) {
+  const floor = 200
+  return (
+    <svg className="still-size" viewBox="0 20 500 216">
+      <defs>
+        <pattern id="still-over" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+          <line x1="0" y1="0" x2="0" y2="6" />
+        </pattern>
+      </defs>
+      <g className="size-person" transform={`translate(8 ${floor - 175})`}>
+        <circle cx="22.5" cy="12" r="11" />
+        <rect x="10" y="26" width="25" height="62" rx="9" />
+        <rect x="2" y="28" width="7" height="58" rx="3.5" />
+        <rect x="36" y="28" width="7" height="58" rx="3.5" />
+        <rect x="11" y="80" width="10.5" height="95" rx="4" />
+        <rect x="23.5" y="80" width="10.5" height="95" rx="4" />
+      </g>
+      <rect className="size-box pic" x="85" y={floor - 80} width="160" height="80" />
+      <image href="/demo/sideboard-arvika.svg" x="85" y={floor - 80} width="160" height="80" preserveAspectRatio="xMidYMax meet" />
+      <rect className="size-line" x="85" y={floor - 80} width="160" height="80" />
+      <rect className="size-box pic" x="290" y={floor - 78} width="200" height="78" />
+      <image href="/demo/sideboard-mira.svg" x="290" y={floor - 78} width="200" height="78" preserveAspectRatio="xMidYMax meet" />
+      <rect fill="url(#still-over)" x="290" y={floor - 78} width="10" height="78" />
+      <rect fill="url(#still-over)" x="480" y={floor - 78} width="10" height="78" />
+      <rect className="size-line" x="290" y={floor - 78} width="200" height="78" />
+      {[75, 255, 300, 480].map((x) => (
+        <line key={x} className="size-niche" x1={x} x2={x} y1={floor} y2={floor - 100} />
+      ))}
+      <line className="still-size-floor" x1="0" x2="500" y1={floor} y2={floor} />
+      <text x="165" y={floor - 108} textAnchor="middle">
+        {room}
+      </text>
+      <text x="165" y={floor + 24} textAnchor="middle">
+        Arvika · 160 cm
+      </text>
+      <text x="390" y={floor + 24} textAnchor="middle" className="over">
+        Mira · 200 cm
+      </text>
+    </svg>
   )
 }
 
