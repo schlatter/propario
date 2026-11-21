@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { updateProduct } from '../../db/repo'
 import type { Product } from '../../db/types'
 import { hostOf, safeHref } from '../../domain/values'
@@ -31,7 +31,7 @@ import { PictureViewDialog } from './PictureViewDialog'
  * One menu loads, adds or removes pictures. Ctrl+V anywhere in the details (outside a text field)
  * or dropping on the strip adds a picture; a new picture never replaces one (src/images.ts).
  */
-export function ProductImage({ product: p, name }: { product: Product; name: string }) {
+export function ProductImage({ product: p, name, actions }: { product: Product; name: string; actions?: ReactNode }) {
   const { m, fmt } = useI18n()
   const file = useRef<HTMLInputElement>(null)
   const track = useRef<HTMLDivElement>(null)
@@ -242,6 +242,7 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
           </div>
         )}
         <span className="spacer" />
+        {actions}
         <Menu
           label={m.image.menuLabel}
           className="btn sm"

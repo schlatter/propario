@@ -9,7 +9,8 @@ for fixes. See "Versions and releases" in the README.
 - Added: side by side and in duels, the products' sizes to scale – from the front, the side and
   above, next to a person for scale. Fields named width, height and depth are found by themselves;
   the space the requirements leave is dashed, and what sticks out is hatched.
-- Added: two products – as in a duel – can be laid one over the other to scale.
+- Added: the products can be laid one over the other to scale – two as in a duel, or more, each
+  with its own line.
 - Added: a picture can be set as the product's front, side or back, with the part that shows the
   product framed by hand or found by itself – a dimension drawing then stands to scale next to the
   others. The marks travel with backups and copies.
@@ -17,6 +18,11 @@ for fixes. See "Versions and releases" in the README.
   marked pictures on their faces, a person beside them for scale. On phones that support it (Chrome
   on Android with ARCore), one product can be placed in the room through the camera; this is still
   being tried out. three.js is loaded only when the 3D view opens.
+- Added: "3D" in a product's details, next to its pictures – and from there the room view.
+- Added: a product's form as parts stacked from the floor, backs against the wall – e.g. the base
+  and the shallower top of a buffet. Set in its 3D view; drawn in 3D and in the sizes to scale, the
+  pictures spread over the parts.
+- Changed: the person beside the products has human proportions, in the drawing and in 3D.
 - Changed: the start page tells the way to a decision in six steps, with sorting out by swiping
   and settling it in duels with the sizes to scale.
 - Security: the Permissions-Policy allows WebXR for this origin only; camera access stays off.

@@ -192,6 +192,18 @@ test('a visitor sees what Propario does and tries the demo, which never talks to
   await accessible(page, 'picture as a view')
   await page.getByRole('button', { name: 'Save', exact: true }).click()
   await expect(page.locator('.pimg-slide .pimg-view')).toHaveText('Front')
+  // Its form, in 3D from the details: a base and a shallower top, backs against the wall.
+  await page.getByRole('button', { name: 'Show in 3D' }).click()
+  const one = page.getByRole('dialog', { name: 'Arvika in 3D' })
+  await expect(one.locator('canvas')).toHaveCount(1)
+  await expect(one.getByText('One box: 160 × 80 × 42 cm')).toBeVisible()
+  await one.getByRole('button', { name: 'Split into parts' }).click()
+  await one.locator('.model3d-parts li', { hasText: 'Part 2 (top)' }).getByLabel('Depth').fill('30')
+  await expect(one.getByText('Together 160 × 80 × 42 cm')).toBeVisible()
+  await accessible(page, 'form in 3D')
+  await one.getByRole('button', { name: 'Save form' }).click()
+  await expect(one.getByRole('button', { name: 'Saved' })).toBeDisabled()
+  await one.getByRole('button', { name: 'Close' }).click()
   await page.locator('dialog.drawer').getByRole('button', { name: 'Close', exact: true }).click()
 
   // Side by side, the sizes to scale: Mira is 200 cm wide where the requirements allow 180.
@@ -218,17 +230,24 @@ test('a visitor sees what Propario does and tries the demo, which never talks to
   await accessible(page, 'sizes to scale')
   // On a phone, all of it fits the width: nothing to scroll sideways in the front view.
   await page.setViewportSize({ width: 390, height: 844 })
-  await size.getByRole('button', { name: 'Front' }).click()
+  await size.getByRole('button', { name: 'Front', exact: true }).click()
   expect(await size.locator('.size-scroll').evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true)
   await accessible(page, 'sizes to scale on a phone')
   // The marked drawing stands for Arvika's front.
   await expect(size.locator('image[href="/demo/sideboard-arvika-dims.svg"]')).toHaveCount(1)
-  // Two products, as in a duel, can also be laid one over the other.
-  await page.getByRole('button', { name: 'Remove from comparison' }).last().click()
+  // From the side, Arvika's form shows its step: two parts.
+  await size.getByRole('button', { name: 'Side', exact: true }).click()
+  await expect(size.locator('.size-col', { hasText: 'Arvika' }).locator('.size-line')).toHaveCount(2)
+  await size.getByRole('button', { name: 'Front', exact: true }).click()
+  // The products can also be laid one over the other – three here, each with its own line …
   await size.getByRole('button', { name: 'Overlaid' }).click()
-  await expect(size.locator('.size-col.overlay .size-cap')).toHaveCount(2)
-  await expect(size.locator('.size-col.overlay .size-body')).toHaveCount(2)
+  await expect(size.locator('.size-col.overlay .size-cap')).toHaveCount(3)
+  await expect(size.locator('.size-col.overlay .size-fig .size-body')).toHaveCount(3)
+  await expect(size.locator('.size-col.overlay .size-fig .size-body.t2')).toHaveCount(1)
   await accessible(page, 'sizes overlaid')
+  // … and two, as in a duel.
+  await page.getByRole('button', { name: 'Remove from comparison' }).last().click()
+  await expect(size.locator('.size-col.overlay .size-fig .size-body')).toHaveCount(2)
   // In 3D: boxes of the real size to turn; three.js loads only now. No AR on this device: no button for it.
   await size.getByRole('button', { name: 'Show the products in 3D' }).click()
   const model = page.getByRole('dialog', { name: '3D view' })

@@ -173,6 +173,14 @@ export interface ViewPicture {
   crop: Crop | null
 }
 
+/** One part of a product's form, e.g. the lower or the upper part of a buffet: width, height, depth in cm. */
+export interface ShapePart {
+  w: number
+  h: number
+  d: number
+}
+export const MAX_PARTS = 6
+
 export interface Product {
   id: string
   projectId: string
@@ -201,6 +209,8 @@ export interface Product {
   images?: string[]
   /** Pictures marked as the front, side or back, each one of `image`/`images`. Absent before 0.16. */
   views?: Partial<Record<PictureView, ViewPicture>>
+  /** The product's form as parts stacked from the floor, backs against the wall (cm). Empty: one box from the size fields. Absent before 0.16. */
+  shape?: ShapePart[]
   variant: string
   description: string
   comments: string

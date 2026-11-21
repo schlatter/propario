@@ -1,4 +1,4 @@
-import type { Crop, Priority, Product, PropertyDef, Requirement } from '../db/types'
+import type { Crop, Priority, Product, PropertyDef, Requirement, ShapePart } from '../db/types'
 
 export type { Crop }
 
@@ -164,4 +164,38 @@ export function scaleToFit(cols: number[], fixed: number, width: number, minCol:
     else hi = mid
   }
   return lo
+}
+
+/**
+ * A product with a form of several parts (src/db/types.ts ShapePart) measures what its parts
+ * add up to: the widest width, the heights together, the deepest depth.
+ */
+export function shapeSize(shape: ShapePart[]): Size {
+  return { width: Math.max(...shape.map((p) => p.w)), height: shape.reduce((n, p) => n + p.h, 0), depth: Math.max(...shape.map((p) => p.d)) }
+}
+
+/** The size to draw: the form's when it has one, otherwise the size fields'. */
+export const drawnSize = (fields: Size, shape: ShapePart[] | undefined): Size => (shape?.length ? shapeSize(shape) : fields)
+
+/** One part in a view, cm: across from the centre (front, back, above) or the wall (side); up from the floor or the wall. */
+export interface PartRect {
+  a0: number
+  a: number
+  b0: number
+  b: number
+}
+
+/** The parts of a form as seen in a view; from above every part hangs from the wall. */
+export function partRects(view: View, shape: ShapePart[]): PartRect[] {
+  let below = 0
+  return shape.map((p) => {
+    const r =
+      view === 'top'
+        ? { a0: -p.w / 2, a: p.w, b0: 0, b: p.d }
+        : view === 'side'
+          ? { a0: 0, a: p.d, b0: below, b: p.h }
+          : { a0: -p.w / 2, a: p.w, b0: below, b: p.h }
+    below += p.h
+    return r
+  })
 }

@@ -8,7 +8,7 @@
  * deeper (per custom field / per requirement); `null` there removes the entry.
  */
 import { makeProduct, makeProject, makeProperty, makeRequirement } from '../db/factories.ts'
-import { EXCLUSION_CATEGORIES, PICTURE_VIEWS, PRIORITIES, type Product, type Project, type PropertyDef, type Requirement } from '../db/types.ts'
+import { EXCLUSION_CATEGORIES, MAX_PARTS, PICTURE_VIEWS, PRIORITIES, type Product, type Project, type PropertyDef, type Requirement } from '../db/types.ts'
 import { UUID } from './ids.ts'
 import { SCALE_RANGE } from './review-scales.ts'
 
@@ -166,6 +166,8 @@ export function checkFields(kind: Kind, fields: Record<string, unknown>): string
     if (key === 'rankings' && !Object.entries(value as object).every(([k, v]) => UUID.test(k) && isRanking(v)))
       return 'rankings must be an order of products per account'
     if (key === 'candidate' && !['open', 'checked', 'excluded', 'favorite'].includes(String(value))) return 'field candidate is unknown'
+    if (key === 'shape' && !((value as unknown[]).length <= MAX_PARTS && (value as unknown[]).every(isShapePart)))
+      return `shape: at most ${MAX_PARTS} parts, each width, height and depth in cm`
     if (key === 'views' && !Object.entries(value as object).every(([k, v]) => (PICTURE_VIEWS as string[]).includes(k) && isViewPicture(v)))
       return 'views: front, side or back, each a picture from this server with an optional crop'
     if (!checkStrings(value)) return `field ${key} is too large or too deep`
@@ -175,6 +177,14 @@ export function checkFields(kind: Kind, fields: Record<string, unknown>): string
 }
 
 const MAX_RANKED = 1000
+
+/** One part of a product's form: exactly width, height and depth, each more than 0 and at most 10 m. */
+export function isShapePart(v: unknown): boolean {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return false
+  const r = v as Record<string, unknown>
+  const cm = (n: unknown) => typeof n === 'number' && Number.isFinite(n) && n > 0 && n <= 1000
+  return Object.keys(r).length === 3 && cm(r.w) && cm(r.h) && cm(r.d)
+}
 
 /** A marked view: a picture of this server and, when set, a crop inside it (shares 0 … 1). */
 function isViewPicture(v: unknown): boolean {
@@ -261,6 +271,7 @@ export function sanitize<T extends AnyRecord>(kind: Kind, record: T): T {
   if (Array.isArray(r.images)) r.images = (r.images as unknown[]).filter((v) => typeof v === 'string' && IMAGE_PATH.test(v)).slice(0, MAX_PICTURES)
   if (kind === 'products') {
     r.extra = extra
+    if (Array.isArray(r.shape)) r.shape = (r.shape as unknown[]).filter(isShapePart).slice(0, MAX_PARTS)
     // A marked view only for a picture the product still has.
     const own = new Set([r.image, ...((r.images as unknown[]) ?? [])])
     if (r.views && typeof r.views === 'object')

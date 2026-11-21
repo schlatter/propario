@@ -7,6 +7,7 @@
 import type { ReactNode } from 'react'
 import { isDemo, startDemo } from '../demo'
 import { useI18n } from '../i18n'
+import { PersonFigure } from '../ui/PersonFigure'
 import { Glyph } from '../ui/Glyph'
 
 export function Overview({ signIn }: { signIn?: ReactNode }) {
@@ -232,14 +233,7 @@ function SizeStill({ room }: { room: string }) {
           <line x1="0" y1="0" x2="0" y2="6" />
         </pattern>
       </defs>
-      <g className="size-person" transform={`translate(8 ${floor - 175})`}>
-        <circle cx="22.5" cy="12" r="11" />
-        <rect x="10" y="26" width="25" height="62" rx="9" />
-        <rect x="2" y="28" width="7" height="58" rx="3.5" />
-        <rect x="36" y="28" width="7" height="58" rx="3.5" />
-        <rect x="11" y="80" width="10.5" height="95" rx="4" />
-        <rect x="23.5" y="80" width="10.5" height="95" rx="4" />
-      </g>
+      <PersonFigure transform={`translate(8 ${floor - 175})`} />
       <rect className="size-box pic" x="85" y={floor - 80} width="160" height="80" />
       <image href="/demo/sideboard-arvika.svg" x="85" y={floor - 80} width="160" height="80" preserveAspectRatio="xMidYMax meet" />
       <rect className="size-line" x="85" y={floor - 80} width="160" height="80" />

@@ -1,8 +1,10 @@
-import { lazy, Suspense, useLayoutEffect, useMemo, useRef, useState, type RefObject } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState, type RefObject } from 'react'
 import type { Product } from '../../db/types'
 import { displayName } from '../../domain/display'
 import {
+  drawnSize,
   fitsFront,
+  partRects,
   pictureFor,
   scaleToFit,
   sizeFields,
@@ -12,6 +14,7 @@ import {
   viewsFor,
   type Side,
   type Size,
+  type PartRect,
   type View,
   type ViewPic,
 } from '../../domain/size'
@@ -19,10 +22,8 @@ import { useI18n } from '../../i18n'
 import { productImage } from '../../images'
 import type { ProjectData } from './useProjectData'
 import { useMeasured } from './useMeasured'
-import { Glyph } from '../../ui/Glyph'
-
-/** three.js is large: loaded only when someone opens the 3D view. */
-const Model3D = lazy(() => import('./Model3D'))
+import { Open3D } from './Open3D'
+import { PersonFigure } from '../../ui/PersonFigure'
 
 /** Height of the reference person, cm. */
 const PERSON = 175
@@ -37,7 +38,9 @@ const PERSON_WIDTH = 45
 const WALL = 6
 
 type Layout = 'beside' | 'overlay'
-type Tone = 'single' | 'first' | 'second'
+/** Side by side every product looks the same; one over the other, each its own line (see app.css). */
+type Tone = 'single' | number
+const toneClass = (t: Tone) => (t === 'single' ? 'single' : t === 0 ? 't0' : `t${((t - 1) % 4) + 1}`)
 
 /**
  * The products to scale: from the front and the back (width × height), the side (depth ×
@@ -53,10 +56,9 @@ export function SizeCompare({ products, data }: { products: Product[]; data: Pro
   const limits = useMemo(() => sizeLimits(data.rules, fields), [data.rules, fields])
   const [chosen, setChosen] = useState<View>('front')
   const [layout, setLayout] = useState<Layout>('beside')
-  const [show3d, setShow3d] = useState(false)
   const [width, ref] = useWidth<HTMLDivElement>()
 
-  const items = products.map((p) => ({ product: p, size: sizeOf(p, fields), name: p.model || displayName(p, m) }))
+  const items = products.map((p) => ({ product: p, size: drawnSize(sizeOf(p, fields), p.shape), name: p.model || displayName(p, m) }))
   const views = viewsFor(
     items.map((i) => i.size),
     1,
@@ -67,7 +69,7 @@ export function SizeCompare({ products, data }: { products: Product[]; data: Pro
   const [across, up] = VIEW_SIDES[view]
   const shown = items.filter((i) => i.size[across] && i.size[up])
   const missing = items.filter((i) => !shown.includes(i))
-  const overlay = layout === 'overlay' && shown.length === 2
+  const overlay = layout === 'overlay' && shown.length >= 2
   const person = view !== 'top'
   const acrossMax = limits[across]?.max
   const upMax = limits[up]?.max
@@ -94,6 +96,7 @@ export function SizeCompare({ products, data }: { products: Product[]; data: Pro
   const body = (i: (typeof shown)[number], tone: Tone) => ({
     a: i.size[across]!,
     b: i.size[up]!,
+    parts: i.product.shape?.length ? partRects(view, i.product.shape) : null,
     // One over the other, only outlines: two pictures on top of each other hide both.
     picture: overlay ? null : pictureFor(i.product, productImage(i.product), view),
     tone,
@@ -104,9 +107,16 @@ export function SizeCompare({ products, data }: { products: Product[]; data: Pro
     const overA = acrossMax !== undefined && a > acrossMax
     const overB = upMax !== undefined && b > upMax
     return (
-      <span className={`size-cap ${tone}`} key={i.product.id}>
+      <span className={`size-cap ${toneClass(tone)}`} key={i.product.id}>
         <span className="size-name" title={i.name}>
-          {tone !== 'single' && <i className={`size-swatch ${tone}`} aria-hidden="true" />}
+          {tone !== 'single' && (
+            <svg className="size-swatch" width="20" height="12" aria-hidden="true">
+              <g className={`size-body ${toneClass(tone)}`}>
+                <rect className="size-box" x="1.5" y="1.5" width="17" height="9" />
+                <rect className="size-line" x="1.5" y="1.5" width="17" height="9" />
+              </g>
+            </svg>
+          )}
           {i.name}
         </span>
         <span className="size-dims" aria-hidden="true">
@@ -135,7 +145,7 @@ export function SizeCompare({ products, data }: { products: Product[]; data: Pro
             ))}
           </div>
         )}
-        {shown.length === 2 && (
+        {shown.length >= 2 && (
           <div className="seg" role="group" aria-label={m.size.layout}>
             {(['beside', 'overlay'] as const).map((l) => (
               <button key={l} type="button" aria-pressed={l === layout} onClick={() => setLayout(l)}>
@@ -144,12 +154,7 @@ export function SizeCompare({ products, data }: { products: Product[]; data: Pro
             ))}
           </div>
         )}
-        {/* A box needs all three sides. */}
-        {items.some((i) => i.size.width && i.size.height && i.size.depth) && (
-          <button type="button" className="btn sm" onClick={() => setShow3d(true)} aria-label={m.model3d.openLabel}>
-            <Glyph name="cube" /> {m.model3d.open}
-          </button>
-        )}
+        <Open3D products={products} data={data} />
         <p className="muted small">
           {overlay ? m.size.hintOverlay : m.size.hint}
           {(acrossMax || upMax) && ` ${m.size.hintLimits}`}
@@ -176,8 +181,8 @@ export function SizeCompare({ products, data }: { products: Product[]; data: Pro
             )}
             {overlay ? (
               <figure className="size-col overlay" style={{ width: colPx(figures[0], MIN_OVERLAY) }}>
-                <Figure {...frame} col={colPx(figures[0], MIN_OVERLAY)} bodies={[body(shown[0], 'first'), body(shown[1], 'second')]} />
-                <figcaption>{shown.map((i, n) => caption(i, n === 0 ? 'first' : 'second'))}</figcaption>
+                <Figure {...frame} col={colPx(figures[0], MIN_OVERLAY)} bodies={shown.map((i, n) => body(i, n))} />
+                <figcaption>{shown.map((i, n) => caption(i, n))}</figcaption>
               </figure>
             ) : (
               shown.map((i) => (
@@ -209,23 +214,6 @@ export function SizeCompare({ products, data }: { products: Product[]; data: Pro
         </p>
       )}
       {missing.length > 0 && <p className="muted small size-note">{m.size.missing(missing.map((i) => i.name).join(', '))}</p>}
-      {show3d && (
-        <Suspense fallback={null}>
-          <Model3D
-            onClose={() => setShow3d(false)}
-            items={items.map((i) => ({
-              id: i.product.id,
-              name: i.name,
-              size: i.size,
-              pictures: {
-                front: pictureFor(i.product, productImage(i.product), 'front') ?? undefined,
-                side: pictureFor(i.product, null, 'side') ?? undefined,
-                back: pictureFor(i.product, null, 'back') ?? undefined,
-              },
-            }))}
-          />
-        </Suspense>
-      )}
     </details>
   )
 }
@@ -242,6 +230,8 @@ interface Frame {
 interface BodyProps {
   a: number
   b: number
+  /** The form's parts in this view (cm), or null for one box. */
+  parts: PartRect[] | null
   picture: ViewPic | null
   tone: Tone
 }
@@ -263,31 +253,37 @@ function Figure({ bodies, col, ...frame }: Frame & { col: number; bodies: BodyPr
   )
 }
 
-/** One product: its outline (or picture) and what sticks out of the space, hatched. */
-function Body({ view, k, upMax, y, a, b, picture, tone, col, nicheX }: Frame & BodyProps & { col: number; nicheX: number[] | null }) {
+/** One product: its outline (or picture) and what sticks out of the space, hatched – for a form of several parts, each part. */
+function Body({ view, k, upMax, y, a, b, parts, picture, tone, col, nicheX }: Frame & BodyProps & { col: number; nicheX: number[] | null }) {
   const measured = useMeasured(picture?.src ?? null)
-  const w = a * k
   // Front, back and from above: centred in its column. From the side: standing against the wall.
-  const x0 = view === 'side' ? WALL + 2 : (col - w) / 2
-  const top = Math.min(y(0), y(b))
-  const h = Math.abs(y(b) - y(0))
+  const across = (cm: number) => (view === 'side' ? WALL + 2 + cm * k : col / 2 + cm * k)
+  const toPx = (r: PartRect) => ({ x: across(r.a0), y: Math.min(y(r.b0), y(r.b0 + r.b)), width: r.a * k, height: r.b * k })
+  const whole = toPx({ a0: view === 'side' ? 0 : -a / 2, a, b0: 0, b })
+  const boxes = parts ? parts.map(toPx) : [whole]
   const crop = picture?.crop ?? measured?.crop
   const drawn = picture && measured && crop && (picture.marked || fitsFront(crop, measured.ratio, a, b)) ? crop : null
   const over: { x: number; y: number; width: number; height: number }[] = []
-  if (nicheX) {
-    if (x0 < nicheX[0]) over.push({ x: x0, y: top, width: nicheX[0] - x0, height: h })
-    if (x0 + w > nicheX[1]) over.push({ x: nicheX[1], y: top, width: x0 + w - nicheX[1], height: h })
+  for (const r of boxes) {
+    if (nicheX) {
+      if (r.x < nicheX[0]) over.push({ ...r, width: Math.min(r.width, nicheX[0] - r.x) })
+      if (r.x + r.width > nicheX[1]) over.push({ ...r, x: Math.max(r.x, nicheX[1]), width: r.x + r.width - Math.max(r.x, nicheX[1]) })
+    }
+    // Above the limit (from above: beyond it, away from the wall).
+    if (upMax !== undefined) {
+      const limit = y(upMax)
+      const [lo, hi] = view === 'top' ? [Math.max(r.y, limit), r.y + r.height] : [r.y, Math.min(r.y + r.height, limit)]
+      if (hi > lo) over.push({ x: r.x, y: lo, width: r.width, height: hi - lo })
+    }
   }
-  if (upMax !== undefined && b > upMax) over.push({ x: x0, y: Math.min(y(upMax), y(b)), width: w, height: Math.abs(y(b) - y(upMax)) })
   return (
-    <g className={`size-body ${tone}`}>
-      <rect className={`size-box${drawn ? ' pic' : ''}`} x={x0} y={top} width={w} height={h} />
+    <g className={`size-body ${toneClass(tone)}`}>
+      {boxes.map((r, i) => (
+        <rect key={i} className={`size-box${drawn ? ' pic' : ''}`} {...r} />
+      ))}
       {drawn && measured && (
         <svg
-          x={x0}
-          y={top}
-          width={w}
-          height={h}
+          {...whole}
           viewBox={`${drawn.x * measured.nw} ${drawn.y * measured.nh} ${drawn.w * measured.nw} ${drawn.h * measured.nh}`}
           preserveAspectRatio="xMidYMax meet"
         >
@@ -297,7 +293,9 @@ function Body({ view, k, upMax, y, a, b, picture, tone, col, nicheX }: Frame & B
       {over.map((r, i) => (
         <rect key={i} className="size-over" fill="url(#size-over)" {...r} />
       ))}
-      <rect className="size-line" x={x0} y={top} width={w} height={h} />
+      {boxes.map((r, i) => (
+        <rect key={i} className="size-line" {...r} />
+      ))}
     </g>
   )
 }
@@ -307,14 +305,7 @@ function Person({ k, height }: { k: number; height: number }) {
   const s = (PERSON / 175) * k
   return (
     <svg className="size-fig" width={Math.max(PERSON_WIDTH * k, MIN_COL)} height={height} aria-hidden="true">
-      <g className="size-person" transform={`translate(${(Math.max(PERSON_WIDTH * k, MIN_COL) - PERSON_WIDTH * s) / 2} ${height - PERSON * k}) scale(${s})`}>
-        <circle cx="22.5" cy="12" r="11" />
-        <rect x="10" y="26" width="25" height="62" rx="9" />
-        <rect x="2" y="28" width="7" height="58" rx="3.5" />
-        <rect x="36" y="28" width="7" height="58" rx="3.5" />
-        <rect x="11" y="80" width="10.5" height="95" rx="4" />
-        <rect x="23.5" y="80" width="10.5" height="95" rx="4" />
-      </g>
+      <PersonFigure transform={`translate(${(Math.max(PERSON_WIDTH * k, MIN_COL) - PERSON_WIDTH * s) / 2} ${height - PERSON * k}) scale(${s})`} />
     </svg>
   )
 }

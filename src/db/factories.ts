@@ -46,6 +46,7 @@ export function makeProduct(projectId: string, p: Partial<Product> = {}): Produc
     image: '',
     images: [],
     views: {},
+    shape: [],
     variant: '',
     description: '',
     comments: '',
