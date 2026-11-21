@@ -677,6 +677,19 @@ export const en = {
     toFirst: (signed: string, name: string) => `${signed} to ${name}`,
     sameAsFirst: (name: string) => `same as ${name}`,
   },
+  size: {
+    title: 'Size',
+    view: 'View',
+    views: { front: 'Front', side: 'Side', top: 'From above' },
+    sides: { width: 'Width', height: 'Height', depth: 'Depth' },
+    hint: 'To scale, side by side.',
+    hintLimits: 'Dashed: the space your requirements leave.',
+    person: 'Person',
+    max: (v: string) => `at most ${v}`,
+    limit: (side: string, v: string) => `${side}: at most ${v}`,
+    over: 'too big',
+    missing: (names: string) => `No size given: ${names}`,
+  },
   importer: {
     title: 'Import a table',
     intro:

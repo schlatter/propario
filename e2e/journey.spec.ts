@@ -166,6 +166,34 @@ test('a visitor sees what Propario does and tries the demo, which never talks to
   await page.getByRole('button', { name: 'Update picture', exact: true }).click()
   await expect(page.getByText('Not in the demo – reading shop pages needs your own account.')).toBeVisible()
   await page.locator('dialog.drawer').getByRole('button', { name: 'Close', exact: true }).click()
+
+  // Side by side, the sizes to scale: Mira is 200 cm wide where the requirements allow 180.
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page.getByRole('checkbox', { name: /^Select for comparison: .*Arvika$/ }).check()
+  await page.getByRole('checkbox', { name: /^Select for comparison: .*Kanto$/ }).check()
+  await page.getByRole('button', { name: /Compare 2/ }).click()
+  // Mira is out of the running (too wide), so it joins from here.
+  await page.getByRole('button', { name: 'Product', exact: true }).click()
+  await page
+    .getByRole('menuitem', { name: /Mira/ })
+    .or(page.getByRole('button', { name: /Mira/ }))
+    .first()
+    .click()
+  const size = page.locator('.size-compare')
+  await expect(size.getByRole('heading', { name: 'Size' })).toBeVisible()
+  await expect(size.locator('figcaption', { hasText: 'Mira' })).toContainText('Width 200 cm (too big), Height 78 cm')
+  await expect(size.locator('figcaption', { hasText: 'Arvika' }).locator('.over')).toHaveCount(0)
+  await expect(size.getByText('Width: at most 180 cm')).toBeVisible()
+  await size.getByRole('button', { name: 'From above' }).click()
+  await expect(size.getByRole('button', { name: 'From above' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(size.getByText('Width: at most 180 cm · Depth: at most 45 cm')).toBeVisible()
+  await expect(size.locator('.size-over').first()).toBeVisible()
+  await accessible(page, 'sizes to scale')
+  // On a phone, all of it fits the width: nothing to scroll sideways in the front view.
+  await page.setViewportSize({ width: 390, height: 844 })
+  await size.getByRole('button', { name: 'Front' }).click()
+  expect(await size.locator('.size-scroll').evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true)
+  await accessible(page, 'sizes to scale on a phone')
   expect(calls).toEqual([])
 
   // Ending the demo removes its data from the browser.

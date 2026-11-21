@@ -6,6 +6,7 @@ import { setDecision, updateProject } from '../db/repo'
 import { current, decide, everyone, finished, joint, normalize, progress, remaining, skip, startOrder, type Side } from '../domain/duel'
 import { useUsers } from '../users'
 import { Gallery } from './project/Gallery'
+import { SizeCompare } from './project/SizeCompare'
 import { FavoriteToggle, VerdictCell } from './project/Verdict'
 import { avgStars, displayName, exclusionText, formatValue } from '../domain/display'
 import { evaluate, WEIGHT } from '../domain/requirements'
@@ -375,6 +376,7 @@ export function ComparePage() {
           </div>
         </div>
       )}
+      <SizeCompare products={products} data={data} />
       <div className={`compare-wrap${duelMode ? ' duel' : ''}`}>
         <table className={`compare${duelMode ? ' duel' : ''}`}>
           {!duelMode && (

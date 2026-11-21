@@ -6,6 +6,10 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- Added: side by side and in duels, the products' sizes to scale – from the front, the side and
+  above, next to a person for scale. Fields named width, height and depth are found by themselves;
+  the space the requirements leave is dashed, and what sticks out is hatched.
+
 ## 0.15.3 — 2026-11-20
 
 - Changed: duels take only the narrow choice – products someone starred, and products everyone

@@ -684,6 +684,19 @@ export const de: Messages = {
     toFirst: (signed, name) => `${signed} zu ${name}`,
     sameAsFirst: (name) => `gleich wie ${name}`,
   },
+  size: {
+    title: 'Größe',
+    view: 'Ansicht',
+    views: { front: 'Vorne', side: 'Seite', top: 'Von oben' },
+    sides: { width: 'Breite', height: 'Höhe', depth: 'Tiefe' },
+    hint: 'Maßstabsgetreu nebeneinander.',
+    hintLimits: 'Gestrichelt: der Platz laut deinen Anforderungen.',
+    person: 'Person',
+    max: (v) => `höchstens ${v}`,
+    limit: (side, v) => `${side}: höchstens ${v}`,
+    over: 'zu groß',
+    missing: (names) => `Ohne Maße: ${names}`,
+  },
   importer: {
     title: 'Tabelle importieren',
     intro:
