@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { makeProduct, makeProperty, makeRequirement } from '../src/db/factories'
-import { contentBox, fitsFront, scaleToFit, sizeFields, sizeLimits, sizeOf, toCm, viewsFor } from '../src/domain/size'
+import { contentBox, fitsFront, pictureFor, scaleToFit, sizeFields, sizeLimits, sizeOf, toCm, viewsFor } from '../src/domain/size'
 
 const width = makeProperty('p', { name: 'Breite', type: 'number', unit: 'cm', order: 0 })
 const height = makeProperty('p', { name: 'Höhe', type: 'number', unit: 'cm', order: 1 })
@@ -130,5 +130,30 @@ describe('scaleToFit', () => {
 
   it('says so when nothing fits even at the floor', () => {
     expect(scaleToFit([100, 100, 100], 0, 100, 50, 2, 0.6)).toBeNull()
+  })
+})
+
+describe('pictureFor', () => {
+  const main = '/api/images/main'
+  const drawing = '/api/images/drawing'
+  const crop = { x: 0.1, y: 0.1, w: 0.5, h: 0.8 }
+
+  it('takes a marked picture for its side, otherwise the main picture for the front only', () => {
+    const p = { views: { side: { src: drawing, crop } } }
+    expect(pictureFor(p, main, 'side')).toEqual({ src: drawing, crop, marked: true })
+    expect(pictureFor(p, main, 'front')).toEqual({ src: main, crop: null, marked: false })
+    expect(pictureFor(p, main, 'back')).toBeNull()
+    expect(pictureFor(p, main, 'top')).toBeNull()
+  })
+
+  it('prefers a marked front over the main picture, and works for products from before views', () => {
+    expect(pictureFor({ views: { front: { src: drawing, crop: null } } }, main, 'front')?.src).toBe(drawing)
+    expect(pictureFor({}, null, 'front')).toBeNull()
+  })
+
+  it('offers the back only when a picture of it is marked', () => {
+    const sizes = [{ width: 85, height: 188, depth: 37 }]
+    expect(viewsFor(sizes)).toEqual(['front', 'side', 'top'])
+    expect(viewsFor(sizes, 1, true)).toEqual(['front', 'back', 'side', 'top'])
   })
 })

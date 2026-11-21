@@ -122,6 +122,25 @@ describe('backup', () => {
     expect(p.purchase).toMatchObject({ returnUntil: '2026-11-27', warrantyUntil: '2028-11-13' })
   })
 
+  it('keeps marked views per side through the server, and drops them with pictures that cannot come along', async () => {
+    const { project, product } = await seed()
+    const pic = '/api/images/00000000-0000-4000-8000-0000000000aa'
+    const crop = { x: 0.1, y: 0.05, w: 0.8, h: 0.9 }
+    await updateProduct((await db.products.get(product.id))!, { image: pic, views: { front: { src: pic, crop } } })
+    // Moving the mark to another side: one side removed, one set – merged per side.
+    await updateProduct((await db.products.get(product.id))!, { views: { front: null, side: { src: pic, crop: null } } } as never)
+    expect((await db.products.get(product.id))!.views).toEqual({ side: { src: pic, crop: null } })
+
+    // The picture of this made-up path cannot be copied: the product comes back, the mark does not.
+    const file = parseBackup(JSON.stringify(await exportProject(project.id)))
+    if (!file.ok) throw new Error('parse failed')
+    await deleteProject(project.id)
+    await restoreReplace(file.file)
+    const p = (await db.products.toArray())[0]
+    expect(p.model).toBe('Arvika')
+    expect(p.views).toEqual({})
+  })
+
   it('quick edits of several offers do not undo each other', async () => {
     const { product } = await seed()
     const stale = (await db.products.get(product.id))!

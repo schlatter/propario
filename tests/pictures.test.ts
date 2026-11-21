@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { withAdded, withMain, without } from '../src/domain/pictures'
+import { makeProduct } from '../src/db/factories'
+import { markView, remapViews, viewOf, viewsWithout, withAdded, withMain, without } from '../src/domain/pictures'
+import { checkFields, sanitize } from '../src/shared/records'
 
 const MAX = 8
 const main = '/api/images/main'
@@ -44,5 +46,55 @@ describe('picture changes never lose a picture', () => {
     expect(without({ image: main, images: [a, b] }, main)).toEqual({ image: a, images: [b] })
     expect(without({ image: main, images: [a, b] }, a)).toEqual({ image: main, images: [b] })
     expect(without({ image: main, images: [] }, main)).toEqual({ image: '', images: [] })
+  })
+})
+
+describe('marked views follow their pictures', () => {
+  const crop = { x: 0.1, y: 0, w: 0.8, h: 1 }
+
+  it('marks a picture as one side; marking it as another moves the mark', () => {
+    expect(markView({}, a, 'front', crop)).toEqual({ front: { src: a, crop } })
+    expect(markView({ front: { src: a, crop: null } }, a, 'side', null)).toEqual({ front: null, side: { src: a, crop: null } })
+    // Another picture as the front replaces the mark, the old picture stays.
+    expect(markView({ front: { src: a, crop: null } }, b, 'front', null)).toEqual({ front: { src: b, crop: null } })
+    expect(markView({ front: { src: a, crop: null } }, a, null, null)).toEqual({ front: null })
+  })
+
+  it('drops the marks of a picture that goes', () => {
+    expect(viewsWithout({ front: { src: a, crop: null }, side: { src: b, crop: null } }, a)).toEqual({ front: null })
+    expect(viewsWithout(undefined, a)).toEqual({})
+  })
+
+  it('moves marks with their pictures and loses those whose picture is gone', () => {
+    const moved = remapViews({ front: { src: a, crop }, back: { src: b, crop: null } }, (src) => (src === a ? n : ''))
+    expect(moved).toEqual({ front: { src: n, crop } })
+    expect(viewOf(moved, n)).toBe('front')
+    expect(viewOf(moved, a)).toBeNull()
+  })
+})
+
+describe('views on the server and in old records', () => {
+  const pic = '/api/images/00000000-0000-4000-8000-000000000001'
+
+  it('accepts a marked picture of this server with or without a crop, nothing else', () => {
+    expect(checkFields('products', { views: { front: { src: pic, crop: null } } })).toBeNull()
+    expect(checkFields('products', { views: { side: { src: pic, crop: { x: 0.2, y: 0, w: 0.5, h: 1 } } } })).toBeNull()
+    expect(checkFields('products', { views: { top: { src: pic, crop: null } } })).toMatch(/views/)
+    expect(checkFields('products', { views: { front: { src: 'https://shop.example/a.jpg', crop: null } } })).toMatch(/views/)
+    expect(checkFields('products', { views: { front: { src: pic, crop: { x: 0.5, y: 0, w: 0.8, h: 1 } } } })).toMatch(/views/)
+    expect(checkFields('products', { views: { front: { src: pic, crop: null, extra: 1 } } })).toMatch(/views/)
+  })
+
+  it('keeps on restore only marks of pictures the product has', () => {
+    const other = '/api/images/00000000-0000-4000-8000-000000000002'
+    const p = makeProduct('00000000-0000-4000-8000-000000000000', {
+      image: pic,
+      views: { front: { src: pic, crop: null }, side: { src: other, crop: null } },
+    })
+    expect(sanitize('products', p).views).toEqual({ front: { src: pic, crop: null } })
+    // Records from before views existed stay as they are.
+    const old = { ...p } as Partial<typeof p>
+    delete old.views
+    expect(sanitize('products', old as typeof p).views).toBeUndefined()
   })
 })

@@ -4861,7 +4861,8 @@ table.compare.duel {
   color: var(--muted);
   background: var(--surface);
 }
-.size-col figcaption {
+.size-col figcaption,
+.size-cap {
   display: grid;
   gap: 1px;
   padding-top: 6px;
@@ -4887,4 +4888,110 @@ table.compare.duel {
 .size-note {
   margin: 0;
   padding: 0 16px 10px;
+}
+
+/* One over the other: the first filled and quiet, the second as a strong outline – what
+   differs between the two is what the eye catches (amber points out). */
+.size-cap {
+  padding-top: 0;
+}
+.size-col.overlay figcaption {
+  gap: 6px;
+}
+.size-body.first .size-box {
+  fill: var(--sunken);
+}
+.size-body.second .size-box {
+  fill: none;
+}
+.size-body.second .size-line {
+  stroke: var(--accent-text);
+  stroke-width: 2.5;
+}
+.size-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 5px;
+  vertical-align: -1px;
+  border-radius: 2px;
+}
+.size-swatch.first {
+  background: var(--sunken);
+  border: 1.5px solid var(--ink-2);
+}
+.size-swatch.second {
+  border: 2.5px solid var(--accent-text);
+}
+
+/* A picture marked as a view: says which side, on the picture (PictureViewDialog.tsx). */
+.pimg-slide {
+  position: relative;
+}
+.pimg-view {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.pview {
+  display: grid;
+  gap: 12px;
+  max-width: 560px;
+}
+.pview h2,
+.pview p {
+  margin: 0;
+}
+.pview-pic {
+  --pview-h: min(55vh, 480px);
+  position: relative;
+  min-height: 120px;
+  justify-self: center;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: #fff;
+  touch-action: none;
+  cursor: crosshair;
+  user-select: none;
+}
+.pview-pic img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.pview-pic:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+/* Outside the frame dimmed, the frame itself petrol: it is what you set. */
+.pview-frame {
+  position: absolute;
+  border: 2px solid var(--brand);
+  box-shadow: 0 0 0 9999px rgb(18 26 27 / 0.45);
+  pointer-events: none;
+}
+.pview-frame.auto {
+  border-style: dashed;
+}
+.pview-corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border-radius: 50%;
+  background: var(--brand);
+  border: 2px solid #fff;
+  pointer-events: none;
+}
+.pview-tools {
+  gap: 8px;
+  flex-wrap: wrap;
 }

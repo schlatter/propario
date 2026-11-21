@@ -1,4 +1,6 @@
-import type { Priority, Product, PropertyDef, Requirement } from '../db/types'
+import type { Crop, Priority, Product, PropertyDef, Requirement } from '../db/types'
+
+export type { Crop }
 
 /**
  * Sizes to scale: which fields of a comparison hold width, height and depth, each product's size
@@ -77,25 +79,36 @@ export function sizeLimits(rules: Requirement[], fields: Partial<Record<Side, Pr
 }
 
 /** Which sides each view shows: across × up. The view from above is seen with the wall at the top. */
-export type View = 'front' | 'side' | 'top'
-export const VIEWS: View[] = ['front', 'side', 'top']
+export type View = 'front' | 'back' | 'side' | 'top'
+export const VIEWS: View[] = ['front', 'back', 'side', 'top']
 export const VIEW_SIDES: Record<View, [Side, Side]> = {
   front: ['width', 'height'],
+  back: ['width', 'height'],
   side: ['depth', 'height'],
   top: ['width', 'depth'],
 }
 
-/** Views in which at least `min` products can be drawn. */
-export function viewsFor(sizes: Size[], min = 1): View[] {
-  return VIEWS.filter((v) => sizes.filter((s) => VIEW_SIDES[v].every((side) => s[side])).length >= min)
+/**
+ * Views in which at least `min` products can be drawn. The back only when someone marked a
+ * picture of it – without one it is the front's outline once more.
+ */
+export function viewsFor(sizes: Size[], min = 1, withBack = false): View[] {
+  return VIEWS.filter((v) => (v !== 'back' || withBack) && sizes.filter((s) => VIEW_SIDES[v].every((side) => s[side])).length >= min)
 }
 
-/** The part of a picture that is not white background, as shares (0 … 1) of its width and height. */
-export interface Crop {
-  x: number
-  y: number
-  w: number
-  h: number
+/** A picture to draw in a view: one marked for it, or for the front the main picture. */
+export interface ViewPic {
+  src: string
+  /** null: the object is found in the picture automatically. */
+  crop: Crop | null
+  /** Marked by someone: drawn as it is. The main picture only when its shape fits. */
+  marked: boolean
+}
+
+export function pictureFor(p: Pick<Product, 'views'>, main: string | null, view: View): ViewPic | null {
+  const marked = view === 'top' ? undefined : p.views?.[view]
+  if (marked) return { src: marked.src, crop: marked.crop, marked: true }
+  return view === 'front' && main ? { src: main, crop: null, marked: false } : null
 }
 
 /**

@@ -22,6 +22,8 @@ import { Preview } from '../../ui/Thumb'
 import { filledLabels } from '../../domain/display'
 import { Gallery } from './Gallery'
 import { Menu } from '../../ui/Menu'
+import { viewOf } from '../../domain/pictures'
+import { PictureViewDialog } from './PictureViewDialog'
 
 /**
  * Pictures in the product drawer: a strip as wide as the drawer that a finger swipes through
@@ -119,6 +121,8 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
     setShownAt(i)
   }
   const [gallery, setGallery] = useState<number | null>(null)
+  /** The picture whose side and part are being set (src/pages/project/PictureViewDialog.tsx). */
+  const [marking, setMarking] = useState<string | null>(null)
   /** Picture `i` becomes the main one; the former main one stays as a further picture. By path, not position: the list may have changed meanwhile. */
   const makeMain = (i: number) => {
     void makeMainPicture(p, pictures[i])
@@ -180,6 +184,7 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
             {pictures.map((pic, i) => (
               <div className="pimg-slide" key={pic} aria-hidden={i !== at}>
                 <img src={pic} alt={i === 0 ? name : m.gallery.alt(name, i + 1, pictures.length)} referrerPolicy="no-referrer" draggable={false} />
+                {viewOf(p.views, pic) && <span className="pimg-view">{m.pictureView.views[viewOf(p.views, pic)!]}</span>}
               </div>
             ))}
           </div>
@@ -264,6 +269,11 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
                     <Glyph name={stored ? 'plus' : 'upload'} /> {stored ? m.image.addFurther : m.image.chooseFile}
                   </button>
                 )}
+                {stored && (
+                  <button type="button" onClick={act(() => setMarking(pictures[at]))}>
+                    <Glyph name="crop" /> {m.pictureView.open}
+                  </button>
+                )}
                 {stored && at > 0 && (
                   <button type="button" onClick={act(() => makeMain(at))}>
                     <Glyph name="star" /> {m.gallery.makeMain}
@@ -324,6 +334,7 @@ export function ProductImage({ product: p, name }: { product: Product; name: str
           {m.image.error[error]}
         </p>
       )}
+      {marking && <PictureViewDialog product={p} src={marking} onClose={() => setMarking(null)} />}
       <Gallery pictures={pictures} name={name} start={gallery ?? 0} open={gallery !== null} onClose={() => setGallery(null)} onMakeMain={makeMain} />
     </div>
   )

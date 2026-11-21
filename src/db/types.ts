@@ -155,6 +155,24 @@ export interface Review {
   url: string
 }
 
+/** The part of a picture that shows the object, as shares (0 … 1) of its width and height. */
+export interface Crop {
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
+/** Which side of a product a picture shows, for the sizes to scale (src/pages/project/SizeCompare.tsx). */
+export type PictureView = 'front' | 'side' | 'back'
+export const PICTURE_VIEWS: PictureView[] = ['front', 'side', 'back']
+
+/** One of the product's pictures marked as a view, cut to the object (null: found automatically). */
+export interface ViewPicture {
+  src: string
+  crop: Crop | null
+}
+
 export interface Product {
   id: string
   projectId: string
@@ -181,6 +199,8 @@ export interface Product {
   image: string
   /** Further pictures (a dimension drawing, another view), stored like `image`. Absent before 0.8. */
   images?: string[]
+  /** Pictures marked as the front, side or back, each one of `image`/`images`. Absent before 0.16. */
+  views?: Partial<Record<PictureView, ViewPicture>>
   variant: string
   description: string
   comments: string

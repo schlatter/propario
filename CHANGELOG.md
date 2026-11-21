@@ -9,6 +9,10 @@ for fixes. See "Versions and releases" in the README.
 - Added: side by side and in duels, the products' sizes to scale – from the front, the side and
   above, next to a person for scale. Fields named width, height and depth are found by themselves;
   the space the requirements leave is dashed, and what sticks out is hatched.
+- Added: two products – as in a duel – can be laid one over the other to scale.
+- Added: a picture can be set as the product's front, side or back, with the part that shows the
+  product framed by hand or found by itself – a dimension drawing then stands to scale next to the
+  others. The marks travel with backups and copies.
 
 ## 0.15.3 — 2026-11-20
 

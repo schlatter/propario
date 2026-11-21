@@ -1,3 +1,4 @@
+import type { Crop, PictureView, ViewPicture } from '../db/types'
 /**
  * Which of a shop page's pictures to keep as the second one (see src/images.ts): a dimension
  * drawing – named so in its address ("…/masszeichnung.jpg", "…-dimensions.png") or recognised by
@@ -105,3 +106,42 @@ export function without(p: Pictures, path: string): Pictures {
   const rest = allOf(p).filter((x) => x !== path)
   return { image: rest[0] ?? '', images: rest.slice(1) }
 }
+
+/**
+ * Marked views (front, side, back) point at one of the product's pictures. Changes are patches
+ * merged per view (src/shared/records.ts): `null` removes a mark. One picture shows one side, so
+ * marking it as another side moves the mark.
+ */
+export type Views = Partial<Record<PictureView, ViewPicture>>
+export type ViewsPatch = Partial<Record<PictureView, ViewPicture | null>>
+
+/** Marks `src` as `view` (or unmarks it with null), cut to `crop` (null: found automatically). */
+export function markView(views: Views | undefined, src: string, view: PictureView | null, crop: Crop | null): ViewsPatch {
+  const patch: ViewsPatch = {}
+  for (const [k, v] of Object.entries(views ?? {}) as [PictureView, ViewPicture][]) if (v.src === src && k !== view) patch[k] = null
+  if (view) patch[view] = { src, crop }
+  return patch
+}
+
+/** The marks to drop when a picture goes. */
+export function viewsWithout(views: Views | undefined, src: string): ViewsPatch {
+  return Object.fromEntries(
+    Object.entries(views ?? {})
+      .filter(([, v]) => v.src === src)
+      .map(([k]) => [k, null]),
+  )
+}
+
+/** Marks after the pictures moved (backup, restore, copy): each follows its picture, or goes with it. */
+export function remapViews(views: Views | undefined, moved: (src: string) => string): Views {
+  const out: Views = {}
+  for (const [k, v] of Object.entries(views ?? {}) as [PictureView, ViewPicture][]) {
+    const src = moved(v.src)
+    if (src) out[k] = { src, crop: v.crop }
+  }
+  return out
+}
+
+/** Which view a picture is marked as, if any. */
+export const viewOf = (views: Views | undefined, src: string): PictureView | null =>
+  (Object.entries(views ?? {}) as [PictureView, ViewPicture][]).find(([, v]) => v.src === src)?.[0] ?? null

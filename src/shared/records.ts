@@ -8,7 +8,7 @@
  * deeper (per custom field / per requirement); `null` there removes the entry.
  */
 import { makeProduct, makeProject, makeProperty, makeRequirement } from '../db/factories.ts'
-import { EXCLUSION_CATEGORIES, PRIORITIES, type Product, type Project, type PropertyDef, type Requirement } from '../db/types.ts'
+import { EXCLUSION_CATEGORIES, PICTURE_VIEWS, PRIORITIES, type Product, type Project, type PropertyDef, type Requirement } from '../db/types.ts'
 import { UUID } from './ids.ts'
 import { SCALE_RANGE } from './review-scales.ts'
 
@@ -28,7 +28,7 @@ export type Change =
   | { op: 'delete'; kind: Kind; id: string; projectId: string }
 
 /** Fields merged per key instead of replaced as a whole. */
-const DEEP = new Set(['values', 'checks', 'votes', 'favorites', 'rankings'])
+const DEEP = new Set(['values', 'checks', 'votes', 'favorites', 'rankings', 'views'])
 
 /** Fields where each person writes only their own entry, keyed by account. */
 export const PERSONAL = ['votes', 'favorites', 'rankings'] as const
@@ -166,6 +166,8 @@ export function checkFields(kind: Kind, fields: Record<string, unknown>): string
     if (key === 'rankings' && !Object.entries(value as object).every(([k, v]) => UUID.test(k) && isRanking(v)))
       return 'rankings must be an order of products per account'
     if (key === 'candidate' && !['open', 'checked', 'excluded', 'favorite'].includes(String(value))) return 'field candidate is unknown'
+    if (key === 'views' && !Object.entries(value as object).every(([k, v]) => (PICTURE_VIEWS as string[]).includes(k) && isViewPicture(v)))
+      return 'views: front, side or back, each a picture from this server with an optional crop'
     if (!checkStrings(value)) return `field ${key} is too large or too deep`
   }
   if (JSON.stringify(fields).length > MAX_JSON) return 'record too large'
@@ -173,6 +175,27 @@ export function checkFields(kind: Kind, fields: Record<string, unknown>): string
 }
 
 const MAX_RANKED = 1000
+
+/** A marked view: a picture of this server and, when set, a crop inside it (shares 0 … 1). */
+function isViewPicture(v: unknown): boolean {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return false
+  const r = v as Record<string, unknown>
+  if (Object.keys(r).length !== 2 || typeof r.src !== 'string' || !IMAGE_PATH.test(r.src)) return false
+  if (r.crop === null) return true
+  const c = r.crop as Record<string, unknown>
+  if (!c || typeof c !== 'object' || Object.keys(c).length !== 4) return false
+  const share = (n: unknown) => typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= 1
+  return (
+    share(c.x) &&
+    share(c.y) &&
+    share(c.w) &&
+    share(c.h) &&
+    (c.w as number) > 0 &&
+    (c.h as number) > 0 &&
+    (c.x as number) + (c.w as number) <= 1.0001 &&
+    (c.y as number) + (c.h as number) <= 1.0001
+  )
+}
 
 /** A ranking as src/domain/duel.ts keeps it: product ids best first and two positions in it. */
 function isRanking(v: unknown): boolean {
@@ -236,6 +259,14 @@ export function sanitize<T extends AnyRecord>(kind: Kind, record: T): T {
   if (Array.isArray(r.links)) r.links = (r.links as unknown[]).filter((l) => typeof l === 'string' && /^https?:\/\//i.test(l))
   if (typeof r.image === 'string' && r.image !== '' && !IMAGE_PATH.test(r.image)) r.image = ''
   if (Array.isArray(r.images)) r.images = (r.images as unknown[]).filter((v) => typeof v === 'string' && IMAGE_PATH.test(v)).slice(0, MAX_PICTURES)
-  if (kind === 'products') r.extra = extra
+  if (kind === 'products') {
+    r.extra = extra
+    // A marked view only for a picture the product still has.
+    const own = new Set([r.image, ...((r.images as unknown[]) ?? [])])
+    if (r.views && typeof r.views === 'object')
+      r.views = Object.fromEntries(
+        Object.entries(r.views).filter(([k, v]) => (PICTURE_VIEWS as string[]).includes(k) && isViewPicture(v) && own.has((v as { src: string }).src)),
+      )
+  }
   return r as T
 }

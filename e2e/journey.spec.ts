@@ -167,6 +167,30 @@ test('a visitor sees what Propario does and tries the demo, which never talks to
   await expect(page.getByText('Not in the demo – reading shop pages needs your own account.')).toBeVisible()
   await page.locator('dialog.drawer').getByRole('button', { name: 'Close', exact: true }).click()
 
+  // Arvika's dimension drawing shows its front: framed by dragging across the cabinet in it.
+  await page.getByRole('button', { name: 'Arvika', exact: true }).click()
+  await page.getByRole('button', { name: 'Show picture 2' }).click()
+  await page.getByRole('button', { name: 'Update pictures' }).click()
+  await page.getByRole('button', { name: 'Set as view' }).click()
+  await expect(page.getByRole('heading', { name: 'Which side does it show?' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Front', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  const pic = page.locator('.pview-pic')
+  await expect(pic).toHaveAccessibleName(/Part of the picture/)
+  await expect.poll(() => pic.locator('img').evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0)
+  const area = (await pic.boundingBox())!
+  // The cabinet sits at 150–490 × 150–340 of the 640 × 480 drawing.
+  await page.mouse.move(area.x + area.width * (150 / 640), area.y + area.height * (150 / 480))
+  await page.mouse.down()
+  await page.mouse.move(area.x + area.width * (320 / 640), area.y + area.height * (250 / 480), { steps: 4 })
+  await page.mouse.move(area.x + area.width * (490 / 640), area.y + area.height * (340 / 480), { steps: 4 })
+  await page.mouse.up()
+  await expect(page.getByText('Part drawn by hand.')).toBeVisible()
+  await expect(pic).toHaveAccessibleName(/from the left 23 %, from the top 31 %, 53 % wide, 40 % high/)
+  await accessible(page, 'picture as a view')
+  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await expect(page.locator('.pimg-slide .pimg-view')).toHaveText('Front')
+  await page.locator('dialog.drawer').getByRole('button', { name: 'Close', exact: true }).click()
+
   // Side by side, the sizes to scale: Mira is 200 cm wide where the requirements allow 180.
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.getByRole('checkbox', { name: /^Select for comparison: .*Arvika$/ }).check()
@@ -194,6 +218,14 @@ test('a visitor sees what Propario does and tries the demo, which never talks to
   await size.getByRole('button', { name: 'Front' }).click()
   expect(await size.locator('.size-scroll').evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true)
   await accessible(page, 'sizes to scale on a phone')
+  // The marked drawing stands for Arvika's front.
+  await expect(size.locator('image[href="/demo/sideboard-arvika-dims.svg"]')).toHaveCount(1)
+  // Two products, as in a duel, can also be laid one over the other.
+  await page.getByRole('button', { name: 'Remove from comparison' }).last().click()
+  await size.getByRole('button', { name: 'Overlaid' }).click()
+  await expect(size.locator('.size-col.overlay .size-cap')).toHaveCount(2)
+  await expect(size.locator('.size-col.overlay .size-body')).toHaveCount(2)
+  await accessible(page, 'sizes overlaid')
   expect(calls).toEqual([])
 
   // Ending the demo removes its data from the browser.

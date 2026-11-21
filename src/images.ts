@@ -7,10 +7,21 @@ import { factsFromUrl } from './domain/url-facts'
 import { DEMO_PICTURE, isDemo } from './demo'
 import { api } from './api'
 import { takeFacts, updateProduct } from './db/repo'
-import type { Product } from './db/types'
+import type { Crop, PictureView, Product } from './db/types'
 import { safeHref } from './domain/values'
 import { cleanFacts, type ProductFacts } from './shared/product-facts.ts'
-import { furtherCandidates, looksLikeDrawing, pixelStats, type Pictures, withAdded, withMain, without } from './domain/pictures'
+import {
+  furtherCandidates,
+  looksLikeDrawing,
+  markView,
+  pixelStats,
+  remapViews,
+  type Pictures,
+  viewsWithout,
+  withAdded,
+  withMain,
+  without,
+} from './domain/pictures'
 import { db } from './db/db'
 import { IMAGE_PATH, MAX_PICTURES } from './shared/records.ts'
 
@@ -293,8 +304,17 @@ export async function addPicture(p: Product, blob: Blob): Promise<void> {
 /** Makes one of a product's pictures the main one; the former main one stays as a further picture. */
 export const makeMainPicture = (p: Product, path: string) => changePictures(p, (c) => withMain(picturesOf(c), path, MAX_PICTURES))
 
-/** Removes one picture; when it was the main one, the next takes its place. */
-export const removePicture = (p: Product, path: string) => changePictures(p, (c) => without(picturesOf(c), path))
+/** Removes one picture; when it was the main one, the next takes its place. A view marked on it goes with it. */
+export const removePicture = (p: Product, path: string) =>
+  changePictures(p, (c) => {
+    const views = viewsWithout(c.views, path)
+    // null removes a mark: views are merged per side (src/shared/records.ts).
+    return { ...without(picturesOf(c), path), ...(Object.keys(views).length ? ({ views } as Partial<Product>) : {}) }
+  })
+
+/** Marks a picture as the product's front, side or back (null: no view), cut to `crop` (null: automatically). */
+export const setPictureView = (p: Product, path: string, view: PictureView | null, crop: Crop | null) =>
+  changePictures(p, (c) => ({ views: markView(c.views, path, view, crop) }) as Partial<Product>)
 
 /** Adds a further picture from a shop page – best effort: without room it is left out. */
 async function addImageFromBlob(p: Product, blob: Blob): Promise<void> {
@@ -410,13 +430,20 @@ export async function rehostImages(products: Product[], projectId: string): Prom
   }
   const out: Product[] = []
   for (const p of products) {
-    const image = await rehost(p.image)
+    // Old place → new place, so marked views follow their pictures.
+    const moved = new Map<string, string>()
+    const move = async (src: string | undefined) => {
+      const path = await rehost(src)
+      if (src && path) moved.set(src, path)
+      return path
+    }
+    const image = await move(p.image)
     const images: string[] = []
     for (const src of p.images ?? []) {
-      const path = await rehost(src)
+      const path = await move(src)
       if (path) images.push(path)
     }
-    out.push({ ...p, image, images })
+    out.push({ ...p, image, images, views: remapViews(p.views, (src) => moved.get(src) ?? '') })
   }
   return out
 }
@@ -438,10 +465,18 @@ export async function inlineImages(products: Product[]): Promise<Product[]> {
     }
   }
   return Promise.all(
-    products.map(async (p) => ({
-      ...p,
-      image: p.image ? await inline(p.image) : p.image,
-      ...(p.images?.length ? { images: await Promise.all(p.images.map(inline)) } : {}),
-    })),
+    products.map(async (p) => {
+      // Each picture once; a marked view carries the same data URL as its picture.
+      const done = new Map<string, string>()
+      const once = async (src: string) => done.get(src) ?? done.set(src, await inline(src)).get(src)!
+      const image = p.image ? await once(p.image) : p.image
+      const images = p.images?.length ? await Promise.all(p.images.map(once)) : undefined
+      return {
+        ...p,
+        image,
+        ...(images ? { images } : {}),
+        ...(p.views && Object.keys(p.views).length ? { views: remapViews(p.views, (src) => done.get(src) ?? '') } : {}),
+      }
+    }),
   )
 }
