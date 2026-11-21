@@ -1,8 +1,9 @@
 /**
- * What Propario does, told as the way to a purchase decision: collect, set requirements, sort
- * out by swiping, compare, settle it in duels (sizes to scale), decide together – each with a
- * small still made of the app's own parts and the demo's invented sideboards. Signed out it is the start page (with the sign-in in the opening); signed in it is
- * "What Propario can do" in the menu. Either way it leads into the demo (src/demo.ts).
+ * What Propario does, told as the way to a purchase decision: collect, set requirements, compare,
+ * sort out by swiping, settle it in duels (sizes to scale), decide together – each with a small
+ * still made of the app's own parts and the demo's invented sideboards. Signed out it is the start
+ * page (with the sign-in in the opening); signed in it is "What Propario can do" in the menu.
+ * Either way the opening leads into the demo (src/demo.ts).
  */
 import type { ReactNode } from 'react'
 import { isDemo, startDemo } from '../demo'
@@ -14,10 +15,14 @@ export function Overview({ signIn }: { signIn?: ReactNode }) {
   const { m, locale, setLocale, fmt } = useI18n()
   const o = m.overview
   const demo = isDemo()
-  const tryDemo = !demo && (
-    <button type="button" className="btn big" onClick={startDemo}>
-      {o.tryDemo}
-    </button>
+  // See for yourself: the invented comparisons, right where one decides to sign in or not.
+  const demoBox = !demo && (
+    <section className="overview-demo-box" aria-labelledby="overview-demo-title">
+      <h2 id="overview-demo-title">{o.closingTitle}</h2>
+      <button type="button" className="btn" onClick={startDemo}>
+        {o.tryDemo}
+      </button>
+    </section>
   )
 
   return (
@@ -42,22 +47,19 @@ export function Overview({ signIn }: { signIn?: ReactNode }) {
         <div className="overview-hero-words">
           <h1 id="overview-title">{o.title}</h1>
           <p className="overview-lead">{o.lead}</p>
-          {!signIn && <div className="row">{tryDemo}</div>}
         </div>
         {signIn ? (
           <div className="overview-signin">
             {signIn}
-            {tryDemo && (
-              <div className="overview-demo">
-                <p className="muted small">{o.demoHint}</p>
-                {tryDemo}
-              </div>
-            )}
+            {demoBox}
           </div>
         ) : (
-          <figure className="still still-card" aria-hidden="true">
-            <ProductStill fmt={fmt} />
-          </figure>
+          <div className="overview-signin">
+            <figure className="still still-card" aria-hidden="true">
+              <ProductStill fmt={fmt} />
+            </figure>
+            {demoBox}
+          </div>
         )}
       </section>
 
@@ -82,27 +84,6 @@ export function Overview({ signIn }: { signIn?: ReactNode }) {
           </p>
         </Step>
         <Step n={3} title={o.s3Title} text={o.s3Text}>
-          <div className="still-swipe">
-            <div className="still-swipe-card">
-              <img src="/demo/sideboard-kanto.svg" alt="" />
-              <b>Fjell Kanto</b>
-              <span className="still-price">{fmt.money(549)}</span>
-            </div>
-            <div className="still-swipe-buttons">
-              <span className="vote dislike">
-                <Glyph name="thumbDown" />
-              </span>
-              <span className="vote neutral">
-                <Glyph name="neutral" />
-              </span>
-              <span className="vote like">
-                <Glyph name="thumbUp" />
-              </span>
-            </div>
-            <span className="still-swipe-count">{o.swipeCount}</span>
-          </div>
-        </Step>
-        <Step n={4} title={o.s4Title} text={o.s4Text}>
           <table className="still-compare">
             <thead>
               <tr>
@@ -136,6 +117,27 @@ export function Overview({ signIn }: { signIn?: ReactNode }) {
               </tr>
             </tbody>
           </table>
+        </Step>
+        <Step n={4} title={o.s4Title} text={o.s4Text}>
+          <div className="still-swipe">
+            <div className="still-swipe-card">
+              <img src="/demo/sideboard-kanto.svg" alt="" />
+              <b>Fjell Kanto</b>
+              <span className="still-price">{fmt.money(549)}</span>
+            </div>
+            <div className="still-swipe-buttons">
+              <span className="vote dislike">
+                <Glyph name="thumbDown" />
+              </span>
+              <span className="vote neutral">
+                <Glyph name="neutral" />
+              </span>
+              <span className="vote like">
+                <Glyph name="thumbUp" />
+              </span>
+            </div>
+            <span className="still-swipe-count">{o.swipeCount}</span>
+          </div>
         </Step>
         <Step n={5} title={o.s5Title} text={o.s5Text}>
           <div className="still-duel">
@@ -193,12 +195,6 @@ export function Overview({ signIn }: { signIn?: ReactNode }) {
           </ul>
         </div>
       </section>
-
-      <section className="overview-closing" aria-labelledby="overview-closing">
-        <h2 id="overview-closing">{o.closingTitle}</h2>
-        <p className="overview-lead">{demo ? o.inDemo : o.closingText}</p>
-        {tryDemo}
-      </section>
     </main>
   )
 }
@@ -207,10 +203,12 @@ function Step({ n, title, text, children }: { n: number; title: string; text: st
   return (
     <li className="overview-step">
       <div className="overview-step-words">
-        <span className="overview-step-n" aria-hidden="true">
-          {String(n).padStart(2, '0')}
-        </span>
-        <h2>{title}</h2>
+        <h2>
+          <span className="overview-step-n" aria-hidden="true">
+            {n}
+          </span>
+          {title}
+        </h2>
         <p>{text}</p>
       </div>
       <figure className="still" aria-hidden="true">

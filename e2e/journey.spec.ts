@@ -119,7 +119,7 @@ test('Ada sets up the instance with a passkey', async ({ browser }) => {
   // Signed in, the overview is in the menu.
   await page.getByRole('button', { name: 'Menu' }).click()
   await page.getByRole('link', { name: 'What Propario can do' }).click()
-  await expect(page.getByRole('heading', { name: 'Compare together. Decide well.' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Compare quickly, decide better.' })).toBeVisible()
   await page.goto('/')
 })
 
@@ -127,11 +127,11 @@ test('a visitor sees what Propario does and tries the demo, which never talks to
   const context = await browser.newContext()
   const page = await context.newPage()
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'Compare together. Decide well.' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'One link is enough.' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Compare quickly, decide better.' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'One link is enough' })).toBeVisible()
   // The way to a decision: sorting out by swiping and duels with sizes to scale are part of it.
-  await expect(page.getByRole('heading', { name: 'Sort out quickly.' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Settle it in duels.' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Sort out quickly' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Settle it in duels' })).toBeVisible()
   await accessible(page, 'overview')
 
   // From here on, nothing may reach the server's data.
@@ -263,7 +263,7 @@ test('a visitor sees what Propario does and tries the demo, which never talks to
 
   // Ending the demo removes its data from the browser.
   await page.getByRole('button', { name: 'End demo' }).click()
-  await expect(page.getByRole('heading', { name: 'Compare together. Decide well.' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Compare quickly, decide better.' })).toBeVisible()
   await expect.poll(() => page.evaluate(async () => (await indexedDB.databases()).some((d) => d.name === 'propario-demo'))).toBe(false)
   await context.close()
 })

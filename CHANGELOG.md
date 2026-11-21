@@ -6,6 +6,8 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+## 0.16.0 — 2026-11-22
+
 - Added: side by side and in duels, the products' sizes to scale – from the front, the side and
   above, next to a person for scale. Fields named width, height and depth are found by themselves;
   the space the requirements leave is dashed, and what sticks out is hatched.
@@ -23,8 +25,9 @@ for fixes. See "Versions and releases" in the README.
   and the shallower top of a buffet. Set in its 3D view; drawn in 3D and in the sizes to scale, the
   pictures spread over the parts.
 - Changed: the person beside the products has human proportions, in the drawing and in 3D.
-- Changed: the start page tells the way to a decision in six steps, with sorting out by swiping
-  and settling it in duels with the sizes to scale.
+- Changed: the start page tells the way to a decision in six short steps, with sorting out by
+  swiping and settling it in duels with the sizes to scale; the way into the demo sits in the
+  opening, next to the sign-in.
 - Security: the Permissions-Policy allows WebXR for this origin only; camera access stays off.
 
 ## 0.15.3 — 2026-11-20

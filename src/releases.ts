@@ -11,6 +11,23 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.16.0',
+    notes: {
+      en: [
+        'Sizes to scale side by side and in duels – next to or over each other, with the space you have.',
+        'Set a picture as front, side or back: a dimension drawing then stands to scale.',
+        'The products in 3D, also from their details – a buffet’s base and top as parts.',
+        'A shorter start page that leads straight into the demo.',
+      ],
+      de: [
+        'Größen maßstabsgetreu, auch im Duell – neben- oder übereinander, mit dem Platz, den ihr habt.',
+        'Bilder als Vorder-, Seiten- oder Rückansicht festlegen: Maßzeichnungen stehen dann im Maßstab.',
+        'Die Produkte in 3D, auch aus den Details – Unterteil und Aufsatz eines Buffets als Teile.',
+        'Eine kürzere Startseite, die direkt in die Demo führt.',
+      ],
+    },
+  },
+  {
     version: '0.15.3',
     notes: {
       en: ['Duels only between favourites and what everyone likes – the decision comes faster.'],

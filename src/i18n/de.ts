@@ -408,37 +408,31 @@ export const de: Messages = {
       'Wenn du Produkte ergänzt oder Werte änderst oder ergänzt, antworte zusätzlich mit dieser Tabelle in genau diesem Format (gleiche Spalten, Link zuerst; Unbekanntes leer lassen). Wir können sie dann wieder in unseren Vergleich einfügen.',
   },
   overview: {
-    title: 'Gemeinsam vergleichen. Gut entscheiden.',
-    lead: 'Für die größeren Anschaffungen – das Sideboard, den Laptop, das Fahrrad. Propario bringt euch von vielen Kandidaten zu einer Entscheidung, hinter der alle stehen: festlegen, was zählt, aussortieren, vergleichen, im Duell klären.',
+    title: 'Schnell vergleichen, besser entscheiden.',
+    lead: 'Für die größeren Anschaffungen: Sideboard, Laptop, Fahrrad. Propario bringt euch schneller von vielen Kandidaten zu einer Entscheidung, hinter der alle stehen.',
     tryDemo: 'Demo ausprobieren',
     stepsLabel: 'So entscheidet ihr',
-    demoHint: 'Noch kein Konto? Sieh dich mit drei erfundenen Vergleichen um – nichts wird gespeichert.',
-    s1Title: 'Ein Link genügt.',
-    s1Text:
-      'Shop-Link einfügen: Propario übernimmt Bild, Preis, Maße und Datenblatt – ohne KI und ohne Tracking. Oder bring eine Tabelle aus Excel, CSV oder deiner KI mit.',
-    s2Title: 'Was es muss, was schön wäre.',
-    s2Text:
-      'Muss, wichtig, Wunsch und ein Budget. Jedes Produkt wird von selbst daran geprüft: grün erfüllt, rot nicht erfüllt, grau noch unbekannt – fehlende Daten zählen nie dagegen.',
+    s1Title: 'Ein Link genügt',
+    s1Text: 'Propario übernimmt Details direkt vom Shop – oder bring deine Tabelle aus Excel oder deiner KI mit.',
+    s2Title: 'Definiere deine Anforderungen',
+    s2Text: 'Jedes Produkt wird dagegen geprüft.',
     reqs: [
       ['Muss', 'Passt in die Nische · Breite ≤ 180 cm', 'pass'],
       ['Wichtig', 'Nicht zu tief · ≤ 45 cm', 'pass'],
       ['Wunsch', 'Türen schließen leise', 'fail'],
       ['Wunsch', 'Lieferbar in 6 Wochen', 'open'],
     ],
-    s3Title: 'Schnell aussortieren.',
-    s3Text:
-      'Karte für Karte wischen: Daumen hoch, neutral oder runter, jede Person für sich. Was niemandem gefällt, ist schnell aus dem Rennen – ohne Diskussion.',
-    swipeCount: '4 von 12',
-    s4Title: 'Nebeneinander, nicht durcheinander.',
-    s4Text:
-      'Die Kandidaten nebeneinander: beste Werte markiert, Unterschiede hervorgehoben, Gleiches auf Wunsch ausgeblendet. Dahinter eine Tabelle wie in Excel und Filter wie in Jira.',
+    s3Title: 'Nebeneinander, nicht durcheinander',
+    s3Text: 'Die Kandidaten nebeneinander: beste Werte werden visualisiert, Unterschiede hervorgehoben.',
     depth: 'Tiefe',
-    s5Title: 'Im Duell klären.',
-    s5Text:
-      'Immer nur zwei: Welches ist besser? Propario fragt, bis eure Rangliste steht – und zeigt beide maßstabsgetreu, nebeneinander oder übereinander, mit dem Platz, den ihr habt.',
+    s4Title: 'Schnell aussortieren',
+    s4Text: 'Swipen: Daumen hoch oder runter. Was niemandem gefällt, ist aussortiert.',
+    swipeCount: '4 von 12',
+    s5Title: 'Im Duell klären',
+    s5Text: 'Welches ist besser? Propario stellt sie nebeneinander und fragt, bis eure Rangliste steht.',
     room: 'Platz 180 cm',
-    s6Title: 'Gemeinsam entscheiden, in Ruhe.',
-    s6Text: 'Aus den Ranglisten aller wird eine gemeinsame, ihr Erster kann die Entscheidung werden. Dann der Kauf und wann Rückgabe und Garantie enden.',
+    s6Title: 'Gemeinsam entscheiden',
+    s6Text: 'Eine gemeinsame Rangliste.',
     returnLine: 'Gekauft · Rückgabe bis 19.12. · Garantie bis 2028',
     aiTitle: 'Mit deiner KI, wenn du willst.',
     aiText:
@@ -452,9 +446,6 @@ export const de: Messages = {
       'Barrierefrei (WCAG 2.1 AA), freie Software (AGPL)',
     ],
     closingTitle: 'Überzeug dich selbst.',
-    closingText:
-      'Drei erfundene Vergleiche – ein Sideboard, Kopfhörer und ein Saugroboter: bearbeiten, filtern, wischen, im Duell klären und entscheiden, wie du willst. Nichts wird gespeichert.',
-    inDemo: 'Du bist in der Demo – hier ist alles erfunden, und nichts wird gespeichert.',
   },
   fieldHint: {
     description: 'Was das Produkt ist – meist von der Shopseite übernommen.',
