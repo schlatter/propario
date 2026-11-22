@@ -5052,6 +5052,9 @@ dialog.model3d-modal {
   position: fixed;
   inset: 0;
   background: transparent;
+  /* Swipes and twists are read by the page, not taken by the browser for scrolling or zooming. */
+  touch-action: none;
+  user-select: none;
 }
 .model3d-overlay[hidden] {
   display: none;
@@ -5074,6 +5077,26 @@ dialog.model3d-modal {
 }
 .model3d-ar-bar .row {
   gap: 8px;
+  flex-wrap: wrap;
+}
+.model3d-ar-bar .btn {
+  min-height: 44px;
+}
+.model3d-ar-bar .btn.icon {
+  min-width: 44px;
+  justify-content: center;
+}
+.model3d-ar-bar .btn[aria-pressed='true'] {
+  background: var(--brand-soft);
+  border-color: var(--brand);
+  color: var(--brand-text);
+}
+/* Sideways the bar stays narrow on the left, so most of the room is seen. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .model3d-ar-bar {
+    right: auto;
+    width: min(360px, 45vw);
+  }
 }
 /* The rest of the height, for the top part of a form: shown, not typed. */
 .model3d-rest {

@@ -11,6 +11,11 @@ for fixes. See "Versions and releases" in the README.
 - Added: the form is read from a dimension drawing set as the side view (and the widths from the
   front view) – no typing for most furniture. One picture can show several sides, each with its
   own part, as in IKEA's drawings.
+- Changed: the room view is easier to use – swipe or twist with two fingers to turn the product,
+  arrows for both ways, the product glides instead of jumping and stays put on an anchor where
+  the phone has anchors. "See-through" shows what is behind it; with several products, "Next
+  product" puts the next one in the same place to compare in the room. Its name and size stay in
+  view, and a tip says that holding the phone sideways shows more of a small room.
 - Fixed: in the room view a tap placed nothing, and the hint and buttons sat oddly over the camera
   picture. The product now follows the ring as a preview until a tap sets it down.
 

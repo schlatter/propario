@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import type { Crop, Product, ShapePart } from '../../db/types'
@@ -8,6 +8,8 @@ import { fitShape } from '../../domain/form'
 import { ShapeEditor } from './ShapeEditor'
 import { useI18n } from '../../i18n'
 import { Modal } from '../../ui/Dialog'
+import { Glyph } from '../../ui/Glyph'
+import { follow, Gestures, lerpAngle } from '../../domain/gestures'
 import { measureOnce } from './useMeasured'
 
 export interface Model3DItem {
@@ -47,16 +49,20 @@ interface Scene3D {
  * itself, nothing leaves the device. Loaded only when opened (three.js).
  */
 export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]; edit?: Product; onClose: () => void }) {
-  const { m } = useI18n()
+  const { m, fmt } = useI18n()
   const host = useRef<HTMLDivElement>(null)
   const overlay = useRef<HTMLDivElement>(null)
   const bar = useRef<HTMLDivElement>(null)
   const ctx = useRef<Scene3D | null>(null)
-  const ar = useRef<{ session: XRSession | null; model: THREE.Group | null }>({ session: null, model: null })
+  /** The running room view (WebXR), kept outside React: it changes every frame. */
+  const room = useRef<Room | null>(null)
+  const gestures = useRef(new Gestures(() => window.innerWidth))
   const [failed, setFailed] = useState(false)
   const [arAvailable, setArAvailable] = useState(false)
   const [arState, setArState] = useState<'off' | 'starting' | 'searching' | 'placed'>('off')
   const [arError, setArError] = useState(false)
+  /** What the bar over the camera picture shows: the product in the room and whether it is see-through. */
+  const [arShown, setArShown] = useState<{ id: string; ghost: boolean }>({ id: '', ghost: false })
   const fieldSize = items.find((i) => i.id === edit?.id)?.size ?? {}
   /** The form being set (cm), inside the product's size; empty: one box. Shown in 3D as it changes. */
   const [draft, setDraft] = useState<ShapePart[]>(() => fitShape(edit?.shape ?? [], fieldSize))
@@ -141,7 +147,7 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
     ctx.current = c
     return () => {
       c.alive = false
-      void ar.current.session?.end().catch(() => {})
+      void room.current?.session.end().catch(() => {})
       ro.disconnect()
       controls.dispose()
       renderer.setAnimationLoop(null)
@@ -197,10 +203,10 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
     // Rebuilt when sizes or forms change.
   }, [shapeKey, failed])
 
-  // Taps on the buttons over the camera picture must not also place the product.
-  // Only the bar: the overlay itself covers the whole screen, and a tap anywhere else places.
+  // In the room every touch is read here (tap, swipe, twist); the browser's own "select" would
+  // place the product a second time.
   useEffect(() => {
-    const el = bar.current
+    const el = overlay.current
     const stop = (e: Event) => e.preventDefault()
     el?.addEventListener('beforexrselect', stop)
     return () => el?.removeEventListener('beforexrselect', stop)
@@ -218,11 +224,28 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
   }
 
   // ---------- in the room (WebXR) ----------
+  /** One product as it stands in the room, with a soft shadow so it stands instead of floating. */
+  const roomModel = (c: Scene3D, id: string) => {
+    const p = c.boxes.get(id)!
+    const model = makeModel(
+      c,
+      { ...p, x: 0 },
+      shown.find((i) => i.id === id)!,
+    )
+    const shadow = new THREE.Mesh(
+      c.keep(new THREE.PlaneGeometry(p.w + 0.08, p.d + 0.08).rotateX(-Math.PI / 2)),
+      c.keep(new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.22, depthWrite: false })),
+    )
+    shadow.position.y = 0.002
+    shadow.userData.shadow = true
+    model.add(shadow)
+    model.visible = false
+    return model
+  }
+
   const startAr = async (id: string) => {
     const c = ctx.current
-    const p = c?.boxes.get(id)
-    const item = shown.find((i) => i.id === id)
-    if (!c || !p || !item || !navigator.xr) return
+    if (!c || !c.boxes.has(id) || !navigator.xr) return
     setArError(false)
     // The overlay must be shown before the session takes it over.
     setArState('starting')
@@ -231,7 +254,8 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
     try {
       session = await navigator.xr.requestSession('immersive-ar', {
         requiredFeatures: ['hit-test'],
-        optionalFeatures: ['dom-overlay'],
+        // Anchors keep a product where it was set down while the phone learns the room.
+        optionalFeatures: ['dom-overlay', 'anchors'],
         domOverlay: { root: overlay.current! },
       })
     } catch {
@@ -240,25 +264,15 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
       return
     }
     const { renderer, camera, keep, colors } = c
-    const arScene = new THREE.Scene()
-    arScene.add(...lights())
+    const scene = new THREE.Scene()
+    scene.add(...lights())
     const reticle = new THREE.Mesh(
       keep(new THREE.RingGeometry(0.12, 0.15, 40).rotateX(-Math.PI / 2)),
       keep(new THREE.MeshBasicMaterial({ color: colors.brand })),
     )
-    reticle.matrixAutoUpdate = false
     reticle.visible = false
-    const model = makeModel(c, { ...p, x: 0 }, item)
-    // A soft shadow under it, so it stands on the floor instead of floating.
-    const shadow = new THREE.Mesh(
-      keep(new THREE.PlaneGeometry(p.w + 0.08, p.d + 0.08).rotateX(-Math.PI / 2)),
-      keep(new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.22, depthWrite: false })),
-    )
-    shadow.position.y = 0.002
-    model.add(shadow)
-    model.visible = false
-    arScene.add(reticle, model)
-    ar.current = { session, model }
+    const model = roomModel(c, id)
+    scene.add(reticle, model)
 
     renderer.xr.enabled = true
     renderer.xr.setReferenceSpaceType('local')
@@ -270,46 +284,143 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
       setArError(true)
       return
     }
-    /** Puts the product where the ring is, its front towards the phone. */
-    const toRing = () => {
-      model.position.setFromMatrixPosition(reticle.matrix)
-      const eye = new THREE.Vector3().setFromMatrixPosition(renderer.xr.getCamera().matrixWorld)
-      model.rotation.y = Math.atan2(eye.x - model.position.x, eye.z - model.position.z)
-      model.visible = true
+    const r: Room = {
+      session,
+      scene,
+      model,
+      id,
+      placed: false,
+      turn: 0,
+      base: 0,
+      at: new THREE.Vector3(),
+      anchor: null,
+      wantDown: false,
+      ghost: false,
+      onPlaced: () => setArState('placed'),
+      ended: false,
     }
-    // Until a tap it follows the ring as a preview; a tap sets it down, the next one moves it.
-    let placed = false
-    const controller = renderer.xr.getController(0)
-    controller.addEventListener('select', () => {
-      if (!reticle.visible) return
-      toRing()
-      placed = true
-      setArState('placed')
-    })
-    arScene.add(controller)
+    room.current = r
+    setArShown({ id, ghost: false })
     setArState('searching')
-    renderer.setAnimationLoop((_, frame) => {
-      if (frame) {
-        const space = renderer.xr.getReferenceSpace()
-        const found = frame.getHitTestResults(hits)[0]?.getPose(space!)
-        reticle.visible = !!found
-        if (found) {
-          reticle.matrix.fromArray(found.transform.matrix)
-          if (!placed) toRing()
+
+    const ring = new THREE.Vector3()
+    const ringTarget = new THREE.Vector3()
+    const ringQuat = new THREE.Quaternion()
+    const target = new THREE.Vector3()
+    const eye = new THREE.Vector3()
+    let last = 0
+    renderer.setAnimationLoop((time, frame) => {
+      const dt = last ? (time - last) / 1000 : 0
+      last = time
+      const space = renderer.xr.getReferenceSpace()
+      if (frame && space) {
+        const hit = frame.getHitTestResults(hits)[0]
+        const pose = hit?.getPose(space)
+        if (pose) {
+          const p = pose.transform.position
+          ringTarget.set(p.x, p.y, p.z)
+          const o = pose.transform.orientation
+          ringQuat.set(o.x, o.y, o.z, o.w)
+          // The ring glides instead of jumping with every measurement.
+          if (!reticle.visible) ring.copy(ringTarget)
+          else ring.lerp(ringTarget, follow(dt, 0.06))
+          reticle.position.copy(ring)
+          reticle.quaternion.copy(ringQuat)
         }
+        // The ring stays: it shows where a tap puts the product.
+        reticle.visible = !!pose
+        // A tap is only noted; a floor hit counts in its own frame, so it is set down here.
+        if (r.wantDown) {
+          r.wantDown = false
+          if (hit && pose) setDownAt(r, hit, pose)
+        }
+        // Where the product should be: on the ring while it is a preview, then on its anchor.
+        let goal: THREE.Vector3 | null = null
+        if (r.placed) {
+          const anchored = r.anchor && frame.trackedAnchors?.has(r.anchor) ? frame.getPose(r.anchor.anchorSpace, space) : null
+          if (anchored) r.at.set(anchored.transform.position.x, anchored.transform.position.y, anchored.transform.position.z)
+          goal = r.at
+        } else if (pose) goal = ring
+        if (goal) {
+          eye.setFromMatrixPosition(renderer.xr.getCamera().matrixWorld)
+          // Its front towards the phone while it is a preview; set down, it keeps its way.
+          const facing = Math.atan2(eye.x - goal.x, eye.z - goal.z)
+          const yaw = (r.placed ? r.base : facing) + r.turn
+          target.copy(goal)
+          if (!r.model.visible) {
+            r.model.position.copy(target)
+            r.model.rotation.y = yaw
+            r.model.visible = true
+          } else {
+            const t = follow(dt, r.placed ? 0.05 : 0.08)
+            r.model.position.lerp(target, t)
+            r.model.rotation.y = lerpAngle(r.model.rotation.y, yaw, follow(dt, 0.05))
+          }
+        }
+        seeThrough(r.model, r.ghost)
       }
-      renderer.render(arScene, camera)
+      renderer.render(r.scene, camera)
     })
     session.addEventListener('end', () => {
+      r.ended = true
       hits.cancel()
+      r.anchor?.delete()
       renderer.setAnimationLoop(null)
       renderer.xr.enabled = false
-      ar.current = { session: null, model: null }
+      room.current = null
       if (!c.alive) return
       setArState('off')
       c.render()
     })
   }
+
+  /** A tap sets the product down where the ring is (and moves it there once it stands) – in the next frame. */
+  const setDown = () => {
+    if (room.current) room.current.wantDown = true
+  }
+
+  /** Turns the product in the room; seen from above, positive is anticlockwise. */
+  const turnInRoom = (by: number) => {
+    if (room.current) room.current.turn += by
+  }
+
+  /** Another product of the comparison in the same place and the same way round – to compare in the room. */
+  const nextInRoom = () => {
+    const r = room.current
+    const c = ctx.current
+    if (!r || !c) return
+    const ids = placed.boxes.map((b) => b.id)
+    const id = ids[(ids.indexOf(r.id) + 1) % ids.length]
+    const model = roomModel(c, id)
+    model.position.copy(r.model.position)
+    model.rotation.y = r.model.rotation.y
+    model.visible = r.model.visible
+    r.scene.remove(r.model)
+    r.scene.add(model)
+    r.model = model
+    r.id = id
+    setArShown({ id, ghost: r.ghost })
+  }
+
+  const onTouch = (kind: 'down' | 'move' | 'up', e: ReactPointerEvent<HTMLDivElement>) => {
+    // The bar has its own buttons.
+    if (e.target instanceof Element && e.target.closest('.model3d-ar-bar')) return
+    const g = gestures.current
+    const result =
+      kind === 'down'
+        ? g.down(e.pointerId, { x: e.clientX, y: e.clientY })
+        : kind === 'move'
+          ? g.move(e.pointerId, { x: e.clientX, y: e.clientY })
+          : g.up(e.pointerId)
+    if (result?.kind === 'turn') turnInRoom(result.by)
+    if (result?.kind === 'tap') setDown()
+  }
+  const arBox = room.current ? ctx.current?.boxes.get(arShown.id) : undefined
+  const arName = items.find((i) => i.id === arShown.id)?.name ?? ''
+  const nextName = (() => {
+    const ids = placed.boxes.map((b) => b.id)
+    return items.find((i) => i.id === ids[(ids.indexOf(arShown.id) + 1) % ids.length])?.name ?? ''
+  })()
 
   return (
     <Modal open onClose={onClose} labelledBy="model3d-title" className="model3d-modal">
@@ -354,6 +465,7 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
                 <button type="button" className="btn primary" onClick={() => void startAr(arId)}>
                   {m.model3d.ar}
                 </button>
+                <p className="muted small">{m.model3d.arTip}</p>
                 {arError && (
                   <p className="small" role="alert">
                     {m.model3d.arFailed}
@@ -364,23 +476,53 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
             {edit && <ShapeEditor product={edit} size={fieldSize} draft={draft} setDraft={setDraft} />}
           </>
         )}
-        {/* Shown over the camera picture while in the room. */}
-        <div ref={overlay} className="model3d-overlay" hidden={arState === 'off'}>
+        {/* Shown over the camera picture while in the room: the whole screen reads touches, the bar has the buttons. */}
+        <div
+          ref={overlay}
+          className="model3d-overlay"
+          hidden={arState === 'off'}
+          onPointerDown={(e) => onTouch('down', e)}
+          onPointerMove={(e) => onTouch('move', e)}
+          onPointerUp={(e) => onTouch('up', e)}
+          onPointerCancel={(e) => onTouch('up', e)}
+        >
           <div ref={bar} className="model3d-ar-bar">
-            <p>{arState === 'placed' ? m.model3d.arPlaced : m.model3d.arHint}</p>
-            <div className="row">
-              {arState === 'placed' && (
-                <button
-                  type="button"
-                  className="btn"
-                  onClick={() => {
-                    if (ar.current.model) ar.current.model.rotation.y += Math.PI / 12
-                  }}
-                >
-                  {m.model3d.arTurn}
+            {arBox && (
+              <p className="model3d-ar-name">
+                <b>{arName}</b>{' '}
+                <span className="muted">
+                  {fmt.number(Math.round(arBox.w * 1000) / 10)} × {fmt.number(Math.round(arBox.h * 1000) / 10)} × {fmt.number(Math.round(arBox.d * 1000) / 10)}{' '}
+                  cm
+                </span>
+              </p>
+            )}
+            <p className="small">{arState === 'placed' ? m.model3d.arPlaced : m.model3d.arHint}</p>
+            <div className="row model3d-ar-buttons">
+              <button type="button" className="btn icon" aria-label={m.model3d.left} title={m.model3d.left} onClick={() => turnInRoom(Math.PI / 12)}>
+                <Glyph name="turnLeft" />
+              </button>
+              <button type="button" className="btn icon" aria-label={m.model3d.right} title={m.model3d.right} onClick={() => turnInRoom(-Math.PI / 12)}>
+                <Glyph name="turnRight" />
+              </button>
+              <button
+                type="button"
+                className="btn"
+                aria-pressed={arShown.ghost}
+                onClick={() => {
+                  if (!room.current) return
+                  room.current.ghost = !room.current.ghost
+                  setArShown((s) => ({ ...s, ghost: !s.ghost }))
+                }}
+              >
+                {m.model3d.arGhost}
+              </button>
+              {placed.boxes.length > 1 && (
+                <button type="button" className="btn" onClick={nextInRoom} aria-label={m.model3d.arNextLabel(nextName)}>
+                  {m.model3d.arNext}
                 </button>
               )}
-              <button type="button" className="btn primary" onClick={() => void ar.current.session?.end()}>
+              <span className="spacer" />
+              <button type="button" className="btn primary" onClick={() => void room.current?.session.end()}>
                 {m.model3d.arEnd}
               </button>
             </div>
@@ -478,4 +620,62 @@ function makeModel(c: Scene3D, p: Placed, item: Model3DItem): THREE.Group {
     })
   }
   return group
+}
+
+interface Room {
+  session: XRSession
+  scene: THREE.Scene
+  model: THREE.Group
+  id: string
+  /** Set down (true) or still a preview on the ring. */
+  placed: boolean
+  /** The way round it was turned by hand, radians; added to where it faced when set down. */
+  turn: number
+  base: number
+  /** Where it stands; followed by its anchor where the browser has anchors. */
+  at: THREE.Vector3
+  anchor: XRAnchor | null
+  /** A tap waiting for the next frame to set the product down. */
+  wantDown: boolean
+  ghost: boolean
+  /** Tells the bar that it stands. */
+  onPlaced: () => void
+  ended: boolean
+}
+
+/** Half see-through, to check what is behind it – a socket, a windowsill. The shadow stays as it is. */
+function seeThrough(model: THREE.Object3D, on: boolean) {
+  model.traverse((o) => {
+    if (!(o instanceof THREE.Mesh) || o.userData.shadow) return
+    for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
+      if (m.transparent === on) continue
+      m.transparent = on
+      m.opacity = on ? 0.45 : 1
+      m.depthWrite = !on
+      m.needsUpdate = true
+    }
+  })
+}
+
+/** Sets the product down on a floor hit of the current frame, its front towards the phone, on an anchor where there are anchors. */
+function setDownAt(r: Room, hit: XRHitTestResult, pose: XRPose) {
+  const p = pose.transform.position
+  r.at.set(p.x, p.y, p.z)
+  // Set down as the preview faced (turned by hand included); moved later, it keeps its way round.
+  if (!r.placed) r.base = r.model.rotation.y - r.turn
+  r.placed = true
+  r.anchor?.delete()
+  r.anchor = null
+  try {
+    void hit
+      .createAnchor?.()
+      .then((a) => {
+        if (!r.ended) r.anchor = a
+        else a.delete()
+      })
+      .catch(() => {})
+  } catch {
+    // No anchors here: it stays where it was set down.
+  }
+  r.onPlaced()
 }
