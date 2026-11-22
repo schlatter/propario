@@ -192,7 +192,25 @@ export function isShapePart(v: unknown): boolean {
 function isViewPicture(v: unknown): boolean {
   if (!v || typeof v !== 'object' || Array.isArray(v)) return false
   const r = v as Record<string, unknown>
-  return Object.keys(r).length === 2 && typeof r.src === 'string' && IMAGE_PATH.test(r.src) && (r.crop === null || isCrop(r.crop))
+  const keys = Object.keys(r)
+  return (
+    (keys.length === 2 || (keys.length === 3 && 'quad' in r && isQuad(r.quad))) &&
+    typeof r.src === 'string' &&
+    IMAGE_PATH.test(r.src) &&
+    (r.crop === null || isCrop(r.crop))
+  )
+}
+
+/** Four corners of a side in a photo, each a point inside the picture. */
+function isQuad(v: unknown): boolean {
+  const share = (n: unknown) => typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= 1
+  return (
+    Array.isArray(v) &&
+    v.length === 4 &&
+    v.every(
+      (p) => p && typeof p === 'object' && !Array.isArray(p) && Object.keys(p).length === 2 && share((p as { x: unknown }).x) && share((p as { y: unknown }).y),
+    )
+  )
 }
 
 /** A part of a picture: shares 0 … 1, inside the picture, not empty. */

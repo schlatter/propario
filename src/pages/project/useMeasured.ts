@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import type { Crop } from '../../db/types'
+import type { Corner, Crop } from '../../db/types'
+import { rectify, type Quad } from '../../domain/rectify'
 import { contentBox } from '../../domain/size'
 import { rowExtents } from '../../domain/form'
 import { looksLikeDrawing, pixelStats } from '../../domain/pictures'
@@ -151,4 +152,54 @@ export async function looksDrawn(src: string): Promise<boolean> {
   } catch {
     return false
   }
+}
+
+const straight = new Map<string, Promise<HTMLCanvasElement | null>>()
+
+/**
+ * A photo taken from an angle, straightened: the part inside `quad` (the side's corners in the
+ * photo) as a picture of the side's own proportions (`aspect` = width : height). Once per page visit.
+ */
+export function straightened(src: string, quad: Corner[], aspect: number): Promise<HTMLCanvasElement | null> {
+  const key = JSON.stringify([src, quad, Math.round(aspect * 1000)])
+  if (!straight.has(key))
+    straight.set(
+      key,
+      (async () => {
+        try {
+          const { data } = await pixels(src, null, 1400)
+          const w = Math.round(Math.min(900, 900 * aspect))
+          const h = Math.round(w / aspect)
+          const out = rectify(data.data, data.width, data.height, quad as Quad, w, h)
+          if (!out) return null
+          const canvas = document.createElement('canvas')
+          canvas.width = w
+          canvas.height = h
+          const img = new ImageData(w, h)
+          img.data.set(out)
+          canvas.getContext('2d')!.putImageData(img, 0, 0)
+          return canvas
+        } catch {
+          return null
+        }
+      })(),
+    )
+  return straight.get(key)!
+}
+
+/** The same as a picture address for the drawing to scale; null while it is made or when it cannot be. */
+export function useStraightened(src: string | null, quad: Corner[] | undefined, aspect: number): string | null {
+  const [url, setUrl] = useState<string | null>(null)
+  const key = src && quad ? JSON.stringify([src, quad, Math.round(aspect * 1000)]) : ''
+  useEffect(() => {
+    setUrl(null)
+    if (!src || !quad) return
+    let live = true
+    void straightened(src, quad, aspect).then((c) => live && setUrl(c ? c.toDataURL('image/jpeg', 0.9) : null))
+    return () => {
+      live = false
+    }
+    // The key holds everything that changes the picture.
+  }, [key])
+  return url
 }

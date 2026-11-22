@@ -4993,6 +4993,36 @@ table.compare.duel {
 .pview-frame.auto {
   border-style: dashed;
 }
+/* Corners of a side photographed from an angle: four points to drag, joined by a petrol line. */
+.pview-quad {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.pview-quad polygon {
+  fill: rgb(31 122 128 / 0.12);
+  stroke: var(--brand);
+  stroke-width: 2;
+}
+.pview-handle {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  padding: 0;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  background: var(--brand);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.35);
+  cursor: grab;
+  touch-action: none;
+}
+.pview-handle:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
 /* A drawing has two frames: the one being set petrol, the other quiet and see-through. */
 .pview-frame.other {
   border: 2px dashed var(--line-strong);
@@ -5022,6 +5052,11 @@ table.compare.duel {
   background: var(--brand);
   border: 2px solid #fff;
   pointer-events: none;
+}
+.pview-tools .btn[aria-pressed='true'] {
+  background: var(--brand-soft);
+  border-color: var(--brand);
+  color: var(--brand-text);
 }
 .pview-tools {
   gap: 8px;
@@ -5085,8 +5120,8 @@ dialog.model3d-modal {
   right: 12px;
   bottom: calc(12px + env(safe-area-inset-bottom));
   display: grid;
-  gap: 10px;
-  padding: 14px 16px;
+  gap: 8px;
+  padding: 10px 12px;
   border-radius: 14px;
   background: var(--surface);
   color: var(--ink);
@@ -5095,25 +5130,32 @@ dialog.model3d-modal {
 .model3d-ar-bar p {
   margin: 0;
 }
-/* The strip to turn on: ridges like a dial, so it reads as something to swipe. */
+/* The strip to turn on: ridges like a dial that run along as it turns, and a petrol mark where
+   the front is (Model3D.tsx sets --spin and --front every frame). */
 .model3d-dial {
-  height: 44px;
-  border-radius: 10px;
+  position: relative;
+  height: 28px;
+  border-radius: 8px;
   background: var(--sunken);
   touch-action: none;
   cursor: ew-resize;
-  display: grid;
-  place-items: center;
+  overflow: hidden;
 }
 .model3d-dial span {
-  width: calc(100% - 32px);
-  height: 18px;
+  position: absolute;
+  inset: 7px 12px;
   background: repeating-linear-gradient(90deg, var(--line-strong) 0 2px, transparent 2px 12px);
-  border-radius: 4px;
+  background-position: var(--spin, 0) 0;
 }
-.model3d-dial-label {
-  margin-top: -6px !important;
-  text-align: center;
+.model3d-dial i {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: var(--front, 50%);
+  width: 4px;
+  margin-left: -2px;
+  border-radius: 2px;
+  background: var(--brand);
 }
 .model3d-ar-bar .row {
   gap: 8px;
@@ -5239,6 +5281,18 @@ dialog.model3d-modal {
   background: var(--brand);
   color: var(--brand-ink);
   font-weight: 600;
+}
+/* The way to the photo on the front: a quiet line with its button. */
+.model3d-photo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+.model3d-photo p {
+  margin: 0;
+  flex: 1 1 260px;
 }
 /* The form of a product: its parts, top part first as it stands. */
 .model3d-form {

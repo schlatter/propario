@@ -6,6 +6,13 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- Added: a photo taken from an angle can be straightened – set the four corners of the front
+  (or another side) and it covers that side in 3D and stands in the sizes to scale as if taken
+  straight on. "Put the photo on the front" in a product's 3D view leads there. Each face in 3D
+  takes the best there is: a straightened photo, a photo of that side, the drawing's lines in the
+  product's colour, or the colour alone.
+- Changed: the room view's bar is smaller – shorter texts, a thinner strip to turn on, and a petrol
+  mark on it that shows where the front is.
 - Added: a picture can be set as the product's dimension drawing ("Set for 3D" under Pictures).
   Its front and side view are found by themselves – the product's dark lines told from the
   coloured measures, as IKEA and others draw them – and the form is read from the side at once.

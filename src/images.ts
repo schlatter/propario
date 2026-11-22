@@ -7,7 +7,7 @@ import { factsFromUrl } from './domain/url-facts'
 import { DEMO_PICTURE, isDemo } from './demo'
 import { api } from './api'
 import { takeFacts, updateProduct } from './db/repo'
-import type { Crop, Drawing, PictureView, Product, ShapePart } from './db/types'
+import type { Corner, Crop, Drawing, PictureView, Product, ShapePart } from './db/types'
 import { safeHref } from './domain/values'
 import { cleanFacts, type ProductFacts } from './shared/product-facts.ts'
 import {
@@ -320,8 +320,8 @@ export const removePicture = (p: Product, path: string) =>
 export const setDrawing = (p: Product, drawing: Drawing | null, shape?: ShapePart[]) => changePictures(p, () => ({ drawing, ...(shape ? { shape } : {}) }))
 
 /** Marks a picture as the product's front, side or back (null: no view), cut to `crop` (null: automatically). */
-export const setPictureView = (p: Product, path: string, view: PictureView | null, crop: Crop | null) =>
-  changePictures(p, (c) => ({ views: markView(c.views, path, view, crop) }) as Partial<Product>)
+export const setPictureView = (p: Product, path: string, view: PictureView | null, crop: Crop | null, quad?: Corner[]) =>
+  changePictures(p, (c) => ({ views: markView(c.views, path, view, crop, quad) }) as Partial<Product>)
 
 /** Adds a further picture from a shop page – best effort: without room it is left out. */
 async function addImageFromBlob(p: Product, blob: Blob): Promise<void> {

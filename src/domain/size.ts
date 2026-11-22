@@ -1,4 +1,4 @@
-import type { Crop, Priority, Product, PropertyDef, Requirement, ShapePart } from '../db/types'
+import type { Corner, Crop, Priority, Product, PropertyDef, Requirement, ShapePart } from '../db/types'
 
 export type { Crop }
 
@@ -103,11 +103,13 @@ export interface ViewPic {
   crop: Crop | null
   /** Marked by someone: drawn as it is. The main picture only when its shape fits. */
   marked: boolean
+  /** Taken from an angle: the side's corners in the photo, to straighten it. */
+  quad?: Corner[]
 }
 
 export function pictureFor(p: Pick<Product, 'views' | 'drawing'>, main: string | null, view: View): ViewPic | null {
   const marked = view === 'top' ? undefined : p.views?.[view]
-  if (marked) return { src: marked.src, crop: marked.crop, marked: true }
+  if (marked) return { src: marked.src, crop: marked.crop, marked: true, ...(marked.quad ? { quad: marked.quad } : {}) }
   // A dimension drawing's view: drawn straight on, to scale – better than a photo from an angle.
   const drawn = view === 'front' || view === 'side' ? p.drawing?.[view] : null
   if (p.drawing && drawn) return { src: p.drawing.src, crop: drawn, marked: true }

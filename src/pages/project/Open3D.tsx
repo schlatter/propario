@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState } from 'react'
 import type { Product } from '../../db/types'
 import { displayName } from '../../domain/display'
-import { pictureFor, sizeFields, sizeOf } from '../../domain/size'
+import { sizeFields, sizeOf } from '../../domain/size'
 import { useI18n } from '../../i18n'
 import { productImage } from '../../images'
 import { Glyph } from '../../ui/Glyph'
@@ -25,10 +25,12 @@ export function Open3D({ products, data, edit }: { products: Product[]; data: Pr
     shape: p.shape,
     drawing: p.drawing,
     photo: productImage(p),
+    // Photos only: marked for a side (with corners where set), and the main photo for the front.
+    // The drawing comes separately – its lines are used where no photo fits.
     pictures: {
-      front: pictureFor(p, productImage(p), 'front') ?? undefined,
-      side: pictureFor(p, null, 'side') ?? undefined,
-      back: pictureFor(p, null, 'back') ?? undefined,
+      front: p.views?.front ? { ...p.views.front, marked: true } : productImage(p) ? { src: productImage(p)!, crop: null, marked: false } : undefined,
+      side: p.views?.side ? { ...p.views.side, marked: true } : undefined,
+      back: p.views?.back ? { ...p.views.back, marked: true } : undefined,
     },
   }))
   const known = items.some((i) => (i.size.width && i.size.height && i.size.depth) || i.shape?.length)

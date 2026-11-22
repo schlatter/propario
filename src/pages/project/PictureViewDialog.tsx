@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
-import { PICTURE_VIEWS, type Crop, type PictureView, type Product } from '../../db/types'
+import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type RefObject } from 'react'
+import { PICTURE_VIEWS, type Corner, type Crop, type PictureView, type Product } from '../../db/types'
+import { boxQuad, quadBox, type Quad } from '../../domain/rectify'
 import { formFromProfiles, profileSteps } from '../../domain/form'
 import { viewsOf } from '../../domain/pictures'
 import type { Size } from '../../domain/size'
@@ -35,14 +36,31 @@ type Frame = 'front' | 'side'
  * set by hand: drag a frame, or tap two corners one after the other; with the keyboard the arrow
  * keys move it and, with Shift, change its size.
  */
-export function PictureViewDialog({ product, src, size, onClose }: { product: Product; src: string; size?: Size; onClose: () => void }) {
+export function PictureViewDialog({
+  product,
+  src,
+  size,
+  corners: startCorners,
+  onClose,
+}: {
+  product: Product
+  src: string
+  size?: Size
+  /** Open on the front with its corners to set – for a photo taken from an angle. */
+  corners?: boolean
+  onClose: () => void
+}) {
   const { m } = useI18n()
   const marked = viewsOf(product.views, src)
   const isDrawing = product.drawing?.src === src
   /** This picture's own part for a side, when it is marked as it. */
   const cropFor = (v: Kind) => (v && v !== 'drawing' && product.views?.[v]?.src === src ? product.views[v]!.crop : null)
-  const [kind, setKindState] = useState<Kind>(isDrawing ? 'drawing' : (marked[0] ?? 'front'))
-  const touched = useRef(isDrawing || marked.length > 0)
+  const [kind, setKindState] = useState<Kind>(startCorners ? 'front' : isDrawing ? 'drawing' : (marked[0] ?? 'front'))
+  const touched = useRef(!!startCorners || isDrawing || marked.length > 0)
+  /** For a photo taken from an angle: the side's four corners in it, or null for a plain frame. */
+  const quadFor = (k: Kind) => (k && k !== 'drawing' && product.views?.[k]?.src === src ? (product.views[k]!.quad ?? null) : null)
+  const [quad, setQuad] = useState<Corner[] | null>(quadFor(kind))
+  const [cornersOn, setCornersOn] = useState(!!startCorners || !!quadFor(kind))
   /** One side: its part, null while found automatically. */
   const [crop, setCrop] = useState<Crop | null>(cropFor(kind))
   /** A drawing: where its front and side view are, and which of the two frames is being set. */
@@ -75,6 +93,8 @@ export function PictureViewDialog({ product, src, size, onClose }: { product: Pr
     touched.current = true
     setKindState(k)
     setCrop(cropFor(k))
+    setQuad(quadFor(k))
+    setCornersOn(!!quadFor(k))
     setCorner(null)
     if (k === 'drawing' && !found) void find()
   }
@@ -88,6 +108,7 @@ export function PictureViewDialog({ product, src, size, onClose }: { product: Pr
     return { x: clamp((e.clientX - r.left) / r.width), y: clamp((e.clientY - r.top) / r.height) }
   }
   const onDown = (e: PointerEvent<HTMLDivElement>) => {
+    if (cornersOn && kind !== 'drawing') return
     e.currentTarget.setPointerCapture(e.pointerId)
     drag.current = { ...at(e), moved: false }
   }
@@ -129,6 +150,10 @@ export function PictureViewDialog({ product, src, size, onClose }: { product: Pr
     setActive(c)
   }
   const pct = (n: number) => `${Math.round(n * 100)} %`
+  /** The corners shown: as set, or the frame's corners to start from. */
+  const shownQuad: Corner[] = quad ?? boxQuad(active ?? WHOLE)
+  const moveCorner = (i: number, p: Corner) => setQuad(shownQuad.map((c, n) => (n === i ? { x: clamp(p.x), y: clamp(p.y) } : c)))
+  const box = useRef<HTMLDivElement>(null)
 
   const save = async () => {
     if (kind === 'drawing') {
@@ -145,7 +170,15 @@ export function PictureViewDialog({ product, src, size, onClose }: { product: Pr
       await setDrawing(product, drawing, shape)
     } else {
       if (isDrawing) await setDrawing(product, null)
-      await setPictureView(product, src, kind, kind && crop ? round(crop) : null)
+      const q = kind && cornersOn ? shownQuad : null
+      const r3 = (n: number) => Math.round(n * 1000) / 1000
+      await setPictureView(
+        product,
+        src,
+        kind,
+        q ? round(quadBox(q as Quad)) : kind && crop ? round(crop) : null,
+        q ? q.map((c) => ({ x: r3(c.x), y: r3(c.y) })) : undefined,
+      )
     }
     onClose()
   }
@@ -153,15 +186,17 @@ export function PictureViewDialog({ product, src, size, onClose }: { product: Pr
   const frameStyle = (c: Crop) => ({ left: `${c.x * 100}%`, top: `${c.y * 100}%`, width: `${c.w * 100}%`, height: `${c.h * 100}%` })
   const status = corner
     ? m.pictureView.secondCorner
-    : kind === 'drawing'
-      ? !found
-        ? m.pictureView.finding
-        : parts[frame]
-          ? m.pictureView.frameSet(m.pictureView.frames[frame])
-          : m.pictureView.frameMissing(m.pictureView.frames[frame])
-      : crop
-        ? m.pictureView.drawn
-        : m.pictureView.automatic
+    : cornersOn && kind !== 'drawing'
+      ? m.pictureView.cornersHint
+      : kind === 'drawing'
+        ? !found
+          ? m.pictureView.finding
+          : parts[frame]
+            ? m.pictureView.frameSet(m.pictureView.frames[frame])
+            : m.pictureView.frameMissing(m.pictureView.frames[frame])
+        : crop
+          ? m.pictureView.drawn
+          : m.pictureView.automatic
 
   return (
     <Modal open onClose={onClose} labelledBy="pview-title" className="pview-modal">
@@ -193,6 +228,7 @@ export function PictureViewDialog({ product, src, size, onClose }: { product: Pr
               </div>
             )}
             <div
+              ref={box}
               className="pview-pic"
               // As wide as the picture's own shape allows in the space: the frame's shares then
               // match the picture exactly (also drawings without a size of their own).
@@ -221,6 +257,8 @@ export function PictureViewDialog({ product, src, size, onClose }: { product: Pr
                       </span>
                     ),
                 )
+              ) : cornersOn ? (
+                <Corners quad={shownQuad} labels={m.pictureView.cornerNames} box={box} onMove={moveCorner} />
               ) : (
                 <span className={`pview-frame${crop ? '' : ' auto'}`} style={frameStyle(active!)} aria-hidden="true" />
               )}
@@ -237,7 +275,10 @@ export function PictureViewDialog({ product, src, size, onClose }: { product: Pr
                 </button>
               ) : (
                 <>
-                  <button type="button" className="btn sm" onClick={() => setCrop(null)} disabled={!crop}>
+                  <button type="button" className="btn sm" aria-pressed={cornersOn} onClick={() => setCornersOn((on) => !on)}>
+                    {m.pictureView.cornersToggle}
+                  </button>
+                  <button type="button" className="btn sm" onClick={() => setCrop(null)} disabled={!crop || cornersOn}>
                     {m.pictureView.auto}
                   </button>
                   <button type="button" className="btn sm" onClick={() => setCrop(WHOLE)}>
@@ -258,5 +299,57 @@ export function PictureViewDialog({ product, src, size, onClose }: { product: Pr
         </div>
       </div>
     </Modal>
+  )
+}
+
+/**
+ * The four corners of a side in a photo taken from an angle, each a point to drag (or move with
+ * the arrow keys), joined by lines so the shape of the side shows.
+ */
+function Corners({
+  quad,
+  labels,
+  box,
+  onMove,
+}: {
+  quad: Corner[]
+  labels: string[]
+  box: RefObject<HTMLDivElement | null>
+  onMove: (i: number, p: Corner) => void
+}) {
+  const at = (e: PointerEvent<HTMLButtonElement>) => {
+    const r = box.current!.getBoundingClientRect()
+    return { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height }
+  }
+  return (
+    <>
+      <svg className="pview-quad" viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true">
+        <polygon points={quad.map((c) => `${c.x},${c.y}`).join(' ')} vectorEffect="non-scaling-stroke" />
+      </svg>
+      {quad.map((c, i) => (
+        <button
+          key={i}
+          type="button"
+          className="pview-handle"
+          style={{ left: `${c.x * 100}%`, top: `${c.y * 100}%` }}
+          aria-label={labels[i]}
+          onPointerDown={(e) => {
+            e.stopPropagation()
+            e.currentTarget.setPointerCapture(e.pointerId)
+          }}
+          onPointerMove={(e) => {
+            if (e.currentTarget.hasPointerCapture(e.pointerId)) onMove(i, at(e))
+          }}
+          onKeyDown={(e) => {
+            const step = e.shiftKey ? 0.02 : 0.005
+            const d = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[e.key]
+            if (!d) return
+            e.preventDefault()
+            e.stopPropagation()
+            onMove(i, { x: c.x + d[0], y: c.y + d[1] })
+          }}
+        />
+      ))}
+    </>
   )
 }

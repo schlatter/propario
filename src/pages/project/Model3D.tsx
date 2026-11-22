@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import type { Crop, Drawing, Product, ShapePart } from '../../db/types'
@@ -6,11 +6,12 @@ import { arrange, cameraDistance, cropToUv, frontSlice, PERSON_M, sideSlice, typ
 import { fitsFront, type Size, type ViewPic } from '../../domain/size'
 import { fitShape } from '../../domain/form'
 import { ShapeEditor } from './ShapeEditor'
+import { PictureViewDialog } from './PictureViewDialog'
 import { useI18n } from '../../i18n'
 import { Modal } from '../../ui/Dialog'
 import { Glyph } from '../../ui/Glyph'
-import { atEdge, follow, Gestures, lerpAngle } from '../../domain/gestures'
-import { drawingTexture, measureOnce, photoColor } from './useMeasured'
+import { atEdge, follow, Gestures, lerpAngle, wrap } from '../../domain/gestures'
+import { drawingTexture, measureOnce, photoColor, straightened } from './useMeasured'
 
 export interface Model3DItem {
   id: string
@@ -57,6 +58,7 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
   const host = useRef<HTMLDivElement>(null)
   const overlay = useRef<HTMLDivElement>(null)
   const bar = useRef<HTMLDivElement>(null)
+  const dial = useRef<HTMLDivElement>(null)
   const ctx = useRef<Scene3D | null>(null)
   /** The running room view (WebXR), kept outside React: it changes every frame. */
   const room = useRef<Room | null>(null)
@@ -74,7 +76,10 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
   const placed = arrange(shown)
   const [arId, setArId] = useState(placed.boxes[0]?.id ?? '')
   const names = placed.boxes.map((b) => items.find((i) => i.id === b.id)!.name).join(', ')
-  const shapeKey = JSON.stringify(placed.boxes)
+  // Rebuilt when sizes, forms or pictures change (a front set while the view is open shows at once).
+  const shapeKey = JSON.stringify([placed.boxes, items.map((i) => [i.pictures, i.drawing, i.photo])])
+  /** The photo whose front corners are being set, from here. */
+  const [cornersOf, setCornersOf] = useState<string | null>(null)
 
   useEffect(() => {
     void navigator.xr
@@ -360,6 +365,13 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
             r.model.position.lerp(target, t)
             r.model.rotation.y = lerpAngle(r.model.rotation.y, yaw, follow(dt, 0.05))
           }
+          // The strip shows where the front is: in the middle it faces the phone, at the ends away.
+          const d = dial.current
+          if (d) {
+            const rel = wrap(r.model.rotation.y - facing)
+            d.style.setProperty('--front', `${50 - (rel / Math.PI) * 50}%`)
+            d.style.setProperty('--spin', `${((r.model.rotation.y / (2 * Math.PI)) * 240) % 12}px`)
+          }
         }
         seeThrough(r.model, r.ghost)
       }
@@ -479,7 +491,16 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
                 )}
               </div>
             )}
+            {edit && !edit.views?.front?.quad && items[0]?.photo && (
+              <div className="model3d-photo">
+                <p className="muted small">{m.model3d.photoFrontHint}</p>
+                <button type="button" className="btn sm" onClick={() => setCornersOf(items[0].photo!)}>
+                  {m.model3d.photoFront}
+                </button>
+              </div>
+            )}
             {edit && <ShapeEditor product={edit} size={fieldSize} draft={draft} setDraft={setDraft} />}
+            {edit && cornersOf && <PictureViewDialog product={edit} src={cornersOf} size={fieldSize} corners onClose={() => setCornersOf(null)} />}
           </>
         )}
         {/* Shown over the camera picture while in the room: the whole screen reads touches, the bar has the buttons. */}
@@ -503,8 +524,7 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
               </p>
             )}
             <p className="small">{arState === 'placed' ? m.model3d.arPlaced : m.model3d.arHint}</p>
-            <TurnDial onTurn={turnInRoom} />
-            <p className="muted small model3d-dial-label">{m.model3d.arDial}</p>
+            <TurnDial dial={dial} onTurn={turnInRoom} />
             <div className="row model3d-ar-buttons">
               <button type="button" className="btn icon" aria-label={m.model3d.left} title={m.model3d.left} onClick={() => turnInRoom(Math.PI / 12)}>
                 <Glyph name="turnLeft" />
@@ -597,11 +617,6 @@ function makeModel(c: Scene3D, p: Placed, item: Model3DItem): THREE.Group {
     return { mesh, part }
   })
   // Box faces: +x, −x, top, bottom, front (+z), back (−z). A side picture covers both sides.
-  const slots: ['front' | 'side' | 'back', number[], (crop: Crop, part: Part3D) => Crop][] = [
-    ['front', [4], (crop, part) => frontSlice(crop, part, p)],
-    ['back', [5], (crop, part) => frontSlice(crop, part, p)],
-    ['side', [0, 1], (crop, part) => sideSlice(crop, part, p)],
-  ]
   const lay = (faces: number[], make: (part: Part3D) => THREE.Material) => {
     for (const { mesh, part } of meshes) {
       const list = [...mesh.material]
@@ -611,59 +626,61 @@ function makeModel(c: Scene3D, p: Placed, item: Model3DItem): THREE.Group {
     }
     c.render()
   }
-  const drawing = item.drawing
-  if (drawing) {
-    // A dimension drawing: its lines on the front and the sides, in the product's colour from its
-    // photo – drawn straight on, unlike a photo from an angle. The dimension lines are left out.
-    const tinted: THREE.MeshStandardMaterial[] = [plain]
-    let colour: string | null = null
-    if (item.photo)
-      void photoColor(item.photo).then((col) => {
-        if (!c.alive || !col) return
-        colour = col
-        for (const t of tinted) t.color.set(col)
-        c.render()
-      })
-    for (const [view, faces, slice] of [slots[0], slots[2]]) {
-      const crop = drawing[view as 'front' | 'side']
-      if (!crop) continue
-      void drawingTexture(drawing.src, crop).then((canvas) => {
-        if (!c.alive || !canvas) return
-        lay(faces, (part) => {
-          const texture = keep(new THREE.CanvasTexture(canvas))
-          texture.colorSpace = THREE.SRGBColorSpace
-          // The canvas is the view itself: each part takes its slice of the whole.
-          const uv = cropToUv(slice({ x: 0, y: 0, w: 1, h: 1 }, part))
-          texture.repeat.set(...uv.repeat)
-          texture.offset.set(...uv.offset)
-          const material = keep(new THREE.MeshStandardMaterial({ map: texture, roughness: 0.85, color: colour ?? colors.body }))
-          tinted.push(material)
-          return material
-        })
-      })
-    }
-    return group
-  }
-  for (const [view, faces, slice] of slots) {
-    const pic = item.pictures[view]
-    if (!pic) continue
-    void measureOnce(pic.src).then((measured) => {
-      const crop = pic.crop ?? measured?.crop ?? null
-      // The main picture only when its shape is the front's – as in the drawing to scale.
-      if (!c.alive || !crop || (!pic.marked && !(measured && fitsFront(crop, measured.ratio, p.w, p.h)))) return
-      new THREE.ImageLoader().load(pic.src, (image) => {
-        if (!c.alive) return
-        lay(faces, (part) => {
-          const texture = keep(new THREE.Texture(image))
-          texture.colorSpace = THREE.SRGBColorSpace
-          const uv = cropToUv(slice(crop, part))
-          texture.repeat.set(...uv.repeat)
-          texture.offset.set(...uv.offset)
-          texture.needsUpdate = true
-          return keep(new THREE.MeshStandardMaterial({ map: texture, roughness: 0.8 }))
-        })
-      })
+  /** A texture from a canvas or picture, each part with its slice of it. */
+  const fromImage = (faces: number[], image: HTMLCanvasElement | HTMLImageElement, slice: (part: Part3D) => Crop, tint?: boolean) =>
+    lay(faces, (part) => {
+      const texture = keep(image instanceof HTMLCanvasElement ? new THREE.CanvasTexture(image) : new THREE.Texture(image))
+      texture.colorSpace = THREE.SRGBColorSpace
+      const uv = cropToUv(slice(part))
+      texture.repeat.set(...uv.repeat)
+      texture.offset.set(...uv.offset)
+      texture.needsUpdate = true
+      const material = keep(new THREE.MeshStandardMaterial({ map: texture, roughness: 0.85, color: tint ? (colour ?? colors.body) : 0xffffff }))
+      if (tint) tinted.push(material)
+      return material
     })
+  // The product's colour from its photo: on the faces without a picture, and over the drawing's lines.
+  const tinted: THREE.MeshStandardMaterial[] = [plain]
+  let colour: string | null = null
+  if (item.photo)
+    void photoColor(item.photo).then((col) => {
+      if (!c.alive || !col) return
+      colour = col
+      for (const t of tinted) t.color.set(col)
+      c.render()
+    })
+  const whole = { x: 0, y: 0, w: 1, h: 1 }
+  const sides: { view: 'front' | 'side' | 'back'; faces: number[]; slice: (crop: Crop, part: Part3D) => Crop; aspect: number }[] = [
+    { view: 'front', faces: [4], slice: (crop, part) => frontSlice(crop, part, p), aspect: p.w / p.h },
+    { view: 'back', faces: [5], slice: (crop, part) => frontSlice(crop, part, p), aspect: p.w / p.h },
+    { view: 'side', faces: [0, 1], slice: (crop, part) => sideSlice(crop, part, p), aspect: p.d / p.h },
+  ]
+  for (const { view, faces, slice, aspect } of sides) {
+    const pic = item.pictures[view]
+    const drawn = view !== 'back' ? item.drawing?.[view] : null
+    // 1. A photo with its corners set: straightened onto the face, as if taken straight on.
+    if (pic?.quad) {
+      void straightened(pic.src, pic.quad, aspect).then((canvas) => c.alive && canvas && fromImage(faces, canvas, (part) => slice(whole, part)))
+      continue
+    }
+    // 2. A photo marked for this side, or the main photo when it is taken straight on.
+    // 3. Otherwise the dimension drawing's lines in the product's colour.
+    const photo = pic && (pic.marked || !drawn) ? pic : null
+    if (photo) {
+      void measureOnce(photo.src).then((measured) => {
+        const crop = photo.crop ?? measured?.crop ?? null
+        const fits = photo.marked || (measured && crop && fitsFront(crop, measured.ratio, p.w, p.h))
+        if (!c.alive || !crop) return
+        if (!fits) {
+          if (item.drawing && drawn)
+            void drawingTexture(item.drawing.src, drawn).then((canvas) => c.alive && canvas && fromImage(faces, canvas, (part) => slice(whole, part), true))
+          return
+        }
+        new THREE.ImageLoader().load(photo.src, (image) => c.alive && fromImage(faces, image, (part) => slice(crop, part)))
+      })
+    } else if (item.drawing && drawn) {
+      void drawingTexture(item.drawing.src, drawn).then((canvas) => c.alive && canvas && fromImage(faces, canvas, (part) => slice(whole, part), true))
+    }
   }
   return group
 }
@@ -728,13 +745,15 @@ function setDownAt(r: Room, hit: XRHitTestResult, pose: XRPose) {
 
 /**
  * A strip to swipe on to turn the product – away from the edges of the screen, where a swipe
- * would be the phone's back gesture. A help for fingers only: the arrows beside it do the same
+ * would be the phone's back gesture. Its ridges run along as it turns, and a petrol mark shows
+ * where the front is: in the middle it faces the phone. A help for fingers only: the arrows beside it do the same
  * for the keyboard and screen readers.
  */
-function TurnDial({ onTurn }: { onTurn: (by: number) => void }) {
+function TurnDial({ dial, onTurn }: { dial: RefObject<HTMLDivElement | null>; onTurn: (by: number) => void }) {
   const last = useRef<number | null>(null)
   return (
     <div
+      ref={dial}
       className="model3d-dial"
       aria-hidden="true"
       onPointerDown={(e) => {
@@ -751,6 +770,7 @@ function TurnDial({ onTurn }: { onTurn: (by: number) => void }) {
       onPointerCancel={() => (last.current = null)}
     >
       <span />
+      <i />
     </div>
   )
 }

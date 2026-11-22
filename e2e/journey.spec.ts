@@ -217,6 +217,16 @@ test('a visitor sees what Propario does and tries the demo, which never talks to
   await accessible(page, 'form in 3D')
   await one.getByRole('button', { name: 'Save form' }).click()
   await expect(one.getByRole('button', { name: 'Saved' })).toBeDisabled()
+  // The photo shows Arvika from an angle: its front's corners set, it is straightened onto the front.
+  await one.getByRole('button', { name: 'Put the photo on the front' }).click()
+  await expect(page.getByRole('heading', { name: 'What does the picture show?' })).toBeVisible()
+  await expect(page.getByRole('button', { name: /^Corner / })).toHaveCount(4)
+  await page.getByRole('button', { name: 'Corner top right' }).focus()
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('ArrowDown')
+  await accessible(page, 'corners of the front')
+  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await expect(one.getByRole('button', { name: 'Put the photo on the front' })).toHaveCount(0)
   await one.getByRole('button', { name: 'Close' }).click()
   await page.locator('dialog.drawer').getByRole('button', { name: 'Close', exact: true }).click()
 
@@ -248,7 +258,8 @@ test('a visitor sees what Propario does and tries the demo, which never talks to
   expect(await size.locator('.size-scroll').evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true)
   await accessible(page, 'sizes to scale on a phone')
   // The marked drawing stands for Arvika's front.
-  await expect(size.locator('image[href="/demo/sideboard-arvika-dims.svg"]')).toHaveCount(1)
+  // Arvika's front: the photo, straightened from its corners.
+  await expect(size.locator('.size-col', { hasText: 'Arvika' }).locator('image[href^="data:image/jpeg"]')).toHaveCount(1)
   // From the side, Arvika's form shows its step: two parts.
   await size.getByRole('button', { name: 'Side', exact: true }).click()
   await expect(size.locator('.size-col', { hasText: 'Arvika' }).locator('.size-line')).toHaveCount(2)

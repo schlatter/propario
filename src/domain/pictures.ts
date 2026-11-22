@@ -1,4 +1,4 @@
-import type { Crop, PictureView, ViewPicture } from '../db/types'
+import type { Corner, Crop, PictureView, ViewPicture } from '../db/types'
 /**
  * Which of a shop page's pictures to keep as the second one (see src/images.ts): a dimension
  * drawing – named so in its address ("…/masszeichnung.jpg", "…-dimensions.png") or recognised by
@@ -117,8 +117,8 @@ export type Views = Partial<Record<PictureView, ViewPicture>>
 export type ViewsPatch = Partial<Record<PictureView, ViewPicture | null>>
 
 /** Marks `src` as `view`, cut to `crop` (null: found automatically); with view null, removes all its marks. */
-export function markView(views: Views | undefined, src: string, view: PictureView | null, crop: Crop | null): ViewsPatch {
-  if (view) return { [view]: { src, crop } }
+export function markView(views: Views | undefined, src: string, view: PictureView | null, crop: Crop | null, quad?: Corner[]): ViewsPatch {
+  if (view) return { [view]: quad ? { src, crop, quad } : { src, crop } }
   return viewsWithout(views, src)
 }
 
@@ -136,7 +136,7 @@ export function remapViews(views: Views | undefined, moved: (src: string) => str
   const out: Views = {}
   for (const [k, v] of Object.entries(views ?? {}) as [PictureView, ViewPicture][]) {
     const src = moved(v.src)
-    if (src) out[k] = { src, crop: v.crop }
+    if (src) out[k] = { ...v, src }
   }
   return out
 }

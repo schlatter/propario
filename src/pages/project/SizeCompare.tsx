@@ -21,7 +21,7 @@ import {
 import { useI18n } from '../../i18n'
 import { productImage } from '../../images'
 import type { ProjectData } from './useProjectData'
-import { useMeasured } from './useMeasured'
+import { useMeasured, useStraightened } from './useMeasured'
 import { fitShape } from '../../domain/form'
 import { Open3D } from './Open3D'
 import { PersonFigure } from '../../ui/PersonFigure'
@@ -257,6 +257,8 @@ function Figure({ bodies, col, ...frame }: Frame & { col: number; bodies: BodyPr
 /** One product: its outline (or picture) and what sticks out of the space, hatched – for a form of several parts, each part. */
 function Body({ view, k, upMax, y, a, b, parts, picture, tone, col, nicheX }: Frame & BodyProps & { col: number; nicheX: number[] | null }) {
   const measured = useMeasured(picture?.src ?? null)
+  // Taken from an angle with its corners set: straightened to exactly this outline.
+  const straight = useStraightened(picture?.quad ? picture.src : null, picture?.quad, a / b)
   // Front, back and from above: centred in its column. From the side: standing against the wall.
   const across = (cm: number) => (view === 'side' ? WALL + 2 + cm * k : col / 2 + cm * k)
   const toPx = (r: PartRect) => ({ x: across(r.a0), y: Math.min(y(r.b0), y(r.b0 + r.b)), width: r.a * k, height: r.b * k })
@@ -280,16 +282,21 @@ function Body({ view, k, upMax, y, a, b, parts, picture, tone, col, nicheX }: Fr
   return (
     <g className={`size-body ${toneClass(tone)}`}>
       {boxes.map((r, i) => (
-        <rect key={i} className={`size-box${drawn ? ' pic' : ''}`} {...r} />
+        <rect key={i} className={`size-box${drawn || straight ? ' pic' : ''}`} {...r} />
       ))}
-      {drawn && measured && (
-        <svg
-          {...whole}
-          viewBox={`${drawn.x * measured.nw} ${drawn.y * measured.nh} ${drawn.w * measured.nw} ${drawn.h * measured.nh}`}
-          preserveAspectRatio="xMidYMax meet"
-        >
-          <image href={picture!.src} width={measured.nw} height={measured.nh} />
-        </svg>
+      {straight ? (
+        <image href={straight} {...whole} preserveAspectRatio="none" />
+      ) : (
+        drawn &&
+        measured && (
+          <svg
+            {...whole}
+            viewBox={`${drawn.x * measured.nw} ${drawn.y * measured.nh} ${drawn.w * measured.nw} ${drawn.h * measured.nh}`}
+            preserveAspectRatio="xMidYMax meet"
+          >
+            <image href={picture!.src} width={measured.nw} height={measured.nh} />
+          </svg>
+        )
       )}
       {over.map((r, i) => (
         <rect key={i} className="size-over" fill="url(#size-over)" {...r} />

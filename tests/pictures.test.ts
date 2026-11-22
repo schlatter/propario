@@ -120,3 +120,21 @@ describe('a dimension drawing on the server and in old records', () => {
     expect(sanitize('products', foreign).drawing).toBeNull()
   })
 })
+
+describe('corners of a photo taken from an angle', () => {
+  const pic = '/api/images/00000000-0000-4000-8000-000000000001'
+  const quad = [
+    { x: 0.2, y: 0.1 },
+    { x: 0.7, y: 0.2 },
+    { x: 0.7, y: 0.8 },
+    { x: 0.2, y: 0.9 },
+  ]
+
+  it('go with the mark, through moves, and are checked by the server', () => {
+    expect(markView({}, pic, 'front', null, quad)).toEqual({ front: { src: pic, crop: null, quad } })
+    expect(remapViews({ front: { src: pic, crop: null, quad } }, () => '/api/images/new')).toEqual({ front: { src: '/api/images/new', crop: null, quad } })
+    expect(checkFields('products', { views: { front: { src: pic, crop: null, quad } } })).toBeNull()
+    expect(checkFields('products', { views: { front: { src: pic, crop: null, quad: quad.slice(0, 3) } } })).toMatch(/views/)
+    expect(checkFields('products', { views: { front: { src: pic, crop: null, quad: [...quad.slice(0, 3), { x: 2, y: 0 }] } } })).toMatch(/views/)
+  })
+})

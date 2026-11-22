@@ -171,6 +171,18 @@ export const PICTURE_VIEWS: PictureView[] = ['front', 'side', 'back']
 export interface ViewPicture {
   src: string
   crop: Crop | null
+  /**
+   * For a photo taken from an angle: the corners of that side in the photo – top left, top right,
+   * bottom right, bottom left – as shares (0 … 1). The photo is then straightened onto the side
+   * (src/domain/rectify.ts). Absent before 0.17 and when not set.
+   */
+  quad?: Corner[]
+}
+
+/** A point in a picture as shares (0 … 1) of its width and height. */
+export interface Corner {
+  x: number
+  y: number
 }
 
 /** One part of a product's form, e.g. the lower or the upper part of a buffet: width, height, depth in cm. */
