@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { makeProduct } from '../src/db/factories'
-import { markView, remapViews, viewOf, viewsWithout, withAdded, withMain, without } from '../src/domain/pictures'
+import { markView, remapViews, viewsOf, viewsWithout, withAdded, withMain, without } from '../src/domain/pictures'
 import { checkFields, sanitize } from '../src/shared/records'
 
 const MAX = 8
@@ -52,12 +52,14 @@ describe('picture changes never lose a picture', () => {
 describe('marked views follow their pictures', () => {
   const crop = { x: 0.1, y: 0, w: 0.8, h: 1 }
 
-  it('marks a picture as one side; marking it as another moves the mark', () => {
+  it('marks a picture as a side; one picture may show several sides, each cut on its own', () => {
     expect(markView({}, a, 'front', crop)).toEqual({ front: { src: a, crop } })
-    expect(markView({ front: { src: a, crop: null } }, a, 'side', null)).toEqual({ front: null, side: { src: a, crop: null } })
+    // A drawing with the front and the side: marking it as the side keeps the front.
+    expect(markView({ front: { src: a, crop } }, a, 'side', null)).toEqual({ side: { src: a, crop: null } })
     // Another picture as the front replaces the mark, the old picture stays.
     expect(markView({ front: { src: a, crop: null } }, b, 'front', null)).toEqual({ front: { src: b, crop: null } })
-    expect(markView({ front: { src: a, crop: null } }, a, null, null)).toEqual({ front: null })
+    // None: all of the picture's marks go.
+    expect(markView({ front: { src: a, crop: null }, side: { src: a, crop }, back: { src: b, crop } }, a, null, null)).toEqual({ front: null, side: null })
   })
 
   it('drops the marks of a picture that goes', () => {
@@ -68,8 +70,8 @@ describe('marked views follow their pictures', () => {
   it('moves marks with their pictures and loses those whose picture is gone', () => {
     const moved = remapViews({ front: { src: a, crop }, back: { src: b, crop: null } }, (src) => (src === a ? n : ''))
     expect(moved).toEqual({ front: { src: n, crop } })
-    expect(viewOf(moved, n)).toBe('front')
-    expect(viewOf(moved, a)).toBeNull()
+    expect(viewsOf(moved, n)).toEqual(['front'])
+    expect(viewsOf(moved, a)).toEqual([])
   })
 })
 

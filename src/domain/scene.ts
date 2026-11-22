@@ -1,4 +1,5 @@
 import type { Crop, ShapePart } from '../db/types'
+import { fitShape } from './form'
 import { drawnSize, type Size } from './size'
 
 /**
@@ -37,7 +38,7 @@ export const PERSON_M = { h: 1.75, w: 0.45 }
 export function partsOf(size: Size, shape?: ShapePart[]): Omit<Placed, 'id' | 'x'> | null {
   const s = drawnSize(size, shape)
   if (!s.width || !s.height || !s.depth) return null
-  const list = shape?.length ? shape : [{ w: s.width, h: s.height, d: s.depth }]
+  const list = shape?.length ? fitShape(shape, s) : [{ w: s.width, h: s.height, d: s.depth }]
   const D = s.depth / 100
   let y0 = 0
   const parts = list.map((p) => {

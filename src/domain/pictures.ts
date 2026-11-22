@@ -109,18 +109,17 @@ export function without(p: Pictures, path: string): Pictures {
 
 /**
  * Marked views (front, side, back) point at one of the product's pictures. Changes are patches
- * merged per view (src/shared/records.ts): `null` removes a mark. One picture shows one side, so
- * marking it as another side moves the mark.
+ * merged per view (src/shared/records.ts): `null` removes a mark. One picture may show several
+ * sides – a dimension drawing often has the front and the side next to each other – each with
+ * its own part of the picture.
  */
 export type Views = Partial<Record<PictureView, ViewPicture>>
 export type ViewsPatch = Partial<Record<PictureView, ViewPicture | null>>
 
-/** Marks `src` as `view` (or unmarks it with null), cut to `crop` (null: found automatically). */
+/** Marks `src` as `view`, cut to `crop` (null: found automatically); with view null, removes all its marks. */
 export function markView(views: Views | undefined, src: string, view: PictureView | null, crop: Crop | null): ViewsPatch {
-  const patch: ViewsPatch = {}
-  for (const [k, v] of Object.entries(views ?? {}) as [PictureView, ViewPicture][]) if (v.src === src && k !== view) patch[k] = null
-  if (view) patch[view] = { src, crop }
-  return patch
+  if (view) return { [view]: { src, crop } }
+  return viewsWithout(views, src)
 }
 
 /** The marks to drop when a picture goes. */
@@ -142,6 +141,6 @@ export function remapViews(views: Views | undefined, moved: (src: string) => str
   return out
 }
 
-/** Which view a picture is marked as, if any. */
-export const viewOf = (views: Views | undefined, src: string): PictureView | null =>
-  (Object.entries(views ?? {}) as [PictureView, ViewPicture][]).find(([, v]) => v.src === src)?.[0] ?? null
+/** Which views a picture is marked as, front first. */
+export const viewsOf = (views: Views | undefined, src: string): PictureView[] =>
+  (['front', 'side', 'back'] as PictureView[]).filter((k) => views?.[k]?.src === src)

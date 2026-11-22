@@ -22,6 +22,7 @@ import { useI18n } from '../../i18n'
 import { productImage } from '../../images'
 import type { ProjectData } from './useProjectData'
 import { useMeasured } from './useMeasured'
+import { fitShape } from '../../domain/form'
 import { Open3D } from './Open3D'
 import { PersonFigure } from '../../ui/PersonFigure'
 
@@ -96,7 +97,7 @@ export function SizeCompare({ products, data }: { products: Product[]; data: Pro
   const body = (i: (typeof shown)[number], tone: Tone) => ({
     a: i.size[across]!,
     b: i.size[up]!,
-    parts: i.product.shape?.length ? partRects(view, i.product.shape) : null,
+    parts: i.product.shape?.length ? partRects(view, fitShape(i.product.shape, i.size)) : null,
     // One over the other, only outlines: two pictures on top of each other hide both.
     picture: overlay ? null : pictureFor(i.product, productImage(i.product), view),
     tone,

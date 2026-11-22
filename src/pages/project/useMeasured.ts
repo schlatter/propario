@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Crop } from '../../db/types'
 import { contentBox } from '../../domain/size'
+import { rowExtents } from '../../domain/form'
 
 /**
  * Where the object sits in a picture (white background left out) and the picture's own size,
@@ -55,6 +56,31 @@ async function measure(src: string): Promise<Measured | null> {
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
     const crop = contentBox(ctx.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height)
     return { crop, ratio: nw / nh, nw, nh }
+  } catch {
+    return null
+  }
+}
+
+/**
+ * How wide the object is in each row of a part of a picture (src/domain/form.ts rowExtents),
+ * read at up to 300 rows. Null when the picture cannot be read.
+ */
+export async function readRows(src: string, crop: Crop | null): Promise<(number | null)[] | null> {
+  try {
+    const img = new Image()
+    img.src = src
+    await img.decode()
+    const c = crop ?? (await measureOnce(src))?.crop ?? { x: 0, y: 0, w: 1, h: 1 }
+    const sw = img.naturalWidth * c.w
+    const sh = img.naturalHeight * c.h
+    const scale = Math.min(1, 300 / sh)
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.max(1, Math.round(sw * scale))
+    canvas.height = Math.max(1, Math.round(sh * scale))
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })
+    if (!ctx) return null
+    ctx.drawImage(img, img.naturalWidth * c.x, img.naturalHeight * c.y, sw, sh, 0, 0, canvas.width, canvas.height)
+    return rowExtents(ctx.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height)
   } catch {
     return null
   }

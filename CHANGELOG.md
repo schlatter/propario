@@ -6,6 +6,14 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- Changed: a product's form keeps its size – splitting only moves where it is cut, the top part
+  takes the rest, and no part is wider or deeper than the product.
+- Added: the form is read from a dimension drawing set as the side view (and the widths from the
+  front view) – no typing for most furniture. One picture can show several sides, each with its
+  own part, as in IKEA's drawings.
+- Fixed: in the room view a tap placed nothing, and the hint and buttons sat oddly over the camera
+  picture. The product now follows the ring as a preview until a tap sets it down.
+
 ## 0.16.0 — 2026-11-22
 
 - Added: side by side and in duels, the products' sizes to scale – from the front, the side and

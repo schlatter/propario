@@ -22,7 +22,7 @@ import { Preview } from '../../ui/Thumb'
 import { filledLabels } from '../../domain/display'
 import { Gallery } from './Gallery'
 import { Menu } from '../../ui/Menu'
-import { viewOf } from '../../domain/pictures'
+import { viewsOf } from '../../domain/pictures'
 import { PictureViewDialog } from './PictureViewDialog'
 
 /**
@@ -184,7 +184,13 @@ export function ProductImage({ product: p, name, actions }: { product: Product; 
             {pictures.map((pic, i) => (
               <div className="pimg-slide" key={pic} aria-hidden={i !== at}>
                 <img src={pic} alt={i === 0 ? name : m.gallery.alt(name, i + 1, pictures.length)} referrerPolicy="no-referrer" draggable={false} />
-                {viewOf(p.views, pic) && <span className="pimg-view">{m.pictureView.views[viewOf(p.views, pic)!]}</span>}
+                {viewsOf(p.views, pic).length > 0 && (
+                  <span className="pimg-view">
+                    {viewsOf(p.views, pic)
+                      .map((v) => m.pictureView.views[v])
+                      .join(' · ')}
+                  </span>
+                )}
               </div>
             ))}
           </div>

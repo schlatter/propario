@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
-import { updateProduct } from '../../db/repo'
-import { MAX_PARTS, type Crop, type Product, type ShapePart } from '../../db/types'
+import type { Crop, Product, ShapePart } from '../../db/types'
 import { arrange, cameraDistance, cropToUv, frontSlice, PERSON_M, sideSlice, type Part3D, type Placed } from '../../domain/scene'
-import { fitsFront, shapeSize, type Size, type ViewPic } from '../../domain/size'
+import { fitsFront, type Size, type ViewPic } from '../../domain/size'
+import { fitShape } from '../../domain/form'
+import { ShapeEditor } from './ShapeEditor'
 import { useI18n } from '../../i18n'
-import { isShapePart } from '../../shared/records.ts'
 import { Modal } from '../../ui/Dialog'
 import { measureOnce } from './useMeasured'
 
@@ -47,23 +47,20 @@ interface Scene3D {
  * itself, nothing leaves the device. Loaded only when opened (three.js).
  */
 export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]; edit?: Product; onClose: () => void }) {
-  const { m, fmt } = useI18n()
+  const { m } = useI18n()
   const host = useRef<HTMLDivElement>(null)
   const overlay = useRef<HTMLDivElement>(null)
+  const bar = useRef<HTMLDivElement>(null)
   const ctx = useRef<Scene3D | null>(null)
   const ar = useRef<{ session: XRSession | null; model: THREE.Group | null }>({ session: null, model: null })
   const [failed, setFailed] = useState(false)
   const [arAvailable, setArAvailable] = useState(false)
-  const [arState, setArState] = useState<'off' | 'searching' | 'placed'>('off')
+  const [arState, setArState] = useState<'off' | 'starting' | 'searching' | 'placed'>('off')
   const [arError, setArError] = useState(false)
-  /** The form being set, as typed (cm); empty: one box from the size fields. */
-  const [draft, setDraft] = useState<{ w: string; h: string; d: string }[]>(() =>
-    (edit?.shape ?? []).map((p) => ({ w: String(p.w), h: String(p.h), d: String(p.d) })),
-  )
-  const parsed = draft.map((p) => ({ w: num(p.w), h: num(p.h), d: num(p.d) }))
-  const valid = parsed.every(isShapePart)
-  // While a form is being set, the view shows it as typed (as far as it is valid).
-  const shown = items.map((i) => (edit && i.id === edit.id ? { ...i, shape: valid ? parsed : i.shape } : i))
+  const fieldSize = items.find((i) => i.id === edit?.id)?.size ?? {}
+  /** The form being set (cm), inside the product's size; empty: one box. Shown in 3D as it changes. */
+  const [draft, setDraft] = useState<ShapePart[]>(() => fitShape(edit?.shape ?? [], fieldSize))
+  const shown = items.map((i) => (edit && i.id === edit.id ? { ...i, shape: draft } : i))
   const placed = arrange(shown)
   const [arId, setArId] = useState(placed.boxes[0]?.id ?? '')
   const names = placed.boxes.map((b) => items.find((i) => i.id === b.id)!.name).join(', ')
@@ -201,8 +198,9 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
   }, [shapeKey, failed])
 
   // Taps on the buttons over the camera picture must not also place the product.
+  // Only the bar: the overlay itself covers the whole screen, and a tap anywhere else places.
   useEffect(() => {
-    const el = overlay.current
+    const el = bar.current
     const stop = (e: Event) => e.preventDefault()
     el?.addEventListener('beforexrselect', stop)
     return () => el?.removeEventListener('beforexrselect', stop)
@@ -226,6 +224,9 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
     const item = shown.find((i) => i.id === id)
     if (!c || !p || !item || !navigator.xr) return
     setArError(false)
+    // The overlay must be shown before the session takes it over.
+    setArState('starting')
+    await new Promise((r) => requestAnimationFrame(r))
     let session: XRSession
     try {
       session = await navigator.xr.requestSession('immersive-ar', {
@@ -234,6 +235,7 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
         domOverlay: { root: overlay.current! },
       })
     } catch {
+      setArState('off')
       setArError(true)
       return
     }
@@ -268,14 +270,20 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
       setArError(true)
       return
     }
-    const controller = renderer.xr.getController(0)
-    controller.addEventListener('select', () => {
-      if (!reticle.visible) return
+    /** Puts the product where the ring is, its front towards the phone. */
+    const toRing = () => {
       model.position.setFromMatrixPosition(reticle.matrix)
-      // The front towards whoever placed it.
       const eye = new THREE.Vector3().setFromMatrixPosition(renderer.xr.getCamera().matrixWorld)
       model.rotation.y = Math.atan2(eye.x - model.position.x, eye.z - model.position.z)
       model.visible = true
+    }
+    // Until a tap it follows the ring as a preview; a tap sets it down, the next one moves it.
+    let placed = false
+    const controller = renderer.xr.getController(0)
+    controller.addEventListener('select', () => {
+      if (!reticle.visible) return
+      toRing()
+      placed = true
       setArState('placed')
     })
     arScene.add(controller)
@@ -285,7 +293,10 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
         const space = renderer.xr.getReferenceSpace()
         const found = frame.getHitTestResults(hits)[0]?.getPose(space!)
         reticle.visible = !!found
-        if (found) reticle.matrix.fromArray(found.transform.matrix)
+        if (found) {
+          reticle.matrix.fromArray(found.transform.matrix)
+          if (!placed) toRing()
+        }
       }
       renderer.render(arScene, camera)
     })
@@ -299,26 +310,6 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
       c.render()
     })
   }
-
-  // ---------- the form ----------
-  const fieldSize = items.find((i) => i.id === edit?.id)?.size
-  const setPart = (i: number, key: 'w' | 'h' | 'd', v: string) => setDraft((d) => d.map((p, n) => (n === i ? { ...p, [key]: v } : p)))
-  /** Splits the one box into a lower and an upper half, a start to adjust. */
-  const split = () => {
-    const s = fieldSize
-    if (!s?.width || !s.height || !s.depth) return
-    const lower = Math.round(s.height / 2)
-    setDraft([
-      { w: String(s.width), h: String(lower), d: String(s.depth) },
-      { w: String(s.width), h: String(Math.round((s.height - lower) * 10) / 10), d: String(s.depth) },
-    ])
-  }
-  const together = valid && parsed.length ? shapeSize(parsed) : null
-  const cm = (n: number | undefined) => (n === undefined ? '–' : fmt.number(Math.round(n * 10) / 10))
-  const differs =
-    together && fieldSize && (['width', 'height', 'depth'] as const).some((k) => fieldSize[k] !== undefined && Math.abs(fieldSize[k]! - together[k]!) > 0.5)
-  const saved = JSON.stringify(edit?.shape ?? []) === JSON.stringify(valid ? parsed : null)
-  const save = () => edit && valid && void updateProduct(edit, { shape: parsed })
 
   return (
     <Modal open onClose={onClose} labelledBy="model3d-title" className="model3d-modal">
@@ -370,108 +361,35 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
                 )}
               </div>
             )}
-            {edit && (
-              <section className="model3d-form" aria-labelledby="model3d-form-title">
-                <h3 id="model3d-form-title">{m.model3d.formTitle}</h3>
-                <p className="muted small">{m.model3d.formHint}</p>
-                {draft.length === 0 ? (
-                  <div className="row">
-                    <span className="small">{m.model3d.oneBox(cm(fieldSize?.width), cm(fieldSize?.height), cm(fieldSize?.depth))}</span>
-                    <span className="spacer" />
-                    <button type="button" className="btn sm" onClick={split} disabled={!fieldSize?.width || !fieldSize.height || !fieldSize.depth}>
-                      {m.model3d.split}
-                    </button>
-                  </div>
-                ) : (
-                  <ol className="model3d-parts">
-                    {/* Top part first, as it stands. */}
-                    {draft
-                      .map((p, i) => ({ p, i }))
-                      .reverse()
-                      .map(({ p, i }) => (
-                        <li key={i}>
-                          <span className="model3d-part-name">{m.model3d.part(i + 1, draft.length)}</span>
-                          {(['w', 'h', 'd'] as const).map((key) => (
-                            <label key={key}>
-                              <span>{m.model3d.sides[key]}</span>
-                              <input
-                                className="input"
-                                type="number"
-                                inputMode="decimal"
-                                min="1"
-                                max="1000"
-                                step="0.5"
-                                value={p[key]}
-                                aria-invalid={!isShapePart({ w: 1, h: 1, d: 1, [key]: num(p[key]) })}
-                                onChange={(e) => setPart(i, key, e.target.value)}
-                              />
-                            </label>
-                          ))}
-                          <button
-                            type="button"
-                            className="icon-btn sm"
-                            aria-label={m.model3d.removePart(i + 1)}
-                            title={m.model3d.removePart(i + 1)}
-                            onClick={() => setDraft((d) => d.filter((_, n) => n !== i))}
-                          >
-                            ×
-                          </button>
-                        </li>
-                      ))}
-                  </ol>
-                )}
-                {together && (
-                  <p className="small">
-                    {m.model3d.together(cm(together.width), cm(together.height), cm(together.depth))}
-                    {differs && <span className="muted"> · {m.model3d.fields(cm(fieldSize?.width), cm(fieldSize?.height), cm(fieldSize?.depth))}</span>}
-                  </p>
-                )}
-                <div className="row model3d-form-actions">
-                  {draft.length > 0 && draft.length < MAX_PARTS && (
-                    <button type="button" className="btn sm" onClick={() => setDraft((d) => [...d, { ...d[d.length - 1] }])}>
-                      {m.model3d.addPart}
-                    </button>
-                  )}
-                  {draft.length > 0 && (
-                    <button type="button" className="btn sm" onClick={() => setDraft([])}>
-                      {m.model3d.oneBoxAgain}
-                    </button>
-                  )}
-                  <span className="spacer" />
-                  <button type="button" className="btn primary sm" onClick={save} disabled={!valid || saved}>
-                    {saved ? m.model3d.saved : m.model3d.saveForm}
-                  </button>
-                </div>
-              </section>
-            )}
+            {edit && <ShapeEditor product={edit} size={fieldSize} draft={draft} setDraft={setDraft} />}
           </>
         )}
         {/* Shown over the camera picture while in the room. */}
         <div ref={overlay} className="model3d-overlay" hidden={arState === 'off'}>
-          <p>{arState === 'placed' ? m.model3d.arPlaced : m.model3d.arHint}</p>
-          <div className="row">
-            {arState === 'placed' && (
-              <button
-                type="button"
-                className="btn"
-                onClick={() => {
-                  if (ar.current.model) ar.current.model.rotation.y += Math.PI / 12
-                }}
-              >
-                {m.model3d.arTurn}
+          <div ref={bar} className="model3d-ar-bar">
+            <p>{arState === 'placed' ? m.model3d.arPlaced : m.model3d.arHint}</p>
+            <div className="row">
+              {arState === 'placed' && (
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => {
+                    if (ar.current.model) ar.current.model.rotation.y += Math.PI / 12
+                  }}
+                >
+                  {m.model3d.arTurn}
+                </button>
+              )}
+              <button type="button" className="btn primary" onClick={() => void ar.current.session?.end()}>
+                {m.model3d.arEnd}
               </button>
-            )}
-            <button type="button" className="btn primary" onClick={() => void ar.current.session?.end()}>
-              {m.model3d.arEnd}
-            </button>
+            </div>
           </div>
         </div>
       </div>
     </Modal>
   )
 }
-
-const num = (s: string) => (s.trim() === '' ? NaN : Number(s.replace(',', '.')))
 
 function lights() {
   const sun = new THREE.DirectionalLight(0xffffff, 1.2)

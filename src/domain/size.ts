@@ -174,8 +174,9 @@ export function shapeSize(shape: ShapePart[]): Size {
   return { width: Math.max(...shape.map((p) => p.w)), height: shape.reduce((n, p) => n + p.h, 0), depth: Math.max(...shape.map((p) => p.d)) }
 }
 
-/** The size to draw: the form's when it has one, otherwise the size fields'. */
-export const drawnSize = (fields: Size, shape: ShapePart[] | undefined): Size => (shape?.length ? shapeSize(shape) : fields)
+/** The size to draw: the size fields' – a form only divides it. The form's own size only where the fields do not give one. */
+export const drawnSize = (fields: Size, shape: ShapePart[] | undefined): Size =>
+  fields.width && fields.height && fields.depth ? fields : shape?.length ? shapeSize(shape) : fields
 
 /** One part in a view, cm: across from the centre (front, back, above) or the wall (side); up from the floor or the wall. */
 export interface PartRect {

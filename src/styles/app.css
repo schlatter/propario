@@ -5045,21 +5045,49 @@ dialog.model3d-modal {
 .model3d-tools p {
   margin: 0;
 }
-/* Over the camera picture: a calm bar at the bottom, readable on any room. */
+/* Over the camera picture. In the room the browser shows this element across the whole screen
+   and keeps it see-through; only the bar at the bottom has a surface – and only it stops a tap
+   from placing the product (beforexrselect in Model3D.tsx). */
 .model3d-overlay {
   position: fixed;
-  inset: auto 0 0 0;
-  display: grid;
-  gap: 10px;
-  padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
-  background: var(--surface);
-  color: var(--ink);
+  inset: 0;
+  background: transparent;
 }
 .model3d-overlay[hidden] {
   display: none;
 }
-.model3d-overlay p {
+.model3d-ar-bar {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+.model3d-ar-bar p {
   margin: 0;
+}
+.model3d-ar-bar .row {
+  gap: 8px;
+}
+/* The rest of the height, for the top part of a form: shown, not typed. */
+.model3d-rest {
+  display: grid;
+  gap: 2px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.model3d-rest span + span {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: var(--ink);
 }
 
 /* Overview stills for swiping and duels (Overview.tsx). */

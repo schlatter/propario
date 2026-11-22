@@ -1,6 +1,6 @@
 import { useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
 import { PICTURE_VIEWS, type Crop, type PictureView, type Product } from '../../db/types'
-import { viewOf } from '../../domain/pictures'
+import { viewsOf } from '../../domain/pictures'
 import { useI18n } from '../../i18n'
 import { setPictureView } from '../../images'
 import { Modal } from '../../ui/Dialog'
@@ -30,14 +30,22 @@ const round = (c: Crop): Crop => {
  */
 export function PictureViewDialog({ product, src, onClose }: { product: Product; src: string; onClose: () => void }) {
   const { m } = useI18n()
-  const current = viewOf(product.views, src)
+  const marked = viewsOf(product.views, src)
+  /** This picture's own part for a side, when it is marked as it. */
+  const cropFor = (v: PictureView | null) => (v && product.views?.[v]?.src === src ? product.views[v]!.crop : null)
   // A picture not marked yet is most likely the front.
-  const [view, setView] = useState<PictureView | null>(current ?? 'front')
+  const [view, setViewState] = useState<PictureView | null>(marked[0] ?? 'front')
   /** null: found automatically. */
-  const [crop, setCrop] = useState<Crop | null>(current ? (product.views?.[current]?.crop ?? null) : null)
+  const [crop, setCrop] = useState<Crop | null>(cropFor(marked[0] ?? null))
   /** The first of two tapped corners. */
   const [corner, setCorner] = useState<{ x: number; y: number } | null>(null)
   const drag = useRef<{ x: number; y: number; moved: boolean } | null>(null)
+  // Each side has its own part of the picture: switching shows that side's.
+  const setView = (v: PictureView | null) => {
+    setViewState(v)
+    setCrop(cropFor(v))
+    setCorner(null)
+  }
   const auto = useMeasured(src)
   const shown = crop ?? auto?.crop ?? WHOLE
 
