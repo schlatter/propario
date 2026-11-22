@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, ty
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import type { Crop, Drawing, Product, ShapePart } from '../../db/types'
-import { arrange, cameraDistance, cropToUv, frontSlice, PERSON_M, sideSlice, type Part3D, type Placed } from '../../domain/scene'
+import { arrange, cameraDistance, cropToUv, floorPoint, frontSlice, PERSON_M, sideSlice, type Part3D, type Placed, type Vec3 } from '../../domain/scene'
 import { fitsFront, type Size, type ViewPic } from '../../domain/size'
 import { fitShape } from '../../domain/form'
 import { ShapeEditor } from './ShapeEditor'
@@ -304,7 +304,8 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
       base: 0,
       at: new THREE.Vector3(),
       anchor: null,
-      wantDown: false,
+      wantDown: null,
+      floorY: null,
       ghost: false,
       onPlaced: () => setArState('placed'),
       ended: false,
@@ -318,6 +319,7 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
     const ringQuat = new THREE.Quaternion()
     const target = new THREE.Vector3()
     const eye = new THREE.Vector3()
+    const ray = new THREE.Raycaster()
     let last = 0
     renderer.setAnimationLoop((time, frame) => {
       const dt = last ? (time - last) / 1000 : 0
@@ -337,12 +339,20 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
           reticle.position.copy(ring)
           reticle.quaternion.copy(ringQuat)
         }
-        // The ring stays: it shows where a tap puts the product.
-        reticle.visible = !!pose
-        // A tap is only noted; a floor hit counts in its own frame, so it is set down here.
+        // The floor's height, from the ring's hits: where a tap meets the floor.
+        if (pose) r.floorY = pose.transform.position.y
+        // The ring shows that the floor is found; once the product stands, a tap shows where.
+        reticle.visible = !!pose && !r.placed
+        // A tap is only noted; it is turned into a place on the floor in the frame.
         if (r.wantDown) {
-          r.wantDown = false
-          if (hit && pose) setDownAt(r, hit, pose)
+          const tap = r.wantDown
+          r.wantDown = null
+          if (r.floorY !== null) {
+            const cam = renderer.xr.getCamera()
+            ray.setFromCamera(new THREE.Vector2(tap.x, tap.y), cam.cameras[0] ?? cam)
+            const p = floorPoint(ray.ray.origin, ray.ray.direction, r.floorY)
+            if (p) setDownAt(r, p, frame, space)
+          }
         }
         // Where the product should be: on the ring while it is a preview, then on its anchor.
         let goal: THREE.Vector3 | null = null
@@ -391,9 +401,10 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
     })
   }
 
-  /** A tap sets the product down where the ring is (and moves it there once it stands) – in the next frame. */
-  const setDown = () => {
-    if (room.current) room.current.wantDown = true
+  /** A tap sets the product down where the floor was tapped (and moves it there once it stands) – in the next frame. */
+  const setDown = (x: number, y: number) => {
+    // The tapped point in the camera's terms: −1 … 1 across and up.
+    if (room.current) room.current.wantDown = { x: (x / window.innerWidth) * 2 - 1, y: -(y / window.innerHeight) * 2 + 1 }
   }
 
   /** Turns the product in the room; seen from above, positive is anticlockwise. */
@@ -432,7 +443,7 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
           ? g.move(e.pointerId, { x: e.clientX, y: e.clientY })
           : g.up(e.pointerId)
     if (result?.kind === 'turn') turnInRoom(result.by)
-    if (result?.kind === 'tap') setDown()
+    if (result?.kind === 'tap') setDown(e.clientX, e.clientY)
   }
   const arBox = room.current ? ctx.current?.boxes.get(arShown.id) : undefined
   const arName = items.find((i) => i.id === arShown.id)?.name ?? ''
@@ -708,7 +719,9 @@ interface Room {
   at: THREE.Vector3
   anchor: XRAnchor | null
   /** A tap waiting for the next frame to set the product down. */
-  wantDown: boolean
+  wantDown: { x: number; y: number } | null
+  /** The floor's height as last found, metres; null before it is found. */
+  floorY: number | null
   ghost: boolean
   /** Tells the bar that it stands. */
   onPlaced: () => void
@@ -730,8 +743,7 @@ function seeThrough(model: THREE.Object3D, on: boolean) {
 }
 
 /** Sets the product down on a floor hit of the current frame, its front towards the phone, on an anchor where there are anchors. */
-function setDownAt(r: Room, hit: XRHitTestResult, pose: XRPose) {
-  const p = pose.transform.position
+function setDownAt(r: Room, p: Vec3, frame: XRFrame, space: XRReferenceSpace) {
   r.at.set(p.x, p.y, p.z)
   // Set down as the preview faced (turned by hand included); moved later, it keeps its way round.
   if (!r.placed) r.base = r.model.rotation.y - r.turn
@@ -739,9 +751,9 @@ function setDownAt(r: Room, hit: XRHitTestResult, pose: XRPose) {
   r.anchor?.delete()
   r.anchor = null
   try {
-    void hit
-      .createAnchor?.()
-      .then((a) => {
+    void frame
+      .createAnchor?.(new XRRigidTransform({ x: p.x, y: p.y, z: p.z }), space)
+      ?.then((a) => {
         if (!r.ended) r.anchor = a
         else a.delete()
       })

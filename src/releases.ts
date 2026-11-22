@@ -11,6 +11,13 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.17.3',
+    notes: {
+      en: ['In your room, a tap sets the product down right where you tap.'],
+      de: ['Im Raum stellt ein Tipp das Produkt genau dort ab, wo du hintippst.'],
+    },
+  },
+  {
     version: '0.17.2',
     notes: {
       en: ['3D view tidied up: "Edit 3D model" opens the parts, and the ⓘ explains on a tap.'],

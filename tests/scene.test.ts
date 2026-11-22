@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { arrange, cameraDistance, cropToUv, frontSlice, GAP_M, partsOf, PERSON_M, sideSlice } from '../src/domain/scene'
+import { arrange, cameraDistance, cropToUv, floorPoint, frontSlice, GAP_M, partsOf, PERSON_M, sideSlice } from '../src/domain/scene'
 import { partRects, shapeSize } from '../src/domain/size'
 
 describe('arrange', () => {
@@ -101,5 +101,24 @@ describe('a form on the server and in old records', () => {
       ],
     })
     expect(sanitize('products', p).shape).toEqual([{ w: 90, h: 85, d: 40 }])
+  })
+})
+
+describe('setting down where the floor was tapped', () => {
+  const eye = { x: 0, y: 1.5, z: 0 }
+
+  it('finds the point on the floor the tap looks at', () => {
+    // Looking 45° down and straight ahead: the floor 1.5 m below is met 1.5 m ahead.
+    const p = floorPoint(eye, { x: 0, y: -Math.SQRT1_2, z: -Math.SQRT1_2 }, 0)!
+    expect(p.x).toBeCloseTo(0)
+    expect(p.y).toBe(0)
+    expect(p.z).toBeCloseTo(-1.5)
+  })
+
+  it('finds nothing looking level or up, or past the reach', () => {
+    expect(floorPoint(eye, { x: 0, y: 0, z: -1 }, 0)).toBeNull()
+    expect(floorPoint(eye, { x: 0, y: 0.2, z: -1 }, 0)).toBeNull()
+    // Barely down: the floor is 30 m away.
+    expect(floorPoint(eye, { x: 0, y: -0.05, z: -1 }, 0)).toBeNull()
   })
 })

@@ -101,3 +101,22 @@ export function cameraDistance(width: number, height: number, fov: number, aspec
   const byWidth = width / 2 / (Math.tan(half) * aspect)
   return Math.max(byHeight, byWidth) * 1.25
 }
+
+export interface Vec3 {
+  x: number
+  y: number
+  z: number
+}
+
+/**
+ * Where a ray from the phone – through the point on the screen that was tapped – meets the floor
+ * at height `floorY`. Null when it never does: looking level or up, or the floor more than
+ * `reach` metres away (a tap at the horizon is no place to put a cabinet).
+ */
+export function floorPoint(origin: Vec3, dir: Vec3, floorY: number, reach = 12): Vec3 | null {
+  if (dir.y >= -1e-6) return null
+  const t = (floorY - origin.y) / dir.y
+  if (t <= 0) return null
+  const p = { x: origin.x + dir.x * t, y: floorY, z: origin.z + dir.z * t }
+  return Math.hypot(p.x - origin.x, p.z - origin.z) <= reach ? p : null
+}

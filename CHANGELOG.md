@@ -6,6 +6,11 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+## 0.17.3 — 2026-11-22
+
+- Changed: in the room view a tap sets the product down where the floor was tapped, not in the
+  middle of the screen; the ring only shows until it stands.
+
 ## 0.17.2 — 2026-11-22
 
 - Fixed: an ⓘ showed its text only to the mouse and the keyboard – now also when tapped.
