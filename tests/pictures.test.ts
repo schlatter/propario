@@ -100,3 +100,23 @@ describe('views on the server and in old records', () => {
     expect(sanitize('products', old as typeof p).views).toBeUndefined()
   })
 })
+
+describe('a dimension drawing on the server and in old records', () => {
+  const pic = '/api/images/00000000-0000-4000-8000-000000000001'
+  const crop = { x: 0.1, y: 0.1, w: 0.4, h: 0.8 }
+
+  it('accepts a picture of this server with a front and a side view, each optional', () => {
+    expect(checkFields('products', { drawing: { src: pic, front: crop, side: null } })).toBeNull()
+    expect(checkFields('products', { drawing: null })).toBeNull()
+    expect(checkFields('products', { drawing: { src: pic, front: crop } })).toMatch(/drawing/)
+    expect(checkFields('products', { drawing: { src: 'https://shop.example/d.png', front: crop, side: null } })).toMatch(/drawing/)
+    expect(checkFields('products', { drawing: { src: pic, front: { ...crop, w: 2 }, side: null } })).toMatch(/drawing/)
+  })
+
+  it('keeps on restore only a drawing the product still has', () => {
+    const own = makeProduct('00000000-0000-4000-8000-000000000000', { image: pic, drawing: { src: pic, front: crop, side: null } })
+    expect(sanitize('products', own).drawing).toEqual({ src: pic, front: crop, side: null })
+    const foreign = makeProduct('00000000-0000-4000-8000-000000000000', { image: '', drawing: { src: pic, front: crop, side: null } })
+    expect(sanitize('products', foreign).drawing).toBeNull()
+  })
+})

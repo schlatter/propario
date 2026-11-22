@@ -170,32 +170,39 @@ test('a visitor sees what Propario does and tries the demo, which never talks to
   await expect(page.getByText('Not in the demo – reading shop pages needs your own account.')).toBeVisible()
   await page.locator('dialog.drawer').getByRole('button', { name: 'Close', exact: true }).click()
 
-  // Arvika's dimension drawing shows its front: framed by dragging across the cabinet in it.
+  // Arvika's dimension drawing: recognised as one, its front and side view found in it; the
+  // front frame is set anew by dragging across the cabinet.
   await page.getByRole('button', { name: 'Arvika', exact: true }).click()
   await page.getByRole('button', { name: 'Show picture 2' }).click()
   await page.getByRole('button', { name: 'Update pictures' }).click()
-  await page.getByRole('button', { name: 'Set as view' }).click()
-  await expect(page.getByRole('heading', { name: 'Which side does it show?' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Front', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await page.getByRole('button', { name: 'Set for 3D' }).click()
+  await expect(page.getByRole('heading', { name: 'What does the picture show?' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Dimension drawing' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByText('Front view found – drag to set it anew.')).toBeVisible()
+  await page.getByRole('button', { name: 'Side view', exact: true }).click()
+  await expect(page.getByText('Side view found – drag to set it anew.')).toBeVisible()
+  await page.getByRole('button', { name: 'Front view', exact: true }).click()
   const pic = page.locator('.pview-pic')
-  await expect(pic).toHaveAccessibleName(/Part of the picture/)
   await expect.poll(() => pic.locator('img').evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0)
   const area = (await pic.boundingBox())!
-  // The cabinet sits at 150–490 × 150–340 of the 640 × 480 drawing.
+  // The cabinet's front sits at 150–490 × 150–340 of the 640 × 480 drawing.
   await page.mouse.move(area.x + area.width * (150 / 640), area.y + area.height * (150 / 480))
   await page.mouse.down()
   await page.mouse.move(area.x + area.width * (320 / 640), area.y + area.height * (250 / 480), { steps: 4 })
   await page.mouse.move(area.x + area.width * (490 / 640), area.y + area.height * (340 / 480), { steps: 4 })
   await page.mouse.up()
-  await expect(page.getByText('Part drawn by hand.')).toBeVisible()
   await expect(pic).toHaveAccessibleName(/from the left 23 %, from the top 31 %, 53 % wide, 40 % high/)
-  await accessible(page, 'picture as a view')
+  await accessible(page, 'picture for 3D')
   await page.getByRole('button', { name: 'Save', exact: true }).click()
-  await expect(page.locator('.pimg-slide .pimg-view')).toHaveText('Front')
+  await expect(page.locator('.pimg-slide .pimg-view')).toHaveText('Dimension drawing')
   // Its form, in 3D from the details: a base and a shallower top, backs against the wall.
   await page.getByRole('button', { name: 'Show in 3D' }).click()
   const one = page.getByRole('dialog', { name: 'Arvika in 3D' })
   await expect(one.locator('canvas')).toHaveCount(1)
+  // The form was read from the drawing's side view when it was saved: the legs stand further in.
+  await expect(one.locator('.model3d-parts li')).toHaveCount(2)
+  await expect(one.getByRole('button', { name: 'Saved' })).toBeDisabled()
+  await one.getByRole('button', { name: 'One box again' }).click()
   await expect(one.getByText('One box.')).toBeVisible()
   // Split, the size stays: the cut moves, the top part takes the rest.
   await one.getByRole('button', { name: 'Split into parts' }).click()
@@ -207,7 +214,6 @@ test('a visitor sees what Propario does and tries the demo, which never talks to
   await one.locator('.model3d-parts li', { hasText: 'Part 1 (bottom)' }).getByLabel('Depth').fill('60')
   await expect(one.locator('.model3d-parts li', { hasText: 'Part 1 (bottom)' }).getByLabel('Depth')).toHaveAttribute('aria-invalid', 'true')
   await one.locator('.model3d-parts li', { hasText: 'Part 1 (bottom)' }).getByLabel('Depth').fill('42')
-  await expect(one.getByText(/set a dimension drawing as the side view/)).toBeVisible()
   await accessible(page, 'form in 3D')
   await one.getByRole('button', { name: 'Save form' }).click()
   await expect(one.getByRole('button', { name: 'Saved' })).toBeDisabled()

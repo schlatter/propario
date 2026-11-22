@@ -23,6 +23,8 @@ export function Open3D({ products, data, edit }: { products: Product[]; data: Pr
     name: p.model || displayName(p, m),
     size: sizeOf(p, fields),
     shape: p.shape,
+    drawing: p.drawing,
+    photo: productImage(p),
     pictures: {
       front: pictureFor(p, productImage(p), 'front') ?? undefined,
       side: pictureFor(p, null, 'side') ?? undefined,

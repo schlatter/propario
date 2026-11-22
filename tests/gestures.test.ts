@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { angleBetween, follow, Gestures, lerpAngle, TAP_SLOP, wrap } from '../src/domain/gestures'
+import { angleBetween, atEdge, follow, Gestures, lerpAngle, TAP_SLOP, wrap } from '../src/domain/gestures'
 
 const width = () => 400
 
@@ -61,5 +61,14 @@ describe('smooth movement', () => {
     const at60 = 1 - (1 - follow(1 / 60)) ** 4
     const at30 = 1 - (1 - follow(1 / 30)) ** 2
     expect(at60).toBeCloseTo(at30)
+  })
+})
+
+describe('the edges belong to the phone', () => {
+  it('leaves touches at the sides and the top to the back gesture, reads the ones further in', () => {
+    expect(atEdge({ x: 10, y: 400 }, 400, 800)).toBe(true)
+    expect(atEdge({ x: 395, y: 400 }, 400, 800)).toBe(true)
+    expect(atEdge({ x: 200, y: 10 }, 400, 800)).toBe(true)
+    expect(atEdge({ x: 200, y: 400 }, 400, 800)).toBe(false)
   })
 })

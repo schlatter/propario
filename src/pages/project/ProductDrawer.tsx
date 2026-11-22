@@ -15,6 +15,7 @@ import { CheckMark, PriorityTag, Stars } from '../../ui/Marks'
 import { PropertyCell } from './ProductTable'
 import { ProductImage } from './ProductImage'
 import { Open3D } from './Open3D'
+import { sizeFields, sizeOf } from '../../domain/size'
 import { OffersSection, ReviewsSection } from './SourcesSections'
 import { usePageUpdate } from './usePageUpdate'
 import { withPurchaseDate } from '../../domain/purchase'
@@ -266,7 +267,7 @@ function DrawerContent({
         )}
 
         <div className="section">
-          <ProductImage product={p} name={name} actions={<Open3D products={[p]} data={data} edit />} />
+          <ProductImage product={p} name={name} size={sizeOf(p, sizeFields(data.properties))} actions={<Open3D products={[p]} data={data} edit />} />
           {/* What is compared first, each on one line: the price with its date, then the dimensions. */}
           <div className="key-facts">
             <div className="key-fact">

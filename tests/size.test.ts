@@ -151,6 +151,13 @@ describe('pictureFor', () => {
     expect(pictureFor({}, null, 'front')).toBeNull()
   })
 
+  it('takes a dimension drawing’s views before the main photo, after pictures marked for a side', () => {
+    const d = { src: drawing, front: crop, side: null }
+    expect(pictureFor({ drawing: d }, main, 'front')).toEqual({ src: drawing, crop, marked: true })
+    expect(pictureFor({ drawing: d }, main, 'side')).toBeNull()
+    expect(pictureFor({ drawing: d, views: { front: { src: main, crop: null } } }, main, 'front')?.src).toBe(main)
+  })
+
   it('offers the back only when a picture of it is marked', () => {
     const sizes = [{ width: 85, height: 188, depth: 37 }]
     expect(viewsFor(sizes)).toEqual(['front', 'side', 'top'])

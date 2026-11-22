@@ -4993,6 +4993,26 @@ table.compare.duel {
 .pview-frame.auto {
   border-style: dashed;
 }
+/* A drawing has two frames: the one being set petrol, the other quiet and see-through. */
+.pview-frame.other {
+  border: 2px dashed var(--line-strong);
+  box-shadow: none;
+}
+.pview-frame-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: 1px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--brand-ink);
+  background: var(--brand);
+  border-radius: 0 0 4px 0;
+}
+.pview-frame.other .pview-frame-label {
+  color: var(--ink);
+  background: var(--sunken);
+}
 .pview-corner {
   position: absolute;
   width: 14px;
@@ -5074,6 +5094,26 @@ dialog.model3d-modal {
 }
 .model3d-ar-bar p {
   margin: 0;
+}
+/* The strip to turn on: ridges like a dial, so it reads as something to swipe. */
+.model3d-dial {
+  height: 44px;
+  border-radius: 10px;
+  background: var(--sunken);
+  touch-action: none;
+  cursor: ew-resize;
+  display: grid;
+  place-items: center;
+}
+.model3d-dial span {
+  width: calc(100% - 32px);
+  height: 18px;
+  background: repeating-linear-gradient(90deg, var(--line-strong) 0 2px, transparent 2px 12px);
+  border-radius: 4px;
+}
+.model3d-dial-label {
+  margin-top: -6px !important;
+  text-align: center;
 }
 .model3d-ar-bar .row {
   gap: 8px;

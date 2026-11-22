@@ -65,6 +65,7 @@ const NULLABLE: Record<string, string> = {
   favoriteRank: 'number',
   decisionProductId: 'string',
   condition: 'object',
+  drawing: 'object',
 }
 const URL_FIELDS = new Set(['url', 'imageUrl'])
 const MAX_STRING = 50_000
@@ -168,6 +169,7 @@ export function checkFields(kind: Kind, fields: Record<string, unknown>): string
     if (key === 'candidate' && !['open', 'checked', 'excluded', 'favorite'].includes(String(value))) return 'field candidate is unknown'
     if (key === 'shape' && !((value as unknown[]).length <= MAX_PARTS && (value as unknown[]).every(isShapePart)))
       return `shape: at most ${MAX_PARTS} parts, each width, height and depth in cm`
+    if (key === 'drawing' && value !== null && !isDrawing(value)) return 'drawing: a picture from this server with its front and side view'
     if (key === 'views' && !Object.entries(value as object).every(([k, v]) => (PICTURE_VIEWS as string[]).includes(k) && isViewPicture(v)))
       return 'views: front, side or back, each a picture from this server with an optional crop'
     if (!checkStrings(value)) return `field ${key} is too large or too deep`
@@ -190,10 +192,13 @@ export function isShapePart(v: unknown): boolean {
 function isViewPicture(v: unknown): boolean {
   if (!v || typeof v !== 'object' || Array.isArray(v)) return false
   const r = v as Record<string, unknown>
-  if (Object.keys(r).length !== 2 || typeof r.src !== 'string' || !IMAGE_PATH.test(r.src)) return false
-  if (r.crop === null) return true
-  const c = r.crop as Record<string, unknown>
-  if (!c || typeof c !== 'object' || Object.keys(c).length !== 4) return false
+  return Object.keys(r).length === 2 && typeof r.src === 'string' && IMAGE_PATH.test(r.src) && (r.crop === null || isCrop(r.crop))
+}
+
+/** A part of a picture: shares 0 … 1, inside the picture, not empty. */
+function isCrop(v: unknown): boolean {
+  const c = v as Record<string, unknown>
+  if (!c || typeof c !== 'object' || Array.isArray(c) || Object.keys(c).length !== 4) return false
   const share = (n: unknown) => typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= 1
   return (
     share(c.x) &&
@@ -204,6 +209,19 @@ function isViewPicture(v: unknown): boolean {
     (c.h as number) > 0 &&
     (c.x as number) + (c.w as number) <= 1.0001 &&
     (c.y as number) + (c.h as number) <= 1.0001
+  )
+}
+
+/** A dimension drawing: one of the product's pictures with its front and side view (each found or set, or none). */
+export function isDrawing(v: unknown): boolean {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return false
+  const r = v as Record<string, unknown>
+  return (
+    Object.keys(r).length === 3 &&
+    typeof r.src === 'string' &&
+    IMAGE_PATH.test(r.src) &&
+    (r.front === null || isCrop(r.front)) &&
+    (r.side === null || isCrop(r.side))
   )
 }
 
@@ -272,8 +290,9 @@ export function sanitize<T extends AnyRecord>(kind: Kind, record: T): T {
   if (kind === 'products') {
     r.extra = extra
     if (Array.isArray(r.shape)) r.shape = (r.shape as unknown[]).filter(isShapePart).slice(0, MAX_PARTS)
-    // A marked view only for a picture the product still has.
+    // A marked view or drawing only for a picture the product still has.
     const own = new Set([r.image, ...((r.images as unknown[]) ?? [])])
+    if (r.drawing && (!isDrawing(r.drawing) || !own.has((r.drawing as { src: string }).src))) r.drawing = null
     if (r.views && typeof r.views === 'object')
       r.views = Object.fromEntries(
         Object.entries(r.views).filter(([k, v]) => (PICTURE_VIEWS as string[]).includes(k) && isViewPicture(v) && own.has((v as { src: string }).src)),

@@ -7,7 +7,7 @@ import { factsFromUrl } from './domain/url-facts'
 import { DEMO_PICTURE, isDemo } from './demo'
 import { api } from './api'
 import { takeFacts, updateProduct } from './db/repo'
-import type { Crop, PictureView, Product } from './db/types'
+import type { Crop, Drawing, PictureView, Product, ShapePart } from './db/types'
 import { safeHref } from './domain/values'
 import { cleanFacts, type ProductFacts } from './shared/product-facts.ts'
 import {
@@ -309,8 +309,15 @@ export const removePicture = (p: Product, path: string) =>
   changePictures(p, (c) => {
     const views = viewsWithout(c.views, path)
     // null removes a mark: views are merged per side (src/shared/records.ts).
-    return { ...without(picturesOf(c), path), ...(Object.keys(views).length ? ({ views } as Partial<Product>) : {}) }
+    return {
+      ...without(picturesOf(c), path),
+      ...(Object.keys(views).length ? ({ views } as Partial<Product>) : {}),
+      ...(c.drawing?.src === path ? { drawing: null } : {}),
+    }
   })
+
+/** Sets one of the product's pictures as its dimension drawing (null: none), with where its front and side are; a form read from it comes along. */
+export const setDrawing = (p: Product, drawing: Drawing | null, shape?: ShapePart[]) => changePictures(p, () => ({ drawing, ...(shape ? { shape } : {}) }))
 
 /** Marks a picture as the product's front, side or back (null: no view), cut to `crop` (null: automatically). */
 export const setPictureView = (p: Product, path: string, view: PictureView | null, crop: Crop | null) =>
@@ -443,7 +450,8 @@ export async function rehostImages(products: Product[], projectId: string): Prom
       const path = await move(src)
       if (path) images.push(path)
     }
-    out.push({ ...p, image, images, views: remapViews(p.views, (src) => moved.get(src) ?? '') })
+    const drawing = p.drawing && moved.get(p.drawing.src) ? { ...p.drawing, src: moved.get(p.drawing.src)! } : null
+    out.push({ ...p, image, images, views: remapViews(p.views, (src) => moved.get(src) ?? ''), drawing })
   }
   return out
 }
@@ -476,6 +484,7 @@ export async function inlineImages(products: Product[]): Promise<Product[]> {
         image,
         ...(images ? { images } : {}),
         ...(p.views && Object.keys(p.views).length ? { views: remapViews(p.views, (src) => done.get(src) ?? '') } : {}),
+        ...(p.drawing && done.get(p.drawing.src) ? { drawing: { ...p.drawing, src: done.get(p.drawing.src)! } } : {}),
       }
     }),
   )

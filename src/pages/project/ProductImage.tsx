@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { updateProduct } from '../../db/repo'
 import type { Product } from '../../db/types'
+import type { Size } from '../../domain/size'
 import { hostOf, safeHref } from '../../domain/values'
 import { useI18n } from '../../i18n'
 import {
@@ -31,7 +32,7 @@ import { PictureViewDialog } from './PictureViewDialog'
  * One menu loads, adds or removes pictures. Ctrl+V anywhere in the details (outside a text field)
  * or dropping on the strip adds a picture; a new picture never replaces one (src/images.ts).
  */
-export function ProductImage({ product: p, name, actions }: { product: Product; name: string; actions?: ReactNode }) {
+export function ProductImage({ product: p, name, actions, size }: { product: Product; name: string; actions?: ReactNode; size?: Size }) {
   const { m, fmt } = useI18n()
   const file = useRef<HTMLInputElement>(null)
   const track = useRef<HTMLDivElement>(null)
@@ -184,11 +185,9 @@ export function ProductImage({ product: p, name, actions }: { product: Product; 
             {pictures.map((pic, i) => (
               <div className="pimg-slide" key={pic} aria-hidden={i !== at}>
                 <img src={pic} alt={i === 0 ? name : m.gallery.alt(name, i + 1, pictures.length)} referrerPolicy="no-referrer" draggable={false} />
-                {viewsOf(p.views, pic).length > 0 && (
+                {(p.drawing?.src === pic || viewsOf(p.views, pic).length > 0) && (
                   <span className="pimg-view">
-                    {viewsOf(p.views, pic)
-                      .map((v) => m.pictureView.views[v])
-                      .join(' · ')}
+                    {[...(p.drawing?.src === pic ? [m.pictureView.drawing] : []), ...viewsOf(p.views, pic).map((v) => m.pictureView.views[v])].join(' · ')}
                   </span>
                 )}
               </div>
@@ -341,7 +340,7 @@ export function ProductImage({ product: p, name, actions }: { product: Product; 
           {m.image.error[error]}
         </p>
       )}
-      {marking && <PictureViewDialog product={p} src={marking} onClose={() => setMarking(null)} />}
+      {marking && <PictureViewDialog product={p} src={marking} size={size} onClose={() => setMarking(null)} />}
       <Gallery pictures={pictures} name={name} start={gallery ?? 0} open={gallery !== null} onClose={() => setGallery(null)} onMakeMain={makeMain} />
     </div>
   )

@@ -89,3 +89,11 @@ export const lerpAngle = (from: number, to: number, t: number) => from + wrap(to
  * follows quickly: about a tenth of a second whatever the frame rate.
  */
 export const follow = (dtSeconds: number, settle = 0.1) => 1 - Math.exp(-Math.max(0, dtSeconds) / settle)
+
+/**
+ * A touch that starts at the edge of the screen belongs to the phone: Android's back gesture
+ * (from the sides) and leaving full screen (from the top) end the room view. The page leaves
+ * those to the phone and reads only touches further in.
+ */
+export const EDGE = 40
+export const atEdge = (p: Point, width: number, height: number, margin = EDGE) => p.x < margin || p.x > width - margin || p.y < margin || p.y > height - margin

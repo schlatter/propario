@@ -6,6 +6,13 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- Added: a picture can be set as the product's dimension drawing ("Set for 3D" under Pictures).
+  Its front and side view are found by themselves – the product's dark lines told from the
+  coloured measures, as IKEA and others draw them – and the form is read from the side at once.
+  In 3D the drawing's lines then cover the faces in the product's colour from its photo, instead
+  of a photo taken from an angle.
+- Changed: the room view leaves touches at the edges of the screen to the phone (its back gesture
+  ended the room view), and has a strip to turn the product on.
 - Changed: a product's form keeps its size – splitting only moves where it is cut, the top part
   takes the rest, and no part is wider or deeper than the product.
 - Added: the form is read from a dimension drawing set as the side view (and the widths from the

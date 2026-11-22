@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import type { Crop } from '../../db/types'
 import { contentBox } from '../../domain/size'
 import { rowExtents } from '../../domain/form'
+import { looksLikeDrawing, pixelStats } from '../../domain/pictures'
+import { drawingViews, isAnnotation, objectColor, type DrawingViews } from '../../domain/drawing'
 
 /**
  * Where the object sits in a picture (white background left out) and the picture's own size,
@@ -67,21 +69,86 @@ async function measure(src: string): Promise<Measured | null> {
  */
 export async function readRows(src: string, crop: Crop | null): Promise<(number | null)[] | null> {
   try {
-    const img = new Image()
-    img.src = src
-    await img.decode()
-    const c = crop ?? (await measureOnce(src))?.crop ?? { x: 0, y: 0, w: 1, h: 1 }
-    const sw = img.naturalWidth * c.w
-    const sh = img.naturalHeight * c.h
-    const scale = Math.min(1, 300 / sh)
-    const canvas = document.createElement('canvas')
-    canvas.width = Math.max(1, Math.round(sw * scale))
-    canvas.height = Math.max(1, Math.round(sh * scale))
-    const ctx = canvas.getContext('2d', { willReadFrequently: true })
-    if (!ctx) return null
-    ctx.drawImage(img, img.naturalWidth * c.x, img.naturalHeight * c.y, sw, sh, 0, 0, canvas.width, canvas.height)
-    return rowExtents(ctx.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height)
+    const c = crop ?? (await measureOnce(src))?.crop ?? null
+    const { data } = await pixels(src, c, 300)
+    return rowExtents(data.data, data.width, data.height)
   } catch {
     return null
+  }
+}
+
+/** The pixels of a part of a picture, at most `maxSide` px on its longer side. */
+async function pixels(src: string, crop: Crop | null, maxSide: number) {
+  const img = new Image()
+  img.src = src
+  await img.decode()
+  const c = crop ?? { x: 0, y: 0, w: 1, h: 1 }
+  const sw = img.naturalWidth * c.w
+  const sh = img.naturalHeight * c.h
+  const scale = Math.min(1, maxSide / Math.max(sw, sh))
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.max(1, Math.round(sw * scale))
+  canvas.height = Math.max(1, Math.round(sh * scale))
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!
+  // The whole picture first, at its own size: a drawing without a size of its own (SVG) is
+  // otherwise cut from a default-sized copy and comes out partly empty.
+  const whole = document.createElement('canvas')
+  whole.width = img.naturalWidth
+  whole.height = img.naturalHeight
+  const w = whole.getContext('2d')!
+  w.fillStyle = '#fff'
+  w.fillRect(0, 0, whole.width, whole.height)
+  w.drawImage(img, 0, 0, whole.width, whole.height)
+  ctx.drawImage(whole, whole.width * c.x, whole.height * c.y, sw, sh, 0, 0, canvas.width, canvas.height)
+  return { canvas, ctx, data: ctx.getImageData(0, 0, canvas.width, canvas.height) }
+}
+
+/** Where the front and the side view are in a dimension drawing (src/domain/drawing.ts). */
+export async function readDrawing(src: string): Promise<DrawingViews> {
+  try {
+    const { data } = await pixels(src, null, 600)
+    return drawingViews(data.data, data.width, data.height)
+  } catch {
+    return { front: null, side: null }
+  }
+}
+
+/**
+ * A view of a dimension drawing for the faces in 3D: the product's lines only – the coloured
+ * dimension lines and figures turned white, so a colour multiplied over it shows the product.
+ */
+export async function drawingTexture(src: string, crop: Crop | null): Promise<HTMLCanvasElement | null> {
+  try {
+    const { canvas, ctx, data } = await pixels(src, crop, 1024)
+    const d = data.data
+    for (let i = 0; i < d.length; i += 4) if (isAnnotation(d[i], d[i + 1], d[i + 2])) d.set([255, 255, 255], i)
+    ctx.putImageData(data, 0, 0)
+    return canvas
+  } catch {
+    return null
+  }
+}
+
+/** The product's colour from its photo, as a CSS colour; null when there is none to read. */
+export async function photoColor(src: string): Promise<string | null> {
+  try {
+    const crop = (await measureOnce(src))?.crop ?? null
+    const { data } = await pixels(src, crop, 120)
+    const c = objectColor(data.data)
+    return c ? `rgb(${c[0]}, ${c[1]}, ${c[2]})` : null
+  } catch {
+    return null
+  }
+}
+
+/** Whether a picture looks like a dimension drawing (src/domain/pictures.ts), or has a front and a side view in it. */
+export async function looksDrawn(src: string): Promise<boolean> {
+  try {
+    const { data } = await pixels(src, null, 200)
+    if (looksLikeDrawing(pixelStats(data.data))) return true
+    const v = drawingViews(data.data, data.width, data.height)
+    return !!(v.front && v.side)
+  } catch {
+    return false
   }
 }

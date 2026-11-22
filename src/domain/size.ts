@@ -96,7 +96,7 @@ export function viewsFor(sizes: Size[], min = 1, withBack = false): View[] {
   return VIEWS.filter((v) => (v !== 'back' || withBack) && sizes.filter((s) => VIEW_SIDES[v].every((side) => s[side])).length >= min)
 }
 
-/** A picture to draw in a view: one marked for it, or for the front the main picture. */
+/** A picture to draw in a view: one marked for it, the drawing's view, or for the front the main picture. */
 export interface ViewPic {
   src: string
   /** null: the object is found in the picture automatically. */
@@ -105,12 +105,14 @@ export interface ViewPic {
   marked: boolean
 }
 
-export function pictureFor(p: Pick<Product, 'views'>, main: string | null, view: View): ViewPic | null {
+export function pictureFor(p: Pick<Product, 'views' | 'drawing'>, main: string | null, view: View): ViewPic | null {
   const marked = view === 'top' ? undefined : p.views?.[view]
   if (marked) return { src: marked.src, crop: marked.crop, marked: true }
+  // A dimension drawing's view: drawn straight on, to scale – better than a photo from an angle.
+  const drawn = view === 'front' || view === 'side' ? p.drawing?.[view] : null
+  if (p.drawing && drawn) return { src: p.drawing.src, crop: drawn, marked: true }
   return view === 'front' && main ? { src: main, crop: null, marked: false } : null
 }
-
 /**
  * Where the object in a product photo on white sits: the box around every pixel that is neither
  * transparent nor near white. The whole picture when nothing stands out.

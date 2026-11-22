@@ -192,10 +192,14 @@ function sideboard(s: Sideboard): string {
   return svg(s.file, defs, parts.join(''))
 }
 
-/** A front view with its measures – the drawing that helps most when it has to fit a niche. */
+/**
+ * A product in dark lines with its measures in blue, as shops draw them (IKEA and others): the
+ * front, and where given the side next to it. Propario tells the product's lines from the
+ * measures by their colour (src/domain/drawing.ts).
+ */
 function dimensionDrawing(label: string, shape: string, measures: { w: string; h: string; d?: string }, box: { x: number; y: number; w: number; h: number }) {
   uid = 0
-  const ink = '#2c3336'
+  const ink = '#2f63a8'
   const arrow = id('arrow')
   const defs = `<marker id="${arrow}" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 1 L9 5 L0 9 z" fill="${ink}"/></marker>`
   const text = (tx: number, ty: number, t: string, rotate = false) =>
@@ -473,7 +477,7 @@ for (const s of sideboards) write(s.file, sideboard(s))
 for (const p of headphoneModels) write(p.file, headphones(p))
 for (const v of vacuums) write(v.file, vacuum(v))
 
-// Dimension drawings: the sideboard's front, and a vacuum from the side (does it fit under the sofa?).
+// Dimension drawings: the sideboard from the front and the side, and a vacuum from the side (does it fit under the sofa?).
 const ink = '#2c3336'
 write(
   'sideboard-arvika-dims',
@@ -482,7 +486,12 @@ write(
     `<rect x="150" y="150" width="340" height="150" fill="none" stroke="${ink}" stroke-width="2.5"/>` +
       `<path d="M263 162 V288 M377 162 V288" stroke="${ink}" stroke-width="1.5"/>` +
       `<rect x="162" y="162" width="316" height="126" fill="none" stroke="${ink}" stroke-width="1.2" opacity="0.6"/>` +
-      `<path d="M168 300 l4 40 h8 l4 -40 M456 300 l4 40 h8 l4 -40" fill="none" stroke="${ink}" stroke-width="2"/>`,
+      `<path d="M168 300 l4 40 h8 l4 -40 M456 300 l4 40 h8 l4 -40" fill="none" stroke="${ink}" stroke-width="2"/>` +
+      // The side, 42 cm deep at the same scale, its front on the left.
+      `<rect x="532" y="150" width="89" height="150" fill="none" stroke="${ink}" stroke-width="2.5"/>` +
+      `<path d="M538 300 l4 40 h8 l4 -40 M599 300 l4 40 h8 l4 -40" fill="none" stroke="${ink}" stroke-width="2"/>` +
+      `<path d="M532 122 H621" stroke="#2f63a8" stroke-width="1.6"/>` +
+      `<text x="576" y="112" font-family="Helvetica, Arial, sans-serif" font-size="20" font-weight="600" fill="#2f63a8" text-anchor="middle">42 cm</text>`,
     { w: '160 cm', h: '80 cm' },
     { x: 150, y: 150, w: 340, h: 190 },
   ),

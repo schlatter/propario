@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
-import type { Crop, Product, ShapePart } from '../../db/types'
+import type { Crop, Drawing, Product, ShapePart } from '../../db/types'
 import { arrange, cameraDistance, cropToUv, frontSlice, PERSON_M, sideSlice, type Part3D, type Placed } from '../../domain/scene'
 import { fitsFront, type Size, type ViewPic } from '../../domain/size'
 import { fitShape } from '../../domain/form'
@@ -9,8 +9,8 @@ import { ShapeEditor } from './ShapeEditor'
 import { useI18n } from '../../i18n'
 import { Modal } from '../../ui/Dialog'
 import { Glyph } from '../../ui/Glyph'
-import { follow, Gestures, lerpAngle } from '../../domain/gestures'
-import { measureOnce } from './useMeasured'
+import { atEdge, follow, Gestures, lerpAngle } from '../../domain/gestures'
+import { drawingTexture, measureOnce, photoColor } from './useMeasured'
 
 export interface Model3DItem {
   id: string
@@ -19,6 +19,10 @@ export interface Model3DItem {
   size: Size
   shape?: ShapePart[]
   pictures: Partial<Record<'front' | 'side' | 'back', ViewPic>>
+  /** A dimension drawing: its lines go on the faces instead of photos. */
+  drawing?: Drawing | null
+  /** The main photo, for the product's colour. */
+  photo?: string | null
 }
 
 const token = (name: string, fallback: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback
@@ -406,6 +410,8 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
     // The bar has its own buttons.
     if (e.target instanceof Element && e.target.closest('.model3d-ar-bar')) return
     const g = gestures.current
+    // Touches from the edge are the phone's own (back, leave full screen): not read here.
+    if (kind === 'down' && atEdge({ x: e.clientX, y: e.clientY }, window.innerWidth, window.innerHeight)) return
     const result =
       kind === 'down'
         ? g.down(e.pointerId, { x: e.clientX, y: e.clientY })
@@ -497,6 +503,8 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
               </p>
             )}
             <p className="small">{arState === 'placed' ? m.model3d.arPlaced : m.model3d.arHint}</p>
+            <TurnDial onTurn={turnInRoom} />
+            <p className="muted small model3d-dial-label">{m.model3d.arDial}</p>
             <div className="row model3d-ar-buttons">
               <button type="button" className="btn icon" aria-label={m.model3d.left} title={m.model3d.left} onClick={() => turnInRoom(Math.PI / 12)}>
                 <Glyph name="turnLeft" />
@@ -594,6 +602,48 @@ function makeModel(c: Scene3D, p: Placed, item: Model3DItem): THREE.Group {
     ['back', [5], (crop, part) => frontSlice(crop, part, p)],
     ['side', [0, 1], (crop, part) => sideSlice(crop, part, p)],
   ]
+  const lay = (faces: number[], make: (part: Part3D) => THREE.Material) => {
+    for (const { mesh, part } of meshes) {
+      const list = [...mesh.material]
+      const material = make(part)
+      for (const f of faces) list[f] = material
+      mesh.material = list
+    }
+    c.render()
+  }
+  const drawing = item.drawing
+  if (drawing) {
+    // A dimension drawing: its lines on the front and the sides, in the product's colour from its
+    // photo – drawn straight on, unlike a photo from an angle. The dimension lines are left out.
+    const tinted: THREE.MeshStandardMaterial[] = [plain]
+    let colour: string | null = null
+    if (item.photo)
+      void photoColor(item.photo).then((col) => {
+        if (!c.alive || !col) return
+        colour = col
+        for (const t of tinted) t.color.set(col)
+        c.render()
+      })
+    for (const [view, faces, slice] of [slots[0], slots[2]]) {
+      const crop = drawing[view as 'front' | 'side']
+      if (!crop) continue
+      void drawingTexture(drawing.src, crop).then((canvas) => {
+        if (!c.alive || !canvas) return
+        lay(faces, (part) => {
+          const texture = keep(new THREE.CanvasTexture(canvas))
+          texture.colorSpace = THREE.SRGBColorSpace
+          // The canvas is the view itself: each part takes its slice of the whole.
+          const uv = cropToUv(slice({ x: 0, y: 0, w: 1, h: 1 }, part))
+          texture.repeat.set(...uv.repeat)
+          texture.offset.set(...uv.offset)
+          const material = keep(new THREE.MeshStandardMaterial({ map: texture, roughness: 0.85, color: colour ?? colors.body }))
+          tinted.push(material)
+          return material
+        })
+      })
+    }
+    return group
+  }
   for (const [view, faces, slice] of slots) {
     const pic = item.pictures[view]
     if (!pic) continue
@@ -603,19 +653,15 @@ function makeModel(c: Scene3D, p: Placed, item: Model3DItem): THREE.Group {
       if (!c.alive || !crop || (!pic.marked && !(measured && fitsFront(crop, measured.ratio, p.w, p.h)))) return
       new THREE.ImageLoader().load(pic.src, (image) => {
         if (!c.alive) return
-        for (const { mesh, part } of meshes) {
+        lay(faces, (part) => {
           const texture = keep(new THREE.Texture(image))
           texture.colorSpace = THREE.SRGBColorSpace
           const uv = cropToUv(slice(crop, part))
           texture.repeat.set(...uv.repeat)
           texture.offset.set(...uv.offset)
           texture.needsUpdate = true
-          const material = keep(new THREE.MeshStandardMaterial({ map: texture, roughness: 0.8 }))
-          const list = [...mesh.material]
-          for (const f of faces) list[f] = material
-          mesh.material = list
-        }
-        c.render()
+          return keep(new THREE.MeshStandardMaterial({ map: texture, roughness: 0.8 }))
+        })
       })
     })
   }
@@ -678,4 +724,33 @@ function setDownAt(r: Room, hit: XRHitTestResult, pose: XRPose) {
     // No anchors here: it stays where it was set down.
   }
   r.onPlaced()
+}
+
+/**
+ * A strip to swipe on to turn the product – away from the edges of the screen, where a swipe
+ * would be the phone's back gesture. A help for fingers only: the arrows beside it do the same
+ * for the keyboard and screen readers.
+ */
+function TurnDial({ onTurn }: { onTurn: (by: number) => void }) {
+  const last = useRef<number | null>(null)
+  return (
+    <div
+      className="model3d-dial"
+      aria-hidden="true"
+      onPointerDown={(e) => {
+        e.currentTarget.setPointerCapture(e.pointerId)
+        last.current = e.clientX
+      }}
+      onPointerMove={(e) => {
+        if (last.current === null) return
+        // The strip's width turns it half way round; right turns it right.
+        onTurn(-((e.clientX - last.current) / Math.max(1, e.currentTarget.clientWidth)) * Math.PI)
+        last.current = e.clientX
+      }}
+      onPointerUp={() => (last.current = null)}
+      onPointerCancel={() => (last.current = null)}
+    >
+      <span />
+    </div>
+  )
 }

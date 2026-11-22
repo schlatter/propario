@@ -11,15 +11,17 @@ type Note = 'read' | 'nothing' | null
 /**
  * The form of one product inside its size: where it is cut, and how wide and deep each part is.
  * The size fields stay the measure – the top part takes what is left. With a dimension drawing
- * set as the side view, the form is read from it (src/domain/form.ts), so mostly nothing has to
+ * set for 3D (or a picture of the side), the form is read from it (src/domain/form.ts), so mostly nothing has to
  * be typed; the front view adds the widths.
  */
 export function ShapeEditor({ product, size, draft, setDraft }: { product: Product; size: Size; draft: ShapePart[]; setDraft: (s: ShapePart[]) => void }) {
   const { m, fmt } = useI18n()
   const [note, setNote] = useState<Note>(null)
   const full = size.width && size.height && size.depth ? (size as Required<Size>) : null
-  const side = product.views?.side
-  const front = product.views?.front
+  // The drawing's views first, else pictures marked as the side and the front.
+  const d = product.drawing
+  const side = d?.side ? { src: d.src, crop: d.side } : product.views?.side
+  const front = d?.front ? { src: d.src, crop: d.front } : product.views?.front
 
   const read = async () => {
     if (!full || !side) return

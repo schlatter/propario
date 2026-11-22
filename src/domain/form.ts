@@ -117,6 +117,10 @@ export function profileSteps(rows: (number | null)[], jump = 0.06, min = 0.08): 
     const b = runs[Math.max(i, into)]
     runs.splice(Math.min(i, into), 2, { from: a.from, to: b.to, values: [...a.values, ...b.values] })
   }
+  // Neighbours alike again after the merging – a short interruption between them – are one part.
+  for (let i = runs.length - 1; i > 0; i--)
+    if (Math.abs(median(runs[i].values) - median(runs[i - 1].values)) <= jump)
+      runs.splice(i - 1, 2, { from: runs[i - 1].from, to: runs[i].to, values: [...runs[i - 1].values, ...runs[i].values] })
   const widest = Math.max(...runs.map((r) => median(r.values)))
   return runs.map((r) => ({ h: (r.to - r.from + 1) / total, v: median(r.values) / widest })).reverse()
 }

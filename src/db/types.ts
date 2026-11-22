@@ -181,6 +181,13 @@ export interface ShapePart {
 }
 export const MAX_PARTS = 6
 
+/** One of the product's pictures that is a dimension drawing, and where in it the front and the side are (null: not in it). */
+export interface Drawing {
+  src: string
+  front: Crop | null
+  side: Crop | null
+}
+
 export interface Product {
   id: string
   projectId: string
@@ -209,6 +216,8 @@ export interface Product {
   images?: string[]
   /** Pictures marked as the front, side or back, each one of `image`/`images`. Absent before 0.16. */
   views?: Partial<Record<PictureView, ViewPicture>>
+  /** A dimension drawing among the pictures, with where its front and side view are; it gives the form and the lines in 3D. Absent before 0.17. */
+  drawing?: Drawing | null
   /** The product's form as parts stacked from the floor, backs against the wall (cm). Empty: one box from the size fields. Absent before 0.16. */
   shape?: ShapePart[]
   variant: string

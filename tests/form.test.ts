@@ -105,6 +105,11 @@ describe('reading a form from a drawing', () => {
     expect(steps[1].v).toBeCloseTo(66 / 80, 1)
   })
 
+  it('sees one part where a short interruption splits an even profile – a drawer front, a rail', () => {
+    const rows = [...Array(40).fill(1), ...Array(3).fill(0.5), ...Array(40).fill(1)]
+    expect(profileSteps(rows)).toEqual([{ h: 1, v: 1 }])
+  })
+
   it('turns the steps into a form of the product’s size, the top taking the rest', () => {
     const form = formFromProfiles(size, profileSteps(rowExtents(side, 40, 200)))
     expect(form.map((p) => p.d)).toEqual([40, 33])
