@@ -76,9 +76,17 @@ interface Step {
 
 const DIMS = ['width', 'height', 'depth'] as const
 
-/** Typing, choosing or a scrolling strip: there arrow keys and swipes belong to the element. */
-const ownsArrows = (target: EventTarget | null) =>
-  target instanceof Element && !!target.closest('input, textarea, select, [contenteditable], .table-wrap, .entry, .menu-list, dialog.gallery, .pimg-stage')
+/**
+ * Typing, choosing or a scrolling strip: there arrow keys and swipes belong to the element. So do
+ * dialogs opened from the details (3D, setting a picture's frame or corners, the gallery): their
+ * drags turn and move things and must never step to another product.
+ */
+export const ownsArrows = (target: EventTarget | null) =>
+  target instanceof Element &&
+  (!!target.closest('input, textarea, select, [contenteditable], .table-wrap, .entry, .menu-list, .pimg-stage') || !!target.closest('dialog:not(.drawer)'))
+
+/** Another dialog over the details: swipes and arrow keys are its own. */
+const dialogOver = () => document.querySelectorAll('dialog[open]').length > 1
 
 function DrawerContent({
   data,
@@ -111,7 +119,7 @@ function DrawerContent({
     if (!step) return
     const onKey = (e: KeyboardEvent) => {
       if ((e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return
-      if (ownsArrows(e.target) || document.querySelectorAll('dialog[open]').length > 1) return
+      if (ownsArrows(e.target) || dialogOver()) return
       e.preventDefault()
       go(e.key === 'ArrowLeft' ? step.prev : step.next)
     }
@@ -127,12 +135,12 @@ function DrawerContent({
   const touch = useRef<{ x: number; y: number; own: boolean } | null>(null)
   const onTouchStart = (e: React.TouchEvent) => {
     const t = e.touches[0]
-    touch.current = e.touches.length === 1 ? { x: t.clientX, y: t.clientY, own: ownsArrows(e.target) } : null
+    touch.current = e.touches.length === 1 ? { x: t.clientX, y: t.clientY, own: ownsArrows(e.target) || dialogOver() } : null
   }
   const onTouchEnd = (e: React.TouchEvent) => {
     const start = touch.current
     touch.current = null
-    if (!start || start.own || !step) return
+    if (!start || start.own || !step || dialogOver()) return
     const t = e.changedTouches[0]
     const dx = t.clientX - start.x
     const dy = t.clientY - start.y

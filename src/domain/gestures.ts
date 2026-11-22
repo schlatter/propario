@@ -1,12 +1,10 @@
 /**
  * Touches over the room view (src/pages/project/Model3D.tsx), read without the browser: a tap
- * sets the product down, a finger moved sideways or two fingers twisted turn it.
+ * sets the product down, two fingers twisted turn it.
  */
 
 /** Moved less than this (px) between down and up: a tap. */
 export const TAP_SLOP = 12
-/** A swipe across the whole screen turns the product half way round. */
-const SWIPE_TURN = Math.PI
 
 export interface Point {
   x: number
@@ -24,10 +22,6 @@ export class Gestures {
   private start: Point | null = null
   private moved = false
   private many = false
-  private width: () => number
-  constructor(width: () => number) {
-    this.width = width
-  }
 
   down(id: number, p: Point): GestureEvent {
     this.points.set(id, p)
@@ -51,11 +45,11 @@ export class Gestures {
       return { kind: 'turn', by: -angleBetween(before, other, p, other) }
     }
     this.points.set(id, p)
-    if (this.points.size > 2) return null
-    if (!this.moved && this.start && Math.hypot(p.x - this.start.x, p.y - this.start.y) < TAP_SLOP) return null
-    this.moved = true
-    // One finger sideways: right turns it right (clockwise seen from above).
-    return { kind: 'turn', by: -((p.x - before.x) / Math.max(1, this.width())) * SWIPE_TURN }
+    // One finger only ever taps: a moved finger is no tap, and it turns nothing – over the
+    // camera picture, a swipe is too easily the phone's own gesture. Turning is the strip's and
+    // two fingers' job.
+    if (this.start && Math.hypot(p.x - this.start.x, p.y - this.start.y) >= TAP_SLOP) this.moved = true
+    return null
   }
 
   up(id: number): GestureEvent {

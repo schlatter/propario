@@ -1,29 +1,23 @@
 import { describe, expect, it } from 'vitest'
 import { angleBetween, atEdge, follow, Gestures, lerpAngle, TAP_SLOP, wrap } from '../src/domain/gestures'
 
-const width = () => 400
-
 describe('touches over the room view', () => {
   it('a finger down and up without moving is a tap', () => {
-    const g = new Gestures(width)
+    const g = new Gestures()
     g.down(1, { x: 100, y: 100 })
     expect(g.move(1, { x: 100 + TAP_SLOP / 2, y: 100 })).toBeNull()
     expect(g.up(1)).toEqual({ kind: 'tap' })
   })
 
-  it('a finger moved sideways turns – right turns it right – and is no tap', () => {
-    const g = new Gestures(width)
+  it('a finger moved is neither a tap nor a turn – turning is for the strip and two fingers', () => {
+    const g = new Gestures()
     g.down(1, { x: 100, y: 100 })
-    const first = g.move(1, { x: 120, y: 100 })
-    expect(first?.kind).toBe('turn')
-    const second = g.move(1, { x: 220, y: 100 })
-    // 100 px of a 400 px wide screen: a quarter of half a turn.
-    expect(second).toEqual({ kind: 'turn', by: -Math.PI / 4 })
+    expect(g.move(1, { x: 220, y: 100 })).toBeNull()
     expect(g.up(1)).toBeNull()
   })
 
   it('two fingers twisted turn by the angle between them, and their release is no tap', () => {
-    const g = new Gestures(width)
+    const g = new Gestures()
     g.down(1, { x: 100, y: 200 })
     g.down(2, { x: 300, y: 200 })
     // The right finger goes down by as much as the fingers are apart: a quarter turn of the line.
@@ -35,7 +29,7 @@ describe('touches over the room view', () => {
   })
 
   it('ignores fingers it does not know', () => {
-    const g = new Gestures(width)
+    const g = new Gestures()
     expect(g.move(9, { x: 0, y: 0 })).toBeNull()
     expect(g.up(9)).toBeNull()
   })

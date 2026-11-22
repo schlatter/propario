@@ -62,7 +62,7 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
   const ctx = useRef<Scene3D | null>(null)
   /** The running room view (WebXR), kept outside React: it changes every frame. */
   const room = useRef<Room | null>(null)
-  const gestures = useRef(new Gestures(() => window.innerWidth))
+  const gestures = useRef(new Gestures())
   const [failed, setFailed] = useState(false)
   const [arAvailable, setArAvailable] = useState(false)
   const [arState, setArState] = useState<'off' | 'starting' | 'searching' | 'placed'>('off')

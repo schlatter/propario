@@ -6,6 +6,13 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+## 0.17.0 — 2026-11-22
+
+- Fixed: turning a product in 3D, or dragging a frame or a corner on a picture, could step to
+  the next product in the details. Swipes there now belong to the dialog; in the room view one
+  finger only taps, turning is for the strip and two fingers.
+- Changed: the start page tells a little more per step and shows the room view (AR) as part of
+  deciding.
 - Added: a photo taken from an angle can be straightened – set the four corners of the front
   (or another side) and it covers that side in 3D and stands in the sizes to scale as if taken
   straight on. "Put the photo on the front" in a product's 3D view leads there. Each face in 3D

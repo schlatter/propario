@@ -11,6 +11,23 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.17.0',
+    notes: {
+      en: [
+        'In your room by AR, on phones that support it: set the product down, turn it, compare in place.',
+        'Set a dimension drawing for 3D: views and form are read by themselves, e.g. from IKEA.',
+        'Photos taken from an angle are straightened onto the front by their four corners.',
+        'Fixed: turning in 3D or dragging corners no longer jumps to the next product.',
+      ],
+      de: [
+        'Per AR im eigenen Raum, auf Handys, die das können: Produkt abstellen, drehen, vor Ort vergleichen.',
+        'Maßzeichnung für 3D festlegen: Ansichten und Form werden selbst gelesen, z. B. von IKEA.',
+        'Schräg fotografierte Fotos werden über vier Ecken gerade auf die Front gelegt.',
+        'Behoben: Drehen in 3D oder Ecken ziehen springt nicht mehr zum nächsten Produkt.',
+      ],
+    },
+  },
+  {
     version: '0.16.0',
     notes: {
       en: [

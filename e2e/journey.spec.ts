@@ -199,6 +199,14 @@ test('a visitor sees what Propario does and tries the demo, which never talks to
   await page.getByRole('button', { name: 'Show in 3D' }).click()
   const one = page.getByRole('dialog', { name: 'Arvika in 3D' })
   await expect(one.locator('canvas')).toHaveCount(1)
+  // A finger dragged across the 3D view turns it – it never steps to the next product.
+  await one.locator('canvas').evaluate((el) => {
+    const at = (x: number) => new Touch({ identifier: 1, target: el, clientX: x, clientY: 300 })
+    el.dispatchEvent(new TouchEvent('touchstart', { touches: [at(300)], changedTouches: [at(300)], bubbles: true }))
+    el.dispatchEvent(new TouchEvent('touchend', { touches: [], changedTouches: [at(40)], bubbles: true }))
+  })
+  await expect(one).toBeVisible()
+  await expect(page.locator('#drawer-title')).toContainText('Arvika')
   // The form was read from the drawing's side view when it was saved: the legs stand further in.
   await expect(one.locator('.model3d-parts li')).toHaveCount(2)
   await expect(one.getByRole('button', { name: 'Saved' })).toBeDisabled()
