@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type Dispatch, type ReactNode, type SetStateAction } from 'react'
 import { updateProduct } from '../../db/repo'
 import { MAX_PARTS, type Product, type ShapePart } from '../../db/types'
 import { addPart, formFromProfiles, moveCut, profileSteps, removePart, splitAt } from '../../domain/form'
@@ -6,6 +6,7 @@ import type { Size } from '../../domain/size'
 import { useI18n } from '../../i18n'
 import { readRows } from './useMeasured'
 import { InfoTip } from '../../ui/InfoTip'
+import { Glyph } from '../../ui/Glyph'
 
 type Note = 'read' | 'nothing' | null
 
@@ -15,7 +16,20 @@ type Note = 'read' | 'nothing' | null
  * set for 3D (or a picture of the side), the form is read from it (src/domain/form.ts), so mostly nothing has to
  * be typed; the front view adds the widths.
  */
-export function ShapeEditor({ product, size, draft, setDraft }: { product: Product; size: Size; draft: ShapePart[]; setDraft: (s: ShapePart[]) => void }) {
+export function ShapeEditor({
+  product,
+  size,
+  draft,
+  setDraft,
+  photoFront,
+}: {
+  product: Product
+  size: Size
+  draft: ShapePart[]
+  setDraft: Dispatch<SetStateAction<ShapePart[]>>
+  /** The way to the photo on the front, beside "Edit 3D model". */
+  photoFront?: ReactNode
+}) {
   const { m, fmt } = useI18n()
   const [note, setNote] = useState<Note>(null)
   const full = size.width && size.height && size.depth ? (size as Required<Size>) : null
@@ -31,95 +45,111 @@ export function ShapeEditor({ product, size, draft, setDraft }: { product: Produ
     const form = rows ? formFromProfiles(full, profileSteps(rows), frontRows ?? undefined) : []
     if (form.length) setDraft(form)
     setNote(form.length ? 'read' : 'nothing')
+    return form.length
   }
-  // Nothing set yet and a drawing of the side at hand: read it right away.
-  useEffect(() => {
-    if (!product.shape?.length) void read()
-    // Once, when opened.
-  }, [])
+  const [open, setOpen] = useState(false)
 
   if (!full) return <p className="muted small">{m.model3d.noSize}</p>
   const cm = (n: number) => fmt.number(Math.round(n * 10) / 10)
   const rounded = draft.map((p) => ({ w: Math.round(p.w * 10) / 10, h: Math.round(p.h * 10) / 10, d: Math.round(p.d * 10) / 10 }))
   const saved = JSON.stringify(product.shape ?? []) === JSON.stringify(rounded)
   const set = (i: number, patch: Partial<ShapePart>) => setDraft(draft.map((p, n) => (n === i ? { ...p, ...patch } : p)))
+  const half = () => setDraft(splitAt(full, Math.round(full.height / 2)))
+  // Opened without a form: read from the drawing where there is one, else a cut in the middle to start from.
+  const toggle = async () => {
+    if (open) {
+      if (!saved) setDraft(product.shape ?? [])
+      setNote(null)
+      setOpen(false)
+      return
+    }
+    setOpen(true)
+    if (!draft.length && !(side && (await read()))) half()
+  }
 
   return (
-    <section className="model3d-form" aria-labelledby="model3d-form-title">
-      <div className="row model3d-form-head">
-        <h3 id="model3d-form-title">{m.model3d.formTitle}</h3>
-        <InfoTip text={m.model3d.formHint(cm(full.width), cm(full.height), cm(full.depth))} />
-      </div>
-      {note && (
-        <p className="small" role="status">
-          {note === 'read' ? m.model3d.readDone : m.model3d.readNothing}
-        </p>
-      )}
-      {draft.length === 0 ? (
-        <div className="row model3d-form-actions">
-          <span className="small">{m.model3d.oneBox}</span>
-          <span className="spacer" />
-          <button type="button" className="btn sm" onClick={() => setDraft(splitAt(full, Math.round(full.height / 2)))}>
-            {m.model3d.split}
+    <section className="model3d-form" aria-label={m.model3d.editModel}>
+      <div className="row model3d-edit-row">
+        {photoFront}
+        <span className="model3d-with-tip">
+          <button type="button" className="btn sm" aria-expanded={open} aria-controls="model3d-parts" onClick={() => void toggle()}>
+            <Glyph name="edit" /> {m.model3d.editModel}
           </button>
+          <InfoTip text={m.model3d.formHint(cm(full.width), cm(full.height), cm(full.depth))} />
+        </span>
+      </div>
+      {open && (
+        <div id="model3d-parts" className="model3d-panel">
+          {note && (
+            <p className="small" role="status">
+              {note === 'read' ? m.model3d.readDone : m.model3d.readNothing}
+            </p>
+          )}
+          <ol className="model3d-parts">
+            {/* Top part first, as it stands. */}
+            {draft
+              .map((p, i) => ({ p, i }))
+              .reverse()
+              .map(({ p, i }) => {
+                const top = i === draft.length - 1
+                return (
+                  <li key={i}>
+                    <span className="model3d-part-name">{m.model3d.part(i + 1, draft.length)}</span>
+                    {top ? (
+                      <span className="model3d-rest">
+                        <span>{m.model3d.sides.h}</span>
+                        <span>{m.model3d.rest(cm(p.h))}</span>
+                      </span>
+                    ) : (
+                      <NumberField label={m.model3d.sides.h} value={p.h} max={p.h + draft[i + 1].h - 1} onCommit={(h) => setDraft(moveCut(draft, i, h))} />
+                    )}
+                    <NumberField label={m.model3d.sides.w} value={p.w} max={full.width} onCommit={(w) => set(i, { w })} />
+                    <NumberField label={m.model3d.sides.d} value={p.d} max={full.depth} onCommit={(d) => set(i, { d })} />
+                    <button
+                      type="button"
+                      className="icon-btn sm"
+                      aria-label={m.model3d.removePart(i + 1)}
+                      title={m.model3d.removePart(i + 1)}
+                      onClick={() => setDraft(removePart(draft, i))}
+                    >
+                      <Glyph name="close" />
+                    </button>
+                  </li>
+                )
+              })}
+          </ol>
+          <div className="row model3d-form-actions">
+            {side && (
+              <button type="button" className="btn sm" onClick={() => void read()}>
+                {m.model3d.read}
+              </button>
+            )}
+            {draft.length < MAX_PARTS && (
+              <button type="button" className="btn sm" onClick={() => (draft.length ? setDraft(addPart(draft)) : half())}>
+                <Glyph name="plus" /> {m.model3d.addPart}
+              </button>
+            )}
+            <button
+              type="button"
+              className="btn sm"
+              onClick={() => {
+                // Back to one piece, as large as the product – saved at once.
+                setDraft([])
+                void updateProduct(product, { shape: [] })
+                setNote(null)
+                setOpen(false)
+              }}
+            >
+              {m.model3d.formReset}
+            </button>
+            <span className="spacer" />
+            <button type="button" className="btn primary sm" onClick={() => void updateProduct(product, { shape: rounded })} disabled={saved}>
+              {m.common.save}
+            </button>
+          </div>
+          {!side && <p className="muted small">{m.model3d.readTip}</p>}
         </div>
-      ) : (
-        <ol className="model3d-parts">
-          {/* Top part first, as it stands. */}
-          {draft
-            .map((p, i) => ({ p, i }))
-            .reverse()
-            .map(({ p, i }) => {
-              const top = i === draft.length - 1
-              return (
-                <li key={i}>
-                  <span className="model3d-part-name">{m.model3d.part(i + 1, draft.length)}</span>
-                  {top ? (
-                    <span className="model3d-rest">
-                      <span>{m.model3d.sides.h}</span>
-                      <span>{m.model3d.rest(cm(p.h))}</span>
-                    </span>
-                  ) : (
-                    <NumberField label={m.model3d.sides.h} value={p.h} max={p.h + draft[i + 1].h - 1} onCommit={(h) => setDraft(moveCut(draft, i, h))} />
-                  )}
-                  <NumberField label={m.model3d.sides.w} value={p.w} max={full.width} onCommit={(w) => set(i, { w })} />
-                  <NumberField label={m.model3d.sides.d} value={p.d} max={full.depth} onCommit={(d) => set(i, { d })} />
-                  <button
-                    type="button"
-                    className="icon-btn sm"
-                    aria-label={m.model3d.removePart(i + 1)}
-                    title={m.model3d.removePart(i + 1)}
-                    onClick={() => setDraft(removePart(draft, i))}
-                  >
-                    ×
-                  </button>
-                </li>
-              )
-            })}
-        </ol>
       )}
-      <div className="row model3d-form-actions">
-        {side && (
-          <button type="button" className="btn sm" onClick={() => void read()}>
-            {m.model3d.read}
-          </button>
-        )}
-        {draft.length > 0 && draft.length < MAX_PARTS && (
-          <button type="button" className="btn sm" onClick={() => setDraft(addPart(draft))}>
-            {m.model3d.addPart}
-          </button>
-        )}
-        {draft.length > 0 && (
-          <button type="button" className="btn sm" onClick={() => setDraft([])}>
-            {m.model3d.oneBoxAgain}
-          </button>
-        )}
-        <span className="spacer" />
-        <button type="button" className="btn primary sm" onClick={() => void updateProduct(product, { shape: rounded })} disabled={saved}>
-          {saved ? m.model3d.saved : m.model3d.saveForm}
-        </button>
-      </div>
-      {!side && <p className="muted small">{m.model3d.readTip}</p>}
     </section>
   )
 }

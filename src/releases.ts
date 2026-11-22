@@ -11,6 +11,13 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.17.2',
+    notes: {
+      en: ['3D view tidied up: "Edit 3D model" opens the parts, and the ⓘ explains on a tap.'],
+      de: ['3D-Ansicht aufgeräumt: „3D-Modell bearbeiten“ öffnet die Teile, das ⓘ erklärt beim Antippen.'],
+    },
+  },
+  {
     version: '0.17.1',
     notes: {
       en: ['3D: arrow symbols to turn; shorter hints. In the room, one finger turns the product again.'],

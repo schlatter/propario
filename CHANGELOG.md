@@ -6,6 +6,14 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+## 0.17.2 — 2026-11-22
+
+- Fixed: an ⓘ showed its text only to the mouse and the keyboard – now also when tapped.
+- Fixed: a product's photo could stay black on the front in 3D when it had no size of its own.
+- Changed: the 3D view is tidier – turning, re-centring and "View in your room" (with an icon) in
+  one row; "Put the photo on the front" and "Edit 3D model" below, the editor opening only on
+  request, saving only there.
+- Changed: a new opening line on the start page.
 ## 0.17.1 — 2026-11-22
 
 - Changed: the 3D view turns and goes back to the start with arrow symbols; the form and the photo

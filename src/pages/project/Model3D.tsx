@@ -12,7 +12,7 @@ import { Modal } from '../../ui/Dialog'
 import { Glyph } from '../../ui/Glyph'
 import { InfoTip } from '../../ui/InfoTip'
 import { atEdge, follow, Gestures, lerpAngle, wrap } from '../../domain/gestures'
-import { drawingTexture, measureOnce, photoColor, straightened } from './useMeasured'
+import { drawingTexture, measureOnce, photoCanvas, photoColor, straightened } from './useMeasured'
 
 export interface Model3DItem {
   id: string
@@ -457,9 +457,9 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
           <>
             {placed.boxes.length === 0 && <p className="muted">{m.model3d.noSize}</p>}
             <div className="model3d-stage" ref={host} role="img" aria-label={m.model3d.label(names)} />
+            <p className="muted small model3d-hint">{m.model3d.hint}</p>
+            {/* One row: turning on the left, the room on the right – it stands out. */}
             <div className="model3d-tools">
-              <p className="muted small">{m.model3d.hint}</p>
-              <span className="spacer" />
               <button type="button" className="icon-btn" aria-label={m.model3d.left} title={m.model3d.left} onClick={() => turn(-30)}>
                 <Glyph name="turnLeft" />
               </button>
@@ -469,37 +469,45 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
               <button type="button" className="icon-btn" aria-label={m.model3d.reset} title={m.model3d.reset} onClick={() => ctx.current?.home()}>
                 <Glyph name="recentre" />
               </button>
-            </div>
-            {arAvailable && placed.boxes.length > 0 && (
-              <div className="model3d-ar">
-                {placed.boxes.length > 1 && (
-                  <div className="seg" role="group" aria-label={m.model3d.arWhich}>
-                    {placed.boxes.map((b) => (
-                      <button key={b.id} type="button" aria-pressed={b.id === arId} onClick={() => setArId(b.id)}>
-                        {items.find((i) => i.id === b.id)!.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
+              <span className="spacer" />
+              {arAvailable && placed.boxes.length > 0 && (
                 <button type="button" className="btn primary" onClick={() => void startAr(arId)}>
-                  {m.model3d.ar}
+                  <Glyph name="room" /> {m.model3d.ar}
                 </button>
-                {arError && (
-                  <p className="small" role="alert">
-                    {m.model3d.arFailed}
-                  </p>
-                )}
+              )}
+            </div>
+            {arAvailable && placed.boxes.length > 1 && (
+              <div className="seg" role="group" aria-label={m.model3d.arWhich}>
+                {placed.boxes.map((b) => (
+                  <button key={b.id} type="button" aria-pressed={b.id === arId} onClick={() => setArId(b.id)}>
+                    {items.find((i) => i.id === b.id)!.name}
+                  </button>
+                ))}
               </div>
             )}
-            {edit && !edit.views?.front?.quad && items[0]?.photo && (
-              <div className="model3d-photo">
-                <button type="button" className="btn sm" onClick={() => setCornersOf(items[0].photo!)}>
-                  {m.model3d.photoFront}
-                </button>
-                <InfoTip text={m.model3d.photoFrontHint} />
-              </div>
+            {arError && (
+              <p className="small" role="alert">
+                {m.model3d.arFailed}
+              </p>
             )}
-            {edit && <ShapeEditor product={edit} size={fieldSize} draft={draft} setDraft={setDraft} />}
+            {edit && (
+              <ShapeEditor
+                product={edit}
+                size={fieldSize}
+                draft={draft}
+                setDraft={setDraft}
+                photoFront={
+                  !edit.views?.front?.quad && items[0]?.photo ? (
+                    <span className="model3d-with-tip">
+                      <button type="button" className="btn sm" onClick={() => setCornersOf(items[0].photo!)}>
+                        <Glyph name="image" /> {m.model3d.photoFront}
+                      </button>
+                      <InfoTip text={m.model3d.photoFrontHint} />
+                    </span>
+                  ) : null
+                }
+              />
+            )}
             {edit && cornersOf && <PictureViewDialog product={edit} src={cornersOf} size={fieldSize} corners onClose={() => setCornersOf(null)} />}
           </>
         )}
@@ -676,7 +684,8 @@ function makeModel(c: Scene3D, p: Placed, item: Model3DItem): THREE.Group {
             void drawingTexture(item.drawing.src, drawn).then((canvas) => c.alive && canvas && fromImage(faces, canvas, (part) => slice(whole, part), true))
           return
         }
-        new THREE.ImageLoader().load(photo.src, (image) => c.alive && fromImage(faces, image, (part) => slice(crop, part)))
+        // Through a full-size copy: also a picture without a size of its own (SVG) comes out whole.
+        void photoCanvas(photo.src).then((canvas) => c.alive && canvas && fromImage(faces, canvas, (part) => slice(crop, part)))
       })
     } else if (item.drawing && drawn) {
       void drawingTexture(item.drawing.src, drawn).then((canvas) => c.alive && canvas && fromImage(faces, canvas, (part) => slice(whole, part), true))

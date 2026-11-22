@@ -208,13 +208,15 @@ test('a visitor sees what Propario does and tries the demo, which never talks to
   await expect(one).toBeVisible()
   await expect(page.locator('#drawer-title')).toContainText('Arvika')
   // The form was read from the drawing's side view when it was saved: the legs stand further in.
+  await one.getByRole('button', { name: 'Edit 3D model' }).click()
   await expect(one.locator('.model3d-parts li')).toHaveCount(2)
-  await expect(one.getByRole('button', { name: 'Saved' })).toBeDisabled()
-  await one.getByRole('button', { name: 'One box again' }).click()
-  await expect(one.getByText('One box.')).toBeVisible()
-  // Split, the size stays: the cut moves, the top part takes the rest.
-  await one.getByRole('button', { name: 'Split into parts' }).click()
-  await expect(one.getByText('40 cm, the rest')).toBeVisible()
+  await expect(one.getByRole('button', { name: 'Save', exact: true })).toBeDisabled()
+  // Reset: one piece again, saved at once. Opened again, the drawing is read anew.
+  await one.getByRole('button', { name: 'Reset' }).click()
+  await expect(one.locator('.model3d-parts')).toHaveCount(0)
+  await one.getByRole('button', { name: 'Edit 3D model' }).click()
+  await expect(one.getByText(/Read from the side view/)).toBeVisible()
+  // The size stays: the cut moves, the top part takes the rest.
   await one.locator('.model3d-parts li', { hasText: 'Part 1 (bottom)' }).getByLabel('Height').fill('50')
   await expect(one.getByText('30 cm, the rest')).toBeVisible()
   await one.locator('.model3d-parts li', { hasText: 'Part 2 (top)' }).getByLabel('Depth').fill('30')
@@ -223,8 +225,8 @@ test('a visitor sees what Propario does and tries the demo, which never talks to
   await expect(one.locator('.model3d-parts li', { hasText: 'Part 1 (bottom)' }).getByLabel('Depth')).toHaveAttribute('aria-invalid', 'true')
   await one.locator('.model3d-parts li', { hasText: 'Part 1 (bottom)' }).getByLabel('Depth').fill('42')
   await accessible(page, 'form in 3D')
-  await one.getByRole('button', { name: 'Save form' }).click()
-  await expect(one.getByRole('button', { name: 'Saved' })).toBeDisabled()
+  await one.getByRole('button', { name: 'Save', exact: true }).click()
+  await expect(one.getByRole('button', { name: 'Save', exact: true })).toBeDisabled()
   // The photo shows Arvika from an angle: its front's corners set, it is straightened onto the front.
   await one.getByRole('button', { name: 'Put the photo on the front' }).click()
   await expect(page.getByRole('heading', { name: 'What does the picture show?' })).toBeVisible()
@@ -233,7 +235,7 @@ test('a visitor sees what Propario does and tries the demo, which never talks to
   await page.keyboard.press('ArrowDown')
   await page.keyboard.press('ArrowDown')
   await accessible(page, 'corners of the front')
-  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await page.getByRole('dialog', { name: 'What does the picture show?' }).getByRole('button', { name: 'Save', exact: true }).click()
   await expect(one.getByRole('button', { name: 'Put the photo on the front' })).toHaveCount(0)
   await one.getByRole('button', { name: 'Close' }).click()
   await page.locator('dialog.drawer').getByRole('button', { name: 'Close', exact: true }).click()

@@ -203,3 +203,12 @@ export function useStraightened(src: string | null, quad: Corner[] | undefined, 
   }, [key])
   return url
 }
+
+/** A photo as a canvas of up to 1024 px, for a texture in 3D. */
+export async function photoCanvas(src: string): Promise<HTMLCanvasElement | null> {
+  try {
+    return (await pixels(src, null, 1024)).canvas
+  } catch {
+    return null
+  }
+}

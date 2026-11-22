@@ -4386,7 +4386,7 @@ button.info-tip {
   height: 14px;
 }
 .info-tip:hover,
-.info-tip:focus-visible {
+.info-tip:focus {
   color: var(--brand-text);
 }
 .tip-text {
@@ -4414,7 +4414,7 @@ button.info-tip {
   pointer-events: none;
 }
 .info-tip:hover .tip-text,
-.info-tip:focus-visible .tip-text,
+.info-tip:focus .tip-text,
 .field:focus-within .tip-text {
   visibility: visible;
   opacity: 1;
@@ -5285,17 +5285,6 @@ dialog.model3d-modal {
   color: var(--brand-ink);
   font-weight: 600;
 }
-/* The way to the photo on the front: a quiet line with its button. */
-.model3d-photo {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px 16px;
-}
-.model3d-photo {
-  justify-content: flex-start;
-}
 /* The form of a product: its parts, top part first as it stands. */
 .model3d-form {
   display: grid;
@@ -5306,9 +5295,6 @@ dialog.model3d-modal {
 .model3d-form h3,
 .model3d-form p {
   margin: 0;
-}
-.model3d-form-head {
-  gap: 4px;
 }
 .model3d-parts {
   list-style: none;
@@ -5409,4 +5395,36 @@ dialog.model3d-modal {
   font-size: 12px;
   font-weight: 600;
   background: var(--surface);
+}
+
+/* The 3D view's controls: a calm hint, one row of tools with the room on the right, then what
+   can be set for this product. A tip's text hangs from the control it belongs to. */
+.model3d-hint {
+  margin: 0;
+  text-align: center;
+}
+.model3d-tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.model3d-tools .btn.primary .glyph {
+  width: 18px;
+  height: 18px;
+}
+.model3d-edit-row {
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.model3d-with-tip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.model3d-panel {
+  display: grid;
+  gap: 10px;
+}
+.model3d-panel p {
+  margin: 0;
 }
