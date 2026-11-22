@@ -10,6 +10,7 @@ import { PictureViewDialog } from './PictureViewDialog'
 import { useI18n } from '../../i18n'
 import { Modal } from '../../ui/Dialog'
 import { Glyph } from '../../ui/Glyph'
+import { InfoTip } from '../../ui/InfoTip'
 import { atEdge, follow, Gestures, lerpAngle, wrap } from '../../domain/gestures'
 import { drawingTexture, measureOnce, photoColor, straightened } from './useMeasured'
 
@@ -62,7 +63,7 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
   const ctx = useRef<Scene3D | null>(null)
   /** The running room view (WebXR), kept outside React: it changes every frame. */
   const room = useRef<Room | null>(null)
-  const gestures = useRef(new Gestures())
+  const gestures = useRef(new Gestures(() => window.innerWidth))
   const [failed, setFailed] = useState(false)
   const [arAvailable, setArAvailable] = useState(false)
   const [arState, setArState] = useState<'off' | 'starting' | 'searching' | 'placed'>('off')
@@ -459,14 +460,14 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
             <div className="model3d-tools">
               <p className="muted small">{m.model3d.hint}</p>
               <span className="spacer" />
-              <button type="button" className="btn sm" onClick={() => turn(-30)}>
-                {m.model3d.left}
+              <button type="button" className="icon-btn" aria-label={m.model3d.left} title={m.model3d.left} onClick={() => turn(-30)}>
+                <Glyph name="turnLeft" />
               </button>
-              <button type="button" className="btn sm" onClick={() => turn(30)}>
-                {m.model3d.right}
+              <button type="button" className="icon-btn" aria-label={m.model3d.right} title={m.model3d.right} onClick={() => turn(30)}>
+                <Glyph name="turnRight" />
               </button>
-              <button type="button" className="btn sm" onClick={() => ctx.current?.home()}>
-                {m.model3d.reset}
+              <button type="button" className="icon-btn" aria-label={m.model3d.reset} title={m.model3d.reset} onClick={() => ctx.current?.home()}>
+                <Glyph name="recentre" />
               </button>
             </div>
             {arAvailable && placed.boxes.length > 0 && (
@@ -483,7 +484,6 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
                 <button type="button" className="btn primary" onClick={() => void startAr(arId)}>
                   {m.model3d.ar}
                 </button>
-                <p className="muted small">{m.model3d.arTip}</p>
                 {arError && (
                   <p className="small" role="alert">
                     {m.model3d.arFailed}
@@ -493,10 +493,10 @@ export default function Model3D({ items, edit, onClose }: { items: Model3DItem[]
             )}
             {edit && !edit.views?.front?.quad && items[0]?.photo && (
               <div className="model3d-photo">
-                <p className="muted small">{m.model3d.photoFrontHint}</p>
                 <button type="button" className="btn sm" onClick={() => setCornersOf(items[0].photo!)}>
                   {m.model3d.photoFront}
                 </button>
+                <InfoTip text={m.model3d.photoFrontHint} />
               </div>
             )}
             {edit && <ShapeEditor product={edit} size={fieldSize} draft={draft} setDraft={setDraft} />}

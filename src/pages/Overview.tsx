@@ -55,9 +55,11 @@ export function Overview({ signIn }: { signIn?: ReactNode }) {
           </div>
         ) : (
           <div className="overview-signin">
-            <figure className="still still-card" aria-hidden="true">
-              <ProductStill fmt={fmt} />
-            </figure>
+            {/* The app's own mark – the product example follows in step 1. */}
+            <div className="overview-brandmark" aria-hidden="true">
+              <img src="/favicon.svg" alt="" width={88} height={88} />
+              <span>{m.app.name}</span>
+            </div>
             {demoBox}
           </div>
         )}
@@ -84,6 +86,17 @@ export function Overview({ signIn }: { signIn?: ReactNode }) {
           </p>
         </Step>
         <Step n={3} title={o.s3Title} text={o.s3Text}>
+          <div className="still-tools">
+            <span className="still-seg">
+              <span className="on">{m.size.views.front}</span>
+              <span>{m.size.views.side}</span>
+              <span>{m.size.views.top}</span>
+            </span>
+            <span className="still-chip">
+              <Glyph name="cube" /> 3D
+            </span>
+          </div>
+          <BesideStill />
           <table className="still-compare">
             <thead>
               <tr>
@@ -142,7 +155,11 @@ export function Overview({ signIn }: { signIn?: ReactNode }) {
         <Step n={5} title={o.s5Title} text={o.s5Text}>
           <div className="still-duel">
             <b className="still-duel-question">{m.duel.question}</b>
-            <SizeStill room={o.room} />
+            <span className="still-seg">
+              <span>{m.size.layouts.beside}</span>
+              <span className="on">{m.size.layouts.overlay}</span>
+            </span>
+            <OverlayStill room={o.room} />
             <div className="still-duel-choices">
               <span>
                 <Glyph name="check" /> Arvika
@@ -218,39 +235,77 @@ function Step({ n, title, text, children }: { n: number; title: string; text: st
   )
 }
 
+const hatch = (
+  <defs>
+    <pattern id="still-over" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="6" />
+    </pattern>
+  </defs>
+)
+
+/** The sizes to scale side by side, as at the top of a comparison: 1 px = 1 cm, beside a person. */
+function BesideStill() {
+  const floor = 200
+  const items = [
+    { name: 'Arvika', file: 'arvika', x: 70, w: 160, h: 80 },
+    { name: 'Kanto', file: 'kanto', x: 255, w: 150, h: 85 },
+    { name: 'Linea', file: 'linea', x: 430, w: 170, h: 72 },
+  ]
+  return (
+    <svg className="still-size" viewBox="0 18 610 210">
+      <PersonFigure transform={`translate(8 ${floor - 175})`} />
+      {items.map((i) => (
+        <g key={i.name}>
+          <rect className="size-box pic" x={i.x} y={floor - i.h} width={i.w} height={i.h} />
+          <image href={`/demo/sideboard-${i.file}.svg`} x={i.x} y={floor - i.h} width={i.w} height={i.h} preserveAspectRatio="xMidYMax meet" />
+          <rect className="size-line" x={i.x} y={floor - i.h} width={i.w} height={i.h} />
+          <text x={i.x + i.w / 2} y={floor + 22} textAnchor="middle">
+            {i.name}
+          </text>
+        </g>
+      ))}
+      <line className="still-size-floor" x1="0" x2="610" y1={floor} y2={floor} />
+    </svg>
+  )
+}
+
 /**
- * The sizes to scale as in a duel (src/pages/project/SizeCompare.tsx), drawn once: 1 px = 1 cm.
- * Arvika (160 × 80) fits the 180 cm niche, Mira (200 × 78) sticks out on both sides.
+ * A duel's sizes one over the other (src/pages/project/SizeCompare.tsx), drawn once: Arvika
+ * (160 cm) fits the 180 cm niche, Mira (200 cm) laid over it sticks out on both sides.
  */
-function SizeStill({ room }: { room: string }) {
+function OverlayStill({ room }: { room: string }) {
   const floor = 200
   return (
-    <svg className="still-size" viewBox="0 20 500 216">
-      <defs>
-        <pattern id="still-over" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
-          <line x1="0" y1="0" x2="0" y2="6" />
-        </pattern>
-      </defs>
+    <svg className="still-size" viewBox="0 20 330 236">
+      {hatch}
       <PersonFigure transform={`translate(8 ${floor - 175})`} />
-      <rect className="size-box pic" x="85" y={floor - 80} width="160" height="80" />
-      <image href="/demo/sideboard-arvika.svg" x="85" y={floor - 80} width="160" height="80" preserveAspectRatio="xMidYMax meet" />
-      <rect className="size-line" x="85" y={floor - 80} width="160" height="80" />
-      <rect className="size-box pic" x="290" y={floor - 78} width="200" height="78" />
-      <image href="/demo/sideboard-mira.svg" x="290" y={floor - 78} width="200" height="78" preserveAspectRatio="xMidYMax meet" />
-      <rect fill="url(#still-over)" x="290" y={floor - 78} width="10" height="78" />
-      <rect fill="url(#still-over)" x="480" y={floor - 78} width="10" height="78" />
-      <rect className="size-line" x="290" y={floor - 78} width="200" height="78" />
-      {[75, 255, 300, 480].map((x) => (
+      <g className="size-body t0">
+        <rect className="size-box" x="120" y={floor - 80} width="160" height="80" />
+        <rect className="size-line" x="120" y={floor - 80} width="160" height="80" />
+      </g>
+      <g className="size-body t1">
+        <rect fill="url(#still-over)" x="100" y={floor - 78} width="10" height="78" />
+        <rect fill="url(#still-over)" x="290" y={floor - 78} width="10" height="78" />
+        <rect className="size-line" x="100" y={floor - 78} width="200" height="78" />
+      </g>
+      {[110, 290].map((x) => (
         <line key={x} className="size-niche" x1={x} x2={x} y1={floor} y2={floor - 100} />
       ))}
-      <line className="still-size-floor" x1="0" x2="500" y1={floor} y2={floor} />
-      <text x="165" y={floor - 108} textAnchor="middle">
+      <line className="still-size-floor" x1="0" x2="330" y1={floor} y2={floor} />
+      <text x="200" y={floor - 108} textAnchor="middle">
         {room}
       </text>
-      <text x="165" y={floor + 24} textAnchor="middle">
+      <g className="size-body t0">
+        <rect className="size-box" x="128" y={floor + 12} width="14" height="9" />
+        <rect className="size-line" x="128" y={floor + 12} width="14" height="9" />
+      </g>
+      <text x="148" y={floor + 21}>
         Arvika · 160 cm
       </text>
-      <text x="390" y={floor + 24} textAnchor="middle" className="over">
+      <g className="size-body t1">
+        <rect className="size-line" x="128" y={floor + 28} width="14" height="9" />
+      </g>
+      <text x="148" y={floor + 37} className="over">
         Mira · 200 cm
       </text>
     </svg>

@@ -5,6 +5,7 @@ import { addPart, formFromProfiles, moveCut, profileSteps, removePart, splitAt }
 import type { Size } from '../../domain/size'
 import { useI18n } from '../../i18n'
 import { readRows } from './useMeasured'
+import { InfoTip } from '../../ui/InfoTip'
 
 type Note = 'read' | 'nothing' | null
 
@@ -45,8 +46,10 @@ export function ShapeEditor({ product, size, draft, setDraft }: { product: Produ
 
   return (
     <section className="model3d-form" aria-labelledby="model3d-form-title">
-      <h3 id="model3d-form-title">{m.model3d.formTitle}</h3>
-      <p className="muted small">{m.model3d.formHint(cm(full.width), cm(full.height), cm(full.depth))}</p>
+      <div className="row model3d-form-head">
+        <h3 id="model3d-form-title">{m.model3d.formTitle}</h3>
+        <InfoTip text={m.model3d.formHint(cm(full.width), cm(full.height), cm(full.depth))} />
+      </div>
       {note && (
         <p className="small" role="status">
           {note === 'read' ? m.model3d.readDone : m.model3d.readNothing}

@@ -11,6 +11,13 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.17.1',
+    notes: {
+      en: ['3D: arrow symbols to turn; shorter hints. In the room, one finger turns the product again.'],
+      de: ['3D: Pfeilsymbole zum Drehen, kürzere Hinweise. Im Raum dreht wieder ein Finger das Produkt.'],
+    },
+  },
+  {
     version: '0.17.0',
     notes: {
       en: [

@@ -6,6 +6,14 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+## 0.17.1 — 2026-11-22
+
+- Changed: the 3D view turns and goes back to the start with arrow symbols; the form and the photo
+  on the front explain themselves in short, with an ⓘ for more.
+- Changed: in the room view one finger turns the product again (touches from the screen's edges
+  stay the phone's); the hints fit one line, the tip about small rooms is gone.
+- Changed: the start page shows Propario's logo and name in the opening instead of an example
+  product, and steps 3 and 5 show the sizes to scale and the duel as they look now.
 ## 0.17.0 — 2026-11-22
 
 - Fixed: turning a product in 3D, or dragging a frame or a corner on a picture, could step to

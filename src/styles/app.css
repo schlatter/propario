@@ -5129,6 +5129,9 @@ dialog.model3d-modal {
 }
 .model3d-ar-bar p {
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 /* The strip to turn on: ridges like a dial that run along as it turns, and a petrol mark where
    the front is (Model3D.tsx sets --spin and --front every frame). */
@@ -5290,9 +5293,8 @@ dialog.model3d-modal {
   justify-content: space-between;
   gap: 8px 16px;
 }
-.model3d-photo p {
-  margin: 0;
-  flex: 1 1 260px;
+.model3d-photo {
+  justify-content: flex-start;
 }
 /* The form of a product: its parts, top part first as it stands. */
 .model3d-form {
@@ -5304,6 +5306,9 @@ dialog.model3d-modal {
 .model3d-form h3,
 .model3d-form p {
   margin: 0;
+}
+.model3d-form-head {
+  gap: 4px;
 }
 .model3d-parts {
   list-style: none;
@@ -5346,4 +5351,62 @@ dialog.model3d-modal {
   .model3d-stage {
     height: min(46vh, 420px);
   }
+}
+
+/* The app's mark in the opening (signed in): the logo tile and the name, large and calm. */
+.overview-brandmark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: clamp(24px, 5vw, 48px) 0;
+}
+.overview-brandmark img {
+  width: clamp(64px, 9vw, 96px);
+  height: auto;
+  border-radius: 18px;
+}
+.overview-brandmark span {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(36px, 5.5vw, 60px);
+  letter-spacing: -0.02em;
+}
+/* Pieces of the size view in the stills: the view chooser and the 3D button. */
+.still-tools {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.still-seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 9px;
+  background: var(--sunken);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  width: auto !important;
+}
+.still-seg span {
+  padding: 3px 9px;
+  border-radius: 6px;
+}
+.still-seg .on {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+}
+.still-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--surface);
 }
