@@ -4267,6 +4267,11 @@ dialog.gallery::backdrop {
   gap: 10px;
   align-items: flex-start;
 }
+/* The user guide and the source code (src/ui/ProjectLinks.tsx). */
+.project-links {
+  margin: 0;
+  color: var(--muted);
+}
 .overview-trust .glyph {
   flex: none;
   margin-top: 3px;

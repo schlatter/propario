@@ -6,6 +6,8 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Unreleased
 
+- Added: Settings and the start page link to the user guide and the source code.
+
 - Added: a website, a user guide and a self-hosting guide; the README now shows what Propario
   does, with pictures from the demo.
 

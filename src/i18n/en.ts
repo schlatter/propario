@@ -46,6 +46,8 @@ export const en = {
     loading: 'Loading…',
     notFound: 'This comparison no longer exists.',
     openLink: 'Open product page',
+    userGuide: 'User guide',
+    sourceCode: 'Source code',
   },
   status: {
     research: 'Researching',

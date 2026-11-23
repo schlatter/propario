@@ -132,6 +132,9 @@ test('a visitor sees what Propario does and tries the demo, which never talks to
   // The way to a decision: sorting out by swiping and duels with sizes to scale are part of it.
   await expect(page.getByRole('heading', { name: 'Sort out quickly' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Settle it in duels' })).toBeVisible()
+  // The user guide and the source code are one click away.
+  await expect(page.getByRole('link', { name: 'Source code' })).toHaveAttribute('href', 'https://github.com/schlatter/propario')
+  await expect(page.getByRole('link', { name: 'User guide' })).toHaveAttribute('href', /docs\/user-guide\.md$/)
   await accessible(page, 'overview')
 
   // From here on, nothing may reach the server's data.
@@ -950,6 +953,7 @@ test('Ada invites Grace, who joins and sees nothing that is not hers', async ({ 
   const { page } = ada
   await go(page, 'Settings')
   await accessible(page, 'settings')
+  await expect(page.getByRole('link', { name: 'Source code' })).toHaveAttribute('href', 'https://github.com/schlatter/propario')
   await page.getByLabel('For whom (optional)').fill('Grace')
   await page.getByRole('button', { name: 'Create invitation' }).click()
   inviteLink = (await page.locator('.recovery-key.small-key').textContent())!.trim()

@@ -47,6 +47,8 @@ export const de: Messages = {
     loading: 'Lädt …',
     notFound: 'Diesen Vergleich gibt es nicht mehr.',
     openLink: 'Produktseite öffnen',
+    userGuide: 'Anleitung',
+    sourceCode: 'Quellcode',
   },
   status: {
     research: 'In Recherche',
