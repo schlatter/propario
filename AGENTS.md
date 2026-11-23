@@ -58,6 +58,8 @@ looked at in a browser at 390 px and desktop width, light and dark, English and 
 container changes: `docker build .`. A change users notice gets a line under _Unreleased_ in
 `CHANGELOG.md`. Not every change is a release: releases bundle changes about monthly; never
 raise the version for a single feature. A release raises `version` in `package.json`, dates its
-CHANGELOG entry, adds at most four lines per language to `src/releases.ts` and gets an annotated
-tag (`git tag -a v0.3.0 -m v0.3.0`). See "Versions and releases" in the README. Commit only when
+CHANGELOG entry, adds at most four lines per language to `src/releases.ts`, is merged as a pull
+request and then gets an annotated tag on `main` (`git tag -a v0.3.0 -m v0.3.0`); pushing the tag
+publishes image and release (`.github/workflows/release.yml`). See "Versions and releases" in the
+README. Commit only when
 asked.

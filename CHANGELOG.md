@@ -6,6 +6,9 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- Added: every release comes with a ready-made container image on ghcr.io and release notes on
+  GitHub; self-hosters can run a fixed version instead of building from source.
+
 ## 0.17.3 — 2026-11-22
 
 - Changed: in the room view a tap sets the product down where the floor was tapped, not in the
