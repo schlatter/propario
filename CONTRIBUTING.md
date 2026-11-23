@@ -63,7 +63,7 @@ src/import/    Excel and table import (SheetJS)
 src/pages/     screens; src/pages/project/ holds the table, the details and the tabs
 src/i18n/      en.ts (source) and de.ts – TypeScript enforces complete translations
 src/demo.ts    the demo: invented comparisons that never reach the server
-e2e/           the end-to-end story (Playwright, virtual passkeys, axe) and the screenshots
+e2e/           the end-to-end story (Playwright, virtual passkeys, axe), the website's demo, the screenshots
 docs/          user guide, self-hosting, import rules, design guide, pictures
 site/          the website (GitHub Pages)
 ```
@@ -91,7 +91,13 @@ npm run verify       # format check, types, unit tests, the whole story in a rea
 npm test             # unit and integration tests (server logic on in-memory SQLite)
 npm run test:e2e     # builds, starts the production server, runs e2e/ with passkeys and axe
 npm run screenshots  # renews docs/images/ from the demo, light and dark
+npm run build:demo   # the website's demo: only the demo, for /propario/demo/ (src/site.ts)
 ```
+
+The website is `site/` plus that demo: `scripts/build-site.sh <folder>` puts them together, and
+`.github/workflows/pages.yml` publishes them on every change to `main`. The demo build keeps its
+routes after the `#`, takes every file from under its base (`asset()` in `src/site.ts`) and never
+asks a server; `e2e/static-demo.spec.ts` checks exactly that.
 
 The end-to-end story runs axe on every page in both themes. Look at UI changes at 390 px and at
 desktop width, in light and dark, in English and German; after a visible change, run

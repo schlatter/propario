@@ -4,7 +4,7 @@ export const de: Messages = {
   locale: 'de-DE',
   app: {
     name: 'Propario',
-    tagline: 'Sammeln, vergleichen, entscheiden.',
+    tagline: 'Schneller vergleichen, besser entscheiden.',
   },
   nav: {
     menu: 'Menü',
@@ -410,7 +410,7 @@ export const de: Messages = {
       'Wenn du Produkte ergänzt oder Werte änderst oder ergänzt, antworte zusätzlich mit dieser Tabelle in genau diesem Format (gleiche Spalten, Link zuerst; Unbekanntes leer lassen). Wir können sie dann wieder in unseren Vergleich einfügen.',
   },
   overview: {
-    title: 'Schnell vergleichen, besser entscheiden.',
+    title: 'Schneller vergleichen, besser entscheiden.',
     lead: 'Vergiss endlose Listen und tausend offene Tabs. Egal welche Anschaffung: Sideboard, Laptop, Fahrrad etc. Propario bereitet die Daten für euch schön auf und hilft, schneller eine bessere Entscheidung zu treffen.',
     tryDemo: 'Demo ausprobieren',
     stepsLabel: 'So entscheidet ihr',
@@ -476,6 +476,7 @@ export const de: Messages = {
   demo: {
     banner: 'Demo – erfundene Daten, nichts wird gespeichert.',
     end: 'Demo beenden',
+    restart: 'Neu beginnen',
   },
   start: {
     stuckTitle: 'Propario startet nicht',

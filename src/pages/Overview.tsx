@@ -10,6 +10,7 @@ import { isDemo, startDemo } from '../demo'
 import { useI18n } from '../i18n'
 import { PersonFigure } from '../ui/PersonFigure'
 import { Glyph } from '../ui/Glyph'
+import { asset } from '../site'
 import { ProjectLinks } from '../ui/ProjectLinks'
 
 export function Overview({ signIn }: { signIn?: ReactNode }) {
@@ -31,7 +32,7 @@ export function Overview({ signIn }: { signIn?: ReactNode }) {
       {signIn && (
         <header className="overview-top">
           <span className="brand">
-            <img className="brand-mark" src="/favicon.svg" alt="" width={24} height={24} />
+            <img className="brand-mark" src={asset('favicon.svg')} alt="" width={24} height={24} />
             <span className="brand-text">{m.app.name}</span>
           </span>
           <nav className="row" aria-label={m.nav.language}>
@@ -58,7 +59,7 @@ export function Overview({ signIn }: { signIn?: ReactNode }) {
           <div className="overview-signin">
             {/* The app's own mark – the product example follows in step 1. */}
             <div className="overview-brandmark" aria-hidden="true">
-              <img src="/favicon.svg" alt="" width={88} height={88} />
+              <img src={asset('favicon.svg')} alt="" width={88} height={88} />
               <span>{m.app.name}</span>
             </div>
             {demoBox}
@@ -104,7 +105,7 @@ export function Overview({ signIn }: { signIn?: ReactNode }) {
                 <th />
                 {['Arvika', 'Kanto', 'Linea'].map((n, i) => (
                   <th key={n} scope="col">
-                    <img src={['/demo/sideboard-arvika.svg', '/demo/sideboard-kanto.svg', '/demo/sideboard-linea.svg'][i]} alt="" />
+                    <img src={[asset('demo/sideboard-arvika.svg'), asset('demo/sideboard-kanto.svg'), asset('demo/sideboard-linea.svg')][i]} alt="" />
                     {n}
                   </th>
                 ))}
@@ -135,7 +136,7 @@ export function Overview({ signIn }: { signIn?: ReactNode }) {
         <Step n={4} title={o.s4Title} text={o.s4Text}>
           <div className="still-swipe">
             <div className="still-swipe-card">
-              <img src="/demo/sideboard-kanto.svg" alt="" />
+              <img src={asset('demo/sideboard-kanto.svg')} alt="" />
               <b>Fjell Kanto</b>
               <span className="still-price">{fmt.money(549)}</span>
             </div>
@@ -259,7 +260,7 @@ function BesideStill() {
       {items.map((i) => (
         <g key={i.name}>
           <rect className="size-box pic" x={i.x} y={floor - i.h} width={i.w} height={i.h} />
-          <image href={`/demo/sideboard-${i.file}.svg`} x={i.x} y={floor - i.h} width={i.w} height={i.h} preserveAspectRatio="xMidYMax meet" />
+          <image href={asset(`demo/sideboard-${i.file}.svg`)} x={i.x} y={floor - i.h} width={i.w} height={i.h} preserveAspectRatio="xMidYMax meet" />
           <rect className="size-line" x={i.x} y={floor - i.h} width={i.w} height={i.h} />
           <text x={i.x + i.w / 2} y={floor + 22} textAnchor="middle">
             {i.name}
@@ -317,7 +318,7 @@ function OverlayStill({ room }: { room: string }) {
 function ProductStill({ fmt }: { fmt: { money: (n: number) => string } }) {
   return (
     <div className="still-product">
-      <img src="/demo/sideboard-arvika.svg" alt="" />
+      <img src={asset('demo/sideboard-arvika.svg')} alt="" />
       <div className="still-product-body">
         <b>Nordhaus Arvika</b>
         <span className="still-price">{fmt.money(849)}</span>

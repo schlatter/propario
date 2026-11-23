@@ -11,6 +11,7 @@
  * Each reload happens at most once a minute, so a real outage cannot cause a reload loop.
  */
 import { debugLog } from './debug'
+import { asset } from './site'
 
 const RUNNING = __APP_VERSION__
 const KEY = 'propario-reloaded-at'
@@ -33,7 +34,7 @@ export function reloadOnce(now = Date.now()): boolean {
 /** The version the server runs, or null when it cannot be asked (offline, outside the VPN). */
 export async function serverVersion(): Promise<string | null> {
   try {
-    const r = await fetch('/version.json', { cache: 'no-store' })
+    const r = await fetch(asset('version.json'), { cache: 'no-store' })
     if (!r.ok) return null
     return ((await r.json()) as { version?: string }).version ?? null
   } catch {

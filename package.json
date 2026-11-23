@@ -1,7 +1,7 @@
 {
   "name": "propario",
   "version": "0.17.3",
-  "description": "Compare products together and decide – a self-hostable web app.",
+  "description": "Compare faster, decide better – a self-hostable web app.",
   "license": "AGPL-3.0-or-later",
   "private": true,
   "type": "module",
@@ -15,7 +15,7 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "vite build && playwright test",
+    "test:e2e": "vite build && npm run build:demo && playwright test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "verify": "npm run format:check && npm run typecheck && npm test && npm run test:e2e",
@@ -23,7 +23,8 @@
     "recovery-key": "node --disable-warning=ExperimentalWarning server/recovery-key.ts",
     "deps": "npm outdated; npm audit",
     "sbom": "npm sbom --sbom-format cyclonedx --omit dev > sbom.cdx.json",
-    "screenshots": "vite build && SCREENSHOTS=1 playwright test e2e/screenshots.spec.ts"
+    "screenshots": "vite build && SCREENSHOTS=1 playwright test e2e/screenshots.spec.ts",
+    "build:demo": "VITE_DEMO_ONLY=1 vite build --base=/propario/demo/ --outDir dist-demo --emptyOutDir"
   },
   "dependencies": {
     "@simplewebauthn/server": "14.1.0"

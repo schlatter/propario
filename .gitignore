@@ -1,5 +1,6 @@
 node_modules
 dist
+dist-demo
 *.tsbuildinfo
 
 # Runtime data (SQLite database, backups) and personal files – never commit

@@ -1,8 +1,9 @@
 # User guide
 
 How to use Propario, from the first sign-in to the decision. The interface is in English and
-German; this guide uses the English labels. To try everything without an account, open
-**Try the demo** on the start page – its comparisons are invented and stay in your browser tab.
+German; this guide uses the English labels. To try everything without an account, open the
+[demo](https://schlatter.github.io/propario/demo/) or **Try the demo** on your instance's start
+page – its comparisons are invented and stay in your browser tab.
 
 - [Getting in](#getting-in)
 - [Comparisons](#comparisons)

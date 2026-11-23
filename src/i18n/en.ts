@@ -3,7 +3,7 @@ export const en = {
   locale: 'en-GB',
   app: {
     name: 'Propario',
-    tagline: 'Collect, compare, decide.',
+    tagline: 'Compare faster, decide better.',
   },
   nav: {
     menu: 'Menu',
@@ -407,7 +407,7 @@ export const en = {
       'If you add products or change or fill in values, also answer with this table in exactly this format (same columns, link first; leave unknown values empty). We can then paste it back into our comparison.',
   },
   overview: {
-    title: 'Compare quickly, decide better.',
+    title: 'Compare faster, decide better.',
     lead: 'Forget endless lists and a thousand open tabs. Whatever the purchase – sideboard, laptop, bike and more: Propario lays out the facts nicely and helps you reach a better decision, faster.',
     tryDemo: 'Try the demo',
     stepsLabel: 'How you decide',
@@ -472,6 +472,7 @@ export const en = {
   demo: {
     banner: 'Demo – invented data, nothing is saved.',
     end: 'End demo',
+    restart: 'Start over',
   },
   start: {
     stuckTitle: 'Propario is not starting',

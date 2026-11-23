@@ -5,7 +5,7 @@ import { AppDB, db, dropCache, openCache, useCache } from './db/db'
 import type { Settings } from './db/types'
 import { applyLocal, pull, setLocalRole, startSync, useTransport } from './sync'
 import { report, setStep } from './diagnostics'
-import { clearDemo, DEMO_DB, DEMO_USER, demoChanges, demoTransport, endDemo, isDemo } from './demo'
+import { clearDemo, DEMO_DB, DEMO_USER, demoChanges, demoTransport, endDemo, isDemo, restartIfAsked } from './demo'
 import { releaseOf } from './releases'
 
 export interface SessionUser {
@@ -50,6 +50,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       // The demo never asks the server: its own database, its own invented comparison.
       setStep('cache')
       useTransport(demoTransport)
+      await restartIfAsked()
       const demo = new AppDB(DEMO_DB)
       await demo.open()
       useCache(demo)

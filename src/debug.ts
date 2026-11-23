@@ -10,6 +10,7 @@
  *   caches, the browser's databases, storage, record counts, the start step and the log.
  */
 import { currentStep } from './diagnostics'
+import { asset } from './site'
 
 const FLAG = 'pv.debug'
 const STORE = 'pv.debug.log'
@@ -108,7 +109,7 @@ export async function supportPackage(): Promise<Record<string, unknown>> {
     app: 'propario-support',
     created: new Date().toISOString(),
     version: __APP_VERSION__,
-    server: await atMost(fetch('/version.json', { cache: 'no-store' }).then((r) => r.json())),
+    server: await atMost(fetch(asset('version.json'), { cache: 'no-store' }).then((r) => r.json())),
     startStep: currentStep(),
     device: {
       userAgent: navigator.userAgent,

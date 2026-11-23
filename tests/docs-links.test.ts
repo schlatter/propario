@@ -30,15 +30,17 @@ it.each(markdown)('%s links only to files that exist', (file) => {
 })
 
 it('the website refers only to files the build puts next to it', () => {
-  // scripts/build-site.sh: site/* at the root, docs/images → images/, the logo, fonts/.
+  // scripts/build-site.sh: site/* at the root, docs/images → images/, the logo, fonts/, demo/.
   const source = (t: string) =>
-    t.startsWith('images/')
-      ? join(root, 'docs', t)
-      : t.startsWith('fonts/')
-        ? null
-        : t === 'favicon.svg'
-          ? join(root, 'public', t)
-          : join(root, 'site', normalize(t))
+    t === 'demo/'
+      ? join(root, 'index.html')
+      : t.startsWith('images/')
+        ? join(root, 'docs', t)
+        : t.startsWith('fonts/')
+          ? null
+          : t === 'favicon.svg'
+            ? join(root, 'public', t)
+            : join(root, 'site', normalize(t))
   const html = readFileSync(join(root, 'site', 'index.html'), 'utf8')
   const missing = targets(html)
     .filter((t) => t && t !== './')
