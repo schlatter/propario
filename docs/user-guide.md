@@ -178,7 +178,7 @@ Your comparisons are stored on the server. Under **Backup**:
   invitations, removing accounts.
 - **Language** and **Appearance** (system, light or dark).
 - **People:** the names used for ratings and “found by”.
-- **About:** the running version.
+- **About:** the running version, and links to this guide and to the source code.
 - **Troubleshooting:** see below.
 
 ## On your phone

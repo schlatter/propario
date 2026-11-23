@@ -10,6 +10,7 @@ import { isDemo, startDemo } from '../demo'
 import { useI18n } from '../i18n'
 import { PersonFigure } from '../ui/PersonFigure'
 import { Glyph } from '../ui/Glyph'
+import { ProjectLinks } from '../ui/ProjectLinks'
 
 export function Overview({ signIn }: { signIn?: ReactNode }) {
   const { m, locale, setLocale, fmt } = useI18n()
@@ -210,6 +211,7 @@ export function Overview({ signIn }: { signIn?: ReactNode }) {
               </li>
             ))}
           </ul>
+          <ProjectLinks />
         </div>
       </section>
     </main>

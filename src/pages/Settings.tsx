@@ -5,6 +5,7 @@ import { useSettings } from '../hooks'
 import { LOCALE_NAMES, LOCALES, useI18n, type Locale } from '../i18n'
 import { applyTheme, readTheme, type Theme } from '../theme'
 import { Glyph } from '../ui/Glyph'
+import { ProjectLinks } from '../ui/ProjectLinks'
 import { AccountSection, MembersSection } from './Account'
 import { useMe } from '../session'
 
@@ -100,6 +101,7 @@ export function SettingsPage() {
       <section className="panel stack">
         <h2>{m.settings.about}</h2>
         <p>{m.settings.aboutText}</p>
+        <ProjectLinks />
         <label className="check">
           <input type="checkbox" checked={settings.whatsNew !== false} onChange={(e) => void saveSettings({ whatsNew: e.target.checked })} />
           {m.updates.showWhatsNew}

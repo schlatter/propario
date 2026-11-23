@@ -1,5 +1,5 @@
-/* Propario's website. The same tokens, faces and marks as the app (src/styles/app.css,
-   docs/brand.md): petrol acts, amber points out, green/red/grey only for checks. */
+/* Propario's website: the same tokens, faces, sizes and spacing as the app's start page
+   (src/styles/app.css, .overview*; docs/brand.md). Petrol acts, amber points out. */
 
 @font-face {
   font-family: 'Public Sans Variable';
@@ -32,12 +32,9 @@
   --brand-ink: #ffffff;
   --brand-text: #18666b;
   --brand-soft: #e1f0f0;
-  --accent: #f2b33d;
   --accent-text: #8a5c00;
-  --pass: #2a7339;
-  --unknown: #8a9597;
   --focus: #1f7a80;
-  --shadow: 0 1px 2px rgb(18 26 27 / 0.06), 0 12px 32px rgb(18 26 27 / 0.08);
+  --shadow: 0 1px 2px rgb(18 26 27 / 0.05), 0 24px 48px -20px rgb(18 60 62 / 0.3);
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
@@ -56,10 +53,8 @@
     --brand-text: #79cbcf;
     --brand-soft: #14302f;
     --accent-text: #f2b33d;
-    --pass: #6ccf8a;
-    --unknown: #879395;
     --focus: #8fdade;
-    --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 12px 32px rgb(0 0 0 / 0.4);
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 24px 48px -20px rgb(0 0 0 / 0.6);
     color-scheme: dark;
   }
 }
@@ -81,7 +76,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
-  font: 400 17px/1.6 var(--font-ui);
+  font: 400 16px/1.55 var(--font-ui);
   -webkit-text-size-adjust: 100%;
 }
 img {
@@ -94,7 +89,8 @@ a {
   text-underline-offset: 0.18em;
 }
 a:focus-visible,
-summary:focus-visible {
+summary:focus-visible,
+pre:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 3px;
   border-radius: 6px;
@@ -102,28 +98,40 @@ summary:focus-visible {
 h1,
 h2,
 h3 {
-  font-family: var(--font-display);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
   margin: 0;
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+  text-wrap: balance;
 }
 h2 {
-  font-size: clamp(1.6rem, 1.2rem + 1.6vw, 2.3rem);
-  font-weight: 700;
-}
-h3 {
-  font-size: 1.2rem;
-  font-weight: 700;
+  font-size: clamp(22px, 2.6vw, 30px);
+  line-height: 1.1;
 }
 code,
 pre {
   font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
   font-size: 0.9em;
 }
+.defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
 
 .wrap {
   width: min(1120px, 100% - 32px);
   margin-inline: auto;
+}
+/* Sections follow each other at the start page's rhythm. */
+.page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr); /* a long code line scrolls, it never widens the page */
+  gap: clamp(28px, 5vw, 56px);
+  padding-block: clamp(28px, 5vw, 48px) 56px;
+}
+section > h2 {
+  margin-bottom: 16px;
 }
 .skip {
   position: absolute;
@@ -147,19 +155,19 @@ pre {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  min-height: 64px;
+  min-height: 60px;
 }
 .brand {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  font: 700 1.25rem/1 var(--font-display);
-  letter-spacing: -0.02em;
   color: var(--ink);
+  font: 700 1.15rem/1 var(--font-display);
+  letter-spacing: -0.02em;
   text-decoration: none;
 }
 .brand.small {
-  font-size: 1.05rem;
+  font-size: 1rem;
 }
 .top nav {
   display: flex;
@@ -168,8 +176,8 @@ pre {
 }
 .top nav a:not(.btn) {
   color: var(--ink-2);
-  text-decoration: none;
   font-weight: 500;
+  text-decoration: none;
 }
 .top nav a:not(.btn):hover {
   color: var(--brand-text);
@@ -184,8 +192,9 @@ pre {
 .btn {
   display: inline-flex;
   align-items: center;
+  gap: 8px;
   min-height: 44px;
-  padding: 0 20px;
+  padding: 0 18px;
   border: 1px solid var(--line-strong);
   border-radius: 8px;
   background: var(--surface);
@@ -204,196 +213,198 @@ pre {
 .btn.primary:hover {
   background: var(--brand-hover);
 }
-.btn.ghost {
+.btn.small {
   min-height: 40px;
   padding: 0 14px;
 }
+.gh {
+  flex: none;
+}
 
-/* Hero */
+/* Hero: the words left, a piece of the app right – like the start page. */
 .hero {
-  padding-block: clamp(48px, 8vw, 96px) 24px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: clamp(28px, 5vw, 64px);
+  align-items: center;
+}
+.hero-words {
+  display: grid;
+  gap: 18px;
+  justify-items: start;
 }
 .kicker {
-  margin: 0 0 16px;
+  margin: 0;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 .hero h1 {
-  max-width: 14ch;
-  font-size: clamp(2.5rem, 1.4rem + 4.8vw, 4.6rem);
-  font-weight: 800;
+  font-size: clamp(36px, 6vw, 64px);
+  line-height: 1.02;
+}
+/* Amber points out the find: the decision. */
+.hero h1 em {
+  font-style: normal;
+  color: var(--accent-text);
 }
 .lead {
-  max-width: 60ch;
-  margin: 24px 0 0;
+  max-width: 56ch;
+  margin: 0;
   color: var(--ink-2);
-  font-size: 1.15rem;
+  font-size: clamp(16px, 1.6vw, 19px);
 }
 .actions {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin: 32px 0 0;
+  margin: 6px 0 0;
+}
+.hero-still img {
+  width: 100%;
+  max-width: 460px;
+  margin-inline: auto;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
 }
 
-/* Screenshots sit on a surface, like the app's cards. */
-.shot {
-  margin: 0;
+/* The app in a browser window, on a petrol band. */
+.showcase {
+  padding: clamp(16px, 3vw, 32px);
+  border-radius: 20px;
+  background: var(--brand-soft);
 }
-.shot picture {
-  display: block;
+.browser {
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 12px;
   background: var(--surface);
   box-shadow: var(--shadow);
 }
-.hero-shot {
-  margin-top: 56px;
-}
-
-/* The dimension line: the app's dashed "space your requirements leave". */
-.measure {
-  position: relative;
-  margin: 0 0 14px;
-  border-top: 1.5px dashed var(--line-strong);
-  text-align: center;
-}
-.measure::before,
-.measure::after {
-  content: '';
-  position: absolute;
-  top: -7px;
-  height: 12px;
-  border-left: 1.5px solid var(--line-strong);
-}
-.measure::before {
-  left: 0;
-}
-.measure::after {
-  right: 0;
-}
-.measure span {
-  position: relative;
-  top: -0.8em;
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
   padding: 0 12px;
-  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  background: var(--sunken);
+}
+.bar i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--line-strong);
+}
+.bar span {
+  margin-inline: auto;
+  padding: 2px 12px;
+  border-radius: 6px;
+  background: var(--surface);
   color: var(--muted);
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.78rem;
 }
 
-section {
-  padding-block: clamp(48px, 7vw, 88px);
-}
-section > h2 {
-  margin-bottom: 32px;
-}
-
-/* The six steps: words above, the picture from the app's start page below. */
+/* The six steps: cards as on the start page. */
 .steps {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 .steps li {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  padding: 24px;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 14px;
+  padding: 18px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 16px;
   background: var(--surface);
+}
+.steps .words {
+  display: grid;
+  gap: 6px;
+  align-content: start;
 }
 .steps h3 {
   display: flex;
   align-items: baseline;
   gap: 10px;
+  font-size: 18px;
+  line-height: 1.2;
 }
 .steps .n {
-  flex: none;
-  display: inline-grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--accent);
-  color: #1d1503;
-  font-size: 0.95rem;
-  transform: translateY(-2px);
+  color: var(--brand-text);
 }
 .steps p {
-  margin: 8px 0 0;
+  margin: 0;
   color: var(--ink-2);
+  font-size: 14px;
 }
 .steps picture {
-  margin-top: auto;
+  align-self: end;
 }
 .steps img {
   width: 100%;
-  border-radius: 10px;
+  border-radius: 12px;
+}
+@media (max-width: 980px) {
+  .steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
+/* Your AI and your data: two bands side by side. */
+.bands {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
 .band {
-  padding-block: clamp(40px, 6vw, 64px);
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  padding: clamp(22px, 4vw, 36px);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
 }
 .band p {
-  max-width: 62ch;
-  margin: 16px 0 0;
+  margin: 0;
   color: var(--ink-2);
-  font-size: 1.1rem;
-}
-
-.trust {
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
 }
 .checks {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 16px 40px;
+  gap: 10px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 .checks li {
   position: relative;
-  padding-left: 34px;
-}
-.trust .note {
-  max-width: 70ch;
-  margin: 32px 0 0;
-  color: var(--muted);
+  padding-left: 28px;
 }
 .checks li::before {
   content: '✓';
   position: absolute;
-  left: 0;
-  top: 0.15em;
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 5px;
-  background: var(--pass);
-  color: var(--surface);
-  font-size: 0.8rem;
+  left: 2px;
+  color: var(--brand-text);
   font-weight: 800;
 }
 
 .start > p {
-  max-width: 62ch;
+  max-width: 64ch;
+  margin: 0;
   color: var(--ink-2);
 }
 .start pre {
-  margin: 24px 0;
-  padding: 20px 24px;
+  margin: 16px 0;
+  padding: 16px 20px;
   overflow-x: auto;
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -405,13 +416,14 @@ section > h2 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 16px;
-  margin-top: 40px;
+  margin-top: 24px;
 }
 .cards a {
-  display: block;
-  padding: 20px;
+  display: grid;
+  gap: 4px;
+  padding: 18px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 16px;
   background: var(--surface);
   color: var(--ink);
   text-decoration: none;
@@ -420,14 +432,13 @@ section > h2 {
   border-color: var(--brand);
 }
 .cards strong {
-  display: block;
   color: var(--brand-text);
   font-family: var(--font-display);
-  font-size: 1.1rem;
+  font-size: 18px;
 }
 .cards span {
   color: var(--muted);
-  font-size: 0.95rem;
+  font-size: 14px;
 }
 
 .faq details {
@@ -436,31 +447,31 @@ section > h2 {
 }
 .faq summary {
   min-height: 44px;
-  padding: 14px 0;
+  padding: 12px 0;
   cursor: pointer;
   font-weight: 600;
 }
 .faq details p {
-  margin: 0 0 18px;
+  margin: 0 0 16px;
   color: var(--ink-2);
 }
 
 .foot {
-  padding-block: 40px;
+  padding-block: 32px;
   border-top: 1px solid var(--line);
   color: var(--muted);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 .foot-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 16px 32px;
+  gap: 12px 28px;
 }
 .foot nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 20px;
+  gap: 8px 18px;
 }
 .foot nav a {
   color: var(--ink-2);
@@ -468,4 +479,14 @@ section > h2 {
 .foot p {
   flex-basis: 100%;
   margin: 0;
+}
+
+@media (max-width: 760px) {
+  .hero,
+  .bands {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .steps {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
