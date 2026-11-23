@@ -72,6 +72,11 @@ docker compose up -d
 docker compose logs app        # shows the one-time setup link
 ```
 
+This builds the image from the source. To run a released image instead, replace `build: .` and
+`image: propario` in `compose.yaml` with one fixed version from the
+[releases](https://github.com/schlatter/propario/releases), e.g.
+`image: ghcr.io/schlatter/propario:0.18.0`, and raise it when you choose to update.
+
 `DATA_KEY` encrypts every comparison, picture and personal setting at rest (AES-256-GCM). Without
 it the server does not start; if it is lost, the data cannot be read any more.
 
@@ -196,8 +201,14 @@ Every release has a number, an annotated tag and an entry in [CHANGELOG.md](CHAN
 - **Making a release:** raise the middle number in `package.json` (the last number only for a
   fix to a release), turn _Unreleased_ into the release's dated entry, add at most four short
   lines per language to `src/releases.ts` – people see them once after the update unless they
-  turned it off under _Settings_ – commit, then `git tag -a v0.x.y -m v0.x.y` and
-  `git push --follow-tags`. 1.0 is a deliberate decision, not a count.
+  turned it off under _Settings_. Merge that as a pull request, then tag the merged commit on
+  `main`: `git tag -a v0.x.y -m v0.x.y && git push origin v0.x.y`. 1.0 is a deliberate decision,
+  not a count.
+- **What the tag does:** `.github/workflows/release.yml` checks that tag, `package.json` and
+  CHANGELOG agree (`scripts/release-notes.sh v0.x.y` shows the notes beforehand), pushes the
+  image `ghcr.io/schlatter/propario:0.x.y` (and `latest`) and publishes the GitHub release with
+  the CHANGELOG entry. Releases cannot be changed afterwards – a mistake is fixed by the next
+  version.
 - Container builds have no Git history; pass the commit as build argument `PROPARIO_COMMIT`
   so the version shows it.
 
