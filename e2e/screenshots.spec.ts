@@ -65,13 +65,21 @@ test('phone', async ({ browser }) => {
   await shoot(page, 'phone-details')
   await page.locator('dialog.drawer').getByRole('button', { name: 'Close', exact: true }).click()
 
-  await page.getByRole('link', { name: 'Swipe' }).click()
-  await page.getByRole('heading', { name: 'Like it or not?' }).waitFor()
-  await shoot(page, 'phone-swipe')
-  await page.goBack()
+  await page.close()
+})
 
-  await page.getByRole('link', { name: 'Duel' }).click()
-  await page.getByText('Which is better?').waitFor()
-  await shoot(page, 'phone-duel')
+// The six steps of the start page ("What Propario can do"): the website shows the same pictures.
+test('steps', async ({ browser }) => {
+  const page = await browser.newPage({ viewport: desktop, deviceScaleFactor: 2, locale: 'en-GB' })
+  await page.goto('/')
+  const steps = page.locator('.overview-step figure.still')
+  await steps.first().waitFor()
+  for (const scheme of ['light', 'dark'] as const) {
+    await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' })
+    await page.waitForTimeout(300)
+    for (let i = 0; i < (await steps.count()); i++) {
+      await steps.nth(i).screenshot({ path: `${dir}/step-${i + 1}-${scheme}.png`, animations: 'disabled' })
+    }
+  }
   await page.close()
 })

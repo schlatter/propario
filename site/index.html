@@ -11,7 +11,7 @@
     <title>Propario – compare products together, and decide</title>
     <meta
       name="description"
-      content="A calm, self-hosted place for the purchases that otherwise live in spreadsheets: requirements, candidates, pictures and everyone's opinion – and a decision. Free software, no tracking."
+      content="Forget endless lists and a thousand open tabs: Propario lays out the facts nicely and helps you reach a better decision, faster. Self-hosted, private, free software."
     />
     <meta name="color-scheme" content="light dark" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
@@ -35,11 +35,11 @@
 
     <main id="main">
       <section class="hero wrap" aria-labelledby="hero-title">
-        <p class="kicker">Self-hosted · Free software · No tracking</p>
+        <p class="kicker">Self-hosted · Private by default · Free software</p>
         <h1 id="hero-title">Compare products together, and&nbsp;decide.</h1>
         <p class="lead">
-          The sideboard, the laptop, the bike: Propario keeps the requirements, the candidates, their pictures and everyone's opinion in one calm comparison –
-          and checks every product against what you need. On your own server.
+          Forget endless lists and a thousand open tabs. Whatever the purchase – sideboard, laptop, bike and more: Propario lays out the facts nicely and helps
+          you reach a better decision, faster.
         </p>
         <p class="actions">
           <a class="btn primary" href="#start">Get started</a>
@@ -60,137 +60,95 @@
         </figure>
       </section>
 
-      <section id="how" class="wrap steps" aria-labelledby="how-title">
+      <!-- The six steps, words and pictures as on the app's start page (src/i18n/en.ts, overview;
+           pictures from npm run screenshots). A test keeps the words in step. -->
+      <section id="how" class="wrap" aria-labelledby="how-title">
         <h2 id="how-title">How you decide</h2>
-        <ol>
+        <ol class="steps">
           <li>
-            <span class="marks" aria-hidden="true"><i class="pass"></i><i></i><i></i><i></i></span>
-            <h3>One link is enough</h3>
-            <p>Paste a shop link: picture, price and dimensions come straight from the page. Or bring your table from Excel or your AI.</p>
+            <div class="words">
+              <h3><span class="n" aria-hidden="true">1</span>One link is enough</h3>
+              <p>Paste a shop link: Propario takes the picture, price and dimensions straight from the shop – or bring your table from Excel or your AI.</p>
+            </div>
+            <picture>
+              <source media="(prefers-color-scheme: dark)" srcset="images/step-1-dark.png" />
+              <img src="images/step-1-light.png" width="608" height="634" loading="lazy" alt="" />
+            </picture>
           </li>
           <li>
-            <span class="marks" aria-hidden="true"><i class="pass"></i><i class="pass"></i><i></i><i></i></span>
-            <h3>Say what you need</h3>
-            <p>Musts, wishes and a budget. Every product is checked: green met, red not met, grey not known yet.</p>
+            <div class="words">
+              <h3><span class="n" aria-hidden="true">2</span>Define your requirements</h3>
+              <p>Set what it must be, what you wish for and a budget: every product is checked against them – green met, red not met.</p>
+            </div>
+            <picture>
+              <source media="(prefers-color-scheme: dark)" srcset="images/step-2-dark.png" />
+              <img src="images/step-2-light.png" width="608" height="634" loading="lazy" alt="" />
+            </picture>
           </li>
           <li>
-            <span class="marks" aria-hidden="true"><i class="pass"></i><i class="pass"></i><i class="pass"></i><i></i></span>
-            <h3>See them side by side</h3>
-            <p>Differences highlighted, sizes to scale against the space you have – in 3D, and on a phone in your room.</p>
+            <div class="words">
+              <h3><span class="n" aria-hidden="true">3</span>Side by side, not all over the place</h3>
+              <p>The candidates side by side: best values shown, differences highlighted – and their sizes to scale, in 3D too.</p>
+            </div>
+            <picture>
+              <source media="(prefers-color-scheme: dark)" srcset="images/step-3-dark.png" />
+              <img src="images/step-3-light.png" width="608" height="634" loading="lazy" alt="" />
+            </picture>
           </li>
           <li>
-            <span class="marks" aria-hidden="true"><i class="pass"></i><i class="pass"></i><i class="pass"></i><i class="pass"></i></span>
-            <h3>Decide together</h3>
-            <p>Everyone swipes and duels on their own; the rankings become one. Then the purchase, returns and warranty in view.</p>
+            <div class="words">
+              <h3><span class="n" aria-hidden="true">4</span>Sort out quickly</h3>
+              <p>Swipe: thumb up or down, each person on their own. What nobody likes is sorted out – without a long discussion.</p>
+            </div>
+            <picture>
+              <source media="(prefers-color-scheme: dark)" srcset="images/step-4-dark.png" />
+              <img src="images/step-4-light.png" width="608" height="628" loading="lazy" alt="" />
+            </picture>
+          </li>
+          <li>
+            <div class="words">
+              <h3><span class="n" aria-hidden="true">5</span>Settle it in duels</h3>
+              <p>Which is better? Propario puts them side by side and asks until your ranking stands. On a phone, AR puts them right into your room.</p>
+            </div>
+            <picture>
+              <source media="(prefers-color-scheme: dark)" srcset="images/step-5-dark.png" />
+              <img src="images/step-5-light.png" width="608" height="628" loading="lazy" alt="" />
+            </picture>
+          </li>
+          <li>
+            <div class="words">
+              <h3><span class="n" aria-hidden="true">6</span>Decide together</h3>
+              <p>Your rankings become one joint ranking – its first place can become your decision. Then the purchase, returns and warranty in view.</p>
+            </div>
+            <picture>
+              <source media="(prefers-color-scheme: dark)" srcset="images/step-6-dark.png" />
+              <img src="images/step-6-light.png" width="608" height="628" loading="lazy" alt="" />
+            </picture>
           </li>
         </ol>
       </section>
 
-      <section class="wrap feature" aria-labelledby="f-req">
-        <div class="text">
-          <h2 id="f-req">Your requirements check every product</h2>
-          <p>
-            Write down what the purchase has to do – <em>fits the niche, at most 180&nbsp;cm wide</em> – and Propario checks each candidate. Musts decide who is
-            eligible; the rest becomes a weighted fit. Missing data never counts against a product: it stays grey until someone knows.
-          </p>
-        </div>
-        <figure class="shot">
-          <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="images/requirements-dark.png" />
-            <img
-              src="images/requirements-light.png"
-              width="1440"
-              height="900"
-              loading="lazy"
-              alt="Requirements grouped into budget, size, comfort and purchase, each with a priority and an automatic check, and an overview of which product meets which."
-            />
-          </picture>
-        </figure>
-      </section>
-
-      <section class="wrap feature" aria-labelledby="f-scale">
-        <div class="text">
-          <h2 id="f-scale">Side by side, to scale</h2>
-          <p>
-            Pick your candidates and look at them next to each other: best values marked, only the differences if you like, and their sizes drawn to scale next
-            to a person – with the dashed line of the space your requirements leave.
-          </p>
-        </div>
-        <figure class="shot">
-          <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="images/side-by-side-dark.png" />
-            <img
-              src="images/side-by-side-light.png"
-              width="1440"
-              height="900"
-              loading="lazy"
-              alt="Three sideboards drawn to scale next to a person, with the dashed limit of 180 cm width from the requirements."
-            />
-          </picture>
-        </figure>
-      </section>
-
-      <section class="wrap feature phones" aria-labelledby="f-together">
-        <div class="text">
-          <h2 id="f-together">Made for deciding together</h2>
-          <p>
-            Each person swipes through the products – like, neutral, dislike – and settles the favourites in duels. No long discussion about what nobody likes,
-            and a joint ranking whose first place can become your decision.
-          </p>
-        </div>
-        <div class="pair">
-          <figure class="phone">
-            <picture>
-              <source media="(prefers-color-scheme: dark)" srcset="images/phone-swipe-dark.png" />
-              <img
-                src="images/phone-swipe-light.png"
-                width="780"
-                height="1688"
-                loading="lazy"
-                alt="Swiping on a phone: one sideboard with its price, dimensions and requirements, and the buttons dislike, neutral and like."
-              />
-            </picture>
-          </figure>
-          <figure class="phone">
-            <picture>
-              <source media="(prefers-color-scheme: dark)" srcset="images/phone-duel-dark.png" />
-              <img
-                src="images/phone-duel-light.png"
-                width="780"
-                height="1688"
-                loading="lazy"
-                alt="A duel on a phone: two sideboards to scale, and the question which one is better."
-              />
-            </picture>
-          </figure>
-        </div>
-      </section>
-
-      <section class="wrap more" aria-labelledby="more-title">
-        <h2 id="more-title">And everything around it</h2>
-        <ul>
-          <li>
-            <strong>Your AI, if you like.</strong> “Copy for my AI” hands the comparison to the assistant you use; its answer comes back as a table – you see
-            every change first.
-          </li>
-          <li><strong>Import what you have.</strong> Excel, CSV or Markdown, with a preview and a mapping you can correct. Nothing is dropped silently.</li>
-          <li><strong>Offers, tests and reviews.</strong> Several shops per product, ratings on one scale, price comparisons by GTIN.</li>
-          <li><strong>A table like a spreadsheet.</strong> Edit in place, sort, filter with chips or a query, choose and move columns.</li>
-          <li><strong>An app on your phone.</strong> Install it, and share a product from a shop app straight into a comparison.</li>
-          <li><strong>For everyone.</strong> English and German, light and dark, built and tested for WCAG 2.1 AA.</li>
-        </ul>
+      <section class="wrap band" aria-labelledby="ai-title">
+        <h2 id="ai-title">With your AI, if you like.</h2>
+        <p>
+          “Copy for my AI” hands the comparison to the assistant you already use. Its answer comes back as a table and updates your products – you see every
+          change first.
+        </p>
       </section>
 
       <section class="wrap trust" aria-labelledby="trust-title">
-        <h2 id="trust-title">Private, safe, yours</h2>
+        <h2 id="trust-title">Private, safe, yours.</h2>
         <ul class="checks">
-          <li>Runs on your own server – your data stays with you, encrypted at rest.</li>
-          <li>Passkeys instead of passwords; new people join only by invitation.</li>
-          <li>Every comparison is private until you share it – to view or to edit.</li>
-          <li>No tracking, no advertising, no affiliate links, no third-party scripts. This page has none either.</li>
-          <li>A shop page is read once, never crawled; shops that refuse are respected.</li>
-          <li>Free software under the AGPL – read it, change it, run it.</li>
+          <li>Runs on your own server – your data stays with you</li>
+          <li>Passkeys instead of passwords</li>
+          <li>Stored encrypted, shared only on purpose</li>
+          <li>No tracking, no advertising, no affiliate links</li>
+          <li>Accessible (WCAG 2.1 AA), free software (AGPL)</li>
         </ul>
+        <p class="note">
+          New people join only by invitation. A shop page is read once when you add it, never crawled, and shops that refuse automated access are respected.
+          This page has no cookies, no tracking and no scripts either.
+        </p>
       </section>
 
       <section id="start" class="wrap start" aria-labelledby="start-title">
@@ -201,8 +159,8 @@ echo "DATA_KEY=$(openssl rand -base64 32)" &gt;&gt; .env
 docker compose up -d
 docker compose logs app    # shows the one-time setup link</code></pre>
         <p>
-          Open the setup link, choose a name, create your passkey – and invite the people you decide with. Or press
-          <strong>Try the demo</strong> on the start page: invented comparisons that never leave your browser.
+          Open the setup link, choose a name, create your passkey – and invite the people you decide with. Or press <strong>Try the demo</strong> on the start
+          page: invented comparisons that never leave your browser.
         </p>
         <div class="cards">
           <a href="https://github.com/schlatter/propario/blob/main/docs/user-guide.md"
@@ -237,15 +195,15 @@ docker compose logs app    # shows the one-time setup link</code></pre>
         <details>
           <summary>Which shops does it work with?</summary>
           <p>
-            Any shop page that states its product's picture, name or price in a common format. Propario reads a page once when you add it and never gets past a
-            bot wall; for shops that refuse, it takes what the link itself says and you add the rest.
+            Any shop page that states its product's picture, name or price in a common format. For shops that refuse automated access, Propario takes what the
+            link itself says and you add the rest.
           </p>
         </details>
         <details>
           <summary>Can I bring my existing spreadsheets?</summary>
           <p>
-            Yes. Excel, CSV and Markdown tables are imported with a preview of every column; unknown columns become fields, nothing is dropped. You can also
-            export to Excel and JSON at any time.
+            Yes. Excel, CSV and Markdown tables are imported with a preview of every column; unknown columns become fields, nothing is dropped. You can export
+            to Excel and JSON at any time.
           </p>
         </details>
         <details>
@@ -266,7 +224,7 @@ docker compose logs app    # shows the one-time setup link</code></pre>
           <a href="https://github.com/schlatter/propario/blob/main/SECURITY.md">Security</a>
           <a href="https://github.com/schlatter/propario/discussions">Discussions</a>
         </nav>
-        <p>Free software under the AGPL-3.0. No cookies, no tracking, no scripts on this page.</p>
+        <p>Free software under the AGPL-3.0.</p>
       </div>
     </footer>
   </body>

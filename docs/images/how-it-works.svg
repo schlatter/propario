@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 132" width="880" height="132" role="img" aria-labelledby="t">
+  <title id="t">How you decide with Propario: 1 One link is enough, 2 Define your requirements, 3 Side by side, not all over the place, 4 Sort out quickly, 5 Settle it in duels, 6 Decide together.</title>
+  <!-- The six steps of the start page (src/i18n/en.ts, overview.s1Title … s6Title); a test keeps
+       the titles in step. Transparent, white on petrol: readable on light and dark pages. -->
+  <style>
+    .box { fill: #1f7a80; }
+    .n { fill: #f2b33d; }
+    .nt { fill: #1d1503; font: 700 14px system-ui, -apple-system, 'Segoe UI', sans-serif; text-anchor: middle; }
+    .t { fill: #ffffff; font: 600 14px system-ui, -apple-system, 'Segoe UI', sans-serif; text-anchor: middle; }
+    .a { stroke: #8a9597; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  </style>
+  <g transform="translate(0 18)">
+    <rect class="box" x="0" y="0" width="128" height="100" rx="12" />
+    <rect class="box" x="150" y="0" width="128" height="100" rx="12" />
+    <rect class="box" x="300" y="0" width="128" height="100" rx="12" />
+    <rect class="box" x="450" y="0" width="128" height="100" rx="12" />
+    <rect class="box" x="600" y="0" width="128" height="100" rx="12" />
+    <rect class="box" x="750" y="0" width="128" height="100" rx="12" />
+
+    <path class="a" d="M133 50h12m-5-5l5 5-5 5" />
+    <path class="a" d="M283 50h12m-5-5l5 5-5 5" />
+    <path class="a" d="M433 50h12m-5-5l5 5-5 5" />
+    <path class="a" d="M583 50h12m-5-5l5 5-5 5" />
+    <path class="a" d="M733 50h12m-5-5l5 5-5 5" />
+
+    <circle class="n" cx="64" cy="0" r="13" /><text class="nt" x="64" y="5">1</text>
+    <circle class="n" cx="214" cy="0" r="13" /><text class="nt" x="214" y="5">2</text>
+    <circle class="n" cx="364" cy="0" r="13" /><text class="nt" x="364" y="5">3</text>
+    <circle class="n" cx="514" cy="0" r="13" /><text class="nt" x="514" y="5">4</text>
+    <circle class="n" cx="664" cy="0" r="13" /><text class="nt" x="664" y="5">5</text>
+    <circle class="n" cx="814" cy="0" r="13" /><text class="nt" x="814" y="5">6</text>
+
+    <text class="t" x="64" y="48"><tspan x="64">One link</tspan><tspan x="64" dy="19">is enough</tspan></text>
+    <text class="t" x="214" y="48"><tspan x="214">Define your</tspan><tspan x="214" dy="19">requirements</tspan></text>
+    <text class="t" x="364" y="40"><tspan x="364">Side by side,</tspan><tspan x="364" dy="19">not all over</tspan><tspan x="364" dy="19">the place</tspan></text>
+    <text class="t" x="514" y="48"><tspan x="514">Sort out</tspan><tspan x="514" dy="19">quickly</tspan></text>
+    <text class="t" x="664" y="48"><tspan x="664">Settle it</tspan><tspan x="664" dy="19">in duels</tspan></text>
+    <text class="t" x="814" y="48"><tspan x="814">Decide</tspan><tspan x="814" dy="19">together</tspan></text>
+  </g>
+</svg>

@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Compare products together, and decide.</strong><br>
-  A calm, self-hosted place for the purchases that otherwise live in spreadsheets and a dozen open tabs.
+  Self-hosted · private by default · free software
 </p>
 
 <p align="center">
@@ -27,80 +27,46 @@
   <img src="docs/images/table-light.png" alt="A comparison of six sideboards in Propario: pictures, prices against the budget, requirements met and not met, fit and everyone's verdicts.">
 </picture>
 
-The sideboard, the laptop, the bike: a bigger purchase means requirements, a handful of
-candidates, pictures, prices, dimensions and the opinions of everyone who has to live with it.
-Propario keeps all of that in one comparison, checks every product against what you need, and
-helps you decide – together, without spreadsheet chaos, without advertising, and on your own
-server.
+Forget endless lists and a thousand open tabs. Whatever the purchase – sideboard, laptop, bike
+and more: Propario lays out the facts nicely and helps you reach a better decision, faster.
+
+## How it works
+
+<img src="docs/images/how-it-works.svg" width="880" alt="How you decide with Propario: 1 One link is enough, 2 Define your requirements, 3 Side by side, not all over the place, 4 Sort out quickly, 5 Settle it in duels, 6 Decide together.">
 
 ## What it does
 
-**One link is enough.** Paste a shop link and Propario takes the picture, name, price and
-dimensions from the page – once, and only what the page states about the product. Or bring
-your existing tables from Excel, CSV or the answer of your AI.
+- **One link is enough.** Paste a shop link: Propario takes the picture, price and dimensions
+  straight from the shop – or bring your table from Excel or your AI.
+- **Define your requirements.** Set what it must be, what you wish for and a budget: every
+  product is checked against them – green met, red not met.
+- **Side by side, not all over the place.** The candidates side by side: best values shown,
+  differences highlighted – and their sizes to scale, in 3D too.
+- **Sort out quickly.** Swipe: thumb up or down, each person on their own. What nobody likes is
+  sorted out – without a long discussion.
+- **Settle it in duels.** Which is better? Propario puts them side by side and asks until your
+  ranking stands. On a phone, AR puts them right into your room.
+- **Decide together.** Your rankings become one joint ranking – its first place can become your
+  decision. Then the purchase, returns and warranty in view.
+- **With your AI, if you like.** “Copy for my AI” hands the comparison to the assistant you
+  already use. Its answer comes back as a table and updates your products – you see every change
+  first.
 
-**Your requirements check every product.** Set what it must be, what is important, what you
-wish for, and a budget. Every product is checked: green met, red not met, grey not known yet.
-Missing data never counts against a product.
+Also: offers from several shops and ratings from tests and reviews on one scale; a table that
+works like a spreadsheet, with filters and queries; Excel, CSV and Markdown import and export;
+an installable app that takes products shared from shop apps; English and German, light and
+dark; backups of everything you can see, pictures included.
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/requirements-dark.png">
-  <img src="docs/images/requirements-light.png" alt="Requirements grouped into budget, size, comfort and purchase, each with a priority and an automatic check, and an overview of which product meets which.">
-</picture>
+## Private, safe, yours
 
-**Side by side, to scale.** Put candidates next to each other: best values marked, differences
-highlighted, and their sizes drawn to scale against the space your requirements leave – in 3D
-too, and on a phone right in your room.
+- Runs on your own server – your data stays with you
+- Passkeys instead of passwords
+- Stored encrypted, shared only on purpose
+- No tracking, no advertising, no affiliate links
+- Accessible (WCAG 2.1 AA), free software (AGPL)
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/side-by-side-dark.png">
-  <img src="docs/images/side-by-side-light.png" alt="Three sideboards drawn to scale next to a person, with the dashed limit of 180 cm width from the requirements.">
-</picture>
-
-**Decide together.** Each person swipes through the products – like, neutral, dislike – and
-settles the favourites in duels. Everyone's rankings become one joint ranking; its first place
-can become your decision. Then the purchase, the return deadline and the warranty stay in view.
-
-<table>
-  <tr>
-    <td width="50%">
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="docs/images/phone-swipe-dark.png">
-        <img src="docs/images/phone-swipe-light.png" alt="Swiping on a phone: one sideboard with its price, dimensions and requirements, and the buttons dislike, neutral and like.">
-      </picture>
-    </td>
-    <td width="50%">
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="docs/images/phone-duel-dark.png">
-        <img src="docs/images/phone-duel-light.png" alt="A duel on a phone: two sideboards to scale, and the question which one is better.">
-      </picture>
-    </td>
-  </tr>
-</table>
-
-**And everything around it**
-
-- **Your AI, if you like:** _Copy for my AI_ hands the comparison to the assistant you already
-  use; its answer comes back as a table and updates your products – you see every change first.
-- **Offers, tests and reviews:** several shops per product (the cheapest total becomes the
-  price), ratings from tests and reviews on one scale, links to price comparisons by GTIN.
-- **A table like a spreadsheet:** edit in place, sort, filter with quick chips or a query such
-  as `Width <= 90 AND NOT Selection = excluded`, choose and move columns.
-- **Installs as an app** on phones and computers; share a product from a shop app straight into
-  a comparison.
-- **English and German**, light and dark, built and tested for WCAG 2.1 AA.
-- **Backups** of everything you can see, pictures included, as one file.
-
-## What it will not do
-
-- **No passwords, no e-mail addresses.** You sign in with a passkey – fingerprint, face or device
-  PIN. New people join only with an invitation.
-- **No tracking, no advertising, no affiliate links**, no third-party scripts or fonts. Pictures
-  are served from your server, so no shop learns who is looking.
-- **No crawling.** A product page is read once when you add it, nothing more; shops that refuse
-  automated access are respected.
-- **Nobody else owns your data.** It stays on your server, encrypted at rest, and every
-  comparison is private until you share it.
+New people join only by invitation. A shop page is read once when you add it, never crawled,
+and shops that refuse automated access are respected.
 
 ## Try it
 
@@ -113,11 +79,9 @@ docker compose up -d
 docker compose logs app                              # shows the one-time setup link
 ```
 
-Open the setup link, choose a name and create your passkey. The start page also has
-**Try the demo** – three invented comparisons that never leave your browser tab.
-
-For a real instance – HTTPS, your own address, backups, updates – read
-[Self-hosting](docs/self-hosting.md).
+Open the setup link, choose a name and create your passkey – or press **Try the demo** on the
+start page: invented comparisons that never leave your browser tab. For a real instance with
+HTTPS, backups and updates, read [Self-hosting](docs/self-hosting.md).
 
 ## Documentation
 
@@ -130,13 +94,11 @@ For a real instance – HTTPS, your own address, backups, updates – read
 | Working on the code       | [CONTRIBUTING.md](CONTRIBUTING.md) · [Design guide](docs/brand.md)                        |
 | What changed              | [CHANGELOG.md](CHANGELOG.md) · [Releases](https://github.com/schlatter/propario/releases) |
 
-## Status
+## Status and contributing
 
-Early and in daily use. Propario was built for a household comparing purchases together and
-grows from real use. Versions follow [Semantic Versioning](https://semver.org); while it is 0.x,
-read the [changelog](CHANGELOG.md) before updating.
-
-## Contributing
+Early and in daily use: Propario was built for a household comparing purchases together and
+grows from real use. Versions follow [Semantic Versioning](https://semver.org); while it is
+0.x, read the [changelog](CHANGELOG.md) before updating.
 
 Ideas, questions and feedback are welcome in
 [Discussions](https://github.com/schlatter/propario/discussions), bugs in
