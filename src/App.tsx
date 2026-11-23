@@ -4,7 +4,7 @@ import { Overview } from './pages/Overview'
 import { Starting, StartProblem } from './ui/StartProblem'
 import { currentStep } from './diagnostics'
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { BrowserRouter, NavLink, Navigate, Route, Routes, Link, useLocation } from 'react-router-dom'
+import { BrowserRouter, HashRouter, NavLink, Navigate, Route, Routes, Link, useLocation } from 'react-router-dom'
 import { ApiError } from './api'
 import { I18nProvider, useI18n } from './i18n'
 import { SessionProvider, useSession } from './session'
@@ -21,6 +21,10 @@ import { SwipePage } from './pages/Swipe'
 import { BackupPage } from './pages/Backup'
 import { SharePage } from './pages/Share'
 import { SettingsPage } from './pages/Settings'
+import { asset, DEMO_ONLY } from './site'
+
+/** The website's demo is served as plain files: its routes live after the #. */
+const Router = DEMO_ONLY ? HashRouter : BrowserRouter
 
 // The importer pulls in the spreadsheet library; load it only when needed.
 const ImportPage = lazy(() => import('./pages/Import').then((x) => ({ default: x.ImportPage })))
@@ -32,9 +36,9 @@ export function App() {
       <ToastProvider>
         <ConfirmProvider>
           <SessionProvider>
-            <BrowserRouter>
+            <Router>
               <Gate />
-            </BrowserRouter>
+            </Router>
           </SessionProvider>
         </ConfirmProvider>
       </ToastProvider>
@@ -145,7 +149,7 @@ function Shell() {
         </Menu>
         <Link to="/" className="brand" aria-label={m.app.name}>
           {/* The same drawing as the favicon and the app icons (scripts/icons.ts). */}
-          <img className="brand-mark" src="/favicon.svg" alt="" width={24} height={24} />
+          <img className="brand-mark" src={asset('favicon.svg')} alt="" width={24} height={24} />
           <span className="brand-text">{m.app.name}</span>
         </Link>
         <div className="topbar-slot" ref={setSlot} />
@@ -155,7 +159,7 @@ function Shell() {
         <div className="demo-bar" role="status">
           <span>{m.demo.banner}</span>
           <button type="button" className="btn sm" onClick={endDemo}>
-            {m.demo.end}
+            {DEMO_ONLY ? m.demo.restart : m.demo.end}
           </button>
         </div>
       )}

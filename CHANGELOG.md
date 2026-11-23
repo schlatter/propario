@@ -6,6 +6,9 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Unreleased
 
+- Added: a demo on the website that runs in the browser alone – no installation, nothing saved.
+- Changed: the line is now “Compare faster, decide better.” / „Schneller vergleichen, besser entscheiden.“
+
 - Added: Settings and the start page link to the user guide and the source code.
 
 - Added: a website, a user guide and a self-hosting guide; the README now shows what Propario

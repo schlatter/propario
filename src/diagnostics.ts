@@ -4,6 +4,7 @@
  * the error, the step, the version and the page's path – no contents of comparisons.
  */
 import { debugEntries, debugLog, debugOn } from './debug'
+import { DEMO_ONLY } from './site'
 
 export type Step = 'session' | 'cache' | 'sync' | 'ready'
 
@@ -20,6 +21,7 @@ export function report(kind: 'crash' | 'stuck' | 'start-failed' | 'slow', error?
   const ref = Array.from(crypto.getRandomValues(new Uint8Array(4)), (b) => b.toString(16).padStart(2, '0')).join('')
   const e = error instanceof Error ? error : null
   try {
+    if (DEMO_ONLY) return ref // the website's demo has no server to tell
     void fetch('/api/client-error', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

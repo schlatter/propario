@@ -1,11 +1,10 @@
 name: Website
 
-# Publishes site/ (with the pictures from docs/images and the app's fonts) to GitHub Pages
-# whenever one of them changes on main.
+# Publishes site/ – with the pictures from docs/images, the app's fonts and the demo built from
+# main under demo/ – to GitHub Pages on every change to main.
 on:
   push:
     branches: [main]
-    paths: ['site/**', 'docs/images/**', 'public/favicon.svg', 'scripts/build-site.sh', '.github/workflows/pages.yml']
   workflow_dispatch:
 
 permissions:
@@ -29,6 +28,7 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - run: npm run build:demo
       - run: scripts/build-site.sh _site
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:

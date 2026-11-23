@@ -5,7 +5,7 @@
 <h1 align="center">Propario</h1>
 
 <p align="center">
-  <strong>Compare products together, and decide.</strong><br>
+  <strong>Compare faster, decide better.</strong><br>
   Self-hosted · private by default · free software
 </p>
 
@@ -70,7 +70,10 @@ and shops that refuse automated access are respected.
 
 ## Try it
 
-Propario runs in Docker. On your own computer:
+**In your browser:** the [demo](https://schlatter.github.io/propario/demo/) runs three invented
+comparisons right in the page – nothing is saved, nothing is sent anywhere.
+
+**On your own computer**, with Docker:
 
 ```sh
 git clone https://github.com/schlatter/propario.git && cd propario
@@ -79,9 +82,8 @@ docker compose up -d
 docker compose logs app                              # shows the one-time setup link
 ```
 
-Open the setup link, choose a name and create your passkey – or press **Try the demo** on the
-start page: invented comparisons that never leave your browser tab. For a real instance with
-HTTPS, backups and updates, read [Self-hosting](docs/self-hosting.md).
+Open the setup link, choose a name and create your passkey. For a real instance with HTTPS,
+backups and updates, read [Self-hosting](docs/self-hosting.md).
 
 ## Documentation
 

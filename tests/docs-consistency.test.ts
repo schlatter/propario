@@ -20,7 +20,21 @@ const words = (file: string) =>
 
 const o = en.overview
 const titles = [o.s1Title, o.s2Title, o.s3Title, o.s4Title, o.s5Title, o.s6Title]
-const story = [o.lead, ...titles, o.s1Text, o.s2Text, o.s3Text, o.s4Text, o.s5Text, o.s6Text, o.aiTitle, o.aiText, o.trustTitle.replace(/\.$/, ''), ...o.trust]
+const story = [
+  o.title,
+  o.lead,
+  ...titles,
+  o.s1Text,
+  o.s2Text,
+  o.s3Text,
+  o.s4Text,
+  o.s5Text,
+  o.s6Text,
+  o.aiTitle,
+  o.aiText,
+  o.trustTitle.replace(/\.$/, ''),
+  ...o.trust,
+]
 
 describe.each(['README.md', 'site/index.html'])('%s', (file) => {
   it('tells the start page’s story in its words', () => {

@@ -38,8 +38,8 @@ privat, schnell und barrierefrei – und mit so wenig Aufwand wie möglich._
 
 - **Name:** Propario – from _pro_ (for, in favour of) and _comparare_ (to compare). Written
   with a capital P, never in capitals, never with a tagline glued to it.
-- **Line:** _Compare products together, and decide._ / _Produkte gemeinsam vergleichen und
-  entscheiden._
+- **Line:** _Compare faster, decide better._ / _Schneller vergleichen, besser entscheiden._ The
+  same words everywhere – the start page's title, the README, the website, the app's manifest.
 - **Character:** a well-made tool – precise, calm, friendly, a little warm. It feels like a
   good workbench, not like a shop and not like a finance app.
 

@@ -1,6 +1,6 @@
 # Propario – working agreements
 
-Compare products together and decide. Self-hosted web app, AGPL. Read `README.md` for what it
+Compare faster, decide better. Self-hosted web app, AGPL. Read `README.md` for what it
 does, `CONTRIBUTING.md` for how the code is organised, tested and released, `SECURITY.md` for
 the baseline, `docs/excel-import.md` before changing the importer, and `docs/brand.md` – vision,
 mission and design guide – before changing the interface, its texts or the logo. User-facing

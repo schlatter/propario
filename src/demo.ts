@@ -13,16 +13,20 @@ import type { Change } from './shared/records.ts'
 import type { SyncResult, Transport } from './sync'
 import { db } from './db/db'
 import { todayIso, shiftDate } from './domain/values'
+import { asset, BASE, DEMO_ONLY } from './site'
 
 const FLAG = 'propario-demo'
 export const DEMO_DB = 'propario-demo'
 export const DEMO_USER = { id: 'demo', name: 'Ada', isAdmin: false, settings: { people: ['Ada', 'Grace'] } }
 /** Pictures that come with the app for the demo (public/demo). */
-export const DEMO_PICTURE = /^\/demo\/[a-z0-9-]+\.svg$/
+export const DEMO_PICTURE = new RegExp(`^${BASE.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}demo/[a-z0-9-]+\\.svg$`)
+const RESTART = 'propario-demo-restart'
+/** One of the drawings that come with the demo (public/demo). */
+const pic = (name: string) => asset(`demo/${name}.svg`)
 
 export function isDemo(): boolean {
   try {
-    return sessionStorage.getItem(FLAG) === '1'
+    return DEMO_ONLY || sessionStorage.getItem(FLAG) === '1'
   } catch {
     return false
   }
@@ -34,17 +38,30 @@ export function startDemo() {
   } catch {
     return
   }
-  location.assign('/')
+  location.assign(BASE)
 }
 
-/** Leaves the demo; the next start removes its data (this page still holds it open). */
+/** Leaves the demo; the next start removes its data (this page still holds it open). On the
+ * website, where the demo is all there is, it starts over with the invented comparisons. */
 export function endDemo() {
   try {
-    sessionStorage.removeItem(FLAG)
+    if (DEMO_ONLY) sessionStorage.setItem(RESTART, '1')
+    else sessionStorage.removeItem(FLAG)
   } catch {
     /* nothing to remove */
   }
-  location.assign('/')
+  location.assign(BASE)
+}
+
+/** On the website: what "Start over" asked for – the demo's data removed before it opens. */
+export async function restartIfAsked() {
+  try {
+    if (sessionStorage.getItem(RESTART) !== '1') return
+    sessionStorage.removeItem(RESTART)
+  } catch {
+    return
+  }
+  await Dexie.delete(DEMO_DB).catch(() => {})
 }
 
 /** Removes what a demo left in this browser; runs on every start outside the demo. */
@@ -173,8 +190,8 @@ function sideboards(t: T): Change[] {
         price: 849,
         retailer: 'Wohnwerk',
         url: 'https://shop.example/nordhaus-arvika',
-        image: '/demo/sideboard-arvika.svg',
-        images: ['/demo/sideboard-arvika-dims.svg'],
+        image: pic('sideboard-arvika'),
+        images: [pic('sideboard-arvika-dims')],
         candidate: 'checked',
         favorite: true,
         votes: { demo: 'like', grace: 'like' },
@@ -196,7 +213,7 @@ function sideboards(t: T): Change[] {
         price: 1090,
         retailer: 'Holzladen',
         url: 'https://shop.example/lund-bo',
-        image: '/demo/sideboard-bo.svg',
+        image: pic('sideboard-bo'),
         pros: t('Schöne Maserung', 'Beautiful grain'),
         candidate: 'checked',
         votes: { demo: 'neutral', grace: 'dislike' },
@@ -212,7 +229,7 @@ function sideboards(t: T): Change[] {
         price: 549,
         retailer: 'Wohnwerk',
         url: 'https://shop.example/fjell-kanto',
-        image: '/demo/sideboard-kanto.svg',
+        image: pic('sideboard-kanto'),
         favorites: { grace: true },
         votes: { grace: 'like' },
       },
@@ -227,7 +244,7 @@ function sideboards(t: T): Change[] {
         price: 699,
         retailer: 'Holzladen',
         url: 'https://shop.example/haller-mira',
-        image: '/demo/sideboard-mira.svg',
+        image: pic('sideboard-mira'),
         candidate: 'excluded',
         exclusionCategory: 'size',
         exclusionReason: t('Zu breit für die Nische', 'Too wide for the niche'),
@@ -243,7 +260,7 @@ function sideboards(t: T): Change[] {
         price: 899,
         retailer: 'Nordhaus Store',
         url: 'https://shop.example/nordhaus-arvika-low',
-        image: '/demo/sideboard-arvika-low.svg',
+        image: pic('sideboard-arvika-low'),
       },
       [180, 60, 42, oak, true, 8],
       4,
@@ -256,7 +273,7 @@ function sideboards(t: T): Change[] {
         price: 779,
         retailer: 'Wohnwerk',
         url: 'https://shop.example/studio-verde-linea',
-        image: '/demo/sideboard-linea.svg',
+        image: pic('sideboard-linea'),
         votes: { demo: 'like', grace: 'like' },
       },
       [170, 72, 38, veneer, true, null],
@@ -325,7 +342,7 @@ function headphones(t: T): Change[] {
         price: 329,
         retailer: 'Klangraum',
         url: 'https://shop.example/sonora-aura-4',
-        image: '/demo/headphones-aura.svg',
+        image: pic('headphones-aura'),
         candidate: 'checked',
         favorite: true,
         votes: { demo: 'like', grace: 'like' },
@@ -342,7 +359,7 @@ function headphones(t: T): Change[] {
         price: 279,
         retailer: 'Technikhaus',
         url: 'https://shop.example/kestrel-q35',
-        image: '/demo/headphones-kestrel.svg',
+        image: pic('headphones-kestrel'),
         candidate: 'checked',
         votes: { demo: 'like', grace: 'like' },
         pros: t('40 Stunden Akku', '40 hours of battery'),
@@ -357,7 +374,7 @@ function headphones(t: T): Change[] {
         price: 399,
         retailer: 'Klangraum',
         url: 'https://shop.example/ondo-studio-pro',
-        image: '/demo/headphones-ondo.svg',
+        image: pic('headphones-ondo'),
         cons: t('Schwer und über dem Budget', 'Heavy and over budget'),
       },
       [24, 310, true, ldac, false],
@@ -370,7 +387,7 @@ function headphones(t: T): Change[] {
         price: 149,
         retailer: 'Technikhaus',
         url: 'https://shop.example/lumen-air',
-        image: '/demo/headphones-lumen.svg',
+        image: pic('headphones-lumen'),
         candidate: 'excluded',
         exclusionCategory: 'quality',
         exclusionReason: t('Keine Geräuschunterdrückung', 'No noise cancelling'),
@@ -385,7 +402,7 @@ function headphones(t: T): Change[] {
         price: 349,
         retailer: 'Klangraum',
         url: 'https://shop.example/halden-h7',
-        image: '/demo/headphones-halden.svg',
+        image: pic('headphones-halden'),
         votes: { grace: 'like' },
         favorites: { grace: true },
       },
@@ -454,8 +471,8 @@ function vacuums(t: T): Change[] {
         price: 649,
         retailer: 'Haushaltsprofi',
         url: 'https://shop.example/tidy-t9-max',
-        image: '/demo/vacuum-tidy.svg',
-        images: ['/demo/vacuum-tidy-dims.svg'],
+        image: pic('vacuum-tidy'),
+        images: [pic('vacuum-tidy-dims')],
         votes: { demo: 'like', grace: 'like' },
       },
       [9.2, 6000, 63, true, true],
@@ -468,7 +485,7 @@ function vacuums(t: T): Change[] {
         price: 549,
         retailer: 'Technikhaus',
         url: 'https://shop.example/robin-s8',
-        image: '/demo/vacuum-robin.svg',
+        image: pic('vacuum-robin'),
         votes: { demo: 'like', grace: 'like' },
       },
       [9.6, 5000, 66, true, false],
@@ -481,19 +498,19 @@ function vacuums(t: T): Change[] {
         price: 899,
         retailer: 'Haushaltsprofi',
         url: 'https://shop.example/nimbus-x2-omni',
-        image: '/demo/vacuum-nimbus.svg',
+        image: pic('vacuum-nimbus'),
         favorites: { demo: true },
       },
       [8.1, 8000, 60, true, true],
       2,
     ),
     product(
-      { brand: 'Pebble', model: 'Lite', price: 249, retailer: 'Technikhaus', url: 'https://shop.example/pebble-lite', image: '/demo/vacuum-pebble.svg' },
+      { brand: 'Pebble', model: 'Lite', price: 249, retailer: 'Technikhaus', url: 'https://shop.example/pebble-lite', image: pic('vacuum-pebble') },
       [7.8, 2700, 68, false, false],
       3,
     ),
     product(
-      { brand: 'Orbit', model: '30', price: 449, retailer: 'Haushaltsprofi', url: 'https://shop.example/orbit-30', image: '/demo/vacuum-orbit.svg' },
+      { brand: 'Orbit', model: '30', price: 449, retailer: 'Haushaltsprofi', url: 'https://shop.example/orbit-30', image: pic('vacuum-orbit') },
       [10.3, 5500, 64, true, false],
       4,
     ),

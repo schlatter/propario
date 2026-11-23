@@ -10,6 +10,7 @@ import { errorText, report } from '../diagnostics'
 import { downloadSupportPackage } from '../debug'
 import { outdated, reloadOnce } from '../freshness'
 import { initialLocale } from '../i18n/active'
+import { asset } from '../site'
 
 export class Crash extends Component<{ children: ReactNode }, { error: unknown; ref: string } | { error: null; ref: '' }> {
   state = { error: null, ref: '' } as { error: unknown; ref: string }
@@ -30,14 +31,14 @@ export class Crash extends Component<{ children: ReactNode }, { error: unknown; 
     const de = initialLocale() === 'de'
     return (
       <main className="crash" role="alert" lang={de ? 'de' : 'en'}>
-        <img src="/favicon.svg" alt="" width={56} height={56} />
+        <img src={asset('favicon.svg')} alt="" width={56} height={56} />
         <h1>{de ? 'Propario muss neu geladen werden' : 'Propario needs to be reloaded'}</h1>
         <p className="muted">{de ? 'Deine Daten sind gespeichert.' : 'Your data is saved.'}</p>
         <div className="row crash-actions">
           <button type="button" className="btn primary" onClick={() => location.reload()}>
             {de ? 'Neu laden' : 'Reload'}
           </button>
-          <a className="btn" href="/reset.html">
+          <a className="btn" href={asset('reset.html')}>
             {de ? 'Browser zurücksetzen' : 'Reset this browser'}
           </a>
         </div>

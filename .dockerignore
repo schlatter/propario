@@ -2,6 +2,7 @@
 .github
 node_modules
 dist
+dist-demo
 data
 private
 e2e
