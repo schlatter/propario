@@ -22,7 +22,8 @@
     "backup": "node --disable-warning=ExperimentalWarning server/backup.ts",
     "recovery-key": "node --disable-warning=ExperimentalWarning server/recovery-key.ts",
     "deps": "npm outdated; npm audit",
-    "sbom": "npm sbom --sbom-format cyclonedx --omit dev > sbom.cdx.json"
+    "sbom": "npm sbom --sbom-format cyclonedx --omit dev > sbom.cdx.json",
+    "screenshots": "vite build && SCREENSHOTS=1 playwright test e2e/screenshots.spec.ts"
   },
   "dependencies": {
     "@simplewebauthn/server": "14.1.0"

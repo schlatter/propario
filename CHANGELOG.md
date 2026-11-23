@@ -2,9 +2,12 @@
 
 What each version can do. Newest first. Versions follow [Semantic Versioning](https://semver.org):
 while Propario is 0.x, the middle number goes up for new features or changed behaviour, the last
-for fixes. See "Versions and releases" in the README.
+for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Unreleased
+
+- Added: a website, a user guide and a self-hosting guide; the README now shows what Propario
+  does, with pictures from the demo.
 
 - Changed: the container runs on Node.js 26. Docker is the one supported way to run Propario.
 

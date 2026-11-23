@@ -4,7 +4,7 @@
 #   docker compose up -d
 #   docker compose logs app     # shows the one-time setup link for the first account
 #
-# Behind a reverse proxy, set ORIGIN to the public https address (see README).
+# Behind a reverse proxy, set ORIGIN to the public https address (see docs/self-hosting.md).
 services:
   app:
     build: .

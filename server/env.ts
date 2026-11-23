@@ -1,4 +1,4 @@
-/** Configuration from environment variables. See the README for the table. */
+/** Configuration from environment variables. The table is in docs/self-hosting.md. */
 export interface Config {
   /** Public address, e.g. https://propario.example.org. Passkeys are bound to it. */
   origin: string
