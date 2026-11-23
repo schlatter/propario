@@ -453,6 +453,8 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await page.getByRole('button', { name: 'Update pictures' }).click()
   await page.getByRole('button', { name: 'Remove picture 2' }).click()
   await expect(page.locator('.pimg-slide')).toHaveCount(1)
+  // A single picture is no scroll region, whatever widths the layout rounds to.
+  await expect(page.locator('.pimg-track')).toHaveCSS('overflow-x', 'hidden')
   await page.setViewportSize(size)
   await accessible(page, 'further pictures')
 
