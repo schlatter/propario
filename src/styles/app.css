@@ -2153,6 +2153,10 @@ table.map {
 .pimg-track::-webkit-scrollbar {
   display: none;
 }
+/* One picture has nothing to scroll; fractional widths must not make it a scroll region. */
+.pimg-track:has(> .pimg-slide:only-child) {
+  overflow-x: hidden;
+}
 .pimg-slide {
   flex: 0 0 100%;
   height: 100%;
