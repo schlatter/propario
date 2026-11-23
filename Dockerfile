@@ -1,5 +1,5 @@
 # Build stage: compile the single-page app.
-FROM node:24-alpine AS build
+FROM node:26-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
 RUN npm ci
@@ -9,13 +9,13 @@ ARG PROPARIO_COMMIT=""
 RUN PROPARIO_COMMIT=$PROPARIO_COMMIT npm run build
 
 # Production dependencies only (the server needs just @simplewebauthn/server), no install scripts.
-FROM node:24-alpine AS deps
+FROM node:26-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
 RUN npm ci --omit=dev
 
 # Runtime: Node runs the server's TypeScript directly; non-root, data in /data.
-FROM node:24-alpine
+FROM node:26-alpine
 ENV NODE_ENV=production PORT=8080 DATA_DIR=/data
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
