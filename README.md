@@ -53,16 +53,12 @@ browser tab and never touches the server's data (`src/demo.ts`).
 
 ## Try it on your computer
 
-Requires Node.js 22.18 or newer (24 recommended).
-
-```sh
-npm ci
-npm run dev
-```
-
-Open <http://localhost:5173>. The terminal shows a **one-time setup link**: open it, choose a
+Propario runs in Docker – the only supported way to run it. Follow
+[Host it yourself](#host-it-yourself); on your own computer the defaults are enough. Open
+<http://localhost:8080> and the **one-time setup link** from `docker compose logs app`: choose a
 name, create your passkey. The first account looks after the instance and invites others.
-Development data lives in `./data/` (git-ignored).
+
+To work on the code, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Host it yourself
 

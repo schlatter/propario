@@ -23,10 +23,17 @@ Thank you for helping. Propario is small on purpose; this page explains what kee
 ## Working on the code
 
 ```sh
+nvm use            # the Node.js version in .nvmrc (fnm use works too)
 npm ci
 pre-commit install --hook-type pre-commit --hook-type pre-push
-npm run dev
+npm run dev        # http://localhost:5173; the terminal shows the one-time setup link
 ```
+
+Development data lives in `./data/` (git-ignored).
+
+- One Node.js version, set in `.nvmrc`: CI reads it, `engines` in `package.json` and the
+  Dockerfile follow it, and a test checks that they agree. When Dependabot raises the Node image,
+  raise `.nvmrc` and `engines` in the same pull request.
 
 - `server/` is plain TypeScript that Node runs directly: erasable syntax only, relative imports
   with `.ts`. Every function that crosses user boundaries takes the acting person's id and

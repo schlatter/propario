@@ -6,6 +6,8 @@ for fixes. See "Versions and releases" in the README.
 
 ## Unreleased
 
+- Changed: the container runs on Node.js 26. Docker is the one supported way to run Propario.
+
 - Added: every release comes with a ready-made container image on ghcr.io and release notes on
   GitHub; self-hosters can run a fixed version instead of building from source.
 
