@@ -1,9 +1,11 @@
 # Propario – working agreements
 
 Compare products together and decide. Self-hosted web app, AGPL. Read `README.md` for what it
-does and how it runs, `SECURITY.md` for the baseline, `docs/excel-import.md` before changing
-the importer, and `docs/brand.md` – vision, mission and design guide – before changing the
-interface, its texts or the logo.
+does, `CONTRIBUTING.md` for how the code is organised, tested and released, `SECURITY.md` for
+the baseline, `docs/excel-import.md` before changing the importer, and `docs/brand.md` – vision,
+mission and design guide – before changing the interface, its texts or the logo. User-facing
+docs live in `docs/user-guide.md` and `docs/self-hosting.md`, the website in `site/`; keep them
+true when a change makes them wrong, and renew the pictures with `npm run screenshots`.
 
 **Vision:** every bigger purchase becomes a good decision, made together – without spreadsheet
 chaos, without advertising, and without anyone else owning your data. Decide in doubt by it.
@@ -60,6 +62,5 @@ container changes: `docker build .`. A change users notice gets a line under _Un
 raise the version for a single feature. A release raises `version` in `package.json`, dates its
 CHANGELOG entry, adds at most four lines per language to `src/releases.ts`, is merged as a pull
 request and then gets an annotated tag on `main` (`git tag -a v0.3.0 -m v0.3.0`); pushing the tag
-publishes image and release (`.github/workflows/release.yml`). See "Versions and releases" in the
-README. Commit only when
-asked.
+publishes image and release (`.github/workflows/release.yml`). See "Releases" in
+`CONTRIBUTING.md`. Commit only when asked.

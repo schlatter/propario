@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; style-src 'self'; img-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="referrer" content="no-referrer" />
+    <title>Propario – compare products together, and decide</title>
+    <meta
+      name="description"
+      content="A calm, self-hosted place for the purchases that otherwise live in spreadsheets: requirements, candidates, pictures and everyone's opinion – and a decision. Free software, no tracking."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href="fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="site.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="top">
+      <div class="wrap top-row">
+        <a class="brand" href="./" aria-label="Propario – home"><img src="favicon.svg" width="32" height="32" alt="" /> Propario</a>
+        <nav aria-label="Main">
+          <a href="#how">How it works</a>
+          <a href="#start">Get started</a>
+          <a href="https://github.com/schlatter/propario/blob/main/docs/user-guide.md">Docs</a>
+          <a class="btn ghost" href="https://github.com/schlatter/propario">GitHub</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero wrap" aria-labelledby="hero-title">
+        <p class="kicker">Self-hosted · Free software · No tracking</p>
+        <h1 id="hero-title">Compare products together, and&nbsp;decide.</h1>
+        <p class="lead">
+          The sideboard, the laptop, the bike: Propario keeps the requirements, the candidates, their pictures and everyone's opinion in one calm comparison –
+          and checks every product against what you need. On your own server.
+        </p>
+        <p class="actions">
+          <a class="btn primary" href="#start">Get started</a>
+          <a class="btn" href="https://github.com/schlatter/propario">View on GitHub</a>
+        </p>
+
+        <figure class="shot hero-shot">
+          <div class="measure" aria-hidden="true"><span>every candidate, one table</span></div>
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="images/table-dark.png" />
+            <img
+              src="images/table-light.png"
+              width="1440"
+              height="600"
+              alt="A comparison of six sideboards: pictures, prices against the budget, requirements met and not met, fit and everyone's verdicts."
+            />
+          </picture>
+        </figure>
+      </section>
+
+      <section id="how" class="wrap steps" aria-labelledby="how-title">
+        <h2 id="how-title">How you decide</h2>
+        <ol>
+          <li>
+            <span class="marks" aria-hidden="true"><i class="pass"></i><i></i><i></i><i></i></span>
+            <h3>One link is enough</h3>
+            <p>Paste a shop link: picture, price and dimensions come straight from the page. Or bring your table from Excel or your AI.</p>
+          </li>
+          <li>
+            <span class="marks" aria-hidden="true"><i class="pass"></i><i class="pass"></i><i></i><i></i></span>
+            <h3>Say what you need</h3>
+            <p>Musts, wishes and a budget. Every product is checked: green met, red not met, grey not known yet.</p>
+          </li>
+          <li>
+            <span class="marks" aria-hidden="true"><i class="pass"></i><i class="pass"></i><i class="pass"></i><i></i></span>
+            <h3>See them side by side</h3>
+            <p>Differences highlighted, sizes to scale against the space you have – in 3D, and on a phone in your room.</p>
+          </li>
+          <li>
+            <span class="marks" aria-hidden="true"><i class="pass"></i><i class="pass"></i><i class="pass"></i><i class="pass"></i></span>
+            <h3>Decide together</h3>
+            <p>Everyone swipes and duels on their own; the rankings become one. Then the purchase, returns and warranty in view.</p>
+          </li>
+        </ol>
+      </section>
+
+      <section class="wrap feature" aria-labelledby="f-req">
+        <div class="text">
+          <h2 id="f-req">Your requirements check every product</h2>
+          <p>
+            Write down what the purchase has to do – <em>fits the niche, at most 180&nbsp;cm wide</em> – and Propario checks each candidate. Musts decide who is
+            eligible; the rest becomes a weighted fit. Missing data never counts against a product: it stays grey until someone knows.
+          </p>
+        </div>
+        <figure class="shot">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="images/requirements-dark.png" />
+            <img
+              src="images/requirements-light.png"
+              width="1440"
+              height="900"
+              loading="lazy"
+              alt="Requirements grouped into budget, size, comfort and purchase, each with a priority and an automatic check, and an overview of which product meets which."
+            />
+          </picture>
+        </figure>
+      </section>
+
+      <section class="wrap feature" aria-labelledby="f-scale">
+        <div class="text">
+          <h2 id="f-scale">Side by side, to scale</h2>
+          <p>
+            Pick your candidates and look at them next to each other: best values marked, only the differences if you like, and their sizes drawn to scale next
+            to a person – with the dashed line of the space your requirements leave.
+          </p>
+        </div>
+        <figure class="shot">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="images/side-by-side-dark.png" />
+            <img
+              src="images/side-by-side-light.png"
+              width="1440"
+              height="900"
+              loading="lazy"
+              alt="Three sideboards drawn to scale next to a person, with the dashed limit of 180 cm width from the requirements."
+            />
+          </picture>
+        </figure>
+      </section>
+
+      <section class="wrap feature phones" aria-labelledby="f-together">
+        <div class="text">
+          <h2 id="f-together">Made for deciding together</h2>
+          <p>
+            Each person swipes through the products – like, neutral, dislike – and settles the favourites in duels. No long discussion about what nobody likes,
+            and a joint ranking whose first place can become your decision.
+          </p>
+        </div>
+        <div class="pair">
+          <figure class="phone">
+            <picture>
+              <source media="(prefers-color-scheme: dark)" srcset="images/phone-swipe-dark.png" />
+              <img
+                src="images/phone-swipe-light.png"
+                width="780"
+                height="1688"
+                loading="lazy"
+                alt="Swiping on a phone: one sideboard with its price, dimensions and requirements, and the buttons dislike, neutral and like."
+              />
+            </picture>
+          </figure>
+          <figure class="phone">
+            <picture>
+              <source media="(prefers-color-scheme: dark)" srcset="images/phone-duel-dark.png" />
+              <img
+                src="images/phone-duel-light.png"
+                width="780"
+                height="1688"
+                loading="lazy"
+                alt="A duel on a phone: two sideboards to scale, and the question which one is better."
+              />
+            </picture>
+          </figure>
+        </div>
+      </section>
+
+      <section class="wrap more" aria-labelledby="more-title">
+        <h2 id="more-title">And everything around it</h2>
+        <ul>
+          <li>
+            <strong>Your AI, if you like.</strong> “Copy for my AI” hands the comparison to the assistant you use; its answer comes back as a table – you see
+            every change first.
+          </li>
+          <li><strong>Import what you have.</strong> Excel, CSV or Markdown, with a preview and a mapping you can correct. Nothing is dropped silently.</li>
+          <li><strong>Offers, tests and reviews.</strong> Several shops per product, ratings on one scale, price comparisons by GTIN.</li>
+          <li><strong>A table like a spreadsheet.</strong> Edit in place, sort, filter with chips or a query, choose and move columns.</li>
+          <li><strong>An app on your phone.</strong> Install it, and share a product from a shop app straight into a comparison.</li>
+          <li><strong>For everyone.</strong> English and German, light and dark, built and tested for WCAG 2.1 AA.</li>
+        </ul>
+      </section>
+
+      <section class="wrap trust" aria-labelledby="trust-title">
+        <h2 id="trust-title">Private, safe, yours</h2>
+        <ul class="checks">
+          <li>Runs on your own server – your data stays with you, encrypted at rest.</li>
+          <li>Passkeys instead of passwords; new people join only by invitation.</li>
+          <li>Every comparison is private until you share it – to view or to edit.</li>
+          <li>No tracking, no advertising, no affiliate links, no third-party scripts. This page has none either.</li>
+          <li>A shop page is read once, never crawled; shops that refuse are respected.</li>
+          <li>Free software under the AGPL – read it, change it, run it.</li>
+        </ul>
+      </section>
+
+      <section id="start" class="wrap start" aria-labelledby="start-title">
+        <h2 id="start-title">Get started</h2>
+        <p>Propario runs in Docker. On your own computer, this is all it takes:</p>
+        <pre tabindex="0" aria-label="Commands to start Propario"><code>git clone https://github.com/schlatter/propario.git &amp;&amp; cd propario
+echo "DATA_KEY=$(openssl rand -base64 32)" &gt;&gt; .env
+docker compose up -d
+docker compose logs app    # shows the one-time setup link</code></pre>
+        <p>
+          Open the setup link, choose a name, create your passkey – and invite the people you decide with. Or press
+          <strong>Try the demo</strong> on the start page: invented comparisons that never leave your browser.
+        </p>
+        <div class="cards">
+          <a href="https://github.com/schlatter/propario/blob/main/docs/user-guide.md"
+            ><strong>User guide</strong><span>From the first sign-in to the decision</span></a
+          >
+          <a href="https://github.com/schlatter/propario/blob/main/docs/self-hosting.md"
+            ><strong>Self-hosting</strong><span>HTTPS, configuration, backups, updates</span></a
+          >
+          <a href="https://github.com/schlatter/propario/blob/main/CONTRIBUTING.md"
+            ><strong>Contributing</strong><span>How the code is organised and tested</span></a
+          >
+          <a href="https://github.com/schlatter/propario/releases"><strong>Releases</strong><span>What changed, and container images</span></a>
+        </div>
+      </section>
+
+      <section class="wrap faq" aria-labelledby="faq-title">
+        <h2 id="faq-title">Questions</h2>
+        <details>
+          <summary>Is there a hosted version I can sign up for?</summary>
+          <p>
+            No. Propario is meant to run on your own server, for a household or a group of friends. If someone you know runs an instance, ask them for an
+            invitation.
+          </p>
+        </details>
+        <details>
+          <summary>What do I need to run it?</summary>
+          <p>
+            Docker on a small server or a computer at home. To use it beyond <code>localhost</code>, a hostname with HTTPS – passkeys require it. It works well
+            behind a VPN, without any public exposure.
+          </p>
+        </details>
+        <details>
+          <summary>Which shops does it work with?</summary>
+          <p>
+            Any shop page that states its product's picture, name or price in a common format. Propario reads a page once when you add it and never gets past a
+            bot wall; for shops that refuse, it takes what the link itself says and you add the rest.
+          </p>
+        </details>
+        <details>
+          <summary>Can I bring my existing spreadsheets?</summary>
+          <p>
+            Yes. Excel, CSV and Markdown tables are imported with a preview of every column; unknown columns become fields, nothing is dropped. You can also
+            export to Excel and JSON at any time.
+          </p>
+        </details>
+        <details>
+          <summary>What does it cost?</summary>
+          <p>Nothing. Propario is free software under the AGPL-3.0. If you run a modified version for others, they are entitled to its source.</p>
+        </details>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <div class="wrap foot-row">
+        <span class="brand small"><img src="favicon.svg" width="24" height="24" alt="" /> Propario</span>
+        <nav aria-label="Footer">
+          <a href="https://github.com/schlatter/propario">GitHub</a>
+          <a href="https://github.com/schlatter/propario/blob/main/docs/user-guide.md">User guide</a>
+          <a href="https://github.com/schlatter/propario/blob/main/docs/self-hosting.md">Self-hosting</a>
+          <a href="https://github.com/schlatter/propario/blob/main/CHANGELOG.md">Changelog</a>
+          <a href="https://github.com/schlatter/propario/blob/main/SECURITY.md">Security</a>
+          <a href="https://github.com/schlatter/propario/discussions">Discussions</a>
+        </nav>
+        <p>Free software under the AGPL-3.0. No cookies, no tracking, no scripts on this page.</p>
+      </div>
+    </footer>
+  </body>
+</html>

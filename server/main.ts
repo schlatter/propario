@@ -1,7 +1,7 @@
 /**
  * Propario production server: the built app (dist/), the API and housekeeping.
  * Dependencies: Node.js 22.18+ (runs this TypeScript directly) and @simplewebauthn/server.
- * Configuration: see server/env.ts and the README.
+ * Configuration: see server/env.ts and docs/self-hosting.md.
  */
 import { createReadStream } from 'node:fs'
 import { readFile, stat } from 'node:fs/promises'
