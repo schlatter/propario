@@ -18,7 +18,16 @@ repos:
         pass_filenames: false
         always_run: true
 
-      # Before anything leaves the machine: format, types, unit tests, the end-to-end story.
+      # Before anything leaves the machine: no personal data in any outgoing commit, message or tag.
+      - id: propario-repo-policy-outgoing
+        name: propario repo policy (outgoing commits, messages, tags)
+        entry: scripts/check-repo-policy.sh --outgoing
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+
+      # Then: format, types, unit tests, the end-to-end story.
       - id: propario-verify
         name: propario verify (format, types, tests)
         entry: npm run verify

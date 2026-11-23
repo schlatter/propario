@@ -21,9 +21,9 @@ function legacyWorkbook(): XLSX.WorkBook {
   const wb = XLSX.utils.book_new()
   const fridge = XLSX.utils.aoa_to_sheet([
     ['Anbieter', 'System', 'Abmaße cm (BxHxT)', 'Gewicht kg', 'No Frost', 'Auswahl', 'Preis', 'Gekauft', 'Kommentar', 'Punkte', 'Grace', 'Link'],
-    ['Frostel', 'FK 100', '60 x 185 x 60,5', 60, 'nein', 'ja', 424, new Date(2024, 4, 14), 'Maße gut', 7, 'okay', 'https://example.org/frostel'],
-    ['Kaltmann', 'KM 2', '60 x 200 x 68', 72, 'Ja', 'nein', '1,500 €', null, 'zu tief', 5, null, null],
-    ['Polaris', 'PX 4', '60 x 190 x 62', '68 (netto)', 'Ja', null, '830 – 900 €', 'August 2018', null, null, null, null],
+    ['Frostel', 'FK 100', '60 x 185 x 60,5', 62, 'nein', 'ja', 399, new Date(2024, 4, 14), 'Maße gut', 7, 'okay', 'https://example.org/frostel'],
+    ['Kaltmann', 'KM 2', '60 x 200 x 68', 74, 'Ja', 'nein', '1,500 €', null, 'zu tief', 5, null, null],
+    ['Polaris', 'PX 4', '60 x 190 x 62', '68 (netto)', 'Ja', null, '830 – 900 €', 'Mai 2019', null, null, null, null],
     [],
     ['Anforderungen'],
     ['Must Have', 'Gefrierfach, leise'],
@@ -43,7 +43,7 @@ function legacyWorkbook(): XLSX.WorkBook {
   const laptop = XLSX.utils.aoa_to_sheet([
     ['Hersteller', 'System', 'Zoll', 'RAM (GB)', 'Auswahl', 'Preis', 'Gekauft', 'Nutzer', 'Kommentar', 'Link'],
     ['Nordwind', 'Air 14', 14, 16, 'ja', 1000, null, 'Ada', 'gut', null],
-    ['Kestrel', 'Pro 13', 14, 8, null, null, null, 'Grace', null, null],
+    ['Kestrel', 'Pro 13', 13, 8, null, null, null, 'Grace', null, null],
     [],
     ['Anforderungen'],
     ['Grace', null, 'Ada'],
@@ -74,13 +74,13 @@ function separateSheetsWorkbook(): XLSX.WorkBook {
       'Breite (cm)',
       'Tiefe (cm)',
       'Freie Fachhöhe (cm)',
-      'Tiefe ≤ 40',
+      'Tiefe ≤ 45',
       'Preis (€)',
       'Produktlink',
     ],
-    [1, 'Fjella', 'Vitrine', 'Favorit', 1, 'Ada', 'Holm', 'Möbelhaus A', 100, 40, 25, 'Ja', 499.99, 'Produktseite öffnen'],
-    [2, 'Birk', 'Buffet', 'Kompromiss', null, 'ChatGPT', 'Versand B', 'Versand B', 80, 34, null, 'Ja', 379.99, 'Produktseite öffnen'],
-    [3, 'Oskar', 'Schrank', 'Ausgeschieden', null, 'Grace', 'Laden C', 'Laden C', 120, 45, 30, 'Nein', 1299, null],
+    [1, 'Fjella', 'Vitrine', 'Favorit', 1, 'Ada', 'Holm', 'Möbelhaus A', 90, 42, 30, 'Ja', 449.99, 'Produktseite öffnen'],
+    [2, 'Birk', 'Buffet', 'Kompromiss', null, 'ChatGPT', 'Versand B', 'Versand B', 75, 38, null, 'Ja', 329.99, 'Produktseite öffnen'],
+    [3, 'Oskar', 'Schrank', 'Ausgeschieden', null, 'Grace', 'Laden C', 'Laden C', 130, 50, 33, 'Nein', 1199, null],
   ])
   products['N6'].f = 'HYPERLINK("https://example.org/fjella","Produktseite öffnen")'
   products['B7'].f = 'HYPERLINK("https://example.org/birk","Birk")'
@@ -89,9 +89,9 @@ function separateSheetsWorkbook(): XLSX.WorkBook {
     ['Anforderungen an das neue Regal'],
     [],
     ['Kategorie', 'Anforderung', 'Priorität', 'Details / Begründung'],
-    ['Maße', 'Maximale Tiefe', 'MUSS', 'Maximal 40 cm.'],
+    ['Maße', 'Maximale Tiefe', 'MUSS', 'Maximal 45 cm.'],
     ['Maße', 'Bevorzugte Breite', 'WUNSCH', 'Ideal bis 100 cm; äußerste Grenze 110 cm.'],
-    ['Stauraum', 'Freie Fachhöhe', 'MUSS', 'Mindestens 23 cm.'],
+    ['Stauraum', 'Freie Fachhöhe', 'MUSS', 'Mindestens 25 cm.'],
     ['Design', 'Hochglanz', 'VERMEIDEN', 'Zu empfindlich.'],
     ['Referenz', 'Modell Vega', 'POSITIV', 'Form interessant.'],
   ])
@@ -129,14 +129,14 @@ describe('legacy layout (one sheet per comparison)', () => {
   })
 
   it('reads products including links, prices, purchases and notes', () => {
-    const [frostel, lg, polaris] = fridge.products
+    const [frostel, kaltmann, polaris] = fridge.products
     // A favourite in the sheet is checked, with the star.
-    expect(frostel).toMatchObject({ brand: 'Frostel', price: 424, candidate: 'checked', favorite: true, url: 'https://example.org/frostel' })
+    expect(frostel).toMatchObject({ brand: 'Frostel', price: 399, candidate: 'checked', favorite: true, url: 'https://example.org/frostel' })
     expect(frostel.purchase).toMatchObject({ status: 'purchased', date: '2024-05-14' })
     expect(frostel.ratings).toEqual([{ person: 'Grace', stars: null, note: 'okay' }])
     expect(kaltmann).toMatchObject({ price: 1500, candidate: 'excluded', url: 'https://example.org/kaltmann' })
     expect(polaris).toMatchObject({ price: 830, priceNote: '830 – 900 €' })
-    expect(polaris.purchase).toMatchObject({ status: 'purchased', note: 'August 2018' })
+    expect(polaris.purchase).toMatchObject({ status: 'purchased', note: 'Mai 2019' })
     // A value that does not fit the number field is kept as text.
     const weight = fridge.properties.find((p) => p.name === 'Gewicht')!
     expect(polaris.values[weight.id]).toBe('68 (netto)')
@@ -202,14 +202,14 @@ describe('separate products and requirements sheets', () => {
     expect(byLabel['Modell Vega'].priority).toBe('info')
     const depth = b.properties.find((p) => p.name === 'Tiefe')!
     const shelf = b.properties.find((p) => p.name === 'Freie Fachhöhe')!
-    expect(byLabel['Maximale Tiefe'].condition).toEqual({ target: { kind: 'property', propertyId: depth.id }, op: 'lte', value: 40 })
-    expect(byLabel['Freie Fachhöhe'].condition).toEqual({ target: { kind: 'property', propertyId: shelf.id }, op: 'gte', value: 23 })
+    expect(byLabel['Maximale Tiefe'].condition).toEqual({ target: { kind: 'property', propertyId: depth.id }, op: 'lte', value: 45 })
+    expect(byLabel['Freie Fachhöhe'].condition).toEqual({ target: { kind: 'property', propertyId: shelf.id }, op: 'gte', value: 25 })
 
     const props = new Map(b.properties.map((p) => [p.id, p]))
     const [fjella, birk, oskar] = b.products.map((p) => summarize(b.requirements, p, props))
     expect(fjella).toMatchObject({ qualified: true, blocked: false })
     expect(birk).toMatchObject({ qualified: false, blocked: false }) // shelf height unknown
-    expect(oskar).toMatchObject({ blocked: true }) // 45 cm deep
+    expect(oskar).toMatchObject({ blocked: true }) // 50 cm deep
   })
 })
 

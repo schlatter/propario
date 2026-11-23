@@ -1,7 +1,7 @@
 /**
- * What a shop link says by itself – for pages that refuse automated access (Otto, for one,
- * answers with a bot check). Many shops write the product name and often the dimensions into
- * the address: …/nordhaus-sideboard-mit-led-beleuchtung-…-b140-t42-h85-cm-…-AB12CD34/.
+ * What a shop link says by itself – for pages that refuse automated access (some shops answer
+ * with a bot check). Many shops write the product name and often the dimensions into the
+ * address: …/nordhaus-sideboard-mit-led-beleuchtung-…-b140-t42-h85-cm-…-AB12CD34/.
  * Read without any request; it only fills empty fields, like a page would.
  */
 import type { ProductFacts } from '../shared/product-facts.ts'

@@ -519,7 +519,7 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await addLink('https://www.shop.example/regal-1.html/?utm_source=mail')
   await expect.poll(countRows).toBe(2)
 
-  // A shop that refuses automated access (Otto answers with a bot check): the app says so instead
+  // A shop that refuses automated access (some answer with a bot check): the app says so instead
   // of staying silent, and takes what the address itself names – without any further request.
   await page.route('**/api/product-image?**', (route) => route.fulfill({ status: 422, json: { error: 'blocked' } }))
   await addLink('https://www.moebel.example/p/nordhaus-sideboard-mit-led-beleuchtung-in-landhaus-stil-1-st-AB12CD34/?variationId=AB12CD34EF')
