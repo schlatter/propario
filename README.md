@@ -36,11 +36,6 @@ and more: Propario lays out the facts nicely and helps you reach a better decisi
 
 ## What it does
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/step-4-dark.png">
-  <img align="right" width="260" src="docs/images/step-4-light.png" alt="Swiping through the products: one sideboard with its picture and price, and the buttons dislike, neutral and like.">
-</picture>
-
 - **One link is enough.** Paste a shop link: Propario takes the picture, price and dimensions
   straight from the shop – or bring your table from Excel or your AI.
 - **Define your requirements.** Set what it must be, what you wish for and a budget: every
