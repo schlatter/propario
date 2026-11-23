@@ -1,0 +1,51 @@
+name: Release
+
+# A version tag (v0.18.0) on main publishes that version: the container image on ghcr.io and the
+# GitHub release with its CHANGELOG entry. Only admins may push v* tags (ruleset "release tags").
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    name: Image and release
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write # create the release
+      packages: write # push the image
+    env:
+      TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Fails before anything is published if the tag, package.json and CHANGELOG.md disagree.
+      - name: Check version, take notes from CHANGELOG.md
+        run: scripts/release-notes.sh "$TAG" > "$RUNNER_TEMP/notes.md"
+
+      - name: Build and push the image
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY,,}"
+          version="${TAG#v}"
+          docker build --pull --build-arg PROPARIO_COMMIT="$GITHUB_SHA" \
+            --label org.opencontainers.image.source="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" \
+            --label org.opencontainers.image.version="$version" \
+            --label org.opencontainers.image.revision="$GITHUB_SHA" \
+            --label org.opencontainers.image.licenses=AGPL-3.0-or-later \
+            -t "$image:$version" -t "$image:latest" .
+          echo "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker push --all-tags "$image"
+          digest=$(docker inspect --format '{{index .RepoDigests 0}}' "$image:$version")
+          printf '\n## Container image\n\n```sh\ndocker pull %s:%s\n```\n\n`%s`\n' "$image" "$version" "$digest" >> "$RUNNER_TEMP/notes.md"
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$TAG" --verify-tag --title "Propario ${TAG#v}" --notes-file "$RUNNER_TEMP/notes.md"
