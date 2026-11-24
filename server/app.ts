@@ -102,6 +102,13 @@ export interface App {
   setupLink: () => string | null
 }
 
+/** Why one's own AI did not answer: logged and told to its person – what went wrong, never what was asked. */
+function aiFailure(provider: string, e: unknown): { error: 'ai'; reason: ai.AiProblem; detail: string } {
+  const failure = e instanceof ai.AiError ? e : new ai.AiError('unreachable', e instanceof Error ? e.message : '')
+  console.error(`[ai] ${provider} ${failure.reason}${failure.detail ? ` – ${failure.detail}` : ''}`)
+  return { error: 'ai', reason: failure.reason, detail: failure.detail }
+}
+
 export function createApp(db: DB, config: Config, version: string | null = null): App {
   const https = config.origin.startsWith('https:')
   const rp = webauthn.relyingParty(config.origin)
@@ -254,6 +261,11 @@ export function createApp(db: DB, config: Config, version: string | null = null)
         const s = body.settings
         if (!s || typeof s !== 'object' || JSON.stringify(s).length > 20_000) throw new HttpError(400, 'settings')
         users.saveSettings(db, me.id, s as Record<string, unknown>)
+        // Switching one's own AI off also forgets its key: nothing is kept that is not used.
+        if (!ai.aiOn(s as Record<string, unknown>) && ai.getAi(db, me.id)) {
+          ai.setAi(db, me.id, null)
+          users.audit('ai-removed', me.id)
+        }
       }
       return send(res, 200, { ok: true })
     }
@@ -299,7 +311,12 @@ export function createApp(db: DB, config: Config, version: string | null = null)
       limit(`ai-models:${me.id}`, 30, 600_000)
       return send(res, 200, await ai.listModels(config).catch(() => []))
     }
+    // Switched off by the person: no key is taken and nothing is asked (copying works regardless).
+    const aiAllowed = () => {
+      if (!ai.aiOn(users.getSettings(db, me.id))) throw new HttpError(403, 'ai-off')
+    }
     if (path === '/api/me/ai' && method === 'PUT') {
+      aiAllowed()
       limit(`ai-models:${me.id}`, 30, 600_000)
       const body = await readJson(req, 4096)
       const current = ai.getAi(db, me.id)
@@ -320,7 +337,7 @@ export function createApp(db: DB, config: Config, version: string | null = null)
       try {
         models = await ai.listModels({ provider, key, model: '' })
       } catch (e) {
-        return send(res, 400, { error: 'ai', reason: e instanceof ai.AiError ? e.reason : 'unreachable' })
+        return send(res, 400, aiFailure(provider, e))
       }
       const config = { provider, key, model: model && models.includes(model) ? model : ai.suggestModel(provider, models) }
       ai.setAi(db, me.id, config)
@@ -333,6 +350,7 @@ export function createApp(db: DB, config: Config, version: string | null = null)
       return send(res, 200, { ok: true })
     }
     if (path === '/api/ai/ask' && method === 'POST') {
+      aiAllowed()
       const config = ai.getAi(db, me.id)
       if (!config) throw new HttpError(400, 'no-ai')
       limit(`ai:${me.id}`, 30, 600_000)
@@ -341,10 +359,7 @@ export function createApp(db: DB, config: Config, version: string | null = null)
       try {
         return send(res, 200, { answer: await ai.ask(config, body.text, body.search === true) })
       } catch (e) {
-        const reason = e instanceof ai.AiError ? e.reason : 'unreachable'
-        // What went wrong, never what was asked.
-        if (reason === 'unreachable') console.error(`[ai] ${config.provider}: ${e instanceof Error ? e.message.slice(0, 200) : 'failed'}`)
-        return send(res, 502, { error: 'ai', reason })
+        return send(res, 502, aiFailure(config.provider, e))
       }
     }
 

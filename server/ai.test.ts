@@ -72,6 +72,37 @@ describe('connecting one’s own AI', () => {
     fake({ '/v1/responses': { status: 429, body: { error: { message: 'quota' } } } })
     await expect(ask(chatgpt, 'x', false)).rejects.toMatchObject({ reason: 'limit' })
   })
+
+  it('tells an API account without credit – a chat subscription – from a per-minute limit', async () => {
+    fake({ '/v1/responses': { status: 429, body: { error: { code: 'insufficient_quota', message: 'You exceeded your current quota.' } } } })
+    await expect(ask(chatgpt, 'x', false)).rejects.toMatchObject({ reason: 'credit' })
+    fake({
+      '/v1/messages': {
+        status: 400,
+        body: { type: 'error', error: { type: 'invalid_request_error', message: 'Your credit balance is too low to access the Anthropic API.' } },
+      },
+    })
+    await expect(ask(claude, 'x', false)).rejects.toMatchObject({ reason: 'credit' })
+    fake({ '/v1/messages': { status: 429, body: { type: 'error', error: { type: 'rate_limit_error', message: 'Too many tokens.' } } } })
+    await expect(ask(claude, 'x', false)).rejects.toMatchObject({ reason: 'rate' })
+    fake({ '/v1/responses': { status: 400, body: { error: { code: 'invalid_value', message: 'Tool web_search is not supported.' } } } })
+    await expect(ask(chatgpt, 'x', true)).rejects.toMatchObject({ reason: 'request' })
+  })
+
+  it('passes on which limit the provider means, without any part of a key', async () => {
+    fake({
+      '/v1/responses': {
+        status: 429,
+        body: { error: { code: 'rate_limit_exceeded', message: 'Request too large on tokens per min (TPM): Limit 30000, Requested 41000.' } },
+      },
+    })
+    await expect(ask(chatgpt, 'x', true)).rejects.toMatchObject({
+      reason: 'rate',
+      detail: '429 · rate_limit_exceeded · Request too large on tokens per min (TPM): Limit 30000, Requested 41000.',
+    })
+    fake({ '/v1/models': { status: 401, body: { error: { code: 'invalid_api_key', message: 'Incorrect API key provided: sk-proj-abc*****wxyz.' } } } })
+    await expect(listModels(chatgpt)).rejects.toMatchObject({ reason: 'key', detail: '401 · invalid_api_key · Incorrect API key provided: …' })
+  })
 })
 
 describe('asking one’s own AI', () => {

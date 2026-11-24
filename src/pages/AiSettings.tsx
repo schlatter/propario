@@ -1,31 +1,46 @@
 import { useEffect, useId, useState } from 'react'
 import { api, ApiError } from '../api'
+import { saveSettings } from '../db/db'
 import { isDemo } from '../demo'
+import { useSettings } from '../hooks'
+import { useConfirm } from '../ui/Dialog'
 import { useI18n } from '../i18n'
 import { Glyph } from '../ui/Glyph'
 
 export type Provider = 'anthropic' | 'openai'
 export type AiSettings = { provider: Provider; model: string; keyHint: string } | null
-type Problem = 'key' | 'model' | 'limit' | 'refused' | 'unreachable'
+type Problem = 'key' | 'model' | 'credit' | 'rate' | 'busy' | 'request' | 'limit' | 'often' | 'refused' | 'unreachable'
 
 const KEY_PAGES: Record<Provider, string> = {
   anthropic: 'https://console.anthropic.com/settings/keys',
   openai: 'https://platform.openai.com/api-keys',
 }
 
-const PROBLEMS: Problem[] = ['key', 'model', 'limit', 'refused', 'unreachable']
+const PROBLEMS: Problem[] = ['key', 'model', 'credit', 'rate', 'busy', 'request', 'limit', 'refused', 'unreachable']
 
 /** What went wrong, from an error of the server's AI routes. */
 export function aiProblem(e: unknown): Problem {
   if (!(e instanceof ApiError)) return 'unreachable'
   if (PROBLEMS.includes(e.reason as Problem)) return e.reason as Problem
-  return e.status === 429 ? 'limit' : 'unreachable'
+  // Propario's own brake on asking, not the provider's limit.
+  return e.code === 'rate-limited' ? 'often' : 'unreachable'
 }
 
 /**
- * Settings → Your AI (server/ai.ts): connect Claude or ChatGPT with an API key, choose the model,
- * remove it. The key goes to the server once and never comes back; the demo has no server and so
- * no AI of its own.
+ * The message for a failed request to one's own AI: what it means and what to do; for the cases
+ * it cannot name, also what the provider said.
+ */
+export function aiMessage(e: unknown, problems: Record<Problem, string>): string {
+  const problem = aiProblem(e)
+  const detail = e instanceof ApiError ? e.detail : ''
+  return detail && ['request', 'limit', 'unreachable'].includes(problem) ? `${problems[problem]} (${detail})` : problems[problem]
+}
+
+/**
+ * Settings → Your AI (server/ai.ts): first whether to ask one's own AI from Propario at all – off
+ * unless switched on; copying for one's AI works either way. On: connect Claude or ChatGPT with an
+ * API key, choose the model, remove it. Off again forgets the key. The key goes to the server once
+ * and never comes back; the demo has no server and so no AI of its own.
  */
 export function AiSection() {
   const { m } = useI18n()
@@ -37,6 +52,8 @@ export function AiSection() {
   const [models, setModels] = useState<string[]>([])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const on = useSettings().useAi === true
+  const confirm = useConfirm()
 
   useEffect(() => {
     if (isDemo()) return
@@ -61,17 +78,34 @@ export function AiSection() {
       setCurrent(await api<AiSettings>('/api/me/ai', { method: 'PUT', body, timeoutMs: 60_000 }))
       setKey('')
     } catch (e) {
-      setError(m.ai.problem[aiProblem(e)])
+      setError(aiMessage(e, m.ai.problem))
     } finally {
       setBusy(false)
     }
   }
 
+  const switchTo = async (next: boolean) => {
+    if (next === on) return
+    if (!next && current && !(await confirm({ title: t.offTitle, text: t.offConfirm, confirmLabel: t.off, danger: true }))) return
+    await saveSettings({ useAi: next })
+    // The server forgets the key when switched off.
+    if (!next) setCurrent(null)
+  }
+
   return (
     <section className="panel stack" aria-labelledby={`${id}-title`}>
       <h2 id={`${id}-title`}>{t.title}</h2>
-      <p className="muted small">{t.hint}</p>
-      {current ? (
+      <div className="seg" role="group" aria-label={t.use}>
+        <button type="button" aria-pressed={!on} onClick={() => void switchTo(false)}>
+          {t.off}
+        </button>
+        <button type="button" aria-pressed={on} onClick={() => void switchTo(true)}>
+          {t.on}
+        </button>
+      </div>
+      <p className="muted small">{on ? t.hint : t.offHint}</p>
+      {on && <p className="small ai-subscription">{t.subscription}</p>}
+      {!on ? null : current ? (
         <>
           <p>{t.connected(t.providers[current.provider], current.keyHint)}</p>
           <div className="row ai-model">

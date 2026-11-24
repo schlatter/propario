@@ -7,11 +7,14 @@ export class ApiError extends Error {
   code: string
   /** Why, when the server says more (e.g. what one's own AI answered: server/ai.ts). */
   reason: string
-  constructor(status: number, code: string, reason = '') {
+  /** The server's own words for it, e.g. what a provider answered. */
+  detail: string
+  constructor(status: number, code: string, reason = '', detail = '') {
     super(code)
     this.status = status
     this.code = code
     this.reason = reason
+    this.detail = detail
   }
 }
 
@@ -51,7 +54,8 @@ export async function api<T = unknown>(path: string, init: { method?: string; bo
   if (!res.ok) {
     const code = (data as { error?: string }).error ?? `http-${res.status}`
     if (res.status === 401 && code === 'signed-out') onSignedOut()
-    throw new ApiError(res.status, code, String((data as { reason?: unknown }).reason ?? ''))
+    const { reason, detail } = data as { reason?: unknown; detail?: unknown }
+    throw new ApiError(res.status, code, String(reason ?? ''), typeof detail === 'string' ? detail : '')
   }
   return data as T
 }

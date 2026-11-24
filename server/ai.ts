@@ -25,13 +25,23 @@ export interface AiConfig {
 /** What the browser may see: never the key, only its last characters. */
 export type AiSettings = { provider: Provider; model: string; keyHint: string } | null
 
-export type AiProblem = 'key' | 'model' | 'limit' | 'refused' | 'unreachable'
+/**
+ * Why one's own AI did not answer, as precisely as the provider tells: the key; the model; no
+ * credit on the API account (a chat subscription does not include the API); the per-minute limit
+ * of the API account; the provider overloaded; a request it could not handle; a refusal; not
+ * reachable. `limit` is a limit the provider did not name.
+ */
+export type AiProblem = 'key' | 'model' | 'credit' | 'rate' | 'busy' | 'request' | 'limit' | 'refused' | 'unreachable'
 
 export class AiError extends Error {
   reason: AiProblem
+  /** What the provider said, e.g. "429 insufficient_quota: You exceeded …" – shown to the person, logged. */
+  detail: string
   constructor(reason: AiProblem, detail = '') {
     super(detail ? `${reason}: ${detail}` : reason)
     this.reason = reason
+    // Providers may quote part of a key back ("Incorrect API key provided: sk-…"); it stays out.
+    this.detail = detail.replace(/\b(sk|key)-[\w*.-]{4,}/gi, '…').slice(0, 300)
   }
 }
 
@@ -43,6 +53,9 @@ export function useTransport(f: typeof fetch | null): void {
 
 const TIMEOUT_MS = 180_000
 const MAX_TOKENS = 16_000
+
+/** Whether the person switched on asking their own AI from here (Settings → Your AI). Off by default. */
+export const aiOn = (settings: Record<string, unknown>): boolean => settings.useAi === true
 
 export function getAi(db: DB, userId: string): AiConfig | null {
   const row = db.prepare('SELECT ai FROM users WHERE id = ?').get(userId) as { ai: string } | undefined
@@ -77,10 +90,15 @@ const claude = (c: AiConfig) => new Anthropic({ apiKey: c.key, fetch: transport,
 
 function claudeError(e: unknown): AiError {
   if (e instanceof AiError) return e
-  if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError) return new AiError('key')
-  if (e instanceof Anthropic.NotFoundError || e instanceof Anthropic.BadRequestError) return new AiError('model', e.message)
-  if (e instanceof Anthropic.RateLimitError) return new AiError('limit')
-  return new AiError('unreachable', e instanceof Error ? e.message : '')
+  const detail = e instanceof Error ? e.message : ''
+  if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError) return new AiError('key', detail)
+  if (e instanceof Anthropic.NotFoundError) return new AiError('model', detail)
+  // "Your credit balance is too low to access the Anthropic API."
+  if (e instanceof Anthropic.BadRequestError) return new AiError(/credit balance/i.test(detail) ? 'credit' : 'request', detail)
+  if (e instanceof Anthropic.RateLimitError) return new AiError('rate', detail)
+  // 529: overloaded; other 5xx: trouble on their side.
+  if (e instanceof Anthropic.APIError && typeof e.status === 'number' && e.status >= 500) return new AiError('busy', detail)
+  return new AiError('unreachable', detail)
 }
 
 async function claudeModels(c: AiConfig): Promise<string[]> {
@@ -136,8 +154,15 @@ const OPENAI = 'https://api.openai.com/v1'
 const OPENAI_CHAT = /^(gpt-|o\d|chatgpt-)/
 const OPENAI_OTHER = /(audio|realtime|tts|transcribe|image|embedding|moderation|instruct|search|codex|dall-e|whisper)/
 
-const reasonFor = (status: number): AiProblem =>
-  status === 401 || status === 403 ? 'key' : status === 400 || status === 404 ? 'model' : status === 429 ? 'limit' : 'unreachable'
+function reasonFor(status: number, code = ''): AiProblem {
+  if (status === 401 || status === 403) return 'key'
+  if (status === 404 || code === 'model_not_found') return 'model'
+  // OpenAI answers 429 both for an empty balance and for too much per minute; the code tells.
+  if (code === 'insufficient_quota') return 'credit'
+  if (status === 429) return code === 'rate_limit_exceeded' ? 'rate' : 'limit'
+  if (status === 400) return 'request'
+  return status >= 500 ? 'busy' : 'unreachable'
+}
 
 async function openai(c: AiConfig, path: string, body?: unknown): Promise<unknown> {
   let res: Response
@@ -151,8 +176,11 @@ async function openai(c: AiConfig, path: string, body?: unknown): Promise<unknow
   } catch (e) {
     throw new AiError('unreachable', e instanceof Error ? e.message : '')
   }
-  const data = (await res.json().catch(() => null)) as { error?: { message?: string } } | null
-  if (!res.ok) throw new AiError(reasonFor(res.status), data?.error?.message?.slice(0, 200) ?? '')
+  const data = (await res.json().catch(() => null)) as { error?: { message?: string; code?: string; type?: string } } | null
+  if (!res.ok) {
+    const e = data?.error
+    throw new AiError(reasonFor(res.status, e?.code ?? e?.type), [`${res.status}`, e?.code ?? e?.type, e?.message].filter(Boolean).join(' · '))
+  }
   return data
 }
 

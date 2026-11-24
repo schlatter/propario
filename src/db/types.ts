@@ -284,6 +284,8 @@ export interface Settings {
   whatsNew?: boolean
   /** The last release whose notes this person has seen. */
   seenRelease?: string
+  /** Ask one's own AI from Propario with an API key (server/ai.ts); off unless switched on. */
+  useAi?: boolean
 }
 
 export interface BackupFile {

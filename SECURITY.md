@@ -37,7 +37,8 @@ happens.** Every change is measured against this list; `npm run verify` checks m
   address in 10 minutes, same origin only.
 - People can download everything they can see and delete their account themselves; deletion
   takes the comparisons they own along.
-- One's own AI (`server/ai.ts`) is optional and per account. The API key is sealed with the
+- One's own AI (`server/ai.ts`) is optional, per account and off until its person switches it on
+  (`settings.useAi`, checked by the server); switching it off deletes the key. The API key is sealed with the
   account (`users.ai`), never sent back to the browser (only its last four characters), not part
   of the backups people download (server snapshots keep it sealed) and deleted with the
   account. A comparison goes to the provider only when its

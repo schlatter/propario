@@ -8,7 +8,7 @@ import { openDatabase, type DB } from './db.ts'
 import { loadConfig } from './env.ts'
 import { useKey } from './crypto.ts'
 import { resetRateLimits } from './ratelimit.ts'
-import { consumeInvite, createInvite, createSession, createUser, inviteValid, sessionUser, SESSION_IDLE_MS, useRecoveryKey } from './users.ts'
+import { consumeInvite, createInvite, createSession, createUser, saveSettings, inviteValid, sessionUser, SESSION_IDLE_MS, useRecoveryKey } from './users.ts'
 import { registrationGrant } from './webauthn.ts'
 import { newId } from '../src/shared/ids.ts'
 
@@ -231,6 +231,7 @@ describe('one’s own AI', () => {
     const grace = newId()
     createUser(db, { id: ada, name: 'Ada', isAdmin: true })
     createUser(db, { id: grace, name: 'Grace', isAdmin: false })
+    saveSettings(db, ada, { useAi: true })
     const cookie = `propario=${createSession(db, ada)}`
     const res = await send('PUT', '/api/me/ai', { provider: 'anthropic', key }, cookie)
     expect(res.status).toBe(200)
@@ -250,15 +251,32 @@ describe('one’s own AI', () => {
     models()
     const ada = newId()
     createUser(db, { id: ada, name: 'Ada', isAdmin: true })
+    saveSettings(db, ada, { useAi: true })
     const cookie = `propario=${createSession(db, ada)}`
     useTransport((async () => Response.json({ type: 'error', error: { type: 'authentication_error', message: 'no' } }, { status: 401 })) as typeof fetch)
     const res = await send('PUT', '/api/me/ai', { provider: 'anthropic', key }, cookie)
     expect(res.status).toBe(400)
-    expect(await res.json()).toEqual({ error: 'ai', reason: 'key' })
+    expect(await res.json()).toMatchObject({ error: 'ai', reason: 'key' })
     expect(await (await api('/api/me/ai', { headers: { cookie } })).json()).toBeNull()
     expect((await send('POST', '/api/ai/ask', { text: 'Which one?' }, cookie)).status).toBe(400)
     expect((await send('PUT', '/api/me/ai', { provider: 'other', key }, cookie)).status).toBe(400)
   })
+  it('stays off until its person switches it on, and switching off forgets the key', async () => {
+    models()
+    const ada = newId()
+    createUser(db, { id: ada, name: 'Ada', isAdmin: true })
+    const cookie = `propario=${createSession(db, ada)}`
+    // Off by default: no key is taken, nothing is asked.
+    expect((await send('PUT', '/api/me/ai', { provider: 'anthropic', key }, cookie)).status).toBe(403)
+    expect((await send('POST', '/api/ai/ask', { text: 'Which one?' }, cookie)).status).toBe(403)
+    expect((await send('PATCH', '/api/me', { settings: { useAi: true } }, cookie)).status).toBe(200)
+    expect((await send('PUT', '/api/me/ai', { provider: 'anthropic', key }, cookie)).status).toBe(200)
+    expect(await (await api('/api/me/ai', { headers: { cookie } })).json()).toMatchObject({ provider: 'anthropic' })
+    expect((await send('PATCH', '/api/me', { settings: { useAi: false } }, cookie)).status).toBe(200)
+    expect(await (await api('/api/me/ai', { headers: { cookie } })).json()).toBeNull()
+    expect((await send('POST', '/api/ai/ask', { text: 'Which one?' }, cookie)).status).toBe(403)
+  })
+
   it('is gone when the instance switches it off', async () => {
     env = { PROPARIO_AI: 'off' }
     const ada = newId()
