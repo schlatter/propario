@@ -48,9 +48,10 @@ and more: Propario lays out the facts nicely and helps you reach a better decisi
   ranking stands. On a phone, AR puts them right into your room.
 - **Decide together.** Your rankings become one joint ranking – its first place can become your
   decision. Then the purchase, returns and warranty in view.
-- **With your AI, if you like.** “Find and ask” searches the shops for more products – or hands
-  the comparison to the assistant you already use, for suggestions or your own question. Its
-  answer comes back as a table and updates your products – you see every change first.
+- **Find more – with your AI, if you like.** “Find and ask” searches shops, price comparisons,
+  Kleinanzeigen and mydealz for more products – or hands the comparison to the AI you already
+  use; any subscription will do. What it suggests comes back as products – you see every change
+  first.
 
 Also: offers from several shops and ratings from tests and reviews on one scale; a table that
 works like a spreadsheet, with filters and queries; Excel, CSV and Markdown import and export;
