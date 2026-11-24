@@ -5,21 +5,30 @@
 <h1 align="center">Propario</h1>
 
 <p align="center">
-  <strong>Compare faster, decide better.</strong><br>
-  Self-hosted · private by default · free software
+  <strong>Compare faster, decide better.</strong>
 </p>
 
 <p align="center">
-  <a href="https://github.com/schlatter/propario/actions/workflows/ci.yml"><img src="https://github.com/schlatter/propario/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/self-hosted-dark.svg"><img src="docs/images/readme/self-hosted-light.svg" height="24" alt="Self-hosted"></picture>&emsp;<picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/private-dark.svg"><img src="docs/images/readme/private-light.svg" height="24" alt="Private by default"></picture>&emsp;<picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/passkeys-dark.svg"><img src="docs/images/readme/passkeys-light.svg" height="24" alt="Passkeys"></picture>&emsp;<picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/free-software-dark.svg"><img src="docs/images/readme/free-software-light.svg" height="24" alt="Free software"></picture>
+</p>
+
+<p align="center">
+  <a href="https://github.com/schlatter/propario/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/schlatter/propario/ci.yml?branch=main&label=CI" alt="CI"></a>
   <a href="https://github.com/schlatter/propario/releases/latest"><img src="https://img.shields.io/github/v/release/schlatter/propario?label=release&color=1f7a80" alt="Latest release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-1f7a80" alt="License: AGPL-3.0"></a>
+  <a href="https://github.com/schlatter/propario/pkgs/container/propario"><img src="https://img.shields.io/badge/container-ghcr.io-1f7a80" alt="Container image on ghcr.io"></a>
 </p>
 
 <p align="center">
+  <a href="https://schlatter.github.io/propario/demo/"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/demo-dark.svg"><img src="docs/images/readme/demo-light.svg" height="30" alt="Try the demo – right in your browser" align="absmiddle"></picture></a>&ensp;
   <a href="https://schlatter.github.io/propario/">Website</a> ·
   <a href="docs/user-guide.md">User guide</a> ·
-  <a href="docs/self-hosting.md">Self-hosting</a> ·
+  <a href="docs/self-hosting.md">Self‑hosting</a> ·
   <a href="CONTRIBUTING.md">Contributing</a>
+</p>
+
+<p align="center">
+Forget endless lists and a thousand open tabs. Whatever the purchase – sideboard, laptop, bike and more: Propario lays out the facts nicely and helps you reach a better decision, faster.
 </p>
 
 <picture>
@@ -27,12 +36,14 @@
   <img src="docs/images/table-light.png" alt="A comparison of six sideboards in Propario: pictures, prices against the budget, requirements met and not met, fit and everyone's verdicts.">
 </picture>
 
-Forget endless lists and a thousand open tabs. Whatever the purchase – sideboard, laptop, bike
-and more: Propario lays out the facts nicely and helps you reach a better decision, faster.
-
 ## How it works
 
-<img src="docs/images/how-it-works.svg" width="880" alt="How you decide with Propario: 1 One link is enough, 2 Define your requirements, 3 Side by side, not all over the place, 4 Sort out quickly, 5 Settle it in duels, 6 Decide together.">
+<picture>
+  <source media="(max-width: 640px) and (prefers-color-scheme: dark)" srcset="docs/images/readme/how-it-works-narrow-dark.svg">
+  <source media="(max-width: 640px)" srcset="docs/images/readme/how-it-works-narrow-light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/how-it-works-dark.svg">
+  <img src="docs/images/readme/how-it-works-light.svg" width="888" alt="How you decide with Propario: 1 One link is enough, 2 Define your requirements, 3 Side by side, not all over the place, 4 Sort out quickly, 5 Settle it in duels, 6 Decide together.">
+</picture>
 
 ## What it does
 
@@ -57,6 +68,17 @@ Also: offers from several shops and ratings from tests and reviews on one scale;
 works like a spreadsheet, with filters and queries; Excel, CSV and Markdown import and export;
 an installable app that takes products shared from shop apps; English and German, light and
 dark; backups of everything you can see, pictures included.
+
+## Why Propario?
+
+|                                                    |  Spreadsheet  | Bookmarks and open tabs | Propario |
+| -------------------------------------------------- | :-----------: | :---------------------: | :------: |
+| Picture, price and dimensions from a shop link     |    by hand    |            –            |    ✓     |
+| Every product checked against your requirements    | with formulas |            –            |    ✓     |
+| Sizes to scale – side by side, in 3D, in your room |       –       |            –            |    ✓     |
+| Everyone’s verdict, one joint ranking              |    by hand    |            –            |    ✓     |
+| Finding more products, with or without AI          |       –       |         by hand         |    ✓     |
+| Your data on your own server, encrypted            |    depends    |            –            |    ✓     |
 
 ## Private, safe, yours
 
@@ -85,6 +107,37 @@ docker compose logs app                              # shows the one-time setup 
 
 Open the setup link, choose a name and create your passkey. For a real instance with HTTPS,
 backups and updates, read [Self-hosting](docs/self-hosting.md).
+
+## Questions
+
+<details>
+  <summary>Is there a hosted version I can sign up for?</summary>
+  <p>No. Propario is meant to run on your own server, for a household or a group of friends. If someone you know runs an instance, ask them for an invitation.</p>
+</details>
+<details>
+  <summary>What do I need to run it?</summary>
+  <p>Docker on a small server or a computer at home. To use it beyond <code>localhost</code>, a hostname with HTTPS – passkeys require it. It works well behind a VPN, without any public exposure.</p>
+</details>
+<details>
+  <summary>Which shops does it work with?</summary>
+  <p>Any shop page that states its product's picture, name or price in a common format. For shops that refuse automated access, Propario takes what the link itself says and you add the rest.</p>
+</details>
+<details>
+  <summary>Does it need AI?</summary>
+  <p>No. Everything works without it. If you like, “Find and ask” hands a comparison to the AI you already use, and its answer comes back only after you have seen every change.</p>
+</details>
+<details>
+  <summary>Can I use my ChatGPT Plus or Claude Pro subscription?</summary>
+  <p>Yes, by copying: “Find and ask” copies the comparison for your chat and takes its answer back. Asking from within Propario needs an API key with credit from the provider – a chat subscription does not include one.</p>
+</details>
+<details>
+  <summary>Can I bring my existing spreadsheets?</summary>
+  <p>Yes. Excel, CSV and Markdown tables are imported with a preview of every column; unknown columns become fields, nothing is dropped. You can export to Excel and JSON at any time.</p>
+</details>
+<details>
+  <summary>What does it cost?</summary>
+  <p>Nothing. Propario is free software under the AGPL-3.0. If you run a modified version for others, they are entitled to its source.</p>
+</details>
 
 ## Documentation
 
