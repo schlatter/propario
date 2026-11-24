@@ -6,18 +6,15 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Unreleased
 
-- Added: a demo on the website that runs in the browser alone – no installation, nothing saved.
-- Changed: the line is now “Compare faster, decide better.”
-
-- Added: Settings and the start page link to the user guide and the source code.
-
-- Added: a website, a user guide and a self-hosting guide; the README now shows what Propario
-  does, with pictures from the demo.
-
-- Changed: the container runs on Node.js 26. Docker is the one supported way to run Propario.
+## 0.18.0 — 2026-11-24
 
 - Added: every release comes with a ready-made container image on ghcr.io and release notes on
   GitHub; self-hosters can run a fixed version instead of building from source.
+- Added: a website with a demo that runs in the browser alone – no installation, nothing saved –
+  a user guide and a self-hosting guide; the README shows what Propario does.
+- Added: Settings and the start page link to the user guide and the source code.
+- Changed: the line is now “Compare faster, decide better.”
+- Changed: the container runs on Node.js 26. Docker is the one supported way to run Propario.
 
 ## 0.17.3 — 2026-11-22
 
