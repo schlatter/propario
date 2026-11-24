@@ -23,6 +23,9 @@ one in [AGENTS.md](../AGENTS.md): Propario works without it, and AI only propose
 
 ## Later
 
+- **A short video in the README** – 10–15 seconds from a link to a decision: paste, swipe, duel,
+  decide – and **a row of phone pictures** (swipe, duel, the room view) with one line each; after
+  [#11](https://github.com/schlatter/propario/issues/11).
 - **A local AI** (Ollama, LM Studio …) for the whole instance, its address set by whoever runs
   it – not typed in by people, so the server cannot be pointed elsewhere.
 - **Propario as a connector in ChatGPT or Claude** (MCP), so a chat subscription can work with a
