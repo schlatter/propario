@@ -92,6 +92,10 @@ Rules:
   them there, never in the SVGs.
 - Icons are our own simple line glyphs ([`src/ui/Glyph.tsx`](../src/ui/Glyph.tsx)); no icon
   library, no emoji as icons.
+- The README's pictures ([`scripts/readme-art.ts`](../scripts/readme-art.ts)) may use fuller
+  symbols – our own drawings on a 24 grid with stroke 2 and round ends; never copied from an icon
+  set (that would need its license notice). A README stands on its own; the app keeps its glyphs.
+  Change them there, never in the SVGs.
 
 ## Voice
 
