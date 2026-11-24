@@ -1,0 +1,34 @@
+# Roadmap – ideas, not promises
+
+A loose collection of what might come next, sorted by how soon it seems sensible. Nothing here is
+a commitment, and anything may move, change or be dropped. What is decided goes into an issue;
+what is done goes into [CHANGELOG.md](../CHANGELOG.md). The rule for anything with AI stays the
+one in [AGENTS.md](../AGENTS.md): Propario works without it, and AI only proposes.
+
+## Now
+
+- Fix the phone picture of the product details, which shows an enlarged picture on top
+  ([#11](https://github.com/schlatter/propario/issues/11)).
+
+## Next
+
+- **Test the path with a connected AI end to end** – asking, the answer, ticking its links,
+  taking its table – with the server's answers faked in the browser, so it costs no tokens. The
+  provider side is already tested with a stand-in (`server/ai.test.ts`).
+- **A price limit for more shops** in "Find and ask", once a shop's search address for it is
+  documented or stable (today: eBay and Kleinanzeigen).
+- **Tests and best lists** – Stiftung Warentest and similar – as a source in "Find and ask".
+- **From a question to a filter:** the AI turns "less than 40 cm deep" into the Advanced filter's
+  query; only the field names go to it, the filtering stays Propario's.
+
+## Later
+
+- **A local AI** (Ollama, LM Studio …) for the whole instance, its address set by whoever runs
+  it – not typed in by people, so the server cannot be pointed elsewhere.
+- **Propario as a connector in ChatGPT or Claude** (MCP), so a chat subscription can work with a
+  comparison – needs the instance reachable from the internet and a sign-in for the connector.
+- **"Sign in with ChatGPT"** with one's subscription, should OpenAI open it beyond selected
+  partners.
+- **Exploring with an agent before a release**, writing what it finds as ordinary Playwright
+  tests that then run without any AI (the idea behind
+  [explore-compile-replay](https://github.com/pierridotite/explore-compile-replay)).
