@@ -9,8 +9,9 @@ true when a change makes them wrong, and renew the pictures with `npm run screen
 and the app's start page tell one story in the start page's words (`overview` in `src/i18n/en.ts`;
 `tests/docs-consistency.test.ts` checks it): the README in more text, website and start page in pictures.
 
-**Vision:** every bigger purchase becomes a good decision, made together – without spreadsheet
-chaos, without advertising, and without anyone else owning your data. Decide in doubt by it.
+**Vision:** every bigger purchase becomes a good decision – on your own or together – without
+spreadsheet chaos, without advertising, and without anyone else owning your data. Decide in doubt
+by it.
 
 ## Principles, in order
 

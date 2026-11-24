@@ -6,21 +6,14 @@ one of them.
 
 ## Vision
 
-**Every bigger purchase becomes a good decision, made together – without spreadsheet chaos,
-without advertising, and without anyone else owning your data.**
-
-_Jede größere Anschaffung wird eine gute, gemeinsame Entscheidung – ohne Tabellenchaos, ohne
-Werbung und ohne dass die eigenen Daten jemand anderem gehören._
+**Every bigger purchase becomes a good decision – on your own or together – without spreadsheet
+chaos, without advertising, and without anyone else owning your data.**
 
 ## Mission
 
-**Propario turns scattered links, data sheets and opinions into one clear comparison: set
-your requirements, check the candidates calmly, decide together. Self-hosted, private,
-fast and accessible – and with as little effort as possible.**
-
-_Propario macht aus verstreuten Links, Datenblättern und Meinungen einen klaren Vergleich:
-Anforderungen festlegen, Kandidaten in Ruhe prüfen, gemeinsam entscheiden. Selbst gehostet,
-privat, schnell und barrierefrei – und mit so wenig Aufwand wie möglich._
+**Propario turns scattered links, data sheets and opinions into one clear comparison: set your
+requirements, compare the candidates quickly and calmly, and decide – alone or with the people
+it concerns. Self-hosted, private, fast and accessible – and with as little effort as possible.**
 
 ## What we hold to
 
@@ -36,10 +29,11 @@ privat, schnell und barrierefrei – und mit so wenig Aufwand wie möglich._
 
 ## Brand
 
-- **Name:** Propario – from _pro_ (for, in favour of) and _comparare_ (to compare). Written
-  with a capital P, never in capitals, never with a tagline glued to it.
-- **Line:** _Compare faster, decide better._ / _Schneller vergleichen, besser entscheiden._ The
-  same words everywhere – the start page's title, the README, the website, the app's manifest.
+- **Name:** Propario – a blend of the Latin _productum_ (product) and _comparare_ (to compare).
+  Written with a capital P, never in capitals, never with a tagline glued to it.
+- **Line:** _Compare faster, decide better._ The same words everywhere – the start page's title,
+  the README, the website, the app's manifest; translations take theirs from
+  `overview.title` in their language file.
 - **Character:** a well-made tool – precise, calm, friendly, a little warm. It feels like a
   good workbench, not like a shop and not like a finance app.
 
@@ -101,13 +95,14 @@ Rules:
 
 ## Voice
 
-- Plain, short, friendly; German with _du_. Say what happens: "Add product", "3 added,
-  1 updated".
+- Plain, short, friendly. Say what happens: "Add product", "3 added, 1 updated".
+- **Languages:** English is the source – of every text (`src/i18n/en.ts`), the docs and the code.
+  German is the first translation (`src/i18n/de.ts`) and addresses people informally.
 - Name things as people know them: _comparison_, _product_, _requirement_ – not the code's
   words ([GLOSSARY.md](../GLOSSARY.md)).
 - **One action, one name.** The same action has the same label and symbol wherever it appears –
-  "Details aktualisieren" in the details and for several products, "Duplizieren", "Löschen",
-  "Bild hinzufügen". People recognise it at once, and one text key means one place to change:
+  "Update details" in the details and for several products, "Duplicate", "Delete", "Add
+  picture". People recognise it at once, and one text key means one place to change:
   reuse the existing key (`common.*` for actions found in several places) instead of adding a
   second one with the same words. Buttons of one bar share one style.
 - Errors say what went wrong and what to do. No blame, no exclamation marks, no jokes in

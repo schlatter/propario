@@ -10,7 +10,7 @@ page – its comparisons are invented and stay in your browser tab.
 - [Products](#products)
 - [Fields](#fields)
 - [Requirements](#requirements)
-- [Deciding together](#deciding-together)
+- [Deciding](#deciding)
 - [Sharing](#sharing)
 - [Importing tables and working with your AI](#importing-tables-and-working-with-your-ai)
 - [Backup and restore](#backup-and-restore)
@@ -113,9 +113,10 @@ requirement at a glance.
 
 ![Requirements with priorities and automatic checks, and the overview of which product meets which.](images/requirements-light.png)
 
-## Deciding together
+## Deciding
 
-Everyone on a comparison judges for themselves; Propario brings it together.
+On your own or with others: everyone on a comparison judges for themselves, and Propario brings
+their judgements together.
 
 - **Selection:** each product is _Open_, _Checked_ or _Excluded_. Excluding asks for a reason
   (looks, size, price, brand, shop, quality, reviews, other), which you can filter by later.
@@ -188,7 +189,7 @@ Propario installs as an app: on Android choose **Install app**, on iPhone **Shar
 Screen**. Installed, a product link shared from a shop app can go straight into a comparison:
 **Share → Propario**, then pick the comparison.
 
-![A product's details on a phone: its picture, price, dimensions and fields.](images/phone-details-light.png)
+<img src="images/phone-details-light.png" width="280" alt="A product's details on a phone: its picture, price, dimensions and fields.">
 
 ## When something does not work
 
