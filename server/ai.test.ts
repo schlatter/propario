@@ -76,6 +76,9 @@ describe('connecting one’s own AI', () => {
   it('tells an API account without credit – a chat subscription – from a per-minute limit', async () => {
     fake({ '/v1/responses': { status: 429, body: { error: { code: 'insufficient_quota', message: 'You exceeded your current quota.' } } } })
     await expect(ask(chatgpt, 'x', false)).rejects.toMatchObject({ reason: 'credit' })
+    // As OpenAI answered a key without credit in a real test.
+    fake({ '/v1/responses': { status: 429, body: { error: { code: 'credit_balance_exhausted', message: 'You have no credits remaining.' } } } })
+    await expect(ask(chatgpt, 'x', false)).rejects.toMatchObject({ reason: 'credit' })
     fake({
       '/v1/messages': {
         status: 400,
