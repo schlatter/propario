@@ -40,7 +40,7 @@ function OutLink({ url, label }: { url: string; label: string }) {
 }
 
 /** Where to look further, as links under a section's heading; Propario adds no tracking. */
-function LookupRow({ links, label }: { links: LookupLink[]; label: string }) {
+export function LookupRow({ links, label }: { links: LookupLink[]; label: string }) {
   const { m } = useI18n()
   if (!links.length) return null
   return (

@@ -1,7 +1,7 @@
 /**
  * Schema migrations, applied in order. Append new ones; never edit a released migration.
  *
- * Record contents (`records.data`, `images.data`, `users.settings`) are encrypted at rest when
+ * Record contents (`records.data`, `images.data`, `users.settings`, `users.ai`) are encrypted at rest when
  * DATA_KEY is set (see crypto.ts). Only what the server needs to route and authorise stays in
  * clear: ids, the owning project, a change counter, roles.
  */
@@ -88,4 +88,6 @@ export const migrations: string[] = [
   CREATE TABLE counter (id INTEGER PRIMARY KEY CHECK (id = 1), seq INTEGER NOT NULL, pruned INTEGER NOT NULL);
   INSERT INTO counter VALUES (1, 0, 0);
   `,
+  // One's own AI (server/ai.ts): provider, model and API key, sealed; gone with the account.
+  `ALTER TABLE users ADD COLUMN ai TEXT NOT NULL DEFAULT '';`,
 ]

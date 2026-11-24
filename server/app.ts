@@ -3,6 +3,7 @@ import { randomBytes } from 'node:crypto'
 import type { AuthenticationResponseJSON, RegistrationResponseJSON } from '@simplewebauthn/server'
 import type { DB } from './db.ts'
 import type { Config } from './env.ts'
+import * as ai from './ai.ts'
 import { newToken } from './crypto.ts'
 import { allow } from './ratelimit.ts'
 import { encodeFacts, fetchProductImage, ImageFetchError } from './product-image.ts'
@@ -99,6 +100,13 @@ export interface App {
   handle: (req: IncomingMessage, res: ServerResponse, next: Next) => void
   /** One-time link for the first account while none exists (null afterwards). */
   setupLink: () => string | null
+}
+
+/** Why one's own AI did not answer: logged and told to its person – what went wrong, never what was asked. */
+function aiFailure(provider: string, e: unknown): { error: 'ai'; reason: ai.AiProblem; detail: string } {
+  const failure = e instanceof ai.AiError ? e : new ai.AiError('unreachable', e instanceof Error ? e.message : '')
+  console.error(`[ai] ${provider} ${failure.reason}${failure.detail ? ` – ${failure.detail}` : ''}`)
+  return { error: 'ai', reason: failure.reason, detail: failure.detail }
 }
 
 export function createApp(db: DB, config: Config, version: string | null = null): App {
@@ -253,6 +261,11 @@ export function createApp(db: DB, config: Config, version: string | null = null)
         const s = body.settings
         if (!s || typeof s !== 'object' || JSON.stringify(s).length > 20_000) throw new HttpError(400, 'settings')
         users.saveSettings(db, me.id, s as Record<string, unknown>)
+        // Switching one's own AI off also forgets its key: nothing is kept that is not used.
+        if (!ai.aiOn(s as Record<string, unknown>) && ai.getAi(db, me.id)) {
+          ai.setAi(db, me.id, null)
+          users.audit('ai-removed', me.id)
+        }
       }
       return send(res, 200, { ok: true })
     }
@@ -286,6 +299,68 @@ export function createApp(db: DB, config: Config, version: string | null = null)
       if (!users.removePasskey(db, me.id, passkeyMatch[1])) throw new HttpError(409, 'last-passkey')
       users.audit('passkey-removed', me.id)
       return send(res, 200, { ok: true })
+    }
+
+    // ---------- one's own AI (server/ai.ts) ----------
+    // Switched off for the instance: the routes are gone, and so is what was connected.
+    if (!config.ai && (path.startsWith('/api/me/ai') || path === '/api/ai/ask')) throw new HttpError(404, 'disabled')
+    if (path === '/api/me/ai' && method === 'GET') return send(res, 200, ai.aiSettings(ai.getAi(db, me.id)))
+    if (path === '/api/me/ai/models' && method === 'GET') {
+      const config = ai.getAi(db, me.id)
+      if (!config) throw new HttpError(404, 'no-ai')
+      limit(`ai-models:${me.id}`, 30, 600_000)
+      return send(res, 200, await ai.listModels(config).catch(() => []))
+    }
+    // Switched off by the person: no key is taken and nothing is asked (copying works regardless).
+    const aiAllowed = () => {
+      if (!ai.aiOn(users.getSettings(db, me.id))) throw new HttpError(403, 'ai-off')
+    }
+    if (path === '/api/me/ai' && method === 'PUT') {
+      aiAllowed()
+      limit(`ai-models:${me.id}`, 30, 600_000)
+      const body = await readJson(req, 4096)
+      const current = ai.getAi(db, me.id)
+      const provider = body.provider
+      if (!ai.isProvider(provider)) throw new HttpError(400, 'provider')
+      const model = body.model === undefined ? '' : ai.cleanModel(body.model)
+      if (model === null) throw new HttpError(400, 'model')
+      if (body.key === undefined) {
+        // Another model with the key already stored.
+        if (!current || current.provider !== provider || !model) throw new HttpError(400, 'key')
+        ai.setAi(db, me.id, { ...current, model })
+        return send(res, 200, ai.aiSettings({ ...current, model }))
+      }
+      const key = ai.cleanKey(body.key)
+      if (!key) throw new HttpError(400, 'key')
+      // Listing the models checks the key before it is kept.
+      let models: string[]
+      try {
+        models = await ai.listModels({ provider, key, model: '' })
+      } catch (e) {
+        return send(res, 400, aiFailure(provider, e))
+      }
+      const config = { provider, key, model: model && models.includes(model) ? model : ai.suggestModel(provider, models) }
+      ai.setAi(db, me.id, config)
+      users.audit('ai-connected', me.id, `provider=${provider}`)
+      return send(res, 200, ai.aiSettings(config))
+    }
+    if (path === '/api/me/ai' && method === 'DELETE') {
+      ai.setAi(db, me.id, null)
+      users.audit('ai-removed', me.id)
+      return send(res, 200, { ok: true })
+    }
+    if (path === '/api/ai/ask' && method === 'POST') {
+      aiAllowed()
+      const config = ai.getAi(db, me.id)
+      if (!config) throw new HttpError(400, 'no-ai')
+      limit(`ai:${me.id}`, 30, 600_000)
+      const body = await readJson(req, 1024 * 1024)
+      if (typeof body.text !== 'string' || !body.text.trim() || body.text.length > 500_000) throw new HttpError(400, 'text')
+      try {
+        return send(res, 200, { answer: await ai.ask(config, body.text, body.search === true) })
+      } catch (e) {
+        return send(res, 502, aiFailure(config.provider, e))
+      }
     }
 
     // ---------- people on this instance ----------

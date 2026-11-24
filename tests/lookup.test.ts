@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { makeProduct, makeRequirement } from '../src/db/factories'
-import { lookupLinks } from '../src/domain/lookup'
+import { lookupLinks, searchLinks, searchTerm } from '../src/domain/lookup'
 import { daysSince } from '../src/domain/values'
 import { summarize } from '../src/domain/requirements'
 import { cleanFacts, isValidGtin } from '../src/shared/product-facts'
@@ -44,6 +44,38 @@ describe('lookup links', () => {
     const old = { ...makeProduct('p', { model: 'S6' }) } as Record<string, unknown>
     delete old.gtin
     expect(lookupLinks(old as never)[0].href).toContain('S6')
+  })
+
+  it('searches the shops for any words to find more products, and for nothing when empty', () => {
+    expect(searchLinks(' Sideboard & Kommode ').shops.map((l) => [l.id, l.href])).toEqual([
+      ['google', 'https://www.google.com/search?udm=28&q=Sideboard%20%26%20Kommode'],
+      ['geizhals', 'https://geizhals.de/?fs=Sideboard%20%26%20Kommode'],
+      ['idealo', 'https://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q=Sideboard%20%26%20Kommode'],
+      ['amazon', 'https://www.amazon.de/s?k=Sideboard%20%26%20Kommode'],
+    ])
+    expect(searchLinks(' Sideboard & Kommode ').more.map((l) => [l.id, l.href])).toEqual([
+      ['ebay', 'https://www.ebay.de/sch/i.html?_nkw=Sideboard%20%26%20Kommode'],
+      ['kleinanzeigen', 'https://www.kleinanzeigen.de/s-Sideboard-%26-Kommode/k0'],
+      ['mydealz', 'https://www.mydealz.de/search?q=Sideboard%20%26%20Kommode'],
+    ])
+    expect(searchLinks('  ')).toEqual({ shops: [], more: [] })
+  })
+
+  it('passes a price limit only where the site’s address takes it, in whole euros', () => {
+    const { shops, more } = searchLinks('sideboard eiche', 799.5)
+    expect(shops.every((l) => !/800|799/.test(l.href))).toBe(true)
+    expect(more.map((l) => l.href)).toEqual([
+      'https://www.ebay.de/sch/i.html?_nkw=sideboard%20eiche&_udhi=800',
+      'https://www.kleinanzeigen.de/s-preis::800/sideboard-eiche/k0',
+      'https://www.mydealz.de/search?q=sideboard%20eiche',
+    ])
+    for (const none of [null, 0, -5, Number.NaN]) expect(searchLinks('x', none).more[0].href).not.toContain('_udhi')
+  })
+
+  it('searches first for the product type most products share, else the comparison’s name', () => {
+    const types = ['Sideboard', 'Lowboard', ' Sideboard ', ''].map((productType) => makeProduct('p', { productType }))
+    expect(searchTerm('Living room', types)).toBe('Sideboard')
+    expect(searchTerm(' Living room ', [makeProduct('p')])).toBe('Living room')
   })
 })
 

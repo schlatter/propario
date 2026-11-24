@@ -1,7 +1,8 @@
 /**
  * A comparison as plain text for one's own AI ("Copy for my AI"): requirements with their
  * priority, the budget, and every product with its price, fields, verdicts, outside ratings and
- * the notes everyone in the comparison sees – followed by a question. Nothing leaves Propario
+ * the notes everyone in the comparison sees – with a request: help to decide (the default), more
+ * products to look at, or the person's own question. Nothing leaves Propario
  * by itself; the person pastes it where they choose. Names of people are left out: ratings
  * appear as stars only.
  *
@@ -12,6 +13,7 @@ import type { Product, Project, PropertyDef, Requirement } from '../db/types'
 import type { Formatters } from '../i18n'
 import type { Messages } from '../i18n/en'
 import { isFavorite, statusOf } from './verdict.ts'
+import { linkKey, withoutTracking } from './links.ts'
 import { displayName, exclusionText, formatValue } from './display.ts'
 import { evaluate, OP_SYMBOL, type Summary } from './requirements.ts'
 import { reviewSummary } from './reviews.ts'
@@ -25,8 +27,8 @@ interface Input {
   summaries: Map<string, Summary>
 }
 
-export function comparisonForAi(d: Input, m: Messages, fmt: Formatters): string {
-  const lines: string[] = [`# ${d.project.name}${d.project.category ? ` (${d.project.category})` : ''}`, '', m.ai.prompt, '']
+export function comparisonForAi(d: Input, m: Messages, fmt: Formatters, request = m.ai.prompt): string {
+  const lines: string[] = [`# ${d.project.name}${d.project.category ? ` (${d.project.category})` : ''}`, '', request.trim() || m.ai.prompt, '']
   if (d.project.description) lines.push(d.project.description, '')
 
   const rule = (r: Requirement) => {
@@ -120,4 +122,43 @@ export function productTable(d: Pick<Input, 'products' | 'properties'>, m: Messa
   const cols = [...own, ...fields]
   const row = (cells: string[]) => `| ${cells.map(mdCell).join(' | ')} |`
   return [row(cols.map(([h]) => h)), `|${cols.map(() => ' --- |').join('')}`, ...d.products.map((p) => row(cols.map(([, get]) => get(p))))]
+}
+
+/**
+ * An AI's answer as the panel shows it: the prose to read – without Markdown's emphasis marks and
+ * without its table – and how many product rows the table has. The table itself is read only by
+ * "Add or update products".
+ */
+export function splitAnswer(text: string): { prose: string; rows: number } {
+  const lines = text.split('\n')
+  const table = lines.filter((l) => l.trim().startsWith('|'))
+  const prose = lines
+    .filter((l) => !l.trim().startsWith('|'))
+    .join('\n')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+  // Header and the |---| line are no products.
+  const rows = table.filter((l) => !/^\|[\s:|-]+\|$/.test(l.trim())).length - 1
+  return { prose, rows: Math.max(0, rows) }
+}
+
+const MAX_LINKS = 20
+
+/**
+ * The product links an answer names in its text – as it does after searching the web – that the
+ * comparison does not have yet: each once, without trailing punctuation, at most 20. Which of
+ * them are products the person decides; Propario then reads each page itself. Tracking
+ * parameters (utm_source=chatgpt.com …) are dropped.
+ */
+export function answerLinks(text: string, known: { url: string }[]): string[] {
+  const have = new Set(known.filter((p) => p.url).map((p) => linkKey(p.url)))
+  const out = new Map<string, string>()
+  for (const [raw] of text.matchAll(/https?:\/\/[^\s<>"'()[\]|]+/gi)) {
+    const url = raw.replace(/[.,;:!?*_]+$/, '')
+    const key = linkKey(url)
+    if (!have.has(key) && !out.has(key)) out.set(key, withoutTracking(url))
+    if (out.size >= MAX_LINKS) break
+  }
+  return [...out.values()]
 }

@@ -80,6 +80,7 @@ All settings are environment variables, usually set in `.env` next to `compose.y
 | `ADDRESS_HEADER`       | —                                   | Header with the visitor's address behind a trusted proxy (`X-Forwarded-For`).  |
 | `XFF_DEPTH`            | `1`                                 | Which entry of that header to trust, counted from the right.                   |
 | `PROPARIO_IMAGE_FETCH` | `on`                                | `off` stops the server from reading product pages for pictures and facts.      |
+| `PROPARIO_AI`          | `on`                                | `off`: nobody can connect their own AI (Claude, ChatGPT) on this instance.     |
 
 ## Backups
 

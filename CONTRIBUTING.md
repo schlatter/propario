@@ -91,6 +91,7 @@ npm run verify       # format check, types, unit tests, the whole story in a rea
 npm test             # unit and integration tests (server logic on in-memory SQLite)
 npm run test:e2e     # builds, starts the production server, runs e2e/ with passkeys and axe
 npm run screenshots  # renews docs/images/ from the demo, light and dark
+npm run test:visual:update  # keeps new pictures for the looks test (after npm run build)
 npm run build:demo   # the website's demo: only the demo, for /propario/demo/ (src/site.ts)
 ```
 
@@ -103,6 +104,13 @@ The end-to-end story runs axe on every page in both themes. Look at UI changes a
 desktop width, in light and dark, in English and German; after a visible change, run
 `npm run screenshots` and commit the pictures that changed. For container changes:
 `docker build .`.
+
+`e2e/visual.spec.ts` compares a few screens of the demo, on a fixed date, light and dark, with the
+pictures kept in `e2e/visual.spec.ts-snapshots/`: it catches what other tests do not see – things
+on top of each other, a panel too big for a phone. After a change meant to be seen, look at the
+new pictures, keep them with `npm run test:visual:update` and commit them.
+
+Ideas for later are collected, without promises, in [docs/roadmap.md](docs/roadmap.md).
 
 Checks against your own data, which never get committed:
 

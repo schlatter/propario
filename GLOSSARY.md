@@ -15,4 +15,6 @@ words for the same things, in their language file (`src/i18n/de.ts`).
 | Favourite                 | `favorites`                 | A person's own star on a product (old shared stars: `favorite`).             |
 | Verdict                   | `votes`                     | A person's 👍 · neutral · 👎 on a product.                                   |
 | Duel                      | `rankings` (`duel.ts`)      | Two products side by side; the better one moves up in that person's ranking. |
+| Find and ask              | `FindAndAsk`                | The panel bottom right: search shops for more products, or ask an AI.        |
+| Your AI                   | `ai` (`server/ai.ts`)       | A person's own Claude or ChatGPT, connected with an API key.                 |
 | —                         | `change`, `seq`             | A create/patch/delete sent to the server; the counter the browser syncs by.  |

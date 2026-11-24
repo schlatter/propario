@@ -6,6 +6,25 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Unreleased
 
+- Added: “Find and ask”, bottom right in every comparison: search Geizhals, idealo and Amazon
+  for more products and paste the link of what you found – or copy the comparison for your own
+  AI with a request for more products or your own question. Copying for your AI moved here
+  from the ⋯ menu (“Copy for my AI”).
+- Added: connect your own AI – off until you switch it on; then Claude or ChatGPT, with an API key under Settings → Your AI – and
+  “Find and ask” asks it right there: for more products, which it may look up on the web, or
+  your own question. The key is stored encrypted; nothing is sent until you ask. Self-hosters
+  can switch it off with `PROPARIO_AI=off`. Known limit: it needs an API key – a ChatGPT Plus or
+  Claude Pro subscription does not include one; with a subscription, copying in “Find and ask” works.
+- Added: “Find and ask” takes your AI’s answer back right in the panel: a table opens straight in
+  the preview of “Add or update products”; product links in it can be ticked and added, and
+  Propario reads each page itself. Copying can open ChatGPT or Claude at once.
+- Changed: “Find and ask” is smaller – two tabs, Search and Ask AI; the shops as short chips; hints
+  behind ⓘ; the button shows the Propario sign.
+- Added: Google Shopping, eBay, Kleinanzeigen and mydealz among the places “Find and ask”
+  searches; eBay and Kleinanzeigen up to a price, which starts at the budget.
+- Added: when your AI does not answer, Propario says why and what to do – no credit on the API
+  account, its per-minute limit, a deleted key, an overloaded provider.
+
 ## 0.18.0 — 2026-11-24
 
 - Added: every release comes with a ready-made container image on ghcr.io and release notes on

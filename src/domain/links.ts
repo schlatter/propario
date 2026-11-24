@@ -15,6 +15,17 @@ export function linkKey(url: string): string {
   }
 }
 
+/** The link without tracking parameters (utm_…, gclid …), as Propario keeps it; anything else unchanged. */
+export function withoutTracking(url: string): string {
+  try {
+    const u = new URL(url.trim())
+    for (const k of [...u.searchParams.keys()]) if (TRACKING.test(k)) u.searchParams.delete(k)
+    return u.href
+  } catch {
+    return url.trim()
+  }
+}
+
 export const sameLink = (a: string, b: string) => !!a && !!b && linkKey(a) === linkKey(b)
 
 /**

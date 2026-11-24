@@ -853,19 +853,47 @@ test('Ada moves rows and decides by swiping', async () => {
   await page.getByRole('button', { name: 'Delete', exact: true }).last().click()
   await page.getByRole('button', { name: 'Delete for good' }).click()
 
-  // "Copy for my AI": the comparison as text for one's own AI, without names of people.
-  await page.context().grantPermissions(['clipboard-read', 'clipboard-write'])
-  await page.getByRole('button', { name: 'More', exact: true }).first().click()
   // One "Export" entry opens the formats.
-  await expect(page.getByRole('button', { name: 'Copy for my AI' })).toHaveCount(0)
+  await page.getByRole('button', { name: 'More', exact: true }).first().click()
   await page.getByRole('button', { name: 'Export', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Export as Excel' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Export as JSON' })).toBeVisible()
-  await page.getByRole('button', { name: 'Copy for my AI' }).click()
+  await page.keyboard.press('Escape')
+
+  // "Find and ask", bottom right. Without AI: the shops' search for the comparison's name.
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write'])
+  await page.getByRole('button', { name: 'Find and ask' }).click()
+  const panel = page.getByRole('dialog', { name: 'Find and ask' })
+  await expect(panel.getByRole('searchbox', { name: 'Search for' })).toBeFocused()
+  await panel.getByRole('searchbox', { name: 'Search for' }).fill('wall cabinet')
+  await expect(panel.getByRole('link', { name: 'Geizhals' })).toHaveAttribute('href', 'https://geizhals.de/?fs=wall%20cabinet')
+  await expect(panel.getByRole('link', { name: 'idealo' })).toHaveAttribute('target', '_blank')
+  await expect(panel.getByRole('link', { name: 'Google' })).toHaveAttribute('href', 'https://www.google.com/search?udm=28&q=wall%20cabinet')
+  // Used and deals too; eBay and Kleinanzeigen search up to the price given.
+  await panel.getByRole('textbox', { name: 'Up to (€)' }).fill('300')
+  await expect(panel.getByRole('link', { name: 'Kleinanzeigen' })).toHaveAttribute('href', 'https://www.kleinanzeigen.de/s-preis::300/wall-cabinet/k0')
+  await expect(panel.getByRole('link', { name: 'eBay' })).toHaveAttribute('href', /_udhi=300$/)
+  await expect(panel.getByRole('link', { name: 'mydealz' })).toHaveAttribute('href', 'https://www.mydealz.de/search?q=wall%20cabinet')
+  // With one's own AI, on its own tab: a request for more products …
+  await panel.getByRole('tab', { name: 'Ask AI' }).click()
+  await expect(panel.getByRole('tab', { name: 'Ask AI' })).toHaveAttribute('aria-selected', 'true')
+  await expect(panel.getByRole('searchbox', { name: 'Search for' })).toHaveCount(0)
+  await panel.getByRole('button', { name: 'Find new products', exact: true }).click()
   await expect(page.getByText('Copied – paste it into the AI you use.')).toBeVisible()
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('Suggest up to 5 more products')
+  // … or one's own question; the comparison goes with it, without names of people.
+  await panel.getByRole('textbox', { name: 'Your question' }).fill('Which is the quietest?')
+  await panel.getByRole('button', { name: 'Copy question', exact: true }).click()
   const copied = await page.evaluate(() => navigator.clipboard.readText())
   expect(copied).toContain('# Kitchen cabinet')
+  expect(copied).toContain('Which is the quietest?')
   expect(copied).toContain('### Arvika')
+  // One's own AI is off unless switched on in Settings: then the panel only copies.
+  await expect(panel.getByText('Or connect your AI and ask right here:')).toHaveCount(0)
+  await expect(panel.getByRole('button', { name: 'Ask question' })).toHaveCount(0)
+  await page.keyboard.press('Escape')
+  await expect(panel).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Find and ask' })).toBeFocused()
 
   // The AI answers with the table from the copy: one product changed, one new. Pasted back, the
   // first updates its product and the second is added – after a preview.
@@ -876,10 +904,25 @@ test('Ada moves rows and decides by swiping', async () => {
   arvikaRow[cols.indexOf('Price')] = ' 244 '
   const newRow = cols.map((c) => (c === 'Model' ? ' Dora ' : c === 'Price' ? ' 299 ' : c === '' ? '' : ' '))
   const answer = `Here is the updated table:\n\n${header}\n${tableLines[tableLines.indexOf(header) + 1]}\n${arvikaRow.join('|')}\n${newRow.join('|')}\n\nGood luck!`
-  await page.getByRole('button', { name: 'More', exact: true }).first().click()
-  await page.getByRole('button', { name: 'Add or update products' }).click()
-  await page.getByLabel('Table', { exact: true }).fill(answer)
-  await page.getByRole('button', { name: 'Read table' }).click()
+  // Pasted back right in the panel. Which chat opens after copying is this device's choice. An
+  // answer with neither table nor links is turned away; product links in it can be ticked and
+  // added (Propario then reads each page itself); a table opens the preview, already read.
+  await page.getByRole('button', { name: 'Find and ask' }).click()
+  await panel.getByRole('tab', { name: 'Ask AI' }).click()
+  const openIn = panel.getByRole('combobox', { name: 'Open in' })
+  await openIn.selectOption('ChatGPT')
+  await expect(openIn).toHaveValue('ChatGPT')
+  await openIn.selectOption({ label: 'Don’t open' })
+  const pasteBox = panel.getByRole('textbox', { name: 'Its answer' })
+  await pasteBox.fill('Arvika fits best.')
+  await expect(panel.getByText('No table and no product links in it.')).toBeVisible()
+  await pasteBox.fill('Look at https://shop.example/dora?utm_source=chatgpt.com and https://shop.example/edda.')
+  await expect(panel.getByRole('group', { name: 'Links in the answer (2)' })).toBeVisible()
+  await expect(panel.getByRole('checkbox', { name: /shop\.example \/dora$/ })).toBeChecked()
+  await panel.getByRole('checkbox', { name: /edda/ }).uncheck()
+  await expect(panel.getByRole('button', { name: 'Add 1 product' })).toBeEnabled()
+  await pasteBox.fill(answer)
+  await panel.getByRole('button', { name: 'Take its table' }).click()
   await expect(page.getByRole('status').filter({ hasText: '1 new, 1 with changes' })).toBeVisible()
   await expect(page.locator('.merge-item.update')).toContainText('€244')
   await accessible(page, 'merge preview')
@@ -952,6 +995,20 @@ test('Ada moves rows and decides by swiping', async () => {
 test('Ada invites Grace, who joins and sees nothing that is not hers', async ({ browser }) => {
   const { page } = ada
   await go(page, 'Settings')
+  // One's own AI: off until switched on; on, it is connected with an API key (no provider is
+  // called in this story). Off again, nothing of it is left.
+  await expect(page.getByRole('heading', { name: 'Your AI' })).toBeVisible()
+  const aiSwitch = page.getByRole('group', { name: 'Ask your AI from Propario' })
+  await expect(aiSwitch.getByRole('button', { name: 'Off' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByLabel('API key')).toHaveCount(0)
+  await aiSwitch.getByRole('button', { name: 'On, with an API key' }).click()
+  await expect(page.getByRole('button', { name: 'Claude (Anthropic)' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByLabel('API key')).toHaveAttribute('type', 'password')
+  await expect(page.getByRole('button', { name: 'Connect' })).toBeDisabled()
+  await expect(page.getByText(/does not include an API key/)).toBeVisible()
+  await accessible(page, 'settings with your AI on')
+  await aiSwitch.getByRole('button', { name: 'Off' }).click()
+  await expect(page.getByLabel('API key')).toHaveCount(0)
   await accessible(page, 'settings')
   await expect(page.getByRole('link', { name: 'Source code' })).toHaveAttribute('href', 'https://github.com/schlatter/propario')
   await page.getByLabel('For whom (optional)').fill('Grace')
