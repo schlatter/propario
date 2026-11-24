@@ -11,6 +11,16 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.18.0',
+    notes: {
+      en: ['Settings and the start page link to the user guide and the source code.', 'A new line on the start page: “Compare faster, decide better.”'],
+      de: [
+        'Einstellungen und Startseite verlinken jetzt die Anleitung und den Quellcode.',
+        'Neue Zeile auf der Startseite: „Schneller vergleichen, besser entscheiden.“',
+      ],
+    },
+  },
+  {
     version: '0.17.3',
     notes: {
       en: ['In your room, a tap sets the product down right where you tap.'],
