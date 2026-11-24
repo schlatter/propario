@@ -158,7 +158,8 @@ function reasonFor(status: number, code = ''): AiProblem {
   if (status === 401 || status === 403) return 'key'
   if (status === 404 || code === 'model_not_found') return 'model'
   // OpenAI answers 429 both for an empty balance and for too much per minute; the code tells.
-  if (code === 'insufficient_quota') return 'credit'
+  // An empty balance has had two codes: insufficient_quota, and (seen in 2026) credit_balance_exhausted.
+  if (code === 'insufficient_quota' || code === 'credit_balance_exhausted') return 'credit'
   if (status === 429) return code === 'rate_limit_exceeded' ? 'rate' : 'limit'
   if (status === 400) return 'request'
   return status >= 500 ? 'busy' : 'unreachable'

@@ -11,6 +11,23 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.19.0',
+    notes: {
+      en: [
+        'New: “Find and ask” bottom right – find more products in shops, used and on deals.',
+        'Ask your AI: copy the comparison into ChatGPT or Claude, paste the answer back – any subscription.',
+        'Products from the answer come in with picture, price and dimensions read from the shop.',
+        'With an API key your AI answers right here – off until you switch it on in Settings.',
+      ],
+      de: [
+        'Neu: „Finden und fragen“ unten rechts – mehr Produkte finden, in Shops, gebraucht, als Schnäppchen.',
+        'KI fragen: Vergleich in ChatGPT oder Claude kopieren, Antwort zurück einfügen – mit jedem Abo.',
+        'Produkte aus der Antwort kommen mit Bild, Preis und Maßen direkt aus dem Shop.',
+        'Mit API-Schlüssel antwortet deine KI direkt hier – aus, bis du sie in den Einstellungen einschaltest.',
+      ],
+    },
+  },
+  {
     version: '0.18.0',
     notes: {
       en: ['Settings and the start page link to the user guide and the source code.', 'A new line on the start page: “Compare faster, decide better.”'],
