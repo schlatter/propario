@@ -43,4 +43,14 @@ describe('copy for my AI', () => {
     expect(text).toContain('### Bo – Excluded: Size · zu tief')
     expect(text).not.toContain('Ada')
   })
+
+  it('asks what the person asks instead – or, when that is empty, the default', () => {
+    const project = makeProject({ name: 'Sofa' })
+    const d = { project, products: [], properties: [], rules: [], propMap: new Map(), summaries: new Map() }
+    const own = comparisonForAi(d, en, fmt, en.ai.suggestPrompt)
+    expect(own).toContain(en.ai.suggestPrompt)
+    expect(own).not.toContain(en.ai.prompt)
+    expect(own).toContain(en.ai.tableHint)
+    expect(comparisonForAi(d, en, fmt, '  ')).toContain(en.ai.prompt)
+  })
 })

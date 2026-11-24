@@ -6,6 +6,11 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Unreleased
 
+- Added: “Find and ask”, bottom right in every comparison: search Geizhals, idealo and Amazon
+  for more products and paste the link of what you found – or copy the comparison for your own
+  AI with a request for more products or your own question. “Copy for my AI” moved here from
+  the ⋯ menu.
+
 ## 0.18.0 — 2026-11-24
 
 - Added: every release comes with a ready-made container image on ghcr.io and release notes on

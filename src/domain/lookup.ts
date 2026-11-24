@@ -17,6 +17,31 @@ export interface LookupLink {
 
 const q = encodeURIComponent
 
+/**
+ * What to search for first: the product type most of the products share ("Sideboard"), else the
+ * comparison's name – a category like "Furniture" is too broad to find more of the same.
+ */
+export function searchTerm(name: string, products: Pick<Product, 'productType'>[]): string {
+  const count = new Map<string, number>()
+  for (const p of products) {
+    const t = p.productType?.trim()
+    if (t) count.set(t, (count.get(t) ?? 0) + 1)
+  }
+  return [...count].sort((a, b) => b[1] - a[1])[0]?.[0] ?? name.trim()
+}
+
+/** Where to look for products not in the comparison yet: the shops' own search for any words. */
+export function searchLinks(query: string): LookupLink[] {
+  const words = query.trim()
+  if (!words) return []
+  return [
+    { id: 'geizhals', href: `https://geizhals.de/?fs=${q(words)}` },
+    { id: 'idealo', href: `https://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q=${q(words)}` },
+    // Many customer reviews; a plain search link, no partner tag.
+    { id: 'amazon', href: `https://www.amazon.de/s?k=${q(words)}` },
+  ]
+}
+
 export function lookupLinks(p: Pick<Product, 'brand' | 'model' | 'gtin' | 'url'>): LookupLink[] {
   const name = [p.brand, p.model]
     .map((s) => s?.trim())
@@ -25,13 +50,7 @@ export function lookupLinks(p: Pick<Product, 'brand' | 'model' | 'gtin' | 'url'>
   const gtin = p.gtin && isValidGtin(p.gtin) ? p.gtin : ''
   // Price comparisons find the exact product by its GTIN; test sites only by name.
   const exact = gtin || name
-  const links: LookupLink[] = []
-  if (exact) {
-    links.push({ id: 'geizhals', href: `https://geizhals.de/?fs=${q(exact)}` })
-    links.push({ id: 'idealo', href: `https://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q=${q(exact)}` })
-    // Many customer reviews; a plain search link, no partner tag.
-    links.push({ id: 'amazon', href: `https://www.amazon.de/s?k=${q(exact)}` })
-  }
+  const links = searchLinks(exact)
   if (name) links.push({ id: 'warentest', href: `https://www.test.de/suche/?q=${q(name)}` })
   const shop = hostOf(p.url ?? '')
   if (shop) links.push({ id: 'trustpilot', href: `https://de.trustpilot.com/review/${q(shop)}` })

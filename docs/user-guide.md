@@ -41,7 +41,7 @@ show archived ones.
 - **Stage:** each comparison moves from _Researching_ to _Comparing_, _Decided_ and _Purchased_.
   Set it in the menu next to the tabs.
 - **⋯ menu:** edit _Name & category_, _Duplicate_, _Archive_, _Export_ (JSON or Excel),
-  _Share comparison_, _Copy for my AI_, _Add or update products_, _Delete_.
+  _Share comparison_, _Add or update products_, _Delete_.
 - **Tabs:** _Products_, _Requirements_, _Fields_ and _Notes_ (the goal of the purchase, the
   current system, reference links – anything that does not belong to one product).
 
@@ -157,10 +157,18 @@ fit are kept as text. Details: [Excel and table import](excel-import.md).
 file. A row with the same link, GTIN or name updates that product; the others are added; empty
 cells change nothing. You see every change before it is saved.
 
-**With your AI:** **⋯ → Copy for my AI** copies the comparison – requirements, products, what is
-not met or not known – with a short request and the products as a table. Paste it into the
-assistant you use. If it adds products or fills in values, it answers in the same table; paste
-that back with _Add or update products_.
+**Find and ask** – the button bottom right in a comparison:
+
+- **Search the shops:** Geizhals, idealo and Amazon, searched for the type of product you compare or
+  any words you type; the search opens in a new tab and Propario adds no tracking. Found one?
+  Paste its link into the field below.
+- **With your AI:** _Ask my AI for more_ copies the comparison – requirements, products, what is
+  not met or not known – with a request for up to five more products; _Copy for my AI_ copies it
+  with your own question, or, without one, asks which product fits best. Paste it into the
+  assistant you use. If it adds products or fills in values, it answers with the products as a
+  table; paste that back with _Add or update products_. Propario itself sends nothing anywhere.
+- To pick out products by their values – less than 40 cm deep, under €800 – the table's
+  **Advanced** filter answers at once, without AI.
 
 ## Backup and restore
 

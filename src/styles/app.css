@@ -5437,3 +5437,96 @@ dialog.model3d-modal {
 .model3d-panel p {
   margin: 0;
 }
+
+/* ---------- find and ask (FindAndAsk.tsx) ---------- */
+/* Always at hand bottom right: a petrol button that opens a small floating panel. */
+.find-ask {
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 30;
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+}
+.find-ask-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0 18px 0 15px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--brand);
+  color: var(--brand-ink);
+  font-weight: 650;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+}
+.find-ask-toggle:hover {
+  background: var(--brand-hover);
+}
+.find-ask-toggle .glyph {
+  width: 18px;
+  height: 18px;
+}
+@media (max-width: 720px) {
+  .find-ask-toggle {
+    padding: 0;
+    justify-content: center;
+  }
+}
+.find-ask-panel {
+  width: min(400px, calc(100vw - 32px));
+  max-height: calc(100vh - 100px);
+  overflow: auto;
+  display: grid;
+  gap: 18px;
+  padding: 14px 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.find-ask-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.find-ask-head h2 {
+  font-size: 18px;
+}
+.find-ask-panel section {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+.find-ask-panel section > * {
+  width: 100%;
+}
+.find-ask-panel section > .btn {
+  width: auto;
+  min-height: 44px;
+}
+.find-ask-panel input[type='search'],
+.find-ask-panel textarea {
+  min-height: 44px;
+}
+.find-ask-panel .lookup-row {
+  margin: 0;
+}
+.find-ask-panel .lookup-row a {
+  min-height: 44px;
+}
+.find-ask-panel .quick-add {
+  margin: 0;
+}
+.find-ask-panel p > a {
+  color: var(--brand-text);
+}
+/* What floats bottom right must not cover the end of the page. */
+.project-page {
+  padding-bottom: 80px;
+}

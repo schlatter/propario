@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { makeProduct, makeRequirement } from '../src/db/factories'
-import { lookupLinks } from '../src/domain/lookup'
+import { lookupLinks, searchLinks, searchTerm } from '../src/domain/lookup'
 import { daysSince } from '../src/domain/values'
 import { summarize } from '../src/domain/requirements'
 import { cleanFacts, isValidGtin } from '../src/shared/product-facts'
@@ -44,6 +44,21 @@ describe('lookup links', () => {
     const old = { ...makeProduct('p', { model: 'S6' }) } as Record<string, unknown>
     delete old.gtin
     expect(lookupLinks(old as never)[0].href).toContain('S6')
+  })
+
+  it('searches the shops for any words to find more products, and for nothing when empty', () => {
+    expect(searchLinks(' Sideboard & Kommode ').map((l) => [l.id, l.href])).toEqual([
+      ['geizhals', 'https://geizhals.de/?fs=Sideboard%20%26%20Kommode'],
+      ['idealo', 'https://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q=Sideboard%20%26%20Kommode'],
+      ['amazon', 'https://www.amazon.de/s?k=Sideboard%20%26%20Kommode'],
+    ])
+    expect(searchLinks('  ')).toEqual([])
+  })
+
+  it('searches first for the product type most products share, else the comparison’s name', () => {
+    const types = ['Sideboard', 'Lowboard', ' Sideboard ', ''].map((productType) => makeProduct('p', { productType }))
+    expect(searchTerm('Living room', types)).toBe('Sideboard')
+    expect(searchTerm(' Living room ', [makeProduct('p')])).toBe('Living room')
   })
 })
 

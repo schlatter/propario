@@ -22,6 +22,11 @@ by it.
    to store it, can we store less, is it encrypted, exported and deleted with the account?
 3. **Think big, build small.** Do not block the future (public GitHub project, more people,
    more languages), but build only what is needed now.
+4. **Works without AI; AI only proposes.** Every feature has a path without AI – build or
+   name it first. AI may only produce what a person could also enter by hand (a query, a table
+   of products, a text); that goes through the same parser, preview and checks, and never
+   decides, saves or fetches by itself. People bring their own AI (local preferred); it gets
+   only what the feature needs, and only when they ask.
 
 ## Never
 

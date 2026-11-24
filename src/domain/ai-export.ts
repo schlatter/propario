@@ -1,7 +1,8 @@
 /**
  * A comparison as plain text for one's own AI ("Copy for my AI"): requirements with their
  * priority, the budget, and every product with its price, fields, verdicts, outside ratings and
- * the notes everyone in the comparison sees – followed by a question. Nothing leaves Propario
+ * the notes everyone in the comparison sees – with a request: help to decide (the default), more
+ * products to look at, or the person's own question. Nothing leaves Propario
  * by itself; the person pastes it where they choose. Names of people are left out: ratings
  * appear as stars only.
  *
@@ -25,8 +26,8 @@ interface Input {
   summaries: Map<string, Summary>
 }
 
-export function comparisonForAi(d: Input, m: Messages, fmt: Formatters): string {
-  const lines: string[] = [`# ${d.project.name}${d.project.category ? ` (${d.project.category})` : ''}`, '', m.ai.prompt, '']
+export function comparisonForAi(d: Input, m: Messages, fmt: Formatters, request = m.ai.prompt): string {
+  const lines: string[] = [`# ${d.project.name}${d.project.category ? ` (${d.project.category})` : ''}`, '', request.trim() || m.ai.prompt, '']
   if (d.project.description) lines.push(d.project.description, '')
 
   const rule = (r: Requirement) => {

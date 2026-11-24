@@ -405,6 +405,19 @@ export const en = {
     tableTitle: 'Products as a table',
     tableHint:
       'If you add products or change or fill in values, also answer with this table in exactly this format (same columns, link first; leave unknown values empty). We can then paste it back into our comparison.',
+
+    open: 'Find and ask',
+    searchTitle: 'Search the shops',
+    searchFor: 'Search for',
+    searchHint: 'Opens in a new tab. Found one? Paste its link here:',
+    withAi: 'With your AI',
+    withAiHint: 'Copies the comparison with your request. Paste it into the AI you use.',
+    suggest: 'Ask my AI for more',
+    suggestPrompt:
+      'Suggest up to 5 more products that fit our requirements and budget and are not in our list yet – real models that can be bought now. Say briefly why each one fits. Give only values you are sure of, and the link to the product page only if you know it; never invent a link or a value.',
+    question: 'Your question',
+    questionHint: 'Empty: which one fits best. For values such as “less than 40 cm deep”, the Advanced filter answers at once.',
+    pasteBack: 'Then paste its answer:',
   },
   overview: {
     title: 'Compare faster, decide better.',
@@ -435,7 +448,7 @@ export const en = {
     returnLine: 'Bought · return until 19 Dec · warranty until 2028',
     aiTitle: 'With your AI, if you like.',
     aiText:
-      '“Copy for my AI” hands the comparison to the assistant you already use. Its answer comes back as a table and updates your products – you see every change first.',
+      '“Find and ask” searches the shops for more products – or hands the comparison to the assistant you already use, for suggestions or your own question. Its answer comes back as a table and updates your products – you see every change first.',
     trustTitle: 'Private, safe, yours.',
     trust: [
       'Runs on your own server – your data stays with you',

@@ -853,19 +853,35 @@ test('Ada moves rows and decides by swiping', async () => {
   await page.getByRole('button', { name: 'Delete', exact: true }).last().click()
   await page.getByRole('button', { name: 'Delete for good' }).click()
 
-  // "Copy for my AI": the comparison as text for one's own AI, without names of people.
-  await page.context().grantPermissions(['clipboard-read', 'clipboard-write'])
-  await page.getByRole('button', { name: 'More', exact: true }).first().click()
   // One "Export" entry opens the formats.
-  await expect(page.getByRole('button', { name: 'Copy for my AI' })).toHaveCount(0)
+  await page.getByRole('button', { name: 'More', exact: true }).first().click()
   await page.getByRole('button', { name: 'Export', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Export as Excel' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Export as JSON' })).toBeVisible()
-  await page.getByRole('button', { name: 'Copy for my AI' }).click()
+  await page.keyboard.press('Escape')
+
+  // "Find and ask", bottom right. Without AI: the shops' search for the comparison's name.
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write'])
+  await page.getByRole('button', { name: 'Find and ask' }).click()
+  const panel = page.getByRole('dialog', { name: 'Find and ask' })
+  await expect(panel.getByRole('searchbox', { name: 'Search for' })).toBeFocused()
+  await panel.getByRole('searchbox', { name: 'Search for' }).fill('wall cabinet')
+  await expect(panel.getByRole('link', { name: 'Geizhals' })).toHaveAttribute('href', 'https://geizhals.de/?fs=wall%20cabinet')
+  await expect(panel.getByRole('link', { name: 'idealo' })).toHaveAttribute('target', '_blank')
+  // With one's own AI: a request for more products …
+  await panel.getByRole('button', { name: 'Ask my AI for more' }).click()
   await expect(page.getByText('Copied – paste it into the AI you use.')).toBeVisible()
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('Suggest up to 5 more products')
+  // … or one's own question; the comparison goes with it, without names of people.
+  await panel.getByRole('textbox', { name: 'Your question' }).fill('Which is the quietest?')
+  await panel.getByRole('button', { name: 'Copy for my AI' }).click()
   const copied = await page.evaluate(() => navigator.clipboard.readText())
   expect(copied).toContain('# Kitchen cabinet')
+  expect(copied).toContain('Which is the quietest?')
   expect(copied).toContain('### Arvika')
+  await page.keyboard.press('Escape')
+  await expect(panel).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Find and ask' })).toBeFocused()
 
   // The AI answers with the table from the copy: one product changed, one new. Pasted back, the
   // first updates its product and the second is added – after a preview.

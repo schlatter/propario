@@ -408,6 +408,19 @@ export const de: Messages = {
     tableTitle: 'Produkte als Tabelle',
     tableHint:
       'Wenn du Produkte ergänzt oder Werte änderst oder ergänzt, antworte zusätzlich mit dieser Tabelle in genau diesem Format (gleiche Spalten, Link zuerst; Unbekanntes leer lassen). Wir können sie dann wieder in unseren Vergleich einfügen.',
+
+    open: 'Finden und fragen',
+    searchTitle: 'In Shops suchen',
+    searchFor: 'Suchen nach',
+    searchHint: 'Öffnet sich in einem neuen Tab. Etwas gefunden? Füg den Link hier ein:',
+    withAi: 'Mit deiner KI',
+    withAiHint: 'Kopiert den Vergleich mit deiner Bitte. Füg ihn in die KI ein, die du nutzt.',
+    suggest: 'Meine KI nach mehr fragen',
+    suggestPrompt:
+      'Schlag uns bis zu 5 weitere Produkte vor, die zu unseren Anforderungen und zum Budget passen und noch nicht in unserer Liste sind – echte Modelle, die man jetzt kaufen kann. Sag kurz, warum jedes passt. Gib nur Werte an, bei denen du dir sicher bist, und den Link zur Produktseite nur, wenn du ihn kennst; erfinde nie einen Link oder Wert.',
+    question: 'Deine Frage',
+    questionHint: 'Leer: welches am besten passt. Für Werte wie „weniger als 40 cm tief“ antwortet der Filter „Erweitert“ sofort.',
+    pasteBack: 'Dann füg ihre Antwort ein:',
   },
   overview: {
     title: 'Schneller vergleichen, besser entscheiden.',
@@ -439,7 +452,7 @@ export const de: Messages = {
     returnLine: 'Gekauft · Rückgabe bis 19.12. · Garantie bis 2028',
     aiTitle: 'Mit deiner KI, wenn du willst.',
     aiText:
-      '„Für meine KI kopieren“ gibt den Vergleich an den Assistenten, den du schon nutzt. Seine Antwort kommt als Tabelle zurück und aktualisiert deine Produkte – jede Änderung siehst du vorher.',
+      '„Finden und fragen“ sucht in Shops nach weiteren Produkten – oder gibt den Vergleich an den Assistenten, den du schon nutzt, für Vorschläge oder deine eigene Frage. Seine Antwort kommt als Tabelle zurück und aktualisiert deine Produkte – jede Änderung siehst du vorher.',
     trustTitle: 'Privat, sicher, deins.',
     trust: [
       'Läuft auf deinem eigenen Server – deine Daten bleiben bei dir',

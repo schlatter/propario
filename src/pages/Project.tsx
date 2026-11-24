@@ -16,7 +16,7 @@ import { ProductDrawer } from './project/ProductDrawer'
 import { ProductTable } from './project/ProductTable'
 import { RequirementsTab } from './project/RequirementsTab'
 import { useProjectData } from './project/useProjectData'
-import { comparisonForAi } from '../domain/ai-export'
+import { FindAndAsk } from './project/FindAndAsk'
 import { ShareDialog } from './project/ShareDialog'
 import { QuickAdd } from './project/QuickAdd'
 import { ProjectDialog } from './Home'
@@ -128,15 +128,6 @@ export function ProjectPage() {
                   choices={[
                     { glyph: 'download', label: m.common.exportExcel, run: () => void exportProjectExcel(project.id, m) },
                     { glyph: 'download', label: m.common.exportJson, run: () => void exportProjectJson(project.id) },
-                    {
-                      glyph: 'copy',
-                      label: m.ai.copy,
-                      run: () =>
-                        navigator.clipboard
-                          .writeText(comparisonForAi(data, m, fmt))
-                          .then(() => toast(m.ai.copied))
-                          .catch(() => toast(m.ai.failed)),
-                    },
                   ]}
                 />
                 {role !== 'viewer' && (
@@ -294,6 +285,7 @@ export function ProjectPage() {
           setParams(next, { replace: true })
         }}
       />
+      <FindAndAsk data={data} canEdit={role !== 'viewer'} onOpen={(pid) => setParam('product', pid)} />
       <ShareDialog projectId={project.id} open={sharing} onClose={() => setSharing(false)} />
       <ProjectDialog open={editing} project={project} categories={[]} onClose={() => setEditing(false)} />
     </main>
