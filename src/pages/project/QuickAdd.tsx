@@ -9,6 +9,7 @@ import { useToast } from '../../ui/Dialog'
 import { Glyph } from '../../ui/Glyph'
 import { Menu } from '../../ui/Menu'
 import type { ProjectData } from './useProjectData'
+import type { Messages } from '../../i18n/en'
 import { usePageUpdate } from './usePageUpdate'
 
 /**
@@ -44,6 +45,25 @@ export function QuickAdd({ data, onOpen, inline = false }: { data: ProjectData; 
   )
 }
 
+/**
+ * A product from its shop link: added at once, its page read in the background for picture,
+ * price and dimensions (only empty fields are filled). Failures are said, never swallowed; with
+ * `quiet`, only failures are.
+ */
+export async function addFromLink(projectId: string, url: string, m: Messages, toast: (text: string) => void, quiet = false): Promise<string> {
+  const created = await addProduct(projectId, { url, retailer: hostOf(url) })
+  const tell = (filled: string[] | undefined) => !quiet && filled?.length && toast(m.pageImport.filled(filledLabels(filled, m)))
+  void loadProductImage(created)
+    .then((r) => tell(r.filled))
+    // Never silent: say why nothing came, and what the address gave instead.
+    .catch((e) => {
+      const filled = e instanceof ImageError && e.filled?.length ? ` ${m.pageImport.fromAddress(filledLabels(e.filled, m))}` : ''
+      const why = e instanceof ImageError ? m.image.error[e.code] : m.image.error.failed
+      toast(`${hostOf(url)}: ${why}${filled}`)
+    })
+  return created.id
+}
+
 function QuickAddForm({ data, onOpen, autoFocus }: { data: ProjectData; onOpen: (id: string) => void; autoFocus?: boolean }) {
   const { m } = useI18n()
   const { project, products } = data
@@ -68,20 +88,9 @@ function QuickAddForm({ data, onOpen, autoFocus }: { data: ProjectData; onOpen: 
         void pageUpdate(existing, { title: m.pageUpdate.duplicateTitle(name), text: m.pageUpdate.duplicateText })
         return
       }
-      const created = await addProduct(project.id, { url, retailer: hostOf(url) })
-      // Picture and page data come in the background and fill only empty fields; image
-      // failures show in the product details.
-      const tell = (filled: string[] | undefined) => filled?.length && toast(m.pageImport.filled(filledLabels(filled, m)))
-      void loadProductImage(created)
-        .then((r) => tell(r.filled))
-        // Never silent: say why nothing came, and what the address gave instead.
-        .catch((e) => {
-          const filled = e instanceof ImageError && e.filled?.length ? ` ${m.pageImport.fromAddress(filledLabels(e.filled, m))}` : ''
-          const why = e instanceof ImageError ? m.image.error[e.code] : m.image.error.failed
-          toast(`${hostOf(url)}: ${why}${filled}`)
-        })
+      const createdId = await addFromLink(project.id, url, m, toast)
       setText('')
-      onOpen(created.id)
+      onOpen(createdId)
     } else {
       const brand = knownBrands.find((b) => value.toLowerCase().startsWith(`${b.toLowerCase()} `))
       await addProduct(project.id, brand ? { brand, model: value.slice(brand.length).trim() } : { model: value })

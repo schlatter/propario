@@ -5,7 +5,7 @@
  */
 import { statusOf } from '../domain/verdict'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { mergeProducts } from '../db/repo'
 import type { Product } from '../db/types'
@@ -28,8 +28,11 @@ export function MergePage() {
   const toast = useToast()
   const navigate = useNavigate()
   const location = useLocation()
-  // An answer from one's own AI arrives with the link (FindAndAsk.tsx); it is read only when asked.
-  const [text, setText] = useState(() => String((location.state as { text?: unknown } | null)?.text ?? ''))
+  // An answer from one's own AI arrives with the link (FindAndAsk.tsx), and with `read` is read at
+  // once: the plan below still shows every change before anything is saved.
+  const arrived = location.state as { text?: unknown; read?: unknown } | null
+  const [text, setText] = useState(() => String(arrived?.text ?? ''))
+  const readOnArrival = useRef(arrived?.read === true)
   const [plan, setPlan] = useState<MergePlan | null>(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -37,6 +40,14 @@ export function MergePage() {
   const [skip, setSkip] = useState<Set<number>>(new Set())
   const [skipFields, setSkipFields] = useState<Set<string>>(new Set())
   const [over, setOver] = useState(false)
+
+  useEffect(() => {
+    if (!data || !readOnArrival.current) return
+    readOnArrival.current = false
+    const next = planMerge(textToGrids(text), data.products, data.properties)
+    setPlan(next)
+    setError(next ? '' : m.merge.noTable)
+  }, [data, text, m])
 
   if (data === undefined) return <main aria-busy="true" />
   if (data === null)

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { makeProduct, makeProject, makeProperty, makeRequirement } from '../src/db/factories'
-import { comparisonForAi, splitAnswer } from '../src/domain/ai-export'
+import { answerLinks, comparisonForAi, splitAnswer } from '../src/domain/ai-export'
 import { summarize, withBudget } from '../src/domain/requirements'
 import type { Formatters } from '../src/i18n'
 import { en } from '../src/i18n/en'
@@ -60,5 +60,15 @@ describe('an answer from one’s own AI', () => {
     const answer = 'Take **Arvika**.\n\nTwo more:\n\n| Link | Model |\n| --- | --- |\n| https://a.example | Dora |\n| https://b.example | Edda |\n\nGood luck!'
     expect(splitAnswer(answer)).toEqual({ prose: 'Take Arvika.\n\nTwo more:\n\nGood luck!', rows: 2 })
     expect(splitAnswer('Arvika fits best.')).toEqual({ prose: 'Arvika fits best.', rows: 0 })
+  })
+})
+
+describe('product links in an answer', () => {
+  it('takes each new link once, from prose and Markdown links, without trailing punctuation', () => {
+    const text =
+      'Try [Dora](https://shop.example/dora?utm_source=chatgpt.com) or https://shop.example/edda. ' +
+      'Also https://shop.example/dora again, and https://www.known.example/arvika/ (you have it).'
+    expect(answerLinks(text, [{ url: 'https://known.example/arvika' }, { url: '' }])).toEqual(['https://shop.example/dora', 'https://shop.example/edda'])
+    expect(answerLinks('No links here.', [])).toEqual([])
   })
 })

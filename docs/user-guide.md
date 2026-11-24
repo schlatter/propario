@@ -157,20 +157,28 @@ fit are kept as text. Details: [Excel and table import](excel-import.md).
 file. A row with the same link, GTIN or name updates that product; the others are added; empty
 cells change nothing. You see every change before it is saved.
 
-**Find and ask** – the button bottom right in a comparison:
+**Find and ask** – the button with the Propario sign bottom right in a comparison, with two tabs, _Search_ and _Ask AI_:
 
-- **Search the shops:** Geizhals, idealo and Amazon, searched for the type of product you compare or
-  any words you type; the search opens in a new tab and Propario adds no tracking. Found one?
-  Paste its link into the field below.
-- **With your AI:** _Ask my AI for more_ copies the comparison – requirements, products, what is
-  not met or not known – with a request for up to five more products; _Copy for my AI_ copies it
-  with your own question, or, without one, asks which product fits best. Paste it into the
-  assistant you use. If it adds products or fills in values, it answers with the products as a
-  table; paste that back with _Add or update products_.
-- **With your AI connected** (Settings → _Your AI_): the same buttons ask it right here – _Ask my
-  AI for more_ lets it search the web for products, _Ask_ sends your question. The answer
-  appears in the panel; if it has a table, _Add or update products_ shows every change before it
-  is saved. Nothing is sent until you press one of the buttons.
+- **Search the shops:** Google Shopping, idealo, Geizhals and Amazon, and – used and on offer – eBay,
+  Kleinanzeigen and mydealz, searched for the type of product you compare or any words you type.
+  _Up to (€)_ starts at your budget; eBay and Kleinanzeigen search up to it, the others cannot be
+  told a price. Searches open in a new tab and Propario adds no tracking. Found one? Paste its
+  link into the field below.
+- **Ask AI:** _Copy question_ copies the comparison – requirements, products, what is not met or
+  not known – with your question, or, without one, asks which product fits best; _Find new
+  products_ copies it with a request for up to five more products, found on the web with their
+  links. Choose ChatGPT or Claude under _Open in_ once, and copying opens it too. Then paste its
+  answer into _Its answer_:
+  - a **table** → _Take its table_ shows every change before it is saved;
+  - **product links** → tick the ones you want and _Add_; Propario reads each page itself for
+    picture, price and dimensions, so these come from the shop, not from the AI.
+
+  This works with any subscription, ChatGPT Plus or Claude Pro included, and costs nothing extra.
+
+- **With your AI connected** (Settings → _Your AI_): _Ask question_ and _Find new products_ ask it
+  right here – finding new products lets it search the web. The answer appears in the panel; if it
+  has a table, _Add or update products_ shows every change before it is saved. Nothing is sent
+  until you press one of the buttons.
 - To pick out products by their values – less than 40 cm deep, under €800 – the table's
   **Advanced** filter answers at once, without AI.
 
@@ -192,9 +200,10 @@ Your comparisons are stored on the server. Under **Backup**:
   invitations, removing accounts.
 - **Language** and **Appearance** (system, light or dark).
 - **People:** the names used for ratings and “found by”.
-- **Your AI** _(optional)_: connect Claude or ChatGPT with an API key from the provider – a key for
-  their API, not your chat subscription; the provider may charge for its use. The key is stored
-  encrypted and never shown again; choose the model, or remove the key at any time.
+- **Your AI** _(optional)_: **Off** by default – Propario then sends nothing to any AI, and
+  copying in _Find and ask_ still works. **On, with an API key**: connect Claude or ChatGPT with a key from
+  the provider; it is stored encrypted and never shown again; choose the model, or remove the key
+  at any time. Switching off again deletes the key. A chat subscription is not enough – see below.
 - **About:** the running version, and links to this guide and to the source code.
 - **Troubleshooting:** see below.
 
@@ -208,6 +217,17 @@ Screen**. Installed, a product link shared from a shop app can go straight into 
 
 ## When something does not work
 
+- **“Your AI” does not take my ChatGPT Plus or Claude Pro subscription:** right – a chat
+  subscription does not include the API that Propario talks to. The API is a separate account at
+  the provider ([OpenAI](https://platform.openai.com/), [Anthropic](https://console.anthropic.com/)),
+  paid in advance and by use – usually a few cents a question, a little more when your AI searches
+  the web for products. Without one, copy in _Find and ask_ → _Ask AI_: it works with any
+  subscription. Connecting a subscription directly is not possible yet: OpenAI offers it only to
+  selected partner apps so far.
+- **“Your AI” says the API account has no credit, or is over its per-minute limit:** top up under
+  _Billing_ at your provider. New API accounts start with low per-minute limits that rise with
+  use; until then, wait a minute or ask your own question, which needs less than a search for
+  more products.
 - **Propario does not start:** after a few seconds the page says where it stopped. **Reload**, or
   **Reset this browser** – it removes only Propario's copy in this browser; you stay signed in
   and everything is loaded again from the server.

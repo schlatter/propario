@@ -5482,8 +5482,8 @@ dialog.model3d-modal {
   max-height: calc(100vh - 100px);
   overflow: auto;
   display: grid;
-  gap: 18px;
-  padding: 14px 16px 18px;
+  gap: 14px;
+  padding: 12px 16px 16px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -5496,7 +5496,83 @@ dialog.model3d-modal {
   gap: 8px;
 }
 .find-ask-head h2 {
-  font-size: 18px;
+  font-size: 17px;
+  margin-right: auto;
+}
+.find-ask-head {
+  flex-wrap: wrap;
+}
+.find-ask-tabs button {
+  min-height: 32px;
+}
+.seg button[aria-selected='true'] {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+}
+.find-ask-logo {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  flex: none;
+}
+.find-ask-actions {
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+/* The two requests share one row, also on a phone and in German. */
+.find-ask-actions .btn {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 44px;
+  padding: 6px 10px;
+  white-space: normal;
+  line-height: 1.2;
+  text-align: center;
+}
+.find-ask-actions .icon-btn {
+  flex: none;
+  width: 44px;
+  height: 44px;
+}
+.chip-links {
+  display: grid;
+  gap: 4px;
+}
+.chip-links ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.chip-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: var(--brand-text);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.chip-links a:hover {
+  border-color: var(--brand);
+}
+.chip-links .glyph {
+  width: 12px;
+  height: 12px;
+}
+@media (pointer: coarse) {
+  .chip-links a,
+  .find-ask-tabs button {
+    min-height: 44px;
+  }
 }
 .find-ask-panel section {
   display: grid;
@@ -5512,12 +5588,6 @@ dialog.model3d-modal {
 }
 .find-ask-panel input[type='search'],
 .find-ask-panel textarea {
-  min-height: 44px;
-}
-.find-ask-panel .lookup-row {
-  margin: 0;
-}
-.find-ask-panel .lookup-row a {
   min-height: 44px;
 }
 .find-ask-panel .quick-add {
@@ -5539,7 +5609,7 @@ dialog.model3d-modal {
   background: var(--surface-2);
   border: 1px solid var(--line);
 }
-.find-ask-answer h4 {
+.find-ask-answer h3 {
   margin: 0;
   font-size: 13px;
 }
@@ -5550,5 +5620,75 @@ dialog.model3d-modal {
   line-height: 1.5;
 }
 .find-ask-answer .btn {
+  min-height: 44px;
+}
+.find-ask-paste {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+.find-ask-paste > * {
+  width: 100%;
+}
+.find-ask-paste > .btn {
+  width: auto;
+  min-height: 44px;
+}
+.take-answer {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+.take-answer .btn {
+  min-height: 44px;
+}
+.take-links {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  margin: 0;
+  padding: 10px 12px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+.take-links legend {
+  padding: 0 4px;
+  font-weight: 600;
+}
+.take-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  overflow-wrap: anywhere;
+}
+.take-links .btn {
+  justify-self: start;
+  margin-top: 4px;
+}
+.open-in {
+  align-items: center;
+  gap: 6px;
+}
+.open-in-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.open-in-label .select {
+  width: auto;
+  min-height: 36px;
+}
+@media (pointer: coarse) {
+  .open-in-label .select {
+    min-height: 44px;
+  }
+}
+.search-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px;
+  gap: 8px;
+}
+.find-ask-panel .max-price input {
   min-height: 44px;
 }
