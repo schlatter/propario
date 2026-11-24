@@ -4,9 +4,9 @@
  *
  *   node scripts/readme-art.ts
  *
- * Change them here, never in the SVGs. The symbols are our own drawings in the manner of Lucide
- * (24 grid, stroke 2, round ends): fuller than the app's glyphs (src/ui/Glyph.tsx), which suits a
- * README; the app keeps its own (docs/brand.md). The steps' words are the start page's
+ * Change them here, never in the SVGs. The symbols are our own drawings on a 24 grid with stroke 2
+ * and round ends – never copied from an icon set, which would need its license notice. Fuller than
+ * the app's glyphs (src/ui/Glyph.tsx), which suits a README; the app keeps its own (docs/brand.md). The steps' words are the start page's
  * (src/i18n/en.ts, overview.s1Title … s6Title); tests/docs-consistency.test.ts keeps them in step.
  */
 import { mkdirSync, writeFileSync } from 'node:fs'
