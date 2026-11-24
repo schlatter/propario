@@ -24,6 +24,7 @@
     "deps": "npm outdated; npm audit",
     "sbom": "npm sbom --sbom-format cyclonedx --omit dev > sbom.cdx.json",
     "screenshots": "vite build && SCREENSHOTS=1 playwright test e2e/screenshots.spec.ts",
+    "test:visual:update": "playwright test e2e/visual.spec.ts --update-snapshots",
     "build:demo": "VITE_DEMO_ONLY=1 vite build --base=/propario/demo/ --outDir dist-demo --emptyOutDir"
   },
   "dependencies": {
