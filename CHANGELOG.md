@@ -7,7 +7,7 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
 ## Unreleased
 
 - Added: a demo on the website that runs in the browser alone – no installation, nothing saved.
-- Changed: the line is now “Compare faster, decide better.” / „Schneller vergleichen, besser entscheiden.“
+- Changed: the line is now “Compare faster, decide better.”
 
 - Added: Settings and the start page link to the user guide and the source code.
 
@@ -119,8 +119,8 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
 ## 0.15.0 — 2026-11-20
 
 - Changed: the product tab says how many are shown of all while a filter is on ("14/66").
-- Changed: one action, one name – "Details aktualisieren" also for several products, "Duplizieren",
-  "Löschen", "Back to the table" alike everywhere; "Clear selection" is a button like the others in
+- Changed: one action, one name – "Update details" also for several products, "Duplicate",
+  "Delete", "Back to the table" alike everywhere; "Clear selection" is a button like the others in
   its bar. The design guide holds this as a rule.
 - Added: "Reviews" as a kind of exclusion reason.
 - Changed: the demo has three comparisons – the sideboard, headphones and a robot vacuum – with
