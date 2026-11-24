@@ -66,8 +66,10 @@ npm run verify       # format check, types, unit + integration tests, e2e story 
 Changes to who may see or change what need a test in `server/access.test.ts`. UI changes are
 looked at in a browser at 390 px and desktop width, light and dark, English and German. For
 container changes: `docker build .`. A change users notice gets a line under _Unreleased_ in
-`CHANGELOG.md`. Not every change is a release: releases bundle changes about monthly; never
-raise the version for a single feature. A release raises `version` in `package.json`, dates its
+`CHANGELOG.md`. A release follows a feature, not the calendar: when something users notice is
+complete and verified – tried in a browser, outside services called for real at least once – it
+ships; what is finished at the same time ships together. Fixes for bugs and security ship at once
+as a patch. Docs, tests and refactoring alone are no release. A release raises `version` in `package.json`, dates its
 CHANGELOG entry, adds at most four lines per language to `src/releases.ts`, is merged as a pull
 request and then gets an annotated tag on `main` (`git tag -a v0.3.0 -m v0.3.0`); pushing the tag
 publishes image and release (`.github/workflows/release.yml`). See "Releases" in

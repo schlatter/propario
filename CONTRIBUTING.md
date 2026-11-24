@@ -138,8 +138,12 @@ container image and a GitHub release. Versions follow [Semantic Versioning](http
 while Propario is 0.x, the middle number rises for new features or changed behaviour, the last
 for fixes. 1.0 is a deliberate decision, not a count.
 
-- **Not every change is a release.** Changes collect under _Unreleased_; a release bundles them
-  when the set is worth announcing – about once a month, not per feature.
+- **A release follows a feature, not the calendar.** Changes collect under _Unreleased_. When
+  something people notice is complete and verified – `npm run verify`, tried in a browser, and
+  any outside service (an AI provider, a shop) called for real at least once – it ships as a
+  minor release; whatever is finished at the same time ships with it. Fixes for bugs and security
+  ship at once as a patch, without "What's new" (no entry in `src/releases.ts`). Docs, tests and
+  refactoring alone are no release; they travel with the next one.
 - **Making one:** in a pull request, raise `version` in `package.json`, turn _Unreleased_ into
   the dated entry (`## 0.x.y — YYYY-MM-DD`), and add at most four short lines per language to
   `src/releases.ts` – people see them once after the update. Merge it, then tag the merged commit
