@@ -8,6 +8,8 @@ export interface Config {
   production: boolean
   /** Fetch product images from shop pages on request. */
   imageFetch: boolean
+  /** People may connect their own AI (server/ai.ts). */
+  ai: boolean
   /** Header carrying the visitor's address when behind a trusted reverse proxy (e.g. X-Forwarded-For). */
   addressHeader: string
   xffDepth: number
@@ -30,6 +32,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     host: env.HOST || (production ? '0.0.0.0' : '127.0.0.1'),
     production,
     imageFetch: (env.PROPARIO_IMAGE_FETCH || 'on') !== 'off',
+    ai: (env.PROPARIO_AI || 'on') !== 'off',
     addressHeader: (env.ADDRESS_HEADER || '').toLowerCase(),
     xffDepth: Math.max(1, Number(env.XFF_DEPTH || 1)),
   }

@@ -879,6 +879,8 @@ test('Ada moves rows and decides by swiping', async () => {
   expect(copied).toContain('# Kitchen cabinet')
   expect(copied).toContain('Which is the quietest?')
   expect(copied).toContain('### Arvika')
+  // Without an AI of one's own, the panel says where to connect one.
+  await expect(panel.getByText('Or connect your AI and ask right here:')).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(panel).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Find and ask' })).toBeFocused()
@@ -968,6 +970,11 @@ test('Ada moves rows and decides by swiping', async () => {
 test('Ada invites Grace, who joins and sees nothing that is not hers', async ({ browser }) => {
   const { page } = ada
   await go(page, 'Settings')
+  // One's own AI: optional, connected with an API key (no provider is called in this story).
+  await expect(page.getByRole('heading', { name: 'Your AI' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Claude (Anthropic)' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByLabel('API key')).toHaveAttribute('type', 'password')
+  await expect(page.getByRole('button', { name: 'Connect' })).toBeDisabled()
   await accessible(page, 'settings')
   await expect(page.getByRole('link', { name: 'Source code' })).toHaveAttribute('href', 'https://github.com/schlatter/propario')
   await page.getByLabel('For whom (optional)').fill('Grace')

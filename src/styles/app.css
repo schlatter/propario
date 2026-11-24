@@ -5530,3 +5530,25 @@ dialog.model3d-modal {
 .project-page {
   padding-bottom: 80px;
 }
+.find-ask-answer {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+.find-ask-answer h4 {
+  margin: 0;
+  font-size: 13px;
+}
+.find-ask-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.find-ask-answer .btn {
+  min-height: 44px;
+}

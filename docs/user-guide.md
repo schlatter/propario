@@ -166,7 +166,11 @@ cells change nothing. You see every change before it is saved.
   not met or not known – with a request for up to five more products; _Copy for my AI_ copies it
   with your own question, or, without one, asks which product fits best. Paste it into the
   assistant you use. If it adds products or fills in values, it answers with the products as a
-  table; paste that back with _Add or update products_. Propario itself sends nothing anywhere.
+  table; paste that back with _Add or update products_.
+- **With your AI connected** (Settings → _Your AI_): the same buttons ask it right here – _Ask my
+  AI for more_ lets it search the web for products, _Ask_ sends your question. The answer
+  appears in the panel; if it has a table, _Add or update products_ shows every change before it
+  is saved. Nothing is sent until you press one of the buttons.
 - To pick out products by their values – less than 40 cm deep, under €800 – the table's
   **Advanced** filter answers at once, without AI.
 
@@ -188,6 +192,9 @@ Your comparisons are stored on the server. Under **Backup**:
   invitations, removing accounts.
 - **Language** and **Appearance** (system, light or dark).
 - **People:** the names used for ratings and “found by”.
+- **Your AI** _(optional)_: connect Claude or ChatGPT with an API key from the provider – a key for
+  their API, not your chat subscription; the provider may charge for its use. The key is stored
+  encrypted and never shown again; choose the model, or remove the key at any time.
 - **About:** the running version, and links to this guide and to the source code.
 - **Troubleshooting:** see below.
 

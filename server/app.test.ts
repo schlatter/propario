@@ -3,6 +3,7 @@ import http from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createApp } from './app.ts'
+import { useTransport } from './ai.ts'
 import { openDatabase, type DB } from './db.ts'
 import { loadConfig } from './env.ts'
 import { useKey } from './crypto.ts'
@@ -14,10 +15,12 @@ import { newId } from '../src/shared/ids.ts'
 let db: DB
 let server: http.Server
 let base = ''
+/** Extra settings for the next requests (the app is made per request). */
+let env: Record<string, string> = {}
 
 async function start() {
   server = http.createServer((req, res) => {
-    const app = createApp(db, loadConfig({ NODE_ENV: 'production', DATA_KEY: 'unused-in-tests', ORIGIN: base || 'http://localhost:1' }))
+    const app = createApp(db, loadConfig({ NODE_ENV: 'production', DATA_KEY: 'unused-in-tests', ORIGIN: base || 'http://localhost:1', ...env }))
     app.handle(req, res, () => {
       res.writeHead(200, { 'Content-Type': 'text/plain' })
       res.end('static')
@@ -28,6 +31,7 @@ async function start() {
 }
 
 beforeEach(async () => {
+  env = {}
   useKey(null)
   resetRateLimits()
   db = openDatabase(':memory:')
@@ -205,5 +209,63 @@ describe('resetting a browser', () => {
     expect(res.headers.get('location')).toBe('/reset.html?done=1')
     expect(res.headers.get('clear-site-data')).toBe('"cache", "storage"')
     expect(res.headers.get('clear-site-data')).not.toContain('cookies')
+  })
+})
+
+describe('one’s own AI', () => {
+  const key = 'fake-secret-key-' + 'x'.repeat(12)
+  const models = () =>
+    useTransport((async (input: RequestInfo | URL) => {
+      const url = String(input instanceof Request ? input.url : input)
+      if (url.includes('/v1/models')) return Response.json({ data: [{ id: 'claude-opus-5-5', type: 'model' }], has_more: false })
+      return Response.json({ type: 'error', error: { type: 'authentication_error', message: 'invalid x-api-key' } }, { status: 401 })
+    }) as typeof fetch)
+  afterEach(() => useTransport(null))
+  const send = (method: string, path: string, body: unknown, cookie: string) =>
+    api(path, { method, headers: { 'content-type': 'application/json', origin: base, cookie }, body: JSON.stringify(body) })
+
+  it('keeps the key sealed with the account and never shows it, not even to its owner', async () => {
+    useKey(Buffer.alloc(32, 7).toString('base64'))
+    models()
+    const ada = newId()
+    const grace = newId()
+    createUser(db, { id: ada, name: 'Ada', isAdmin: true })
+    createUser(db, { id: grace, name: 'Grace', isAdmin: false })
+    const cookie = `propario=${createSession(db, ada)}`
+    const res = await send('PUT', '/api/me/ai', { provider: 'anthropic', key }, cookie)
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ provider: 'anthropic', model: 'claude-opus-5-5', keyHint: 'xxxx' })
+    const stored = (db.prepare('SELECT ai FROM users WHERE id = ?').get(ada) as { ai: string }).ai
+    expect(stored).toMatch(/^v1\./)
+    expect(stored).not.toContain('secret')
+    for (const path of ['/api/me/ai', '/api/session']) expect(await (await api(path, { headers: { cookie } })).text()).not.toContain('secret')
+    // Someone else sees no AI of theirs – and has none.
+    expect(await (await api('/api/me/ai', { headers: { cookie: `propario=${createSession(db, grace)}` } })).json()).toBeNull()
+    // Removed on request.
+    expect((await send('DELETE', '/api/me/ai', {}, cookie)).status).toBe(200)
+    expect(await (await api('/api/me/ai', { headers: { cookie } })).json()).toBeNull()
+  })
+
+  it('refuses a key the provider refuses, and asks nothing without an AI', async () => {
+    models()
+    const ada = newId()
+    createUser(db, { id: ada, name: 'Ada', isAdmin: true })
+    const cookie = `propario=${createSession(db, ada)}`
+    useTransport((async () => Response.json({ type: 'error', error: { type: 'authentication_error', message: 'no' } }, { status: 401 })) as typeof fetch)
+    const res = await send('PUT', '/api/me/ai', { provider: 'anthropic', key }, cookie)
+    expect(res.status).toBe(400)
+    expect(await res.json()).toEqual({ error: 'ai', reason: 'key' })
+    expect(await (await api('/api/me/ai', { headers: { cookie } })).json()).toBeNull()
+    expect((await send('POST', '/api/ai/ask', { text: 'Which one?' }, cookie)).status).toBe(400)
+    expect((await send('PUT', '/api/me/ai', { provider: 'other', key }, cookie)).status).toBe(400)
+  })
+  it('is gone when the instance switches it off', async () => {
+    env = { PROPARIO_AI: 'off' }
+    const ada = newId()
+    createUser(db, { id: ada, name: 'Ada', isAdmin: true })
+    const cookie = `propario=${createSession(db, ada)}`
+    expect((await api('/api/me/ai', { headers: { cookie } })).status).toBe(404)
+    expect((await send('PUT', '/api/me/ai', { provider: 'anthropic', key }, cookie)).status).toBe(404)
+    expect((await send('POST', '/api/ai/ask', { text: 'Which one?' }, cookie)).status).toBe(404)
   })
 })

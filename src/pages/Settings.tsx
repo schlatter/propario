@@ -7,6 +7,7 @@ import { applyTheme, readTheme, type Theme } from '../theme'
 import { Glyph } from '../ui/Glyph'
 import { ProjectLinks } from '../ui/ProjectLinks'
 import { AccountSection, MembersSection } from './Account'
+import { AiSection } from './AiSettings'
 import { useMe } from '../session'
 
 export function SettingsPage() {
@@ -24,6 +25,8 @@ export function SettingsPage() {
 
       <AccountSection />
       {me.isAdmin && <MembersSection />}
+
+      <AiSection />
 
       <section className="panel stack">
         <h2>{m.settings.language}</h2>

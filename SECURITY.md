@@ -37,6 +37,15 @@ happens.** Every change is measured against this list; `npm run verify` checks m
   address in 10 minutes, same origin only.
 - People can download everything they can see and delete their account themselves; deletion
   takes the comparisons they own along.
+- One's own AI (`server/ai.ts`) is optional and per account. The API key is sealed with the
+  account (`users.ai`), never sent back to the browser (only its last four characters), not part
+  of the backups people download (server snapshots keep it sealed) and deleted with the
+  account. A comparison goes to the provider only when its
+  person presses _Ask_ or _Ask my AI for more_, as the same text "Copy for my AI" gives – without
+  names of people – and only to the two fixed provider addresses (api.anthropic.com,
+  api.openai.com); nothing typed by people decides where the server connects. Propario
+  stores and logs neither requests nor answers; what the provider keeps is up to its terms. An answer's table changes nothing until it passes the
+  preview of _Add or update products_. `PROPARIO_AI=off` switches it off for the instance.
 
 ### Encryption
 

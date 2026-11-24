@@ -28,7 +28,8 @@ export function MergePage() {
   const toast = useToast()
   const navigate = useNavigate()
   const location = useLocation()
-  const [text, setText] = useState('')
+  // An answer from one's own AI arrives with the link (FindAndAsk.tsx); it is read only when asked.
+  const [text, setText] = useState(() => String((location.state as { text?: unknown } | null)?.text ?? ''))
   const [plan, setPlan] = useState<MergePlan | null>(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)

@@ -122,3 +122,22 @@ export function productTable(d: Pick<Input, 'products' | 'properties'>, m: Messa
   const row = (cells: string[]) => `| ${cells.map(mdCell).join(' | ')} |`
   return [row(cols.map(([h]) => h)), `|${cols.map(() => ' --- |').join('')}`, ...d.products.map((p) => row(cols.map(([, get]) => get(p))))]
 }
+
+/**
+ * An AI's answer as the panel shows it: the prose to read – without Markdown's emphasis marks and
+ * without its table – and how many product rows the table has. The table itself is read only by
+ * "Add or update products".
+ */
+export function splitAnswer(text: string): { prose: string; rows: number } {
+  const lines = text.split('\n')
+  const table = lines.filter((l) => l.trim().startsWith('|'))
+  const prose = lines
+    .filter((l) => !l.trim().startsWith('|'))
+    .join('\n')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+  // Header and the |---| line are no products.
+  const rows = table.filter((l) => !/^\|[\s:|-]+\|$/.test(l.trim())).length - 1
+  return { prose, rows: Math.max(0, rows) }
+}

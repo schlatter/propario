@@ -10,6 +10,10 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
   for more products and paste the link of what you found – or copy the comparison for your own
   AI with a request for more products or your own question. “Copy for my AI” moved here from
   the ⋯ menu.
+- Added: connect your own AI – Claude or ChatGPT, with an API key under Settings → Your AI – and
+  “Find and ask” asks it right there: for more products, which it may look up on the web, or
+  your own question. The key is stored encrypted; nothing is sent until you ask. Self-hosters
+  can switch it off with `PROPARIO_AI=off`.
 
 ## 0.18.0 — 2026-11-24
 

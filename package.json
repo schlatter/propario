@@ -27,6 +27,7 @@
     "build:demo": "VITE_DEMO_ONLY=1 vite build --base=/propario/demo/ --outDir dist-demo --emptyOutDir"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "1.8.0",
     "@simplewebauthn/server": "14.1.0"
   },
   "devDependencies": {

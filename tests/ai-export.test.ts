@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { makeProduct, makeProject, makeProperty, makeRequirement } from '../src/db/factories'
-import { comparisonForAi } from '../src/domain/ai-export'
+import { comparisonForAi, splitAnswer } from '../src/domain/ai-export'
 import { summarize, withBudget } from '../src/domain/requirements'
 import type { Formatters } from '../src/i18n'
 import { en } from '../src/i18n/en'
@@ -52,5 +52,13 @@ describe('copy for my AI', () => {
     expect(own).not.toContain(en.ai.prompt)
     expect(own).toContain(en.ai.tableHint)
     expect(comparisonForAi(d, en, fmt, '  ')).toContain(en.ai.prompt)
+  })
+})
+
+describe('an answer from one’s own AI', () => {
+  it('shows the prose without emphasis marks or the table, and counts the table’s products', () => {
+    const answer = 'Take **Arvika**.\n\nTwo more:\n\n| Link | Model |\n| --- | --- |\n| https://a.example | Dora |\n| https://b.example | Edda |\n\nGood luck!'
+    expect(splitAnswer(answer)).toEqual({ prose: 'Take Arvika.\n\nTwo more:\n\nGood luck!', rows: 2 })
+    expect(splitAnswer('Arvika fits best.')).toEqual({ prose: 'Arvika fits best.', rows: 0 })
   })
 })
