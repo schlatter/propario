@@ -228,7 +228,7 @@ export function ProjectPage() {
       {decision && (
         <div className={`decision-bar${decision.purchase.status === 'purchased' ? ' purchased' : ''}`}>
           <span className="label">{decision.purchase.status === 'purchased' ? m.purchase.purchased : m.project.decision}</span>
-          <button className="btn ghost sm" style={{ fontWeight: 700, fontSize: 15 }} onClick={() => setParam('product', decision.id)}>
+          <button className="btn ghost sm" style={{ fontWeight: 700, fontSize: 16 }} onClick={() => setParam('product', decision.id)}>
             {productName(decision, m.product.unnamed)}
           </button>
           {decision.purchase.status === 'purchased' && (

@@ -167,7 +167,7 @@ export function ImportPage() {
       {step === 'done' && (
         <div className="panel stack">
           <h2>{m.importer.done}</h2>
-          <ul style={{ margin: 0, paddingLeft: 18 }}>
+          <ul style={{ margin: 0, paddingLeft: 20 }}>
             {results.map((r) => (
               <li key={r.id}>
                 <Link to={`/p/${r.id}`}>{m.importer.resultLine(r.name, r.products, r.requirements)}</Link>
@@ -318,7 +318,7 @@ function SheetEditor({
     patchSheet({ columns: sheet.columns.map((c) => (c.index === index ? { ...c, ...patch, confident: true } : c)) })
 
   return (
-    <section className="panel stack" style={{ gap: 18, minWidth: 0 }} aria-label={sheet.sheetName}>
+    <section className="panel stack" style={{ gap: 20, minWidth: 0 }} aria-label={sheet.sheetName}>
       <div className="row" style={{ alignItems: 'flex-end', gap: 12 }}>
         <h2 style={{ flex: '1 1 auto' }}>{sheet.sheetName}</h2>
         <label className="check">

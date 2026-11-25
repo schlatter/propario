@@ -80,12 +80,21 @@ Rules:
   used sparingly.
 - **Public Sans** (interface): everything else; tabular figures where numbers line up.
 - Both are served from the instance, never from a font service. No third face.
+- **Type scale (px): 11, 12, 13, 14, 16, 18, 20, 28, 36, 48, 64.** 14 is the body, 12 and 13 the
+  small and dense text (tables, notes), 11 only for tiny labels, 16 to 28 for titles, 36 and up
+  for big numbers and monograms. Titles that grow with the screen use `clamp()`.
 
 ## Shape, space, imagery
 
 - Radius 10 px for surfaces, 6–8 px for controls, round only for dots and avatars.
 - Borders separate, shadows only for things that float (menus, dialogs, the drawer).
 - Touch targets 44 px; generous white space over extra lines and boxes.
+- **Spacing scale (px): 1, 2, 4, 6, 8, 10, 12, 16, 20, 24, 32, 40, 48, 64, 80.** For gaps, padding
+  and margins, in the CSS and in inline styles. 1 is a hairline only (a pill's top and bottom, the
+  seam between segments); 80 keeps room for the floating button. Between two steps, take the
+  larger one.
+- Both scales are checked by `tests/design-scale.test.ts`, which reads them from this page. A value
+  outside them fails the test: use a step, or change the scale here on purpose.
 - Product pictures are the stars: on white, uncropped, never tinted.
 - The demo's pictures are drawn by [`scripts/demo-pictures.ts`](../scripts/demo-pictures.ts):
   invented products as studio shots in vector – no photo of a real product is shipped. Change

@@ -137,7 +137,7 @@ export function BackupPage() {
               <b>{m.backup.fileSummary(file.projects.length, file.products.length, file.exportedAt ? fmt.dateTime(file.exportedAt) : '?')}</b>
             </p>
             <div className="grid-2">
-              <div className="panel stack" style={{ padding: 14 }}>
+              <div className="panel stack" style={{ padding: 16 }}>
                 <button
                   className="btn primary"
                   disabled={busy}
@@ -154,7 +154,7 @@ export function BackupPage() {
                 <span className="muted small">{m.backup.mergeHint}</span>
               </div>
               {file.kind === 'full' && (
-                <div className="panel stack" style={{ padding: 14, marginTop: 0 }}>
+                <div className="panel stack" style={{ padding: 16, marginTop: 0 }}>
                   <button
                     className="btn danger"
                     disabled={busy}
