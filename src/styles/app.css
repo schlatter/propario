@@ -2194,9 +2194,11 @@ table.map {
 .pimg-track::-webkit-scrollbar {
   display: none;
 }
-/* One picture has nothing to scroll; fractional widths must not make it a scroll region. */
+/* One picture has nothing to scroll. `clip`, not `hidden`: a hidden overflow is still a scroll
+   container, and a width rounded to a fraction of a pixel then makes it a scroll region nobody can
+   reach with the keyboard (axe: scrollable-region-focusable). Clipped, it is no scroll container. */
 .pimg-track:has(> .pimg-slide:only-child) {
-  overflow-x: hidden;
+  overflow: clip;
 }
 .pimg-slide {
   flex: 0 0 100%;
