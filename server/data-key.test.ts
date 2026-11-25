@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { openDatabase } from './db.ts'
 import { parseKey, useKey } from './crypto.ts'
-import { devDataKey, loadConfig } from './env.ts'
+import { devDataKey } from './env.ts'
 import { applyChanges, keyProblem } from './store.ts'
 import { createUser } from './users.ts'
 import { makeProject } from '../src/db/factories.ts'
@@ -68,14 +68,9 @@ describe('npm run dev encrypts by default', () => {
     expect(readFileSync(file, 'utf8').trim()).toBe(first.key)
   })
 
-  it('takes DATA_KEY when it is set, and stores unencrypted only with DATA_KEY=off', () => {
+  it('takes DATA_KEY when it is set, and then makes no key of its own', () => {
     const file = join(mkdtempSync(join(tmpdir(), 'propario-key-')), '.dev-data-key')
     expect(devDataKey(KEY, file).key).toBe(KEY)
-    expect(devDataKey('off', file).key).toBeNull()
     expect(() => readFileSync(file)).toThrow()
-  })
-
-  it('production refuses DATA_KEY=off', () => {
-    expect(() => loadConfig({ NODE_ENV: 'production', ORIGIN: 'https://p.example.org', DATA_KEY: 'off' })).toThrow('development only')
   })
 })

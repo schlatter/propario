@@ -46,11 +46,10 @@ function api(): Plugin {
     apply: 'serve',
     async configureServer(server) {
       if (process.env.VITEST) return
-      // Encrypted as in production, unless DATA_KEY=off says otherwise (server/env.ts).
+      // Encrypted as in production (server/env.ts).
       const { devDataKey } = await import('./server/env.ts')
       const dev = devDataKey(process.env.DATA_KEY, '.dev-data-key')
-      if (dev.key) process.env.DATA_KEY = dev.key
-      else delete process.env.DATA_KEY
+      process.env.DATA_KEY = dev.key
       const [{ createApp }, { openDatabase }, { loadConfig }, { keyProblem }] = await Promise.all([
         import('./server/app.ts'),
         import('./server/db.ts'),

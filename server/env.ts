@@ -27,7 +27,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     throw new Error('ORIGIN must use https (passkeys need a secure context); only localhost may use http')
   }
   if (production && !env.DATA_KEY) throw new Error('Set DATA_KEY (openssl rand -base64 32); it encrypts all comparisons at rest')
-  if (production && env.DATA_KEY === 'off') throw new Error('DATA_KEY=off (no encryption) is for development only')
   return {
     origin,
     dataDir: env.DATA_DIR || (production ? '/data' : './data'),
@@ -43,11 +42,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
 
 /**
  * The key `npm run dev` encrypts with, so development stores data as production does: DATA_KEY
- * when it is set (e.g. production's key, to open its data), none when it is "off", otherwise the
- * key in `file` (git-ignored, outside the data folder), made once on the first start.
+ * when it is set (e.g. production's key, to open its data), otherwise the key in `file`
+ * (git-ignored, outside the data folder), made once on the first start. There is no unencrypted
+ * mode.
  */
-export function devDataKey(value: string | undefined, file: string): { key: string | null; note: string } {
-  if (value === 'off') return { key: null, note: 'DATA_KEY=off: development data is stored unencrypted.' }
+export function devDataKey(value: string | undefined, file: string): { key: string; note: string } {
   if (value) return { key: value, note: 'Development data is encrypted with DATA_KEY.' }
   if (existsSync(file)) return { key: readFileSync(file, 'utf8').trim(), note: `Development data is encrypted with the key in ${file}.` }
   const key = randomBytes(32).toString('base64')

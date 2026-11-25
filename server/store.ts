@@ -78,7 +78,7 @@ export function keyProblem(db: DB, dataDir: string, production: boolean): string
     const fix = 'Start again with the DATA_KEY the data was written with. A new key, e.g. from openssl rand, only suits an empty data folder.'
     const dev = production
       ? ''
-      : ` For development: npm run dev without DATA_KEY uses the key in .dev-data-key, DATA_KEY=off stores unencrypted, and moving ${dataDir} aside begins with an empty one.`
+      : ` For development: npm run dev without DATA_KEY uses the key in .dev-data-key, and moving ${dataDir} aside begins with an empty one.`
     return `${what} ${fix}${dev}`
   }
 }

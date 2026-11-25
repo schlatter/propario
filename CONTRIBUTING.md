@@ -42,15 +42,17 @@ npm run dev        # http://localhost:5173; the terminal shows the one-time setu
 ```
 
 Development data lives in `./data/` (git-ignored) and is **encrypted as in production**: on the
-first start `npm run dev` makes a key and keeps it in `.dev-data-key` (git-ignored, readable only
-by you), and uses it every time after. Keep that file; without it `./data/` cannot be read. To
-open data from a production backup, start with its key: `DATA_KEY=… npm run dev`. Never use
+first start `npm run dev` makes a key and keeps it in `.dev-data-key` (git-ignored, readable
+only by you), and uses it every time after. Keep that file; without it `./data/` cannot be read.
+To open data from a production backup, start with its key: `DATA_KEY=… npm run dev`. Never use
 `DATA_KEY=$(openssl rand -base64 32) npm run dev`: that makes a new key on every start, and the
-server then refuses `./data/` with a message saying so. Unencrypted storage is an option for
-development only, `DATA_KEY=off npm run dev`. To start over, move `./data/` aside. The hooks run on every commit: gitleaks and
-`scripts/check-repo-policy.sh` (no databases, workbooks, exports or `private/`, plus any terms
-you list, one per line, in the git-ignored `private/denylist.txt`). Before every push they check
-all outgoing commits, messages and tags the same way and run `npm run verify`.
+server then refuses `./data/` with a message saying so. There is no unencrypted mode. To start
+over, move `./data/` aside.
+
+The hooks run on every commit: gitleaks and `scripts/check-repo-policy.sh` (no databases,
+workbooks, exports or `private/`, plus any terms you list, one per line, in the git-ignored
+`private/denylist.txt`). Before every push they check all outgoing commits, messages and tags
+the same way and run `npm run verify`.
 
 **One Node.js version**, set in `.nvmrc`: CI reads it, `engines` in `package.json` and the
 Dockerfile follow it, and a test checks that they agree. When Dependabot raises the Node image,
