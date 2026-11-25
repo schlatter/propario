@@ -607,7 +607,8 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await page.locator('dialog.drawer').getByRole('button', { name: 'More' }).click()
   await page.getByRole('button', { name: 'Use as price reference' }).click()
   await page.locator('dialog.drawer').getByRole('button', { name: 'Close' }).click()
-  await expect(page.locator('.price-cell').getByText('price reference')).toBeVisible()
+  // Short under the price: the reference itself is "Ref.", its sentence the tooltip.
+  await expect(page.locator('.price-cell').getByTitle('Ref. (price reference)')).toHaveText('Ref.')
   await accessible(page, 'comparison with rules')
 
   // Quick filters toggle; the advanced query filters by any field and says what went wrong.

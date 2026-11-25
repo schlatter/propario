@@ -12,12 +12,17 @@ import zlib from 'node:zlib'
 import { createApp } from './app.ts'
 import { openDatabase } from './db.ts'
 import { loadConfig } from './env.ts'
-import { collectGarbage } from './store.ts'
+import { collectGarbage, keyProblem } from './store.ts'
 import { purgeExpired } from './users.ts'
 
 const config = loadConfig()
 const ROOT = resolve(process.env.PROPARIO_DIST || join(fileURLToPath(new URL('.', import.meta.url)), '..', 'dist'))
 const db = openDatabase(join(config.dataDir, 'propario.db'))
+const problem = keyProblem(db, config.dataDir, config.production)
+if (problem) {
+  console.error(`\n  ${problem}\n`)
+  process.exit(1)
+}
 /** The build's version (written by `vite build`), e.g. 0.2.0+4d837a1. */
 const version = await readFile(join(ROOT, 'version.json'), 'utf8')
   .then((t) => (JSON.parse(t) as { version: string }).version)

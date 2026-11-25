@@ -32,7 +32,8 @@ docker compose logs app                              # shows the one-time setup 
 
 **`DATA_KEY` encrypts every comparison, picture and personal setting at rest (AES-256-GCM).**
 Without it the server does not start; if it is lost, the data cannot be read any more. Keep a
-copy somewhere safe and apart from your backups.
+copy somewhere safe and apart from your backups. Create it **once**: a different key does not
+open the data written before, and the server then refuses to start and says so.
 
 `docker compose up -d` builds the image from the source. To run a released image instead,
 replace `build: .` and `image: propario` in `compose.yaml` with one fixed version from the
@@ -118,7 +119,8 @@ This issues a new recovery key (the old one stops working). Hand it over in pers
 ## Troubleshooting
 
 - **The server does not start:** `docker compose logs app`. A missing or wrong `DATA_KEY` and a
-  wrong `ORIGIN` are the usual causes.
+  wrong `ORIGIN` are the usual causes. "DATA_KEY does not match the data" means the key changed
+  since the data was written: put back the key you used before.
 - **A browser does not start Propario** (blank, loading forever): after 10 seconds the page names
   the step it stopped at and shows a reference; `docker compose logs app | grep <reference>`
   shows the error. _Reset this browser_ (also at `/reset.html`) removes only Propario's copy in

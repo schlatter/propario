@@ -1,3 +1,5 @@
+import { randomBytes } from 'node:crypto'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 /** Configuration from environment variables. The table is in docs/self-hosting.md. */
 export interface Config {
   /** Public address, e.g. https://propario.example.org. Passkeys are bound to it. */
@@ -36,4 +38,18 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     addressHeader: (env.ADDRESS_HEADER || '').toLowerCase(),
     xffDepth: Math.max(1, Number(env.XFF_DEPTH || 1)),
   }
+}
+
+/**
+ * The key `npm run dev` encrypts with, so development stores data as production does: DATA_KEY
+ * when it is set (e.g. production's key, to open its data), otherwise the key in `file`
+ * (git-ignored, outside the data folder), made once on the first start. There is no unencrypted
+ * mode.
+ */
+export function devDataKey(value: string | undefined, file: string): { key: string; note: string } {
+  if (value) return { key: value, note: 'Development data is encrypted with DATA_KEY.' }
+  if (existsSync(file)) return { key: readFileSync(file, 'utf8').trim(), note: `Development data is encrypted with the key in ${file}.` }
+  const key = randomBytes(32).toString('base64')
+  writeFileSync(file, key + '\n', { mode: 0o600, flag: 'wx' })
+  return { key, note: `Development data is encrypted with a new key, kept in ${file}. Keep it: without it the data folder cannot be read.` }
 }

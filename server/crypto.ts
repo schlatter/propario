@@ -9,8 +9,9 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes, timingSafeEq
  * bytes in base64) lives outside the data directory: a copied database file or backup alone
  * reveals nothing but ids, roles and timestamps. Values are stored as `v1.<base64url>`.
  *
- * Without a key (development, tests) values are stored as they are; the server refuses to start
- * without one in production (env.ts). Secrets (sessions, invites, recovery keys) are only ever
+ * Production refuses to start without a key, and `npm run dev` makes and keeps its own (env.ts):
+ * there is no unencrypted mode. Only unit tests run without a key (useKey(null)); values written
+ * without one, by an old version, are still read. Secrets (sessions, invites, recovery keys) are only ever
  * stored as SHA-256 hashes.
  */
 

@@ -20,8 +20,9 @@ propario-*.json
 /test-results
 /playwright-report
 
-# Env
+# Env, and the key npm run dev encrypts ./data with
 .env
+.dev-data-key
 .env.*
 !.env.example
 
