@@ -696,6 +696,17 @@ test('Ada moves rows and decides by swiping', async () => {
     .first()
     .evaluate((b) => (b.textContent = 'Vitrine mit drei Schubladen und zwei Glastüren aus massivem Kiefernholz'))
   expect(await nameColumn.evaluate((th) => th.getBoundingClientRect().width)).toBe(nameWidth)
+  // Scrolled sideways, only the pictures stay, so more of the data fits; at the left edge the names return.
+  const wrap = page.locator('.project-page .table-wrap')
+  const topName = page.locator('table.grid tbody .name-model').first()
+  await wrap.evaluate((w) => (w.scrollLeft = 160))
+  await expect(topName).toBeHidden()
+  await expect(page.locator('table.grid tbody .name-cell .thumb').first()).toBeVisible()
+  expect(await nameColumn.evaluate((th) => th.getBoundingClientRect().width)).toBeLessThanOrEqual(56)
+  await accessible(page, 'table on a phone, scrolled sideways')
+  await wrap.evaluate((w) => (w.scrollLeft = 0))
+  await expect(topName).toBeVisible()
+  expect(await nameColumn.evaluate((th) => th.getBoundingClientRect().width)).toBe(nameWidth)
   // Adding, the filter field, filter and columns in one row, right below the tabs.
   const tops = await Promise.all(
     [

@@ -3362,6 +3362,15 @@ main.project-page {
   .grid col[data-col='candidate'] {
     width: 56px !important;
   }
+  /* Scrolled sideways, the product column keeps only the pictures (ProductTable folds it). */
+  .pictures-only .grid col.c-name {
+    width: 52px !important;
+  }
+  .pictures-only .name-main,
+  .pictures-only .name-tools,
+  .pictures-only thead .col-name .th-inner {
+    display: none;
+  }
   /* The table runs from edge to edge: the page's margins are room for data. */
   .project-page .table-wrap {
     margin-inline: calc(-1 * var(--gutter));

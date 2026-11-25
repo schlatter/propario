@@ -6,6 +6,9 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Unreleased
 
+- Changed: on a phone, scrolling the table sideways folds the product column to its pictures, so
+  more of the data fits; back at the left edge the names return.
+
 ## 0.21.0 — 2026-11-25
 
 - Changed: the selection in the table is a symbol (a circle for open, a tick for checked, a cross

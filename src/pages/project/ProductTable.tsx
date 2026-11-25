@@ -56,6 +56,11 @@ function addClause(query: string, name: string): string {
 /** Narrowest and widest width a column gets from double-clicking its edge. */
 const MIN_COL = 60
 const MAX_FIT = 360
+/** Matches the phone rules in app.css; there the product column is 148 px, folded 52 px. */
+const PHONE = '(max-width: 600px)'
+/** Folding only pays off when the table stays wider than the screen afterwards; otherwise it
+ *  would snap back to the left edge and unfold at once. */
+const FOLDED_BY = 96
 
 export function ProductTable({
   data,
@@ -122,6 +127,14 @@ export function ProductTable({
 
   // ---- product images ----
   const showThumbs = products.some((p) => productImage(p))
+  // On a phone, scrolling sideways folds the product column to its pictures, so more of the data
+  // fits; back at the left edge the names return.
+  const [picturesOnly, setPicturesOnly] = useState(false)
+  const foldOnScroll = (wrap: HTMLDivElement) => {
+    if (wrap.scrollLeft <= 0) setPicturesOnly(false)
+    else if (!picturesOnly && showThumbs && wrap.scrollLeft > 8 && wrap.scrollWidth - wrap.clientWidth > FOLDED_BY + 8 && window.matchMedia(PHONE).matches)
+      setPicturesOnly(true)
+  }
 
   // ---- acting on the selected products ----
   const confirm = useConfirm()
@@ -755,7 +768,7 @@ export function ProductTable({
           <QuickAdd data={data} onOpen={onOpen} inline />
         </div>
       ) : (
-        <div className="table-wrap">
+        <div className={picturesOnly ? 'table-wrap pictures-only' : 'table-wrap'} onScroll={(e) => foldOnScroll(e.currentTarget)}>
           <table className="grid" ref={tableRef}>
             <colgroup>
               <col className="c-sel" style={{ width: 64 }} />
