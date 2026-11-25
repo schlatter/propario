@@ -471,7 +471,9 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await page.getByRole('button', { name: 'Remove picture 2' }).click()
   await expect(page.locator('.pimg-slide')).toHaveCount(1)
   // A single picture is no scroll region, whatever widths the layout rounds to.
-  await expect(page.locator('.pimg-track')).toHaveCSS('overflow-x', 'hidden')
+  await expect(page.locator('.pimg-track')).toHaveCSS('overflow-x', 'clip')
+  // Not even a script can scroll it: it is no scroll container at all.
+  expect(await page.locator('.pimg-track').evaluate((el) => ((el.scrollLeft = 8), el.scrollLeft))).toBe(0)
   await page.setViewportSize(size)
   await accessible(page, 'further pictures')
 
