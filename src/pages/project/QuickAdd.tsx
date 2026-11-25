@@ -23,11 +23,11 @@ export function QuickAdd({ data, onOpen, inline = false }: { data: ProjectData; 
   return (
     <Menu
       label={m.project.addProduct}
-      className="btn sm primary"
+      className="btn sm primary quick-add-btn"
       listClassName="quick-add-pop"
       trigger={
         <>
-          <Glyph name="plus" /> {m.project.addShort}
+          <Glyph name="plus" /> <span className="hide-narrow">{m.project.addShort}</span>
         </>
       }
     >

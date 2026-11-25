@@ -16,9 +16,9 @@ import { ProductDrawer } from './project/ProductDrawer'
 import { ProductTable } from './project/ProductTable'
 import { RequirementsTab } from './project/RequirementsTab'
 import { useProjectData } from './project/useProjectData'
+import { useLoadImages } from './project/useLoadImages'
 import { FindAndAsk } from './project/FindAndAsk'
 import { ShareDialog } from './project/ShareDialog'
-import { QuickAdd } from './project/QuickAdd'
 import { ProjectDialog } from './Home'
 import { InTopbar } from '../ui/Topbar'
 import { rolesOf } from '../sync'
@@ -44,6 +44,7 @@ export function ProjectPage() {
   const [sharing, setSharing] = useState(false)
   const [editing, setEditing] = useState(false)
   const role = useLiveQuery(async () => (await rolesOf())[id ?? ''], [id])
+  const images = useLoadImages(data?.products ?? [])
 
   if (data === undefined) return <main aria-busy="true" />
   if (data === null)
@@ -76,6 +77,30 @@ export function ProjectPage() {
             /
           </span>
           <h1 className="sr-only">{project.name}</h1>
+          {/* The stage as a coloured dot before the name; its menu names the stages. */}
+          <Menu
+            label={`${m.project.stage}: ${m.status[project.status]}`}
+            className="stage-trigger"
+            trigger={<span className="stage-dot" data-status={project.status} aria-hidden="true" />}
+          >
+            {(close) =>
+              STAGES.map((st, i) => (
+                <button
+                  key={st}
+                  aria-pressed={project.status === st}
+                  className={`stage-option${i < stageIndex && project.status !== 'archived' ? ' done' : ''}`}
+                  onClick={() => {
+                    close()
+                    void updateProject(project.id, { status: st })
+                  }}
+                >
+                  <span className="stage-dot" data-status={st} aria-hidden="true" />
+                  {m.status[st]}
+                  {project.status === st && <Glyph name="check" />}
+                </button>
+              ))
+            }
+          </Menu>
           <CommitInput
             className="title-input"
             aria-label={m.field.name}
@@ -130,6 +155,18 @@ export function ProjectPage() {
                     { glyph: 'download', label: m.common.exportJson, run: () => void exportProjectJson(project.id) },
                   ]}
                 />
+                {role !== 'viewer' && (images.missing > 0 || images.progress) && (
+                  <button
+                    title={m.image.loadAllHint}
+                    disabled={!!images.progress}
+                    onClick={() => {
+                      close()
+                      void images.load()
+                    }}
+                  >
+                    <Glyph name="image" /> {m.image.loadAll(images.missing)}
+                  </button>
+                )}
                 {role !== 'viewer' && (
                   <button
                     onClick={() => {
@@ -223,39 +260,13 @@ export function ProjectPage() {
             </button>
           ))}
         </div>
-        <div className="tabbar-actions">
-          <Menu
-            label={`${m.project.stage}: ${m.status[project.status]}`}
-            className="stage-trigger"
-            trigger={
-              <>
-                <span className="stage-dot" data-status={project.status} aria-hidden="true" />
-                <span>{m.status[project.status]}</span>
-                <Glyph name="down" />
-              </>
-            }
-          >
-            {(close) =>
-              STAGES.map((st, i) => (
-                <button
-                  key={st}
-                  aria-pressed={project.status === st}
-                  className={`stage-option${i < stageIndex && project.status !== 'archived' ? ' done' : ''}`}
-                  onClick={() => {
-                    close()
-                    void updateProject(project.id, { status: st })
-                  }}
-                >
-                  <span className="stage-dot" data-status={st} aria-hidden="true" />
-                  {m.status[st]}
-                  {project.status === st && <Glyph name="check" />}
-                </button>
-              ))
-            }
-          </Menu>
-          {tab === 'products' && role !== 'viewer' && products.length > 0 && <QuickAdd data={data} onOpen={(pid) => setParam('product', pid)} />}
-        </div>
       </div>
+
+      {images.progress && (
+        <p className="small muted" role="status">
+          {m.image.loading(images.progress.done, images.progress.total)}
+        </p>
+      )}
 
       <div role="tabpanel">
         {tab === 'products' && (

@@ -13,7 +13,7 @@ import { reviewSummary } from '../../domain/reviews'
 import { coerceValue, daysSince, hostOf, isTyped, parseNumber, safeHref, STALE_DAYS } from '../../domain/values'
 import { useI18n, type Formatters } from '../../i18n'
 import type { Messages } from '../../i18n/en'
-import { applyProductPage, ImageError, loadImages, missingImages, productImage, readProductPage } from '../../images'
+import { applyProductPage, productImage, readProductPage } from '../../images'
 import { useConfirm, useToast } from '../../ui/Dialog'
 import { Glyph } from '../../ui/Glyph'
 import { CheckMark, RequirementBars, Stars } from '../../ui/Marks'
@@ -120,23 +120,6 @@ export function ProductTable({
 
   // ---- product images ----
   const showThumbs = products.some((p) => productImage(p))
-  // Products already tried in this session are not offered again (most failures are shops refusing automated access).
-  const [tried, setTried] = useState<Set<string>>(() => new Set())
-  const missing = missingImages(products).filter((p) => !tried.has(p.id))
-  const [imgProgress, setImgProgress] = useState<{ done: number; total: number } | null>(null)
-  const loadAllImages = async () => {
-    if (imgProgress) return
-    setImgProgress({ done: 0, total: missing.length })
-    try {
-      const r = await loadImages(missing, (done, total) => setImgProgress({ done, total }))
-      setTried(new Set([...tried, ...missing.map((p) => p.id)]))
-      toast(m.image.bulkResult(r.loaded, r.failed.length))
-    } catch (e) {
-      toast(m.image.error[e instanceof ImageError ? e.code : 'failed'])
-    } finally {
-      setImgProgress(null)
-    }
-  }
 
   // ---- acting on the selected products ----
   const confirm = useConfirm()
@@ -616,6 +599,7 @@ export function ProductTable({
   return (
     <>
       <div className="toolbar" style={{ marginBottom: 12 }}>
+        {canEdit && products.length > 0 && <QuickAdd data={data} onOpen={onOpen} />}
         <label className="search">
           <Glyph name="search" />
           <span className="sr-only">{m.project.filterPlaceholder}</span>
@@ -627,9 +611,12 @@ export function ProductTable({
           className="btn sm filter-toggle"
           aria-expanded={filtersOpen}
           aria-controls="filter-chips"
+          aria-label={activeFilters ? m.filter.toggleActive(activeFilters) : m.filter.toggle}
+          title={m.filter.toggle}
           onClick={() => setFiltersOpen(!filtersOpen)}
         >
-          <Glyph name="search" /> {activeFilters ? m.filter.toggleActive(activeFilters) : m.filter.toggle}
+          <Glyph name="filter" />
+          {activeFilters > 0 && <span className="filter-count">{activeFilters}</span>}
         </button>
         <div id="filter-chips" className={`chips filter-chips${filtersOpen ? ' open' : ''}`} role="group" aria-label={m.filter.quick}>
           <button type="button" className="chip toggle" aria-pressed={chips.has('fav')} onClick={() => toggleChip('fav')}>
@@ -661,22 +648,7 @@ export function ProductTable({
           </button>
         </div>
         <span className="spacer" />
-        {(missing.length > 0 || imgProgress) && (
-          <button type="button" className="btn sm" onClick={loadAllImages} disabled={!!imgProgress} aria-live="polite" title={m.image.loadAllHint}>
-            <Glyph name="image" />
-            {imgProgress ? m.image.loading(imgProgress.done, imgProgress.total) : m.image.loadAll(missing.length)}
-          </button>
-        )}
-        <Menu
-          label={m.project.columns}
-          trigger={
-            <>
-              <Glyph name="columns" /> {m.project.columns}
-            </>
-          }
-          className="btn sm"
-          scroll
-        >
+        <Menu label={m.project.columns} trigger={<Glyph name="columns" />} className="btn sm icon-only" scroll>
           {() =>
             hideableCols.map((c, i) => (
               <div className="col-row" key={c.id}>

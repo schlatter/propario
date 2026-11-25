@@ -9,6 +9,7 @@ const paths = {
   up: 'M4 10l4-4 4 4',
   down: 'M4 6l4 4 4-4',
   search: 'M7 12A5 5 0 1 0 7 2a5 5 0 0 0 0 10zM10.6 10.6L14 14',
+  filter: 'M2 3h12L9.4 8.6v4.6l-2.8-1.4V8.6z',
   out: 'M9 3h4v4M13 3L7.5 8.5M11 9.5V13H3V5h3.5',
   panel: 'M2.5 3h11v10h-11zM9.5 3v10',
   columns: 'M2.5 3h11v10h-11zM6.2 3v10M9.8 3v10',

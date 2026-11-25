@@ -1220,7 +1220,9 @@ table.grid {
   border-collapse: separate;
   border-spacing: 0;
   table-layout: fixed;
-  width: max-content;
+  /* As wide as its columns' widths add up to: long content wraps or is cut, it never widens a
+     column (max-content would let a long name push every column wider). */
+  width: 0;
   min-width: 100%;
   font-size: 14px;
 }
@@ -2913,30 +2915,34 @@ main.project-page {
   border-bottom: 0;
   margin-bottom: 0;
 }
-.tabbar-actions {
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding-bottom: 4px;
-}
+/* The stage: a coloured dot before the comparison's name; its menu names the stages. */
 .stage-trigger {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  min-height: 32px;
-  padding: 0 10px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--surface);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink-2);
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
   cursor: pointer;
 }
 .stage-trigger:hover {
-  border-color: var(--line-strong);
+  background: var(--sunken);
+}
+.stage-trigger .stage-dot {
+  width: 10px;
+  height: 10px;
+}
+.topbar-title .menu-list {
+  left: 0;
+  right: auto;
+}
+@media (pointer: coarse) {
+  .stage-trigger {
+    width: 44px;
+    height: 44px;
+  }
 }
 .stage-dot {
   width: 8px;
@@ -2963,6 +2969,8 @@ main.project-page {
   margin-left: auto;
 }
 .menu-list.quick-add-pop {
+  left: 0;
+  right: auto;
   width: min(460px, calc(100vw - 2 * var(--gutter)));
   padding: 8px;
 }
@@ -2971,21 +2979,6 @@ main.project-page {
 }
 .project-page .table-wrap {
   max-height: calc(100vh - 170px);
-}
-@media (max-width: 720px) {
-  .tabbar {
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  .tabbar .tabs {
-    flex-basis: 100%;
-    order: 2;
-  }
-  .tabbar-actions {
-    width: 100%;
-    justify-content: space-between;
-    padding: 6px 0 0;
-  }
 }
 
 /* ---------- Moving columns ---------- */
@@ -3281,6 +3274,21 @@ main.project-page {
 .filter-toggle {
   display: none;
 }
+/* A button that shows only its glyph; its name is in aria-label and title. */
+.btn.icon-only {
+  padding: 0;
+  aspect-ratio: 1;
+}
+.filter-count {
+  min-width: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--brand);
+  color: var(--brand-ink);
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+}
 @media (max-width: 600px) {
   .filter-toggle {
     display: inline-flex;
@@ -3298,7 +3306,7 @@ main.project-page {
     left: 36px;
   }
   .grid col.c-name {
-    width: 172px !important;
+    width: 148px !important;
   }
   .cell-sel .grip {
     display: none;
@@ -3308,24 +3316,70 @@ main.project-page {
     padding: 6px 4px;
   }
   .name-cell .thumb {
-    width: 52px;
-    height: 52px;
+    width: 40px;
+    height: 40px;
+  }
+  /* The star sits at the end of the brand's line, so the name below gets the cell's width. */
+  .name-cell {
+    position: relative;
+  }
+  .name-tools {
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
+  .name-brand {
+    padding-right: 26px;
+    font-size: 11px;
   }
   .name-tools a.icon-btn {
     display: none;
   }
+  /* Two lines of the name at most; the details show all of it. */
   .name-model {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    font-size: 13px;
     white-space: normal;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
     text-align: left;
   }
   .grid col[data-col='candidate'] {
     width: 96px !important;
   }
-  /* Search, filter and columns share one line. */
+  /* The table runs from edge to edge: the page's margins are room for data. */
+  .project-page .table-wrap {
+    margin-inline: calc(-1 * var(--gutter));
+    border-inline: 0;
+    border-radius: 0;
+  }
+  /* Filter field, filter and columns share one line; the two buttons show only their glyph. */
   .toolbar .search {
     flex: 1 1 120px;
     min-width: 0;
+  }
+  .toolbar .search .input,
+  .toolbar .btn.sm {
+    min-height: 44px;
+  }
+  .toolbar .filter-toggle {
+    gap: 4px;
+    padding: 0 12px;
+  }
+  .toolbar .spacer {
+    display: none;
+  }
+  .toolbar .quick-add-btn {
+    padding: 0;
+    aspect-ratio: 1;
+  }
+  /* Opened, the quick filters take their own lines below the tools. */
+  .toolbar .filter-chips {
+    order: 1;
+    flex-basis: 100%;
   }
 }
 

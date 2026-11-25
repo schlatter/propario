@@ -39,7 +39,7 @@ show archived ones.
 
 - **New comparison:** a name and, if you like, a category.
 - **Stage:** each comparison moves from _Researching_ to _Comparing_, _Decided_ and _Purchased_.
-  Set it in the menu next to the tabs.
+  In a comparison the stage is the coloured dot before its name; select it to change the stage.
 - **⋯ menu:** edit _Name & category_, _Duplicate_, _Archive_, _Export_ (JSON or Excel),
   _Share comparison_, _Add or update products_, _Delete_.
 - **Tabs:** _Products_, _Requirements_, _Fields_ and _Notes_ (the goal of the purchase, the
@@ -49,7 +49,7 @@ show archived ones.
 
 ![The products table of a comparison: pictures, prices against the budget, requirements met and not met, fit and verdicts.](images/table-light.png)
 
-**Add a product** with **+ Product**: type a name, or paste a shop link and press Enter.
+**Add a product** with **+ Product** (on a phone just **+**) next to the filter field: type a name, or paste a shop link and press Enter.
 With a link, Propario reads the page once and fills what it states about the product – picture,
 name, brand, price, dimensions, data sheet. Shops that refuse automated access are respected;
 Propario then takes what the address itself says, and you can paste or drop a picture
@@ -59,6 +59,8 @@ yourself.
 
 - Edit a cell in place; sort by a column; drag rows to put them in your order.
 - **Columns** chooses what is shown; drag a column edge to resize it, double-click to fit.
+- **Load images** in the ⋯ menu fetches the main picture of every product that has a link but no
+  picture yet.
 - **Quick filters:** _Favourites_, _New_, _Found by me_, _Only eligible_ (meets all must
   criteria), _Hide excluded_.
 - **Advanced** filters with a query over any field, for example
@@ -212,6 +214,9 @@ Your comparisons are stored on the server. Under **Backup**:
 Propario installs as an app: on Android choose **Install app**, on iPhone **Share → Add to Home
 Screen**. Installed, a product link shared from a shop app can go straight into a comparison:
 **Share → Propario**, then pick the comparison.
+
+On a phone the table keeps the product column narrow and runs from edge to edge, so more fields
+stay in view; the quick filters fold behind the filter button next to the filter field.
 
 <img src="images/phone-details-light.png" width="280" alt="A product's details on a phone: its picture, price, dimensions and fields.">
 

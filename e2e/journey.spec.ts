@@ -678,15 +678,39 @@ test('Ada moves rows and decides by swiping', async () => {
   await page.getByRole('button', { name: /^Filter/ }).click()
   await expect(page.getByRole('button', { name: 'Favourites' })).toBeVisible()
   await page.getByRole('button', { name: /^Filter/ }).click()
-  const nameWidth = await page.locator('table.grid thead th.col-name').evaluate((th) => th.getBoundingClientRect().width)
-  // Wide enough for a picture people can recognise (52 px), still under half the screen.
-  expect(nameWidth).toBeLessThanOrEqual(176)
+  const nameColumn = page.locator('table.grid thead th.col-name')
+  const nameWidth = await nameColumn.evaluate((th) => th.getBoundingClientRect().width)
+  // A picture people can still recognise (40 px), the rest of the screen for the data.
+  expect(nameWidth).toBeLessThanOrEqual(150)
   expect(
     await page
       .locator('table.grid tbody .name-cell .thumb')
       .first()
       .evaluate((t) => t.getBoundingClientRect().width),
-  ).toBeGreaterThanOrEqual(52)
+  ).toBeGreaterThanOrEqual(40)
+  // A long name wraps (two lines at most) – it never makes the column wider.
+  await page
+    .locator('table.grid tbody .name-model')
+    .first()
+    .evaluate((b) => (b.textContent = 'Vitrine mit drei Schubladen und zwei Glastüren aus massivem Kiefernholz'))
+  expect(await nameColumn.evaluate((th) => th.getBoundingClientRect().width)).toBe(nameWidth)
+  // Adding, the filter field, filter and columns in one row, right below the tabs.
+  const tops = await Promise.all(
+    [
+      page.getByRole('button', { name: 'Add product' }),
+      page.getByRole('searchbox', { name: 'Filter products…' }),
+      page.getByRole('button', { name: /^Filter/ }),
+      page.getByRole('button', { name: 'Columns' }),
+    ].map(async (l) => (await l.boundingBox())!.y),
+  )
+  expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(8)
+  const tabsBottom = (await page.getByRole('tablist').boundingBox())!
+  expect(Math.min(...tops) - (tabsBottom.y + tabsBottom.height)).toBeLessThan(24)
+  // The stage is the dot before the name; its menu names every stage.
+  await page.getByRole('button', { name: /^Stage: / }).click()
+  for (const name of ['Researching', 'Comparing', 'Decided', 'Purchased', 'Archived'])
+    await expect(page.getByRole('button', { name, exact: true })).toBeVisible()
+  await page.keyboard.press('Escape')
   await accessible(page, 'table on a phone')
 
   await page.getByRole('link', { name: 'Swipe' }).click()
