@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { setVote } from '../db/repo'
 import type { Product, Vote } from '../db/types'
-import { displayName, formatValue } from '../domain/display'
+import { cardFacts, displayName, formatValue } from '../domain/display'
 import { safeHref, hostOf } from '../domain/values'
 import { useI18n } from '../i18n'
 import { isPicture, productImage } from '../images'
@@ -162,11 +162,9 @@ function Card({ product: p, data, leaving, onVote }: { product: Product; data: P
   const dims = DIMS.map((d) => ({ d, prop: data.properties.find((prop) => meaning(prop.name) === d) }))
     .map(({ d, prop }) => ({ d, text: prop ? formatValue(prop, p.values?.[prop.id], m, fmt) : '', id: prop?.id }))
     .filter((x) => x.text)
-  const facts = data.properties
-    .filter((prop) => !dims.some((x) => x.id === prop.id))
-    .map((prop) => ({ prop, text: formatValue(prop, p.values?.[prop.id], m, fmt) }))
-    .filter((f) => f.text)
-    .slice(0, 4)
+  const facts = cardFacts(
+    data.properties.filter((prop) => !dims.some((x) => x.id === prop.id)).map((prop) => ({ prop, text: formatValue(prop, p.values?.[prop.id], m, fmt) })),
+  )
 
   const offset = leaving === 'like' ? 700 : leaving === 'dislike' ? -700 : dx
   const hint = offset > 40 ? 'like' : offset < -40 ? 'dislike' : null
@@ -253,7 +251,7 @@ function Card({ product: p, data, leaving, onVote }: { product: Product; data: P
             {facts.map((f) => (
               <div key={f.prop.id}>
                 <dt>{f.prop.name}</dt>
-                <dd>{f.text}</dd>
+                <dd title={f.text}>{f.text}</dd>
               </div>
             ))}
           </dl>

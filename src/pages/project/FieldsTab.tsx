@@ -29,7 +29,7 @@ export function FieldsTab({ data }: { data: ProjectData }) {
   )
 
   return (
-    <div className="stack" style={{ gap: 16, maxWidth: 980 }}>
+    <div className="stack" style={{ gap: 16 }}>
       <p className="muted">{m.fields.intro}</p>
       <form
         className="quick-add"
@@ -212,10 +212,10 @@ function FieldRow({ prop: p, data, drag }: { prop: PropertyDef; data: ProjectDat
             onCommit={(v) => updateProperty(p, { options: splitOptions(v) })}
           />
         ) : (
-          <span className="muted small">{m.fields.typeHint[p.type]}</span>
+          <span className="muted small cell-hint">{m.fields.typeHint[p.type]}</span>
         )}
       </td>
-      <td className="num-cell">
+      <td className="weight-cell">
         <span className={filled ? undefined : 'muted'}>
           {filled}/{data.products.length}
         </span>

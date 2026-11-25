@@ -96,3 +96,17 @@ export function describePlan(p: Product, plan: FactPlan, properties: PropertyDef
 
 /** The name to show and announce: brand and model, else the shop's address, else "Unnamed product". */
 export const displayName = (p: Pick<Product, 'brand' | 'model' | 'url'>, m: Messages) => productName(p, hostOf(p.url ?? '') || m.product.unnamed)
+
+/** A value this long still fits one line of a fact on the card (half its width, on a phone too). */
+const ONE_LINE = 24
+
+/**
+ * The card's four facts: the first fields, in their order, whose values fit on one line, so the
+ * card stays compact; longer values only fill in when there are not enough short ones.
+ */
+export function cardFacts<T extends { text: string }>(all: T[], count = 4): T[] {
+  const filled = all.filter((f) => f.text)
+  const short = filled.filter((f) => f.text.length <= ONE_LINE).slice(0, count)
+  const chosen = new Set([...short, ...filled.filter((f) => !short.includes(f)).slice(0, count - short.length)])
+  return filled.filter((f) => chosen.has(f))
+}

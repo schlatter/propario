@@ -18,6 +18,13 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
   places got a little more room.
 - Changed: updating details from the shop page has its own symbol, an open circle; removing a
   person from the list in the settings says “Remove”, as it only takes the name out.
+- Changed: a swipe card shows the first four fields whose values fit on one line, so a long text
+  no longer makes the card taller; each fact keeps to one line.
+- Fixed: the fields table no longer scrolls sideways on a desktop; the Fields tab uses the full
+  width like the requirements, and the filled count and type hints line up.
+- Fixed: on a phone the requirements kept the empty handle column in view and squeezed the
+  description into a sliver, which made rows very tall. The handle folds away now, priority and
+  requirement stay in view, in the fields the name does.
 - Fixed: below the side-by-side table the page went on with empty space. Scrolled down, the
   table's box now fills the screen below the top bar and the page ends there.
 - Fixed: a duplicated or imported comparison lost its price reference, and its duel rankings

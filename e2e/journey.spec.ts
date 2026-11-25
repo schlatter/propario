@@ -1061,6 +1061,30 @@ test('Ada moves rows and decides by swiping', async () => {
   await expect(page.getByLabel('Unit: Tiefe')).toHaveValue('cm')
   await page.getByLabel('When comparing: Tiefe').selectOption('lower')
   await expect(page.getByLabel('When comparing: Tiefe')).toHaveValue('lower')
+  // A desktop has room for the whole table: nothing to scroll sideways.
+  expect(await page.locator('.table-wrap:has(table.fields-table)').evaluate((w) => w.scrollWidth - w.clientWidth)).toBeLessThanOrEqual(1)
+  // On a phone the handles fold away and the name stays in view; a requirement's row stays one
+  // line high, because its description keeps a column of its own.
+  const desk = page.viewportSize()!
+  await page.setViewportSize({ width: 390, height: 844 })
+  expect(
+    await page
+      .locator('table.fields-table tbody td:nth-child(1)')
+      .first()
+      .evaluate((td) => td.getBoundingClientRect().width),
+  ).toBeLessThan(2)
+  await page.getByRole('tab', { name: /^Requirements/ }).click()
+  const reqRow = page.locator('table.req-table:not(.fields-table) tbody tr:not(.group)').first()
+  expect(await reqRow.evaluate((tr) => tr.getBoundingClientRect().height)).toBeLessThan(80)
+  expect(
+    await page
+      .locator('table.req-table:not(.fields-table) col')
+      .nth(6)
+      .evaluate((c) => c.getBoundingClientRect().width),
+  ).toBeGreaterThan(150)
+  await accessible(page, 'requirements on a phone')
+  await page.setViewportSize(desk)
+  await page.getByRole('tab', { name: /^Fields/ }).click()
   // The tab bar has nothing to scroll on a desktop, so no empty scroll bar.
   expect(await page.locator('.tabs').evaluate((el) => el.scrollHeight <= el.clientHeight)).toBe(true)
   await accessible(page, 'fields table')

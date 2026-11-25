@@ -2765,7 +2765,10 @@ table.map {
 .swipe-facts dd {
   margin: 0;
   font-weight: 600;
-  overflow-wrap: anywhere;
+  /* One line each, so the card keeps its size; the details show all of it. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .swipe-desc {
   margin: 0;
@@ -3503,6 +3506,15 @@ table.grid.req-table {
   /* The fixed columns plus room for the details; narrower screens scroll sideways. */
   min-width: 1180px;
 }
+/* Fields have fewer columns: 620 px fixed plus room for what the type needs. */
+table.grid.fields-table {
+  min-width: 880px;
+}
+/* A type that needs nothing more says so, aligned like the inputs beside it. */
+.fields-table .cell-hint {
+  display: block;
+  padding: 0 10px;
+}
 .req-table td,
 .req-table th {
   vertical-align: middle;
@@ -3641,23 +3653,34 @@ textarea.cell-input:focus {
 }
 /* Phones: priority and requirement stay in view, narrow, like the products' fixed columns. */
 @media (max-width: 600px) {
-  table.grid.req-table {
+  /* The handle comes first; a phone does not move rows (as in the products), so it folds away. */
+  table.grid.req-table:not(.fields-table) {
     min-width: 1060px;
   }
-  .req-table col:nth-child(1) {
+  .req-table:not(.fields-table) col:nth-child(1) {
+    width: 0 !important;
+  }
+  .req-table:not(.fields-table) tbody tr:not(.group) > :nth-child(1),
+  .req-table:not(.fields-table) thead th:nth-child(1) {
+    border-right: 0;
+  }
+  .req-table:not(.fields-table) .grip-cell .grip {
+    display: none;
+  }
+  .req-table:not(.fields-table) col:nth-child(2) {
     width: 86px !important;
   }
-  .req-table col:nth-child(2) {
+  .req-table:not(.fields-table) col:nth-child(3) {
     width: 140px !important;
   }
-  .req-table tbody tr:not(.group) > :nth-child(1),
-  .req-table thead th:nth-child(1) {
+  .req-table:not(.fields-table) tbody tr:not(.group) > :nth-child(2),
+  .req-table:not(.fields-table) thead th:nth-child(2) {
     position: sticky;
     left: 0;
     z-index: 2;
   }
-  .req-table tbody tr:not(.group) > :nth-child(2),
-  .req-table thead th:nth-child(2) {
+  .req-table:not(.fields-table) tbody tr:not(.group) > :nth-child(3),
+  .req-table:not(.fields-table) thead th:nth-child(3) {
     position: sticky;
     left: 86px;
     z-index: 2;
@@ -3665,8 +3688,37 @@ textarea.cell-input:focus {
       1px 0 0 var(--line),
       6px 0 8px -6px rgb(0 0 0 / 0.12);
   }
-  .req-table thead th:nth-child(1),
-  .req-table thead th:nth-child(2) {
+  .req-table:not(.fields-table) thead th:nth-child(2),
+  .req-table:not(.fields-table) thead th:nth-child(3) {
+    z-index: 4;
+  }
+  /* Fields: the handle folds away too, the name stays in view. */
+  table.grid.fields-table {
+    min-width: 760px;
+  }
+  .fields-table col:nth-child(1) {
+    width: 0 !important;
+  }
+  .fields-table tbody tr > :nth-child(1),
+  .fields-table thead th:nth-child(1) {
+    border-right: 0;
+  }
+  .fields-table .grip-cell .grip {
+    display: none;
+  }
+  .fields-table col:nth-child(2) {
+    width: 140px !important;
+  }
+  .fields-table tbody tr > :nth-child(2),
+  .fields-table thead th:nth-child(2) {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    box-shadow:
+      1px 0 0 var(--line),
+      6px 0 8px -6px rgb(0 0 0 / 0.12);
+  }
+  .fields-table thead th:nth-child(2) {
     z-index: 4;
   }
   .req-table tr.group th {
