@@ -203,7 +203,6 @@ export const de: Messages = {
     searchPlaceholder: 'Vergleiche und Produkte durchsuchen …',
     category: 'Kategorie',
     allCategories: 'Alle Kategorien',
-    showArchived: 'Archivierte zeigen',
     productCount: (n) => (n === 1 ? '1 Produkt' : `${n} Produkte`),
     chosen: 'Gewählt',
     favorite: 'Favorit',

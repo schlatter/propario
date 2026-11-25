@@ -847,6 +847,11 @@ test('Ada moves rows and decides by swiping', async () => {
   await expect(page.getByText('1 duel to first place')).toBeVisible()
   const [leftName, rightName] = await page.locator('.duel-choices .duel-name').allTextContents()
   await accessible(page, 'duel')
+  // The two products come first: the drawing to scale waits folded, and stays as one leaves it.
+  await expect(page.locator('details.size-compare[open]')).toHaveCount(0)
+  // A product's column grows to 360 px at most, so the values stay near their names.
+  for (const w of await page.locator('table.compare thead th[scope=col]').evaluateAll((ths) => ths.map((th) => th.getBoundingClientRect().width)))
+    expect(w).toBeLessThanOrEqual(361)
   // With two products there is no other duel to play first: nothing to skip.
   await expect(page.getByRole('button', { name: 'Later' })).toHaveCount(0)
   await page.keyboard.press('ArrowRight')
@@ -1107,6 +1112,13 @@ test('Ada moves rows and decides by swiping', async () => {
     .click()
   await expect(page.getByRole('button', { name: 'Delete', exact: true })).toBeInViewport({ ratio: 1 })
   await page.keyboard.press('Escape')
+  // Category and status fold behind the filter button; "Archived" is one of the statuses.
+  const statuses = page.getByRole('group', { name: 'Status' })
+  await expect(statuses).toBeHidden()
+  await page.getByRole('button', { name: /^Filter/ }).click()
+  await expect(statuses.getByRole('button', { name: 'Archived' })).toBeVisible()
+  await expect(page.getByRole('checkbox', { name: 'Show archived' })).toHaveCount(0)
+  await accessible(page, 'start page filters on a phone')
   await page.setViewportSize(wide)
   await page
     .getByRole('link', { name: /\d+ new/ })

@@ -25,6 +25,12 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
 - Fixed: on a phone the requirements kept the empty handle column in view and squeezed the
   description into a sliver, which made rows very tall. The handle folds away now, priority and
   requirement stay in view, in the fields the name does.
+- Changed: on the start page a phone folds category and status behind the filter button; the
+  “Show archived” box is gone, the status “Archived” shows them.
+- Changed: a duel shows the two products first; the drawing to scale waits folded under “Size” and
+  stays open once opened.
+- Changed: side by side, a product's column grows to 360 px at most, so on a wide screen the values
+  stay near their names.
 - Fixed: below the side-by-side table the page went on with empty space. Scrolled down, the
   table's box now fills the screen below the top bar and the page ends there.
 - Fixed: a duplicated or imported comparison lost its price reference, and its duel rankings

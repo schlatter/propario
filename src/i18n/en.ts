@@ -204,7 +204,6 @@ export const en = {
     searchPlaceholder: 'Search comparisons and products…',
     category: 'Category',
     allCategories: 'All categories',
-    showArchived: 'Show archived',
     productCount: (n: number) => (n === 1 ? '1 product' : `${n} products`),
     chosen: 'Chosen',
     favorite: 'Favourite',

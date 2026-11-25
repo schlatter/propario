@@ -51,7 +51,18 @@ const toneClass = (t: Tone) => (t === 'single' ? 'single' : t === 0 ? 't0' : `t$
  * (src/pages/project/PictureViewDialog.tsx) fill their outline; the main picture stands for the
  * front only when its shape matches the measurements.
  */
-export function SizeCompare({ products, data }: { products: Product[]; data: ProjectData }) {
+/** `open` and `onToggle` let the page keep it open or closed across its products (the duel's pairs). */
+export function SizeCompare({
+  products,
+  data,
+  open = true,
+  onToggle,
+}: {
+  products: Product[]
+  data: ProjectData
+  open?: boolean
+  onToggle?: (open: boolean) => void
+}) {
   const { m, fmt } = useI18n()
   const fields = useMemo(() => sizeFields(data.properties), [data.properties])
   const limits = useMemo(() => sizeLimits(data.rules, fields), [data.rules, fields])
@@ -132,7 +143,7 @@ export function SizeCompare({ products, data }: { products: Product[]; data: Pro
   const frame = { view, k, height: stage, acrossMax, upMax, y }
 
   return (
-    <details className="size-compare" open>
+    <details className="size-compare" open={open} onToggle={(e) => onToggle?.(e.currentTarget.open)}>
       <summary>
         <h2>{m.size.title}</h2>
       </summary>

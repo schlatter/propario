@@ -127,8 +127,9 @@ their judgements together.
 - **Swipe:** go through the products one by one and like them or not – swipe, or use the arrow
   keys (↓ for neutral). At the end you see what everyone likes.
 - **Duel:** two at a time – which is better? After a few duels your ranking stands. Duels are
-  between your favourites and what everyone likes. Everyone's rankings become the **joint
-  ranking**; its first place can become the decision.
+  between your favourites and what everyone likes. The drawing to scale waits folded under
+  **Size**. Everyone's rankings become the **joint ranking**; its first place can become the
+  decision.
 - **Side by side:** select products in the table and **Compare**. Best values are marked,
   _Only differences_ hides what is the same, and **Size** draws the products to scale next to
   a person and the space your requirements leave – from the front, the side or above, side by

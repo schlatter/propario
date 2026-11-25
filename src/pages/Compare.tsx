@@ -31,6 +31,10 @@ interface Row {
   best?: number
 }
 
+/** The row names' column and the widest a product's column gets side by side. */
+const COMPARE_ROWHEAD = 200
+const COMPARE_MAX_COL = 360
+
 export function ComparePage() {
   const { id } = useParams()
   const [params, setParams] = useSearchParams()
@@ -43,6 +47,8 @@ export function ComparePage() {
   const [history, setHistory] = useState<Ranking[]>([])
   const [gallery, setGallery] = useState<{ product: Product; at: number } | null>(null)
   const duelMode = params.get('mode') === 'duel'
+  // In a duel the two products come first; the drawing to scale is one click away and stays as left.
+  const [sizeOpen, setSizeOpen] = useState(!duelMode)
 
   // Duels: the products that take part, in the person's order so far (src/domain/duel.ts).
   // Only the narrow choice takes part: what someone starred and what everyone likes.
@@ -93,6 +99,7 @@ export function ComparePage() {
 
   const ids = duelMode ? (pair ? [pair.left, pair.right] : []) : (params.get('ids') ?? '').split(',').filter(Boolean)
   const products = ids.map((x) => data.products.find((p) => p.id === x)).filter((p): p is Product => !!p)
+  const compareWidth = COMPARE_ROWHEAD + COMPARE_MAX_COL * products.length + 2
   const back = `/p/${data.project.id}`
   /** Products of the comparison not yet side by side, the ones still in the running first. */
   const others = data.products.filter((p) => !ids.includes(p.id)).sort((a, b) => Number(a.candidate === 'excluded') - Number(b.candidate === 'excluded'))
@@ -376,12 +383,14 @@ export function ComparePage() {
           </div>
         </div>
       )}
-      <SizeCompare products={products} data={data} />
-      <div className={`compare-wrap${duelMode ? ' duel' : ''}`}>
+      <SizeCompare products={products} data={data} open={sizeOpen} onToggle={setSizeOpen} />
+      {/* Side by side, a product's column grows to 360 px at most: on a wide screen the values stay
+          close to their names instead of spreading over the whole width. */}
+      <div className={`compare-wrap${duelMode ? ' duel' : ''}`} style={{ maxWidth: compareWidth }}>
         <table className={`compare${duelMode ? ' duel' : ''}`}>
           {!duelMode && (
             <colgroup>
-              <col style={{ width: 200 }} />
+              <col style={{ width: COMPARE_ROWHEAD }} />
               {products.map((p) => (
                 <col key={p.id} style={{ width: 260 }} />
               ))}
@@ -478,7 +487,7 @@ export function ComparePage() {
       </div>
       {duelMode && mine && pair && (
         // The choice sits at the bottom of the screen, where the thumb is – like when swiping.
-        <div className="duel-actions" role="group" aria-label={m.duel.question}>
+        <div className="duel-actions" role="group" aria-label={m.duel.question} style={{ maxWidth: compareWidth }}>
           {/* ✓ = take this one: a choice, not a swipe. "Later" sits quietly between the two. */}
           <div className="duel-choices">
             <button type="button" className="btn primary" onClick={() => choose('left')} aria-keyshortcuts="ArrowLeft">
