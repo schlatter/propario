@@ -11,6 +11,23 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.22.0',
+    notes: {
+      en: [
+        'On a phone, scroll the table sideways and the product column keeps just the pictures.',
+        'Selected products have their own ⋯: update, load pictures, export or delete just them.',
+        'Export as .xlsx, .ods, .csv or .json. Comparing is a balance now, a duel crossed swords.',
+        'Side by side fits the screen: no empty space below, the size comparison opens when you want it.',
+      ],
+      de: [
+        'Am Handy behält die Produktspalte beim seitlichen Wischen nur die Bilder.',
+        'Ausgewählte Produkte haben ihr eigenes ⋯: nur sie aktualisieren, Bilder laden, exportieren oder löschen.',
+        'Export als .xlsx, .ods, .csv oder .json. Vergleichen ist jetzt eine Waage, das Duell zwei Schwerter.',
+        'Der Vergleich passt auf den Bildschirm: kein leerer Platz mehr, der Größenvergleich öffnet sich auf Klick.',
+      ],
+    },
+  },
+  {
     version: '0.21.0',
     notes: {
       en: [

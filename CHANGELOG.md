@@ -6,6 +6,8 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Unreleased
 
+## 0.22.0 — 2026-11-25
+
 - Changed: on a phone, scrolling the table sideways folds the product column to its pictures, so
   more of the data fits; back at the left edge the names return.
 - Changed: the bar for selected products is shorter: “Compare” comes first and is a symbol on a
