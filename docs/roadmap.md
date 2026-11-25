@@ -24,6 +24,9 @@ Nothing at the moment; the next pick comes from _Next_.
 
 - **Polish the app's texts**, in the voice of the start page: shorter, plainer, more like a
   person talks ([docs/brand.md](brand.md), Voice).
+- **A compact card view on phones**: small product cards one below the other, far smaller than
+  in the swipe view. Either the phone's only view of the products or an extra one next to the
+  table; first see whether the table that folds to its pictures is enough.
 - **A short video in the README** – 10–15 seconds from a link to a decision: paste, swipe, duel,
   decide; what it should show best is still open.
 - **A local AI** (Ollama, LM Studio …) for the whole instance, its address set by whoever runs
