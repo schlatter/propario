@@ -19,6 +19,10 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
   is gone.
 - Changed: the filter button shows a funnel instead of a magnifier, “Columns” shows only its
   symbol, and “Load images” moved into the ⋯ menu of the comparison.
+- Changed: under a price the difference to the budget is short, like “−€500.01*”; the * is the
+  budget's mark in the column head, and the full sentence is its tooltip.
+- Changed: the question field in “Find and ask” has no example text. Left empty, it still asks
+  which product fits best.
 - Fixed: a long product name no longer made the product column, and the others, wider.
 
 ## 0.19.0 — 2026-11-24

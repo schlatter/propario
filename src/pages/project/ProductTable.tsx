@@ -239,7 +239,11 @@ export function ProductTable({
                     {p.price !== null ? fmt.money(p.price) : p.priceNote}
                   </span>
                   {note && ' '}
-                  {note && <span className={`delta${note.tone ? ` ${note.tone}` : ''}`}>{note.text}</span>}
+                  {note && (
+                    <span className={`delta${note.tone ? ` ${note.tone}` : ''}`} title={note.short ? note.text : undefined}>
+                      {note.short ?? note.text}
+                    </span>
+                  )}
                 </span>
               }
             />
@@ -968,8 +972,12 @@ export function ProductTable({
   )
 }
 
-/** The note under a price – against the reference product, the budget or the cheapest – and its tone. */
-function priceNote(hint: PriceHint, m: Messages, fmt: Formatters): { text: string; tone: '' | 'best' | 'over' | 'ref' } | null {
+/**
+ * The note under a price (against the reference product, the budget or the cheapest) and its tone.
+ * Against the budget it is short: the difference with the column's rule mark, "−€500.01*"; the
+ * sentence is its tooltip and what a screen reader says.
+ */
+function priceNote(hint: PriceHint, m: Messages, fmt: Formatters): { text: string; short?: string; tone: '' | 'best' | 'over' | 'ref' } | null {
   if (!hint) return null
   const signed = (d: number) => (d > 0 ? `+${fmt.money(d)}` : d < 0 ? `−${fmt.money(-d)}` : '±0')
   switch (hint.kind) {
@@ -978,11 +986,11 @@ function priceNote(hint: PriceHint, m: Messages, fmt: Formatters): { text: strin
     case 'vsReference':
       return { text: m.priceRef.vs(signed(hint.diff)), tone: hint.diff < 0 ? 'best' : hint.diff > 0 ? 'over' : '' }
     case 'underBudget':
-      return { text: m.budget.under(fmt.money(hint.diff)), tone: 'best' }
+      return { text: m.budget.under(fmt.money(hint.diff)), short: `${signed(-hint.diff)}*`, tone: 'best' }
     case 'atBudget':
-      return { text: m.budget.at, tone: 'best' }
+      return { text: m.budget.at, short: '±0*', tone: 'best' }
     case 'overBudget':
-      return { text: m.budget.over(fmt.money(hint.diff)), tone: 'over' }
+      return { text: m.budget.over(fmt.money(hint.diff)), short: `${signed(hint.diff)}*`, tone: 'over' }
     case 'belowMin':
       return { text: m.budget.belowMin(fmt.money(hint.diff)), tone: 'over' }
     case 'cheapest':

@@ -243,15 +243,7 @@ export function FindAndAsk({ data, canEdit, onOpen }: { data: ProjectData; canEd
               )}
               <label className="field">
                 <span>{m.ai.question}</span>
-                <textarea
-                  ref={questionBox}
-                  className="textarea"
-                  rows={2}
-                  value={question}
-                  maxLength={2000}
-                  placeholder={m.ai.questionPlaceholder}
-                  onChange={(e) => setQuestion(e.target.value)}
-                />
+                <textarea ref={questionBox} className="textarea" rows={2} value={question} maxLength={2000} onChange={(e) => setQuestion(e.target.value)} />
               </label>
               {/* Two different requests: the question above, or up to five new products. */}
               <div className="row find-ask-actions">

@@ -590,7 +590,8 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await page.getByLabel('At least (optional)', { exact: true }).fill('')
   await page.getByLabel('At least (optional)', { exact: true }).press('Tab')
   await page.getByRole('tab', { name: /Products/ }).click()
-  await expect(page.getByText('€96 under budget')).toBeVisible()
+  // Short under the price, with the column's rule mark; the sentence is its tooltip.
+  await expect(page.getByTitle('€96 under budget')).toHaveText('−€96*')
   // An own price rule moves into the budget with one click (after a question), and is gone.
   await page.getByRole('tab', { name: /Requirements/ }).click()
   await page.getByRole('button', { name: 'Take “Budget” into the budget' }).click()
@@ -600,7 +601,7 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await page.getByLabel('At most', { exact: true }).fill('300')
   await page.getByLabel('At most', { exact: true }).press('Tab')
   await page.getByRole('tab', { name: /Products/ }).click()
-  await expect(page.getByText('€96 under budget')).toBeVisible()
+  await expect(page.getByTitle('€96 under budget')).toHaveText('−€96*')
   // A product can be the price reference instead.
   await page.getByRole('button', { name: 'Arvika', exact: true }).click()
   await page.locator('dialog.drawer').getByRole('button', { name: 'More' }).click()
