@@ -18,6 +18,8 @@ export const en = {
     save: 'Save',
     cancel: 'Cancel',
     delete: 'Delete',
+    /** Takes an entry out of a list (✕); the bin's Delete removes something for good. */
+    remove: 'Remove',
     close: 'Close',
     add: 'Add',
     edit: 'Edit',

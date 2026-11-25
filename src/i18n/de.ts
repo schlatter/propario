@@ -19,6 +19,7 @@ export const de: Messages = {
     save: 'Speichern',
     cancel: 'Abbrechen',
     delete: 'Löschen',
+    remove: 'Entfernen',
     close: 'Schließen',
     add: 'Hinzufügen',
     edit: 'Bearbeiten',

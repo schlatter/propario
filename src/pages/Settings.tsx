@@ -66,8 +66,8 @@ export function SettingsPage() {
               {p}
               <button
                 className="icon-btn sm"
-                aria-label={`${m.common.delete}: ${p}`}
-                title={m.common.delete}
+                aria-label={`${m.common.remove}: ${p}`}
+                title={m.common.remove}
                 onClick={() => saveSettings({ people: settings.people.filter((x) => x !== p) })}
               >
                 <Glyph name="close" />

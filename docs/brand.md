@@ -118,7 +118,8 @@ Where things go, so a new screen looks like the others without deciding it again
 
 - **One symbol, one meaning,** everywhere: a balance compares side by side, crossed swords start a
   duel, ⋯ holds more, ✕ closes, clears or takes an entry out of a list, a funnel filters, the
-  columns symbol chooses columns, the bin deletes something for good. A new meaning gets a new glyph in [`src/ui/Glyph.tsx`](../src/ui/Glyph.tsx), never
+  columns symbol chooses columns, an open circle fetches again from the shop page, the arrow
+  down exports or downloads, the bin deletes something for good. A new meaning gets a new glyph in [`src/ui/Glyph.tsx`](../src/ui/Glyph.tsx), never
   a symbol already in use.
 - **A button with only a symbol still has a name:** `aria-label` and `title` with the same words
   the wide screen shows (`hide-narrow` hides only the visible text). The accessible name contains

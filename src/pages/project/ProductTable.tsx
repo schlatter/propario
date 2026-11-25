@@ -997,7 +997,7 @@ export function ProductTable({
                       void bulkUpdate()
                     }}
                   >
-                    <Glyph name="download" /> {m.pageUpdate.button}
+                    <Glyph name="refresh" /> {m.pageUpdate.button}
                   </button>
                 )}
                 {canEdit && selectionImages.missing > 0 && (

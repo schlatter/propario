@@ -136,7 +136,7 @@ export function OffersSection({ product: p, lookups = [] }: { product: Product; 
                 type="button"
                 className="icon-btn"
                 aria-label={m.offer.remove(n)}
-                title={m.common.delete}
+                title={m.offer.remove(n)}
                 onClick={() => changeOffers(p, (list) => list.filter((x) => x.id !== o.id))}
               >
                 <Glyph name="close" />

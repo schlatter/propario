@@ -13,6 +13,8 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
 - New: the selected products can be exported on their own, as Excel or JSON, from the selection
   bar's ⋯.
 - Changed: the duel's symbol is two crossed swords, comparing side by side has a balance.
+- Changed: updating details from the shop page has its own symbol, an open circle; removing a
+  person from the list in the settings says “Remove”, as it only takes the name out.
 - Fixed: below the side-by-side table the page went on with empty space when the table scrolled in
   its box.
 - Fixed: a duplicated or imported comparison lost its price reference, and its duel rankings

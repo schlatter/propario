@@ -266,7 +266,7 @@ export function ProductImage({ product: p, name, actions, size }: { product: Pro
               <>
                 {link && (
                   <button type="button" disabled={busy} onClick={act(() => void run(() => loadProductImage(p, link)))}>
-                    <Glyph name="download" /> {stored ? m.image.reload : m.image.fromLink}
+                    <Glyph name="refresh" /> {stored ? m.image.reload : m.image.fromLink}
                   </button>
                 )}
                 {/* Choosing never replaces: without a picture it becomes the main one, otherwise it is added. */}
