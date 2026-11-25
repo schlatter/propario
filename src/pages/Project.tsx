@@ -4,11 +4,12 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { deleteProject, duplicateProject, uniqueProjectName, updateProject } from '../db/repo'
 import type { ProjectStatus } from '../db/types'
 import { productName } from '../domain/display'
-import { exportProjectExcel, exportProjectJson } from '../hooks'
+import { exportComparison } from '../hooks'
 import { useI18n } from '../i18n'
 import { useConfirm, useToast } from '../ui/Dialog'
-import { Glyph, type GlyphName } from '../ui/Glyph'
+import { Glyph } from '../ui/Glyph'
 import { CommitInput } from '../ui/inputs'
+import { ExportChoice } from '../ui/ExportChoice'
 import { Menu } from '../ui/Menu'
 import { FieldsTab } from './project/FieldsTab'
 import { NotesTab } from './project/NotesTab'
@@ -148,13 +149,7 @@ export function ProjectPage() {
                 >
                   <Glyph name="edit" /> {m.project.editDetails}
                 </button>
-                <ExportChoice
-                  close={close}
-                  choices={[
-                    { glyph: 'download', label: m.common.exportExcel, run: () => void exportProjectExcel(project.id, m) },
-                    { glyph: 'download', label: m.common.exportJson, run: () => void exportProjectJson(project.id) },
-                  ]}
-                />
+                <ExportChoice close={close} run={(f) => void exportComparison(project.id, f, m)} />
                 {role !== 'viewer' && (images.missing > 0 || images.progress) && (
                   <button
                     title={m.image.loadAllHint}
@@ -227,7 +222,7 @@ export function ProjectPage() {
       {decision && (
         <div className={`decision-bar${decision.purchase.status === 'purchased' ? ' purchased' : ''}`}>
           <span className="label">{decision.purchase.status === 'purchased' ? m.purchase.purchased : m.project.decision}</span>
-          <button className="btn ghost sm" style={{ fontWeight: 700, fontSize: 15 }} onClick={() => setParam('product', decision.id)}>
+          <button className="btn ghost sm" style={{ fontWeight: 700, fontSize: 16 }} onClick={() => setParam('product', decision.id)}>
             {productName(decision, m.product.unnamed)}
           </button>
           {decision.purchase.status === 'purchased' && (
@@ -300,33 +295,5 @@ export function ProjectPage() {
       <ShareDialog projectId={project.id} open={sharing} onClose={() => setSharing(false)} />
       <ProjectDialog open={editing} project={project} categories={[]} onClose={() => setEditing(false)} />
     </main>
-  )
-}
-
-/** One "Export" entry in a menu; it opens the formats in place, so the menu stays short. */
-function ExportChoice({ close, choices }: { close: () => void; choices: { glyph: GlyphName; label: string; run: () => void }[] }) {
-  const { m } = useI18n()
-  const [open, setOpen] = useState(false)
-  return (
-    <>
-      <button type="button" aria-expanded={open} onClick={() => setOpen(!open)}>
-        <Glyph name="download" /> {m.common.export}
-        <Glyph name={open ? 'up' : 'down'} />
-      </button>
-      {open &&
-        choices.map((c) => (
-          <button
-            key={c.label}
-            type="button"
-            className="sub"
-            onClick={() => {
-              close()
-              c.run()
-            }}
-          >
-            <Glyph name={c.glyph} /> {c.label}
-          </button>
-        ))}
-    </>
   )
 }

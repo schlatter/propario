@@ -35,7 +35,7 @@ const SYMBOLS: Record<string, string> = {
   checks: 'M3 6l2 2 3.5-3.5M3 13l2 2 3.5-3.5M12 7h9M12 14h9M3 20h18',
   columns: 'M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM9 3v18M15 3v18',
   thumbs: 'M7 10v11M3 10h4v11H3zM7 10l4-7c1.4 0 2.5 1.1 2.5 2.5V9h5.2a2 2 0 0 1 2 2.3l-1.2 7a2 2 0 0 1-2 1.7H7',
-  scale: 'M12 3v18M7 21h10M5 7h14M2 15l3-8 3 8a3 3 0 0 1-6 0zM16 15l3-8 3 8a3 3 0 0 1-6 0z',
+  swords: 'M3.5 3.5l12 12M13.5 18l4.5-4.5M15.5 15.5l4 4M20.5 3.5l-12 12M10.5 18L6 13.5M8.5 15.5l-4 4',
   people: 'M9 11.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2.5 20a6.5 6.5 0 0 1 13 0M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.2a6.5 6.5 0 0 1 3.5 5.8',
 }
 
@@ -73,7 +73,7 @@ const STEPS: [string, string, string][] = [
   ['checks', 'Define your', 'requirements'],
   ['columns', 'Side by side, not', 'all over the place'],
   ['thumbs', 'Sort out', 'quickly'],
-  ['scale', 'Settle it', 'in duels'],
+  ['swords', 'Settle it', 'in duels'],
   ['people', 'Decide', 'together'],
 ]
 const STEPS_LABEL =

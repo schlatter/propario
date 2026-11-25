@@ -31,6 +31,10 @@ interface Row {
   best?: number
 }
 
+/** The row names' column and the widest a product's column gets side by side. */
+const COMPARE_ROWHEAD = 200
+const COMPARE_MAX_COL = 360
+
 export function ComparePage() {
   const { id } = useParams()
   const [params, setParams] = useSearchParams()
@@ -43,6 +47,8 @@ export function ComparePage() {
   const [history, setHistory] = useState<Ranking[]>([])
   const [gallery, setGallery] = useState<{ product: Product; at: number } | null>(null)
   const duelMode = params.get('mode') === 'duel'
+  // In a duel the two products come first; the drawing to scale is one click away and stays as left.
+  const [sizeOpen, setSizeOpen] = useState(!duelMode)
 
   // Duels: the products that take part, in the person's order so far (src/domain/duel.ts).
   // Only the narrow choice takes part: what someone starred and what everyone likes.
@@ -93,6 +99,9 @@ export function ComparePage() {
 
   const ids = duelMode ? (pair ? [pair.left, pair.right] : []) : (params.get('ids') ?? '').split(',').filter(Boolean)
   const products = ids.map((x) => data.products.find((p) => p.id === x)).filter((p): p is Product => !!p)
+  // A product's column grows to 360 px at most, and the whole page with it: on a wide screen the
+  // drawing, the table and the choices share one width, the values close to their names.
+  const compareWidth = COMPARE_ROWHEAD + COMPARE_MAX_COL * products.length + 2
   const back = `/p/${data.project.id}`
   /** Products of the comparison not yet side by side, the ones still in the running first. */
   const others = data.products.filter((p) => !ids.includes(p.id)).sort((a, b) => Number(a.candidate === 'excluded') - Number(b.candidate === 'excluded'))
@@ -323,7 +332,7 @@ export function ComparePage() {
   const isEmpty = (r: Row) => r.values.every((v) => !v.trim())
 
   return (
-    <main className="wide">
+    <main className="wide compare-page" style={{ maxWidth: `calc(${compareWidth}px + 2 * var(--gutter))` }}>
       <Link to={back} className="crumb">
         <Glyph name="chevronLeft" /> {data.project.name}
       </Link>
@@ -376,12 +385,12 @@ export function ComparePage() {
           </div>
         </div>
       )}
-      <SizeCompare products={products} data={data} />
+      <SizeCompare products={products} data={data} open={sizeOpen} onToggle={setSizeOpen} />
       <div className={`compare-wrap${duelMode ? ' duel' : ''}`}>
         <table className={`compare${duelMode ? ' duel' : ''}`}>
           {!duelMode && (
             <colgroup>
-              <col style={{ width: 200 }} />
+              <col style={{ width: COMPARE_ROWHEAD }} />
               {products.map((p) => (
                 <col key={p.id} style={{ width: 260 }} />
               ))}

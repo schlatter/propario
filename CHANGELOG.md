@@ -6,6 +6,38 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Unreleased
 
+- Changed: on a phone, scrolling the table sideways folds the product column to its pictures, so
+  more of the data fits; back at the left edge the names return.
+- Changed: the bar for selected products is shorter: “Compare” comes first and is a symbol on a
+  phone, updating, loading pictures and deleting sit behind ⋯, and a cross clears the selection.
+- New: the selected products can be exported on their own, from the selection bar's ⋯.
+- New: Export offers .xlsx, .ods (LibreOffice), .csv (the products as one table) and .json, as one
+  short row in the menu; a comparison's card on the start page has the same Export.
+- Changed: the duel's symbol is two crossed swords, comparing side by side has a balance.
+- Changed: spacing and text sizes follow one scale each (docs/brand.md), so screens line up; a few
+  places got a little more room.
+- Changed: updating details from the shop page has its own symbol, an open circle; removing a
+  person from the list in the settings says “Remove”, as it only takes the name out.
+- Changed: a swipe card shows the first four fields whose values fit on one line, so a long text
+  no longer makes the card taller; each fact keeps to one line.
+- Fixed: the fields table no longer scrolls sideways on a desktop; the Fields tab uses the full
+  width like the requirements, and the filled count and type hints line up.
+- Fixed: on a phone the requirements kept the empty handle column in view and squeezed the
+  description into a sliver, which made rows very tall. The handle folds away now, priority and
+  requirement stay in view, in the fields the name does.
+- Changed: on the start page a phone folds category and status behind the filter button; the
+  “Show archived” box is gone, the status “Archived” shows them.
+- Changed: a duel shows the two products first; the drawing to scale waits folded under “Size
+  comparison”, with an arrow that shows it opens, and stays open once opened.
+- Changed: side by side and in a duel, a product's column grows to 360 px at most and the page
+  with it, so on a wide screen the drawing, the table and the choices share one width.
+- Fixed: below the side-by-side table the page went on with empty space. Scrolled down, the
+  table's box now fills the screen below the top bar and the page ends there.
+- Fixed: a duplicated or imported comparison lost its price reference, and its duel rankings
+  pointed at the original's products.
+- Fixed: on the start page a comparison's ⋯ menu was cut off by its card, so Delete could not be
+  reached. Menus that open from a card or a bar now always fit the screen.
+
 ## 0.21.0 — 2026-11-25
 
 - Changed: the selection in the table is a symbol (a circle for open, a tick for checked, a cross

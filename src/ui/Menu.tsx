@@ -23,6 +23,7 @@ export function Menu({
   const [place, setPlace] = useState<CSSProperties | undefined>()
   const ref = useRef<HTMLDivElement>(null)
   const btn = useRef<HTMLButtonElement>(null)
+  const list = useRef<HTMLDivElement>(null)
   const id = useId()
   useEffect(() => {
     if (!open) return
@@ -57,14 +58,20 @@ export function Menu({
   useLayoutEffect(() => {
     if (!open || !floating || !btn.current) return setPlace(undefined)
     const r = btn.current.getBoundingClientRect()
-    // Below the trigger, or above it when there is no room below.
-    const below = window.innerHeight - r.bottom > 180
+    // Below the trigger, or above it when the list does not fit below and there is more room above.
+    // It never runs past the screen: a list taller than the room scrolls.
+    const roomBelow = window.innerHeight - r.bottom - 12
+    const roomAbove = r.top - 12
+    const height = list.current?.offsetHeight ?? 180
+    const below = height <= roomBelow || roomBelow >= roomAbove
     // Opens towards the side with room, so it never runs off the screen.
     const fromRight = r.left > window.innerWidth / 2
     setPlace({
       position: 'fixed',
       ...(fromRight ? { left: 'auto', right: Math.max(8, window.innerWidth - r.right) } : { left: Math.max(8, r.left), right: 'auto' }),
       ...(below ? { top: r.bottom + 4 } : { top: 'auto', bottom: window.innerHeight - r.top + 4 }),
+      maxHeight: below ? roomBelow : roomAbove,
+      overflowY: 'auto',
     })
   }, [open, floating])
   return (
@@ -88,6 +95,7 @@ export function Menu({
       {open && (
         <div
           className={`menu-list${scroll ? ' scroll' : ''}${listClassName ? ` ${listClassName}` : ''}`}
+          ref={list}
           id={id}
           style={place}
           onClick={(e) => e.stopPropagation()}

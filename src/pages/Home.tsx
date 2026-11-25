@@ -5,7 +5,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { db } from '../db/db'
 import { createProject, deleteProject, duplicateProject, updateProject, uniqueProjectName } from '../db/repo'
 import { PROJECT_STATUSES, type Product, type Project, type ProjectStatus } from '../db/types'
-import { exportProjectJson } from '../hooks'
+import { exportComparison } from '../hooks'
+import { ExportChoice } from '../ui/ExportChoice'
 import { useI18n } from '../i18n'
 import { useMe } from '../session'
 import { productImage } from '../images'
@@ -24,7 +25,7 @@ export function HomePage() {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('')
   const [status, setStatus] = useState<ProjectStatus | ''>('')
-  const [showArchived, setShowArchived] = useState(false)
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const [dialog, setDialog] = useState<{ project: Project | null } | null>(null)
   const navigate = useNavigate()
 
@@ -42,7 +43,7 @@ export function HomePage() {
 
   const q = query.trim().toLowerCase()
   const visible = (projects ?? [])
-    .filter((p) => (status ? p.status === status : showArchived || p.status !== 'archived'))
+    .filter((p) => (status ? p.status === status : p.status !== 'archived'))
     .filter((p) => !category || p.category === category)
     .map((p) => {
       const items = byProject.get(p.id) ?? []
@@ -52,6 +53,8 @@ export function HomePage() {
       return inProject || hits ? { p, items, hits } : null
     })
     .filter((x): x is { p: Project; items: Product[]; hits: number } => x !== null)
+
+  const activeFilters = (category ? 1 : 0) + (status ? 1 : 0)
 
   if (!projects) return <main aria-busy="true" />
 
@@ -87,33 +90,43 @@ export function HomePage() {
               <span className="sr-only">{m.common.search}</span>
               <input className="input" type="search" placeholder={m.home.searchPlaceholder} value={query} onChange={(e) => setQuery(e.target.value)} />
             </label>
-            <label>
-              <span className="sr-only">{m.home.category}</span>
-              <select className="select" value={category} onChange={(e) => setCategory(e.target.value)} style={{ width: 'auto' }}>
-                <option value="">{m.home.allCategories}</option>
-                {categories.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="seg" role="group" aria-label={m.field.status}>
-              <button aria-pressed={status === ''} onClick={() => setStatus('')}>
-                {m.common.all}
-              </button>
-              {PROJECT_STATUSES.map((s) => (
-                <button key={s} aria-pressed={status === s} onClick={() => setStatus(status === s ? '' : s)}>
-                  {m.status[s]}
-                </button>
-              ))}
-            </div>
-            {status === '' && (
-              <label className="check">
-                <input type="checkbox" checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} />
-                {m.home.showArchived}
+            {/* On a phone category and status fold behind the filter button, as in the products. */}
+            <button
+              type="button"
+              className="btn sm filter-toggle"
+              aria-expanded={filtersOpen}
+              aria-controls="home-filters"
+              aria-label={activeFilters ? m.filter.toggleActive(activeFilters) : m.filter.toggle}
+              title={m.filter.toggle}
+              onClick={() => setFiltersOpen(!filtersOpen)}
+            >
+              <Glyph name="filter" />
+              {activeFilters > 0 && <span className="filter-count">{activeFilters}</span>}
+            </button>
+            <div id="home-filters" className={`row filter-chips${filtersOpen ? ' open' : ''}`}>
+              <label>
+                <span className="sr-only">{m.home.category}</span>
+                <select className="select" value={category} onChange={(e) => setCategory(e.target.value)} style={{ width: 'auto' }}>
+                  <option value="">{m.home.allCategories}</option>
+                  {categories.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
               </label>
-            )}
+              {/* "All" leaves the archive out; "Archived" shows it. */}
+              <div className="seg" role="group" aria-label={m.field.status}>
+                <button aria-pressed={status === ''} onClick={() => setStatus('')}>
+                  {m.common.all}
+                </button>
+                {PROJECT_STATUSES.map((s) => (
+                  <button key={s} aria-pressed={status === s} onClick={() => setStatus(status === s ? '' : s)}>
+                    {m.status[s]}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           {visible.length === 0 ? (
@@ -212,7 +225,8 @@ function ProjectCard({ project, items, hits, onEdit }: { project: Project; items
         </div>
       </div>
       <div className="card-menu">
-        <Menu label={`${m.common.actions}: ${project.name}`} trigger={<Glyph name="more" />}>
+        {/* Floating: the card clips what leaves it (its picture has round corners). */}
+        <Menu label={`${m.common.actions}: ${project.name}`} trigger={<Glyph name="more" />} floating>
           {(close) => (
             <>
               <button onClick={() => navigate(`/p/${project.id}`)}>{m.common.open}</button>
@@ -242,14 +256,7 @@ function ProjectCard({ project, items, hits, onEdit }: { project: Project; items
               >
                 <Glyph name="archive" /> {archived ? m.common.unarchive : m.common.archive}
               </button>
-              <button
-                onClick={() => {
-                  close()
-                  void exportProjectJson(project.id)
-                }}
-              >
-                <Glyph name="download" /> {m.common.exportJson}
-              </button>
+              <ExportChoice close={close} run={(f) => void exportComparison(project.id, f, m)} />
               <hr />
               <button
                 className="danger"

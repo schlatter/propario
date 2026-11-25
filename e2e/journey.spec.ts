@@ -77,6 +77,14 @@ async function go(page: Page, name: string): Promise<void> {
   await page.getByRole('navigation', { name: 'Menu' }).getByRole('link', { name, exact: true }).click()
 }
 
+/** Deletes the selected products: the selection bar's ⋯ holds Delete, a dialog asks first. */
+async function deleteSelected(page: Page): Promise<void> {
+  const bar = page.getByRole('region', { name: 'Side by side' })
+  await bar.getByRole('button', { name: 'More', exact: true }).click()
+  await bar.getByRole('button', { name: 'Delete', exact: true }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Delete', exact: true }).click()
+}
+
 async function accessible(page: Page, name: string): Promise<void> {
   for (const scheme of ['light', 'dark'] as const) {
     await page.emulateMedia({ colorScheme: scheme })
@@ -247,7 +255,7 @@ test('a visitor sees what Propario does and tries the demo, which never talks to
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.getByRole('checkbox', { name: /^Select for comparison: .*Arvika$/ }).check()
   await page.getByRole('checkbox', { name: /^Select for comparison: .*Kanto$/ }).check()
-  await page.getByRole('button', { name: /Compare 2/ }).click()
+  await page.getByRole('button', { name: 'Compare', exact: true }).click()
   // Mira is out of the running (too wide), so it joins from here.
   await page.getByRole('button', { name: 'Product', exact: true }).click()
   await page
@@ -256,7 +264,13 @@ test('a visitor sees what Propario does and tries the demo, which never talks to
     .first()
     .click()
   const size = page.locator('.size-compare')
-  await expect(size.getByRole('heading', { name: 'Size' })).toBeVisible()
+  await expect(size.getByRole('heading', { name: 'Size comparison' })).toBeVisible()
+  // On a wide screen the drawing and the table share one width, as wide as three columns need.
+  await page.setViewportSize({ width: 1700, height: 800 })
+  const [sizeBox, tableBox] = await Promise.all([size.boundingBox(), page.locator('.compare-wrap').boundingBox()])
+  expect(Math.round(sizeBox!.width)).toBe(Math.round(tableBox!.width))
+  expect(tableBox!.width).toBeLessThanOrEqual(200 + 3 * 360 + 2)
+  await page.setViewportSize({ width: 1280, height: 800 })
   await expect(size.locator('figcaption', { hasText: 'Mira' })).toContainText('Width 200 cm (too big), Height 78 cm')
   await expect(size.locator('figcaption', { hasText: 'Arvika' }).locator('.over')).toHaveCount(0)
   await expect(size.getByText('Width: at most 180 cm')).toBeVisible()
@@ -532,8 +546,7 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await expect(page.getByText(/moebel\.example: The shop refuses automated access.*Taken from the address instead/)).toBeVisible()
   await expect(page.getByRole('button', { name: 'Nordhaus Sideboard mit Led Beleuchtung in Landhaus Stil', exact: true })).toBeVisible()
   await page.getByRole('checkbox', { name: /Select for comparison: Nordhaus Sideboard/ }).check()
-  await page.getByRole('button', { name: 'Delete', exact: true }).click()
-  await page.getByRole('button', { name: 'Delete', exact: true }).last().click()
+  await deleteSelected(page)
   await page.getByRole('button', { name: 'Delete for good' }).click()
   await expect.poll(countRows).toBe(2)
 
@@ -549,8 +562,7 @@ test('Ada keeps a comparison with a product and its picture', async () => {
 
   // Selected products can be deleted – after asking twice.
   await page.getByRole('checkbox', { name: 'Select for comparison: shop.example' }).check()
-  await page.getByRole('button', { name: 'Delete', exact: true }).click()
-  await page.getByRole('button', { name: 'Delete', exact: true }).last().click()
+  await deleteSelected(page)
   await expect(page.getByRole('heading', { name: 'Really delete?' })).toBeVisible()
   await page.getByRole('button', { name: 'Delete for good' }).click()
   await expect.poll(countRows).toBe(1)
@@ -696,6 +708,17 @@ test('Ada moves rows and decides by swiping', async () => {
     .first()
     .evaluate((b) => (b.textContent = 'Vitrine mit drei Schubladen und zwei Glastüren aus massivem Kiefernholz'))
   expect(await nameColumn.evaluate((th) => th.getBoundingClientRect().width)).toBe(nameWidth)
+  // Scrolled sideways, only the pictures stay, so more of the data fits; at the left edge the names return.
+  const wrap = page.locator('.project-page .table-wrap')
+  const topName = page.locator('table.grid tbody .name-model').first()
+  await wrap.evaluate((w) => (w.scrollLeft = 160))
+  await expect(topName).toBeHidden()
+  await expect(page.locator('table.grid tbody .name-cell .thumb').first()).toBeVisible()
+  expect(await nameColumn.evaluate((th) => th.getBoundingClientRect().width)).toBeLessThanOrEqual(56)
+  await accessible(page, 'table on a phone, scrolled sideways')
+  await wrap.evaluate((w) => (w.scrollLeft = 0))
+  await expect(topName).toBeVisible()
+  expect(await nameColumn.evaluate((th) => th.getBoundingClientRect().width)).toBe(nameWidth)
   // Adding, the filter field, filter and columns in one row, right below the tabs.
   const tops = await Promise.all(
     [
@@ -714,6 +737,32 @@ test('Ada moves rows and decides by swiping', async () => {
     await expect(page.getByRole('button', { name, exact: true })).toBeVisible()
   await page.keyboard.press('Escape')
   await accessible(page, 'table on a phone')
+  // Selected, the bar shows symbols only: compare first, then ⋯ with the rest, closing last; all in one row.
+  const boxes = page.locator('table.grid tbody input[type=checkbox]')
+  await boxes.nth(0).check()
+  await boxes.nth(1).check()
+  const bar = page.getByRole('region', { name: 'Side by side' })
+  await expect(bar.getByText('2 selected')).toBeVisible()
+  const barButtons = [
+    bar.getByRole('button', { name: 'Compare', exact: true }),
+    bar.getByRole('button', { name: 'More', exact: true }),
+    bar.getByRole('button', { name: 'Clear selection' }),
+  ]
+  const barBoxes = await Promise.all(barButtons.map(async (b) => (await b.boundingBox())!))
+  expect(barBoxes.map((b) => b.x)).toEqual([...barBoxes.map((b) => b.x)].sort((a, b) => a - b))
+  expect(Math.max(...barBoxes.map((b) => b.y)) - Math.min(...barBoxes.map((b) => b.y))).toBeLessThan(4)
+  expect(barBoxes[0].width).toBeLessThan(50)
+  await barButtons[1].click()
+  for (const name of ['Update details', 'Export', 'Delete']) await expect(bar.getByRole('button', { name, exact: true })).toBeInViewport()
+  await accessible(page, 'selection on a phone')
+  // Exporting the selection: a file with just those two products.
+  await bar.getByRole('button', { name: 'Export', exact: true }).click()
+  const exported = page.waitForEvent('download')
+  await bar.getByRole('button', { name: '.json' }).click()
+  const backup = JSON.parse((await import('node:fs')).readFileSync(await (await exported).path(), 'utf8'))
+  expect(backup.products).toHaveLength(2)
+  await barButtons[2].click()
+  await expect(bar).toBeHidden()
 
   await page.getByRole('link', { name: 'Swipe' }).click()
   await expect(page.getByRole('heading', { name: 'Like it or not?' })).toBeVisible()
@@ -804,6 +853,11 @@ test('Ada moves rows and decides by swiping', async () => {
   await expect(page.getByText('1 duel to first place')).toBeVisible()
   const [leftName, rightName] = await page.locator('.duel-choices .duel-name').allTextContents()
   await accessible(page, 'duel')
+  // The two products come first: the drawing to scale waits folded, and stays as one leaves it.
+  await expect(page.locator('details.size-compare[open]')).toHaveCount(0)
+  // A product's column grows to 360 px at most, so the values stay near their names.
+  for (const w of await page.locator('table.compare thead th[scope=col]').evaluateAll((ths) => ths.map((th) => th.getBoundingClientRect().width)))
+    expect(w).toBeLessThanOrEqual(361)
   // With two products there is no other duel to play first: nothing to skip.
   await expect(page.getByRole('button', { name: 'Later' })).toHaveCount(0)
   await page.keyboard.press('ArrowRight')
@@ -844,7 +898,7 @@ test('Ada moves rows and decides by swiping', async () => {
   await page.keyboard.press('Escape')
   await page.getByRole('checkbox', { name: 'Select for comparison: Arvika' }).check()
   await page.getByRole('checkbox', { name: 'Select for comparison: Borre' }).check()
-  await page.getByRole('button', { name: /Compare 2/ }).click()
+  await page.getByRole('button', { name: 'Compare', exact: true }).click()
   await expect(page.locator('.num-cell.best').getByText('€204')).toBeVisible()
   await expect(page.locator('.num-cell.worst').getByText('€300')).toBeVisible()
   await expect(page.getByText('+€96 to the best')).toBeVisible()
@@ -856,6 +910,24 @@ test('Ada moves rows and decides by swiping', async () => {
     .first()
     .click()
   await expect(page.locator('table.compare thead th[scope=col]')).toHaveCount(3)
+  // The page ends where its content ends: nothing inside the scrolling table stretches it (a low
+  // window, so the table scrolls in its box).
+  const tall = page.viewportSize()!
+  await page.setViewportSize({ width: tall.width, height: 420 })
+  const ends = await page.evaluate(() => ({
+    page: document.documentElement.scrollHeight,
+    main: document.querySelector('main')!.getBoundingClientRect().bottom + scrollY,
+  }))
+  expect(ends.page).toBeLessThanOrEqual(Math.ceil(ends.main) + 1)
+  // Scrolled to the end, the table's box fills the screen below the top bar: no empty space under it.
+  await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight))
+  const box = await page.evaluate(() => {
+    const r = document.querySelector('.compare-wrap')!.getBoundingClientRect()
+    return { top: r.top, gap: innerHeight - r.bottom, bar: document.querySelector('.topbar')!.getBoundingClientRect().bottom }
+  })
+  expect(box.gap).toBeLessThanOrEqual(24)
+  expect(box.top).toBeGreaterThanOrEqual(box.bar)
+  await page.setViewportSize(tall)
   await page.goBack()
 
   // "Share → Propario" from another app: the link lands in the chosen comparison, once.
@@ -875,15 +947,17 @@ test('Ada moves rows and decides by swiping', async () => {
   await expect.poll(() => page.locator('table.grid tbody tr').count()).toBe(before)
   // Tidy up for the steps that follow.
   await page.getByRole('checkbox', { name: 'Select for comparison: shop.example' }).check()
-  await page.getByRole('button', { name: 'Delete', exact: true }).click()
-  await page.getByRole('button', { name: 'Delete', exact: true }).last().click()
+  await deleteSelected(page)
   await page.getByRole('button', { name: 'Delete for good' }).click()
 
   // One "Export" entry opens the formats.
   await page.getByRole('button', { name: 'More', exact: true }).first().click()
   await page.getByRole('button', { name: 'Export', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Export as Excel' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Export as JSON' })).toBeVisible()
+  // One short row of formats, each named by its extension.
+  const formats = page.getByRole('group', { name: 'Export' }).getByRole('button')
+  await expect(formats).toHaveText(['.xlsx', '.ods', '.csv', '.json'])
+  await expect(page.getByRole('button', { name: '.csv' })).toHaveAccessibleDescription('Products as a table (.csv)')
+  await accessible(page, 'export formats')
   await page.keyboard.press('Escape')
 
   // "Find and ask", bottom right. Without AI: the shops' search for the comparison's name.
@@ -998,6 +1072,30 @@ test('Ada moves rows and decides by swiping', async () => {
   await expect(page.getByLabel('Unit: Tiefe')).toHaveValue('cm')
   await page.getByLabel('When comparing: Tiefe').selectOption('lower')
   await expect(page.getByLabel('When comparing: Tiefe')).toHaveValue('lower')
+  // A desktop has room for the whole table: nothing to scroll sideways.
+  expect(await page.locator('.table-wrap:has(table.fields-table)').evaluate((w) => w.scrollWidth - w.clientWidth)).toBeLessThanOrEqual(1)
+  // On a phone the handles fold away and the name stays in view; a requirement's row stays one
+  // line high, because its description keeps a column of its own.
+  const desk = page.viewportSize()!
+  await page.setViewportSize({ width: 390, height: 844 })
+  expect(
+    await page
+      .locator('table.fields-table tbody td:nth-child(1)')
+      .first()
+      .evaluate((td) => td.getBoundingClientRect().width),
+  ).toBeLessThan(2)
+  await page.getByRole('tab', { name: /^Requirements/ }).click()
+  const reqRow = page.locator('table.req-table:not(.fields-table) tbody tr:not(.group)').first()
+  expect(await reqRow.evaluate((tr) => tr.getBoundingClientRect().height)).toBeLessThan(80)
+  expect(
+    await page
+      .locator('table.req-table:not(.fields-table) col')
+      .nth(6)
+      .evaluate((c) => c.getBoundingClientRect().width),
+  ).toBeGreaterThan(150)
+  await accessible(page, 'requirements on a phone')
+  await page.setViewportSize(desk)
+  await page.getByRole('tab', { name: /^Fields/ }).click()
   // The tab bar has nothing to scroll on a desktop, so no empty scroll bar.
   expect(await page.locator('.tabs').evaluate((el) => el.scrollHeight <= el.clientHeight)).toBe(true)
   await accessible(page, 'fields table')
@@ -1011,6 +1109,23 @@ test('Ada moves rows and decides by swiping', async () => {
 
   // The start page points at what is new.
   await page.goto('/')
+  // On a phone a comparison's ⋯ shows all its actions, Delete too (the card does not cut it off).
+  const wide = page.viewportSize()!
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page
+    .getByRole('button', { name: /^Actions: / })
+    .first()
+    .click()
+  await expect(page.getByRole('button', { name: 'Delete', exact: true })).toBeInViewport({ ratio: 1 })
+  await page.keyboard.press('Escape')
+  // Category and status fold behind the filter button; "Archived" is one of the statuses.
+  const statuses = page.getByRole('group', { name: 'Status' })
+  await expect(statuses).toBeHidden()
+  await page.getByRole('button', { name: /^Filter/ }).click()
+  await expect(statuses.getByRole('button', { name: 'Archived' })).toBeVisible()
+  await expect(page.getByRole('checkbox', { name: 'Show archived' })).toHaveCount(0)
+  await accessible(page, 'start page filters on a phone')
+  await page.setViewportSize(wide)
   await page
     .getByRole('link', { name: /\d+ new/ })
     .first()

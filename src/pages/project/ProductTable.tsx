@@ -1,3 +1,6 @@
+import { useLoadImages } from './useLoadImages'
+import { ExportChoice } from '../../ui/ExportChoice'
+import { exportComparison } from '../../hooks'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { deleteProduct, reorder, setProductValue, updateProduct, updateProject } from '../../db/repo'
@@ -56,6 +59,11 @@ function addClause(query: string, name: string): string {
 /** Narrowest and widest width a column gets from double-clicking its edge. */
 const MIN_COL = 60
 const MAX_FIT = 360
+/** Matches the phone rules in app.css; there the product column is 148 px, folded 52 px. */
+const PHONE = '(max-width: 600px)'
+/** Folding only pays off when the table stays wider than the screen afterwards; otherwise it
+ *  would snap back to the left edge and unfold at once. */
+const FOLDED_BY = 96
 
 export function ProductTable({
   data,
@@ -122,11 +130,20 @@ export function ProductTable({
 
   // ---- product images ----
   const showThumbs = products.some((p) => productImage(p))
+  // On a phone, scrolling sideways folds the product column to its pictures, so more of the data
+  // fits; back at the left edge the names return.
+  const [picturesOnly, setPicturesOnly] = useState(false)
+  const foldOnScroll = (wrap: HTMLDivElement) => {
+    if (wrap.scrollLeft <= 0) setPicturesOnly(false)
+    else if (!picturesOnly && showThumbs && wrap.scrollLeft > 8 && wrap.scrollWidth - wrap.clientWidth > FOLDED_BY + 8 && window.matchMedia(PHONE).matches)
+      setPicturesOnly(true)
+  }
 
   // ---- acting on the selected products ----
   const confirm = useConfirm()
   const [bulk, setBulk] = useState<{ done: number; total: number } | null>(null)
   const selected = products.filter((p) => selection.has(p.id))
+  const selectionImages = useLoadImages(selected)
   /** One shop page after the other – no burst of requests to a shop. */
   const bulkUpdate = async () => {
     const withLink = selected.filter((p) => safeHref(p.url))
@@ -755,7 +772,7 @@ export function ProductTable({
           <QuickAdd data={data} onOpen={onOpen} inline />
         </div>
       ) : (
-        <div className="table-wrap">
+        <div className={picturesOnly ? 'table-wrap pictures-only' : 'table-wrap'} onScroll={(e) => foldOnScroll(e.currentTarget)}>
           <table className="grid" ref={tableRef}>
             <colgroup>
               <col className="c-sel" style={{ width: 64 }} />
@@ -952,23 +969,76 @@ export function ProductTable({
 
       {selection.size > 0 && (
         <div className="compare-bar" role="region" aria-label={m.compare.title}>
-          <span>{m.project.selected(selection.size)}</span>
-          <button className="btn sm outline" onClick={() => setSelection(new Set())}>
-            <Glyph name="close" /> {m.project.clearSelection}
+          <span aria-live="polite">
+            {bulk
+              ? m.bulk.updating(bulk.done, bulk.total)
+              : selectionImages.progress
+                ? m.image.loading(selectionImages.progress.done, selectionImages.progress.total)
+                : m.project.selected(selection.size)}
+          </span>
+          <button
+            className="btn sm"
+            disabled={selection.size < 2}
+            aria-label={m.project.compare}
+            title={m.project.compare}
+            onClick={() => navigate(`/p/${project.id}/compare?ids=${[...selection].join(',')}`)}
+          >
+            <Glyph name="compare" /> <span className="hide-narrow">{m.project.compare}</span>
           </button>
-          <button className="btn sm" disabled={selection.size < 2} onClick={() => navigate(`/p/${project.id}/compare?ids=${[...selection].join(',')}`)}>
-            {m.project.compare(selection.size)}
+          <Menu label={m.common.more} trigger={<Glyph name="more" />} className="btn sm outline icon-only" floating>
+            {(close) => (
+              <>
+                {canEdit && (
+                  <button
+                    disabled={!!bulk}
+                    title={m.pageUpdate.hint}
+                    onClick={() => {
+                      close()
+                      void bulkUpdate()
+                    }}
+                  >
+                    <Glyph name="refresh" /> {m.pageUpdate.button}
+                  </button>
+                )}
+                {canEdit && selectionImages.missing > 0 && (
+                  <button
+                    title={m.image.loadAllHint}
+                    disabled={!!selectionImages.progress}
+                    onClick={() => {
+                      close()
+                      void selectionImages.load()
+                    }}
+                  >
+                    <Glyph name="image" /> {m.image.loadAll(selectionImages.missing)}
+                  </button>
+                )}
+                <ExportChoice close={close} run={(f) => void exportComparison(project.id, f, m, selection)} />
+                {canEdit && (
+                  <>
+                    <hr />
+                    <button
+                      className="danger"
+                      disabled={!!bulk}
+                      onClick={() => {
+                        close()
+                        void bulkDelete()
+                      }}
+                    >
+                      <Glyph name="trash" /> {m.common.delete}
+                    </button>
+                  </>
+                )}
+              </>
+            )}
+          </Menu>
+          <button
+            className="btn sm ghost icon-only"
+            aria-label={m.project.clearSelection}
+            title={m.project.clearSelection}
+            onClick={() => setSelection(new Set())}
+          >
+            <Glyph name="close" />
           </button>
-          {canEdit && (
-            <>
-              <button className="btn sm outline" disabled={!!bulk} onClick={bulkUpdate} aria-live="polite" title={m.pageUpdate.hint}>
-                <Glyph name="download" /> {bulk ? m.bulk.updating(bulk.done, bulk.total) : m.pageUpdate.button}
-              </button>
-              <button className="btn sm outline" disabled={!!bulk} onClick={bulkDelete}>
-                <Glyph name="trash" /> {m.common.delete}
-              </button>
-            </>
-          )}
         </div>
       )}
     </>

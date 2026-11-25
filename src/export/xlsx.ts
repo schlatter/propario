@@ -115,7 +115,15 @@ export function bundleToWorkbook(b: ProjectBundle, m: Messages): XLSX.WorkBook {
   return wb
 }
 
-export function workbookToBlob(wb: XLSX.WorkBook): Blob {
-  const out = XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer
-  return new Blob([out], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+const SPREADSHEET_TYPES = {
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  ods: 'application/vnd.oasis.opendocument.spreadsheet',
+  csv: 'text/csv;charset=utf-8',
+}
+
+/** The workbook as a file; csv holds the first sheet (the products) with a BOM, so spreadsheets read umlauts. */
+export function workbookToBlob(wb: XLSX.WorkBook, format: keyof typeof SPREADSHEET_TYPES = 'xlsx'): Blob {
+  if (format === 'csv') return new Blob(['\ufeff' + XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]])], { type: SPREADSHEET_TYPES.csv })
+  const out = XLSX.write(wb, { type: 'array', bookType: format }) as ArrayBuffer
+  return new Blob([out], { type: SPREADSHEET_TYPES[format] })
 }

@@ -2,8 +2,8 @@
 
 Compare faster, decide better. Self-hosted web app, AGPL. Read `README.md` for what it
 does, `CONTRIBUTING.md` for how the code is organised, tested and released, `SECURITY.md` for
-the baseline, `docs/excel-import.md` before changing the importer, and `docs/brand.md` – vision,
-mission and design guide – before changing the interface, its texts or the logo. User-facing
+the baseline, `docs/excel-import.md` before changing the importer, and `docs/brand.md` (vision,
+mission, design guide and the patterns for where actions and symbols go) before changing the interface, its texts or the logo. User-facing
 docs live in `docs/user-guide.md` and `docs/self-hosting.md`, the website in `site/`; keep them
 true when a change makes them wrong, and renew the pictures with `npm run screenshots`. README, website
 and the app's start page tell one story in the start page's words (`overview` in `src/i18n/en.ts`;

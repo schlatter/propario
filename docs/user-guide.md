@@ -40,7 +40,7 @@ show archived ones.
 - **New comparison:** a name and, if you like, a category.
 - **Stage:** each comparison moves from _Researching_ to _Comparing_, _Decided_ and _Purchased_.
   In a comparison the stage is the coloured dot before its name; select it to change the stage.
-- **⋯ menu:** edit _Name & category_, _Duplicate_, _Archive_, _Export_ (JSON or Excel),
+- **⋯ menu:** edit _Name & category_, _Duplicate_, _Archive_, _Export_ (.xlsx, .ods, .csv or .json),
   _Share comparison_, _Add or update products_, _Delete_.
 - **Tabs:** _Products_, _Requirements_, _Fields_ and _Notes_ (the goal of the purchase, the
   current system, reference links – anything that does not belong to one product).
@@ -127,13 +127,16 @@ their judgements together.
 - **Swipe:** go through the products one by one and like them or not – swipe, or use the arrow
   keys (↓ for neutral). At the end you see what everyone likes.
 - **Duel:** two at a time – which is better? After a few duels your ranking stands. Duels are
-  between your favourites and what everyone likes. Everyone's rankings become the **joint
-  ranking**; its first place can become the decision.
+  between your favourites and what everyone likes. The drawing to scale waits folded under
+  **Size comparison**. Everyone's rankings become the **joint ranking**; its first place can become the
+  decision.
 - **Side by side:** select products in the table and **Compare**. Best values are marked,
-  _Only differences_ hides what is the same, and **Size** draws the products to scale next to
+  _Only differences_ hides what is the same, and **Size comparison** draws the products to scale next to
   a person and the space your requirements leave – from the front, the side or above, side by
   side or overlaid, and in **3D**. On a phone that supports it, **View in your room** puts a
   product into your room.
+- **Selected products** have a bar at the bottom: the balance compares them, its ⋯ updates their
+  details, loads missing pictures, exports just them or deletes them, and ✕ clears the selection.
 
 ![Three sideboards side by side, drawn to scale against the width the requirements allow.](images/side-by-side-light.png)
 

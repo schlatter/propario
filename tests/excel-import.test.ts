@@ -6,7 +6,7 @@
 import * as XLSX from 'xlsx'
 import { describe, expect, it } from 'vitest'
 import { analyzeWorkbook, buildBundles, readWorkbook } from '../src/import/excel'
-import { bundleToWorkbook } from '../src/export/xlsx'
+import { bundleToWorkbook, workbookToBlob } from '../src/export/xlsx'
 import { summarize } from '../src/domain/requirements'
 import { en } from '../src/i18n/en'
 import { de } from '../src/i18n/de'
@@ -231,4 +231,18 @@ describe('Excel export round trip', () => {
       )
     })
   }
+
+  it('re-imports its .ods file, and the .csv holds the products with a BOM', async () => {
+    const original = buildBundles(analyzeWorkbook(readWorkbook(toBytes(separateSheetsWorkbook())), 'Regal.xlsx', { people }))[0]
+    const ods = new Uint8Array(await workbookToBlob(bundleToWorkbook(original, de), 'ods').arrayBuffer())
+    const again = buildBundles(analyzeWorkbook(readWorkbook(ods), 'Regal.ods', { people }))[0]
+    expect(again.products.map((p) => [p.brand, p.model, p.price])).toEqual(original.products.map((p) => [p.brand, p.model, p.price]))
+
+    const bytes = new Uint8Array(await workbookToBlob(bundleToWorkbook(original, de), 'csv').arrayBuffer())
+    expect([...bytes.slice(0, 3)]).toEqual([0xef, 0xbb, 0xbf])
+    const csv = new TextDecoder().decode(bytes)
+    const lines = csv.trim().split('\n')
+    expect(lines).toHaveLength(original.products.length + 1)
+    for (const p of original.products) expect(csv).toContain(p.model)
+  })
 })

@@ -54,6 +54,19 @@ export async function loadBundle(projectId: string, database: AppDB = db): Promi
 }
 
 /**
+ * The bundle with only the given products, for exporting a selection. The decision and the price
+ * reference are kept only when their product is among them; rankings tolerate missing products.
+ */
+export function onlyProducts(b: ProjectBundle, ids: ReadonlySet<string>): ProjectBundle {
+  const keep = (id: string | null | undefined) => (id && ids.has(id) ? id : null)
+  return {
+    ...b,
+    project: { ...b.project, decisionProductId: keep(b.project.decisionProductId), priceReference: keep(b.project.priceReference) ?? '' },
+    products: b.products.filter((p) => ids.has(p.id)),
+  }
+}
+
+/**
  * Gives every record of a bundle a fresh id and rewires all internal references
  * (property values, conditions, manual checks, decision).
  */
@@ -91,6 +104,11 @@ export function remapBundle(b: ProjectBundle, projectPatch: Partial<Project> = {
     ...projectPatch,
     id: projectId,
     decisionProductId: b.project.decisionProductId ? (prodMap.get(b.project.decisionProductId) ?? null) : null,
+    priceReference: b.project.priceReference ? (prodMap.get(b.project.priceReference) ?? '') : b.project.priceReference,
+    // A product missing from the bundle keeps its old id: normalize (domain/duel) skips it like a deleted one.
+    rankings: b.project.rankings
+      ? Object.fromEntries(Object.entries(b.project.rankings).map(([who, r]) => [who, { ...r, order: r.order.map((id) => prodMap.get(id) ?? id) }]))
+      : b.project.rankings,
     createdAt: now,
     updatedAt: now,
   }

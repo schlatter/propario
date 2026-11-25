@@ -217,7 +217,7 @@ function DrawerContent({
                         }
                       })}
                     >
-                      <Glyph name="download" /> {m.pageUpdate.button}
+                      <Glyph name="refresh" /> {m.pageUpdate.button}
                     </button>
                   )}
                   {p.price !== null && (
