@@ -18,6 +18,7 @@ import {
   type View,
   type ViewPic,
 } from '../../domain/size'
+import { Glyph } from '../../ui/Glyph'
 import { useI18n } from '../../i18n'
 import { productImage } from '../../images'
 import type { ProjectData } from './useProjectData'
@@ -145,6 +146,7 @@ export function SizeCompare({
   return (
     <details className="size-compare" open={open} onToggle={(e) => onToggle?.(e.currentTarget.open)}>
       <summary>
+        <Glyph name="chevronRight" />
         <h2>{m.size.title}</h2>
       </summary>
       <div className="size-head">

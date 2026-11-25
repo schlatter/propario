@@ -4926,9 +4926,26 @@ table.compare.duel {
 .size-compare > summary {
   display: flex;
   align-items: center;
+  gap: 8px;
   min-height: 44px;
   padding: 0 16px;
   cursor: pointer;
+  list-style: none;
+}
+.size-compare > summary::-webkit-details-marker {
+  display: none;
+}
+/* The arrow says it opens: right when folded, down when open. */
+.size-compare > summary .glyph {
+  transition: transform 0.15s;
+}
+.size-compare[open] > summary .glyph {
+  transform: rotate(90deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .size-compare > summary .glyph {
+    transition: none;
+  }
 }
 .size-compare > summary h2 {
   display: inline;

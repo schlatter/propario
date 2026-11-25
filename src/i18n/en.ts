@@ -821,7 +821,7 @@ export const en = {
     arFailed: 'The room view could not start on this device.',
   },
   size: {
-    title: 'Size',
+    title: 'Size comparison',
     view: 'View',
     views: { front: 'Front', back: 'Back', side: 'Side', top: 'From above' },
     layout: 'Arrangement',

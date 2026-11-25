@@ -128,10 +128,10 @@ their judgements together.
   keys (↓ for neutral). At the end you see what everyone likes.
 - **Duel:** two at a time – which is better? After a few duels your ranking stands. Duels are
   between your favourites and what everyone likes. The drawing to scale waits folded under
-  **Size**. Everyone's rankings become the **joint ranking**; its first place can become the
+  **Size comparison**. Everyone's rankings become the **joint ranking**; its first place can become the
   decision.
 - **Side by side:** select products in the table and **Compare**. Best values are marked,
-  _Only differences_ hides what is the same, and **Size** draws the products to scale next to
+  _Only differences_ hides what is the same, and **Size comparison** draws the products to scale next to
   a person and the space your requirements leave – from the front, the side or above, side by
   side or overlaid, and in **3D**. On a phone that supports it, **View in your room** puts a
   product into your room.

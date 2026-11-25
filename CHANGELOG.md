@@ -27,10 +27,10 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
   requirement stay in view, in the fields the name does.
 - Changed: on the start page a phone folds category and status behind the filter button; the
   “Show archived” box is gone, the status “Archived” shows them.
-- Changed: a duel shows the two products first; the drawing to scale waits folded under “Size” and
-  stays open once opened.
-- Changed: side by side, a product's column grows to 360 px at most, so on a wide screen the values
-  stay near their names.
+- Changed: a duel shows the two products first; the drawing to scale waits folded under “Size
+  comparison”, with an arrow that shows it opens, and stays open once opened.
+- Changed: side by side and in a duel, a product's column grows to 360 px at most and the page
+  with it, so on a wide screen the drawing, the table and the choices share one width.
 - Fixed: below the side-by-side table the page went on with empty space. Scrolled down, the
   table's box now fills the screen below the top bar and the page ends there.
 - Fixed: a duplicated or imported comparison lost its price reference, and its duel rankings

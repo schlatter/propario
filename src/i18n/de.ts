@@ -828,7 +828,7 @@ export const de: Messages = {
     arFailed: 'Die Raumansicht ließ sich auf diesem Gerät nicht starten.',
   },
   size: {
-    title: 'Größe',
+    title: 'Größenvergleich',
     view: 'Ansicht',
     views: { front: 'Vorne', back: 'Hinten', side: 'Seite', top: 'Von oben' },
     layout: 'Anordnung',

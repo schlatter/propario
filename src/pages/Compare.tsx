@@ -99,6 +99,8 @@ export function ComparePage() {
 
   const ids = duelMode ? (pair ? [pair.left, pair.right] : []) : (params.get('ids') ?? '').split(',').filter(Boolean)
   const products = ids.map((x) => data.products.find((p) => p.id === x)).filter((p): p is Product => !!p)
+  // A product's column grows to 360 px at most, and the whole page with it: on a wide screen the
+  // drawing, the table and the choices share one width, the values close to their names.
   const compareWidth = COMPARE_ROWHEAD + COMPARE_MAX_COL * products.length + 2
   const back = `/p/${data.project.id}`
   /** Products of the comparison not yet side by side, the ones still in the running first. */
@@ -330,7 +332,7 @@ export function ComparePage() {
   const isEmpty = (r: Row) => r.values.every((v) => !v.trim())
 
   return (
-    <main className="wide compare-page">
+    <main className="wide compare-page" style={{ maxWidth: `calc(${compareWidth}px + 2 * var(--gutter))` }}>
       <Link to={back} className="crumb">
         <Glyph name="chevronLeft" /> {data.project.name}
       </Link>
@@ -384,9 +386,7 @@ export function ComparePage() {
         </div>
       )}
       <SizeCompare products={products} data={data} open={sizeOpen} onToggle={setSizeOpen} />
-      {/* Side by side, a product's column grows to 360 px at most: on a wide screen the values stay
-          close to their names instead of spreading over the whole width. */}
-      <div className={`compare-wrap${duelMode ? ' duel' : ''}`} style={{ maxWidth: compareWidth }}>
+      <div className={`compare-wrap${duelMode ? ' duel' : ''}`}>
         <table className={`compare${duelMode ? ' duel' : ''}`}>
           {!duelMode && (
             <colgroup>
@@ -487,7 +487,7 @@ export function ComparePage() {
       </div>
       {duelMode && mine && pair && (
         // The choice sits at the bottom of the screen, where the thumb is – like when swiping.
-        <div className="duel-actions" role="group" aria-label={m.duel.question} style={{ maxWidth: compareWidth }}>
+        <div className="duel-actions" role="group" aria-label={m.duel.question}>
           {/* ✓ = take this one: a choice, not a swipe. "Later" sits quietly between the two. */}
           <div className="duel-choices">
             <button type="button" className="btn primary" onClick={() => choose('left')} aria-keyshortcuts="ArrowLeft">
