@@ -1,5 +1,5 @@
 import { tx, type DB } from './db.ts'
-import { open, openBytes, seal, sealBytes } from './crypto.ts'
+import { hasKey, open, openBytes, seal, sealBytes } from './crypto.ts'
 import { newId, nowIso } from '../src/shared/ids.ts'
 import { applyPatch, checkChange, IMAGE_PATH, KINDS, PERSONAL, type AnyRecord, type Change, type Kind } from '../src/shared/records.ts'
 
@@ -59,6 +59,27 @@ export function accessibleProjects(db: DB, userId: string): { id: string; role: 
 // ---------- records ----------
 
 const aad = (kind: Kind, id: string) => `record:${kind}:${id}`
+
+/**
+ * Whether DATA_KEY opens what is already stored: one encrypted record tells. Null when it does
+ * (or nothing is encrypted yet); otherwise what is wrong and what to do, for the start of the
+ * server. Without this, a wrong key only shows later as every change and picture refused.
+ */
+export function keyProblem(db: DB, dataDir: string, production: boolean): string | null {
+  const row = db.prepare("SELECT kind, id, data FROM records WHERE data LIKE 'v1.%' LIMIT 1").get() as { kind: Kind; id: string; data: string } | undefined
+  if (!row) return null
+  try {
+    open(aad(row.kind, row.id), row.data)
+    return null
+  } catch {
+    const what = hasKey()
+      ? `DATA_KEY does not match the data in ${dataDir}: it was encrypted with another key, so nothing in it can be read or changed.`
+      : `The data in ${dataDir} is encrypted, but DATA_KEY is not set.`
+    const fix = 'Start again with the DATA_KEY the data was written with. A new key, e.g. from openssl rand, only suits an empty data folder.'
+    const dev = production ? '' : ` For development no key is needed: start without DATA_KEY, and move ${dataDir} aside to begin with an empty one.`
+    return `${what} ${fix}${dev}`
+  }
+}
 
 function nextSeq(db: DB): number {
   return (db.prepare('UPDATE counter SET seq = seq + 1 WHERE id = 1 RETURNING seq').get() as { seq: number }).seq

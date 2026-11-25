@@ -46,13 +46,21 @@ function api(): Plugin {
     apply: 'serve',
     async configureServer(server) {
       if (process.env.VITEST) return
-      const [{ createApp }, { openDatabase }, { loadConfig }] = await Promise.all([
+      const [{ createApp }, { openDatabase }, { loadConfig }, { keyProblem }] = await Promise.all([
         import('./server/app.ts'),
         import('./server/db.ts'),
         import('./server/env.ts'),
+        import('./server/store.ts'),
       ])
       const config = loadConfig({ ...process.env, NODE_ENV: 'development', PORT: String(server.config.server.port ?? 5173) })
-      const app = createApp(openDatabase(join(config.dataDir, 'propario.db')), config)
+      const db = openDatabase(join(config.dataDir, 'propario.db'))
+      // A key that does not open ./data stops the start here, with what to do.
+      const problem = keyProblem(db, config.dataDir, false)
+      if (problem) {
+        console.error(`\n  ${problem}\n`)
+        process.exit(1)
+      }
+      const app = createApp(db, config)
       server.middlewares.use((req, res, next) => app.handle(req, res, next))
       server.httpServer?.once('listening', () => {
         const link = app.setupLink()
