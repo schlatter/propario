@@ -11,6 +11,21 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.21.0',
+    notes: {
+      en: [
+        'The selection is a symbol now: a circle for open, a tick for checked, a cross for excluded.',
+        'Against a price reference the note is short too: “Ref.” and the difference, like +€70.',
+        'Rank, selection and price take less room.',
+      ],
+      de: [
+        'Die Auswahl ist jetzt ein Symbol: Kreis für offen, Haken für geprüft, Kreuz für ausgeschlossen.',
+        'Mit Preisreferenz ist die Notiz auch kurz: „Ref.“ und die Differenz, etwa +70 €.',
+        'Platz, Auswahl und Preis brauchen weniger Raum.',
+      ],
+    },
+  },
+  {
     version: '0.20.0',
     notes: {
       en: [

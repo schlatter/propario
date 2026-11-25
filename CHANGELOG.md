@@ -6,15 +6,17 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Unreleased
 
-- Changed: the server checks at start that `DATA_KEY` opens the stored data. A different or
-  missing key stops it with a message saying what to do, instead of starting and then refusing
-  every change and picture.
-- Changed: development stores data encrypted as production does. `npm run dev` makes a key on its
-  first start and keeps it in `.dev-data-key`. There is no unencrypted mode.
-- Changed: against a price reference the note under a price is short too: “Ref.” on the reference
-  itself and the difference alone on the others, like “+€70”; the sentence is its tooltip.
+## 0.21.0 — 2026-11-25
+
 - Changed: the selection in the table is a symbol (a circle for open, a tick for checked, a cross
   for excluded); its menu names them. Rank, selection and price start narrower.
+- Changed: against a price reference the note under a price is short too: “Ref.” on the reference
+  itself and the difference alone on the others, like “+€70”; the sentence is its tooltip.
+- Changed: the server checks at start that `DATA_KEY` opens the stored data. A different or
+  missing key stops it with a message saying what to do, instead of starting and then refusing
+  every change and picture. Keep the key you started with; a new one cannot open old data.
+- Changed: development stores data encrypted as production does. `npm run dev` makes a key on its
+  first start and keeps it in `.dev-data-key`. There is no unencrypted mode.
 
 ## 0.20.0 — 2026-11-25
 
