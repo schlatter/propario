@@ -97,6 +97,53 @@ Rules:
   set (that would need its license notice). A README stands on its own; the app keeps its glyphs.
   Change them there, never in the SVGs.
 
+## Patterns
+
+Where things go, so a new screen looks like the others without deciding it again.
+
+**Actions**
+
+- **One main action in sight.** A bar, a card or a row shows the one action most people come for
+  (petrol). Everything else goes into ⋯ ([`src/ui/Menu.tsx`](../src/ui/Menu.tsx)). Examples: the
+  comparison's top bar, a comparison's card, the selection bar.
+- **Order in a ⋯ menu:** the usual actions first, then Export (one entry that opens its formats,
+  [`src/ui/ExportChoice.tsx`](../src/ui/ExportChoice.tsx)), then a line, then Delete in red as the
+  last entry. Delete always asks first.
+- **Closing or clearing is a ✕ at the end** of its bar, or at the top right of a drawer or panel.
+- **Only what can be done is offered.** An action that is impossible right now is hidden (a viewer
+  sees no Delete); one that needs one more step stays visible but disabled (Compare with one
+  product selected).
+
+**Symbols and labels**
+
+- **One symbol, one meaning,** everywhere: a balance compares side by side, crossed swords start a
+  duel, ⋯ holds more, ✕ closes, clears or takes an entry out of a list, a funnel filters, the
+  columns symbol chooses columns, the bin deletes something for good. A new meaning gets a new glyph in [`src/ui/Glyph.tsx`](../src/ui/Glyph.tsx), never
+  a symbol already in use.
+- **A button with only a symbol still has a name:** `aria-label` and `title` with the same words
+  the wide screen shows (`hide-narrow` hides only the visible text). The accessible name contains
+  the visible text, so voice control finds it.
+- **On a phone, buttons in a bar show their symbol only;** on a wide screen the main action shows
+  its words too. Menu entries always have symbol and words.
+
+**Menus, bars and dialogs**
+
+- **A menu never gets cut off.** Inside something that clips (a card, a table cell, a bar at the
+  bottom) it opens `floating`; it then opens where it fits and scrolls if it is taller than the
+  room.
+- **A bar that appears with a selection** floats at the bottom, says how many are selected and
+  shows progress in place of that count while something runs.
+- **Text in a menu is ordinary text,** whatever the colour of the bar it opens from.
+
+**Phone (up to 600 px)**
+
+- Touch targets 44 px, the toolbar in one row, the page never scrolls sideways.
+- A table may scroll sideways inside its box. Its first columns stay; the product column folds to
+  its pictures while the table is scrolled.
+- Room goes to the data: tables run from edge to edge, headers stay short.
+- Anything positioned inside a scrolling box (screen-reader texts included) has a positioned
+  ancestor inside that box, or it stretches the page.
+
 ## Voice
 
 - Plain, short, friendly. Say what happens: "Add product", "3 added, 1 updated".
@@ -121,6 +168,7 @@ Rules:
 
 - [ ] Solves a real problem; nothing added that is not needed.
 - [ ] Uses tokens; petrol acts, amber points out; check colours only for checks.
+- [ ] Follows the patterns: one main action in sight, the rest in ⋯, symbols keep their meaning.
 - [ ] Light and dark, 390 px and desktop, English and German looked at.
 - [ ] Keyboard, screen reader labels and contrast fine (`npm run verify` runs axe).
 - [ ] Texts plain and in both languages; an action that exists elsewhere uses its label and key.
