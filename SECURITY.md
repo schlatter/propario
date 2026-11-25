@@ -9,7 +9,8 @@ a week.
 ## The baseline
 
 Propario follows one rule: **keep only what comparing needs, protect all of it, and say what
-happens.** Every change is measured against this list; `npm run verify` checks most of it.
+happens.** Every change is measured against this list; `npm run verify` checks most of it. No
+switch turns a protection off, development included.
 
 ### Data minimisation
 

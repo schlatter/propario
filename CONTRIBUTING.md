@@ -14,12 +14,16 @@ and everything you need to work on the code.
 
 ## Principles, in order
 
-1. **KISS.** The simplest thing a person can read, review and operate. No new dependency,
-   service, abstraction or setting without a concrete problem it solves.
-2. **Security and privacy by design.** Private by default, shared on purpose. [SECURITY.md](SECURITY.md)
-   is the baseline and every change keeps it true. When a change touches personal data, answer
-   first: do we need to store it, can we store less, and is it encrypted, exported and deleted
-   with the account?
+1. **KISS.** The simplest thing a person can read, review and operate. No new dependency, service,
+   abstraction or setting without a concrete problem it solves. One way to do a thing: no setting
+   where a good default will do. Every option is one more path to test, document and keep working.
+2. **Security and privacy by design.** Private by default, shared on purpose.
+   [SECURITY.md](SECURITY.md) is the baseline and every change keeps it true. When a change touches
+   personal data, answer first: do we need to store it, can we store less, and is it encrypted,
+   exported and deleted with the account? Protection is never an option: nothing switches off
+   encryption, passkeys, HTTPS or the CSP, not even for development. Development runs like
+   production (the same server, checks and encryption), different only where a laptop needs it,
+   such as localhost or a key of its own.
 3. **Think big, build small.** Do not block the future (more languages, other storage, more
    people), but build only what is needed now.
 
