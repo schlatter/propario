@@ -9,6 +9,11 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
+// A git hook (pre-push runs these tests) exports GIT_DIR, GIT_INDEX_FILE and the like. Inherited,
+// they point every git call here – and in the scripts under test – at the real repository instead
+// of the throwaway one: in a worktree that rewrote its index and made it bare. Never inherit them.
+for (const name of Object.keys(process.env)) if (name.startsWith('GIT_')) delete process.env[name]
+
 const script = join(import.meta.dirname, '..', 'scripts', 'check-repo-policy.sh')
 const ada = 'Ada <1+ada@users.noreply.github.com>'
 let repo: string
