@@ -11,6 +11,21 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.20.0',
+    notes: {
+      en: [
+        'More room for the data on a phone: a narrower product column and one row of tools.',
+        'The stage is now the coloured dot before the name; tap it to change the stage.',
+        '“+ Product” sits next to the filter, and “Load images” is in the ⋯ menu.',
+      ],
+      de: [
+        'Mehr Platz für die Daten am Handy: eine schmalere Produktspalte und eine Zeile für die Werkzeuge.',
+        'Der Stand ist jetzt der farbige Punkt vor dem Namen, ein Tipp darauf ändert ihn.',
+        '„+ Produkt“ steht neben dem Filter, „Bilder laden“ ist im ⋯-Menü.',
+      ],
+    },
+  },
+  {
     version: '0.19.0',
     notes: {
       en: [
