@@ -7,11 +7,7 @@ one in [AGENTS.md](../AGENTS.md): Propario works without it, and AI only propose
 
 ## Now
 
-- **Say at first sight what Propario is** – on the start page, the demo, the README and the
-  website: it works without AI, it is for any bigger purchase (not only furniture), and it is a
-  help to decide, not a search engine. Tell it as a story – one person narrows the choice, the
-  other swipes, a duel, a decision – and show the highlights (swipe, duel, room view) in a set of
-  phone pictures side by side, not only the table.
+Nothing at the moment; the next pick comes from _Next_.
 
 ## Next
 

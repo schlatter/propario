@@ -430,7 +430,6 @@ export const en = {
     suggestPrompt:
       'Suggest up to 5 more products that fit our requirements and budget and are not in our list yet – real models that can be bought now. Search the web if you can, and give the link to each product’s page – never invent a link. Say briefly why each one fits; give only values you are sure of.',
     question: 'Your question',
-    questionPlaceholder: 'Empty: which one fits best?',
     connectHint: 'Or connect your AI and ask right here:',
     ask: 'Ask question',
     asking: 'Your AI is answering – this can take a minute.',

@@ -6,19 +6,24 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Unreleased
 
+## 0.20.0 — 2026-11-25
+
 - Changed: the start page says at first sight what Propario is: a help to compare and decide, for
   anything you compare before buying, with AI completely optional. It tells it as a story: you do
   the research, the others swipe, a few duels settle the rest.
-
-- Changed: on a phone the products table leaves more room for the data – a narrower product
-  column with a smaller picture and the name in two lines at most, the table from edge to edge,
-  and filter field, filter and columns in one row.
-- Changed: in a comparison the stage is a coloured dot before its name – select it to change the
-  stage; “+ Product” sits next to the filter field (on a phone just “+”). The row above the tabs
+- Changed: on a phone the products table leaves more room for the data: a narrower product column
+  with a smaller picture and the name in two lines at most, the table from edge to edge, and
+  filter field, filter and columns in one row.
+- Changed: in a comparison the stage is a coloured dot before its name; select it to change the
+  stage. “+ Product” sits next to the filter field, on a phone just “+”. The row above the tabs
   is gone.
-- Changed: the filter button shows a funnel instead of a magnifier; “Columns” is a button with its
-  symbol only; “Load images” moved into the ⋯ menu of the comparison.
-- Fixed: a long product name no longer made the product column – and the others – wider.
+- Changed: the filter button shows a funnel instead of a magnifier, “Columns” shows only its
+  symbol, and “Load images” moved into the ⋯ menu of the comparison.
+- Changed: under a price the difference to the budget is short, like “−€500.01*”; the * is the
+  budget's mark in the column head, and the full sentence is its tooltip.
+- Changed: the question field in “Find and ask” has no example text. Left empty, it still asks
+  which product fits best.
+- Fixed: a long product name no longer made the product column, and the others, wider.
 
 ## 0.19.0 — 2026-11-24
 

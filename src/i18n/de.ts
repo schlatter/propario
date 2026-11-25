@@ -433,7 +433,6 @@ export const de: Messages = {
     suggestPrompt:
       'Schlag uns bis zu 5 weitere Produkte vor, die zu unseren Anforderungen und zum Budget passen und noch nicht in unserer Liste sind – echte Modelle, die man jetzt kaufen kann. Such im Web, wenn du kannst, und gib zu jedem Produkt den Link zur Produktseite an – erfinde nie einen Link. Sag kurz, warum jedes passt; gib nur Werte an, bei denen du dir sicher bist.',
     question: 'Deine Frage',
-    questionPlaceholder: 'Leer: welches passt am besten?',
     connectHint: 'Oder verbinde deine KI und frag direkt hier:',
     ask: 'Frage stellen',
     asking: 'Deine KI antwortet – das kann eine Minute dauern.',
