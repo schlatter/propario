@@ -33,7 +33,7 @@ Forget endless spreadsheets and a thousand open tabs. You do the research and pi
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/hero-dark.png">
-  <img src="docs/images/hero-light.png" alt="A comparison of six sideboards in Propario: prices against the budget, requirements met and not met, and everyone's verdicts. On top, a phone screen where one of them is being swiped to the right.">
+  <img src="docs/images/hero-light.png" alt="A comparison of six sideboards in Propario: prices against the budget, requirements met and not met, and everyone's verdicts. Over it a magnifying glass shows the same comparison as one product to swipe: like it or not.">
 </picture>
 
 ## How it works

@@ -306,9 +306,8 @@ section > h2 {
   }
 }
 
-/* The app in a browser window, on a petrol band; a phone screen being swiped lies over it. */
+/* The app in a browser window, on a petrol band. */
 .showcase {
-  position: relative;
   padding: clamp(16px, 3vw, 32px);
   border-radius: 20px;
   background: var(--brand-soft);
@@ -603,15 +602,4 @@ section > h2 {
 .why td.yes {
   color: var(--brand-text);
   font-weight: 700;
-}
-
-.showcase-swipe img {
-  position: absolute;
-  right: clamp(24px, 6vw, 72px);
-  bottom: clamp(-48px, -3vw, -16px);
-  width: clamp(92px, 21vw, 262px);
-  height: auto;
-  border: 1px solid var(--line-strong);
-  border-radius: 18px;
-  box-shadow: 0 28px 56px -16px rgb(0 0 0 / 0.4);
 }

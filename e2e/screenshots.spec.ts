@@ -1,5 +1,5 @@
 import { mkdirSync, readFileSync } from 'node:fs'
-import { expect, test, type Browser, type Page } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 /**
  * The pictures in README.md, docs/ and the website: the built-in demo (invented products only),
@@ -66,52 +66,8 @@ test('phone', async ({ browser }) => {
   await shoot(page, 'phone-details')
   await page.locator('dialog.drawer').getByRole('button', { name: 'Close', exact: true }).click()
 
-  // A product being swiped to the right, held mid-gesture: laid over the table in the README's
-  // first picture, and over the browser window on the website.
-  await page.getByRole('link', { name: 'Swipe' }).click()
-  await page.getByRole('heading', { name: 'Like it or not?' }).waitFor()
-  await page.emulateMedia({ reducedMotion: 'reduce' })
-  // Room on the right, so the card that moves there stays in the picture.
-  await page.addStyleTag({ content: '.swipe-card { margin-right: 52px; }' })
-  const card = (await page.locator('.swipe-card').boundingBox())!
-  await page.mouse.move(card.x + card.width / 2, card.y + card.height / 3)
-  await page.mouse.down()
-  await page.mouse.move(card.x + card.width / 2 + 46, card.y + card.height / 3, { steps: 6 })
-  const top = (await page.locator('.swipe-page .crumb').boundingBox())!.y - 12
-  const bottom = (await page.locator('.swipe-actions').boundingBox())!
-  const clip = { x: 0, y: top, width: phone.width, height: bottom.y + bottom.height + 16 - top }
-  for (const scheme of ['light', 'dark'] as const) {
-    await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' })
-    await page.waitForTimeout(300)
-    await page.screenshot({ path: `${dir}/swipe-${scheme}.png`, caret: 'hide', clip })
-  }
-  await page.mouse.up()
   await page.close()
-  await hero(browser)
 })
-
-/** The README's first picture: the table as it is, the swipe screen on top of its right side. */
-async function hero(browser: Browser) {
-  const page = await browser.newPage({ viewport: { width: 1440, height: 600 }, locale: 'en-GB' })
-  await page.goto('/')
-  for (const scheme of ['light', 'dark'] as const) {
-    const png = (name: string) => `data:image/png;base64,${readFileSync(`${dir}/${name}-${scheme}.png`).toString('base64')}`
-    await page.emulateMedia({ colorScheme: scheme })
-    await page.evaluate(
-      ({ table, swipe }) => {
-        document.body.innerHTML = `
-          <div id="hero" style="position:relative;width:1440px;height:600px;overflow:hidden;background:var(--bg)">
-            <img src="${table}" alt="" style="display:block;width:1440px;height:600px">
-            <img src="${swipe}" alt="" style="position:absolute;right:72px;top:50%;transform:translateY(-50%);width:262px;border-radius:18px;border:1px solid var(--line-strong);box-shadow:0 28px 56px -16px rgb(0 0 0 / .4)">
-          </div>`
-      },
-      { table: png('table'), swipe: png('swipe') },
-    )
-    await page.evaluate(() => Promise.all([...document.images].map((i) => i.decode())))
-    await page.locator('#hero').screenshot({ path: `${dir}/hero-${scheme}.png` })
-  }
-  await page.close()
-}
 
 // The six steps of the start page ("What Propario can do"): the website shows the same pictures.
 test('steps', async ({ browser }) => {
@@ -125,6 +81,54 @@ test('steps', async ({ browser }) => {
     for (let i = 0; i < (await steps.count()); i++) {
       await steps.nth(i).screenshot({ path: `${dir}/step-${i + 1}-${scheme}.png`, animations: 'disabled' })
     }
+  }
+  await page.close()
+})
+
+// The first picture of the README and the website: the table, and over it a lens like the logo's,
+// holding the start page's swipe (one product, three buttons). After "steps", whose picture it uses.
+test('hero', async ({ browser }) => {
+  const page = await browser.newPage({ viewport: { width: 1440, height: 600 }, deviceScaleFactor: 2, locale: 'en-GB' })
+  await demo(page, /Living-room sideboard/)
+  await page.addStyleTag({ content: '.find-ask { display: none !important; }' })
+  await page.getByRole('button', { name: 'Only eligible' }).click()
+  await page.mouse.move(0, 0)
+  for (const scheme of ['light', 'dark'] as const) {
+    await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' })
+    await page.waitForTimeout(300)
+    const table = (await page.screenshot({ animations: 'disabled', caret: 'hide' })).toString('base64')
+    const still = readFileSync(`${dir}/step-4-${scheme}.png`).toString('base64')
+    await page.evaluate(
+      async ({ table, still }) => {
+        const picture = new Image()
+        picture.src = `data:image/png;base64,${still}`
+        await picture.decode()
+        // The lens takes the still's own background, so its tile does not show.
+        const canvas = document.createElement('canvas')
+        canvas.width = picture.width
+        canvas.height = picture.height
+        const g = canvas.getContext('2d')!
+        g.drawImage(picture, 0, 0)
+        const [r, gr, bl] = g.getImageData(20, picture.height / 2, 1, 1).data
+        const [cx, cy, R, ring, w] = [930, 290, 200, 14, 34]
+        const size = 2 * R * 0.9
+        const height = size * (picture.height / picture.width)
+        const d = R * Math.SQRT1_2 // the handle starts under the ring, so the two touch
+        const hero = document.createElement('div')
+        hero.id = 'hero'
+        hero.style.cssText = 'position:fixed;inset:0;z-index:9999;overflow:hidden'
+        hero.innerHTML = `
+          <img src="data:image/png;base64,${table}" alt="" style="display:block;width:1440px;height:600px">
+          <div style="position:absolute;inset:0;background:color-mix(in srgb, var(--bg) 35%, transparent)"></div>
+          <div style="position:absolute;left:${cx + d}px;top:${cy + d - w / 2}px;width:184px;height:${w}px;border-radius:${w / 2}px;background:var(--accent);transform:rotate(45deg);transform-origin:0 50%;box-shadow:0 14px 26px -10px rgb(0 0 0 / .4)"></div>
+          <div style="position:absolute;left:${cx - R - ring}px;top:${cy - R - ring}px;width:${2 * R}px;height:${2 * R}px;border-radius:50%;border:${ring}px solid var(--brand);background:rgb(${r} ${gr} ${bl}) url(${picture.src}) no-repeat;background-size:${size}px ${height}px;background-position:${R - size / 2}px ${R - height * 0.48}px;box-shadow:0 26px 60px -14px rgb(0 0 0 / .45)"></div>`
+        document.body.append(hero)
+        await Promise.all([...hero.querySelectorAll('img')].map((i) => i.decode()))
+      },
+      { table, still },
+    )
+    await page.locator('#hero').screenshot({ path: `${dir}/hero-${scheme}.png`, animations: 'disabled' })
+    await page.evaluate(() => document.getElementById('hero')?.remove())
   }
   await page.close()
 })
