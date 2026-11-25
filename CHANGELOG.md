@@ -8,6 +8,10 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 - Changed: on a phone, scrolling the table sideways folds the product column to its pictures, so
   more of the data fits; back at the left edge the names return.
+- Changed: the bar for selected products is shorter: “Compare” comes first and is a symbol on a
+  phone, updating, loading pictures and deleting sit behind ⋯, and a cross clears the selection.
+- Fixed: on the start page a comparison's ⋯ menu was cut off by its card, so Delete could not be
+  reached. Menus that open from a card or a bar now always fit the screen.
 
 ## 0.21.0 — 2026-11-25
 

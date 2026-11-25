@@ -1,3 +1,4 @@
+import { useLoadImages } from './useLoadImages'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { deleteProduct, reorder, setProductValue, updateProduct, updateProject } from '../../db/repo'
@@ -140,6 +141,7 @@ export function ProductTable({
   const confirm = useConfirm()
   const [bulk, setBulk] = useState<{ done: number; total: number } | null>(null)
   const selected = products.filter((p) => selection.has(p.id))
+  const selectionImages = useLoadImages(selected)
   /** One shop page after the other – no burst of requests to a shop. */
   const bulkUpdate = async () => {
     const withLink = selected.filter((p) => safeHref(p.url))
@@ -965,23 +967,71 @@ export function ProductTable({
 
       {selection.size > 0 && (
         <div className="compare-bar" role="region" aria-label={m.compare.title}>
-          <span>{m.project.selected(selection.size)}</span>
-          <button className="btn sm outline" onClick={() => setSelection(new Set())}>
-            <Glyph name="close" /> {m.project.clearSelection}
-          </button>
-          <button className="btn sm" disabled={selection.size < 2} onClick={() => navigate(`/p/${project.id}/compare?ids=${[...selection].join(',')}`)}>
-            {m.project.compare(selection.size)}
+          <span aria-live="polite">
+            {bulk
+              ? m.bulk.updating(bulk.done, bulk.total)
+              : selectionImages.progress
+                ? m.image.loading(selectionImages.progress.done, selectionImages.progress.total)
+                : m.project.selected(selection.size)}
+          </span>
+          <button
+            className="btn sm"
+            disabled={selection.size < 2}
+            aria-label={m.project.compare}
+            title={m.project.compare}
+            onClick={() => navigate(`/p/${project.id}/compare?ids=${[...selection].join(',')}`)}
+          >
+            <Glyph name="compare" /> <span className="hide-narrow">{m.project.compare}</span>
           </button>
           {canEdit && (
-            <>
-              <button className="btn sm outline" disabled={!!bulk} onClick={bulkUpdate} aria-live="polite" title={m.pageUpdate.hint}>
-                <Glyph name="download" /> {bulk ? m.bulk.updating(bulk.done, bulk.total) : m.pageUpdate.button}
-              </button>
-              <button className="btn sm outline" disabled={!!bulk} onClick={bulkDelete}>
-                <Glyph name="trash" /> {m.common.delete}
-              </button>
-            </>
+            <Menu label={m.common.more} trigger={<Glyph name="more" />} className="btn sm outline icon-only" floating>
+              {(close) => (
+                <>
+                  <button
+                    disabled={!!bulk}
+                    title={m.pageUpdate.hint}
+                    onClick={() => {
+                      close()
+                      void bulkUpdate()
+                    }}
+                  >
+                    <Glyph name="download" /> {m.pageUpdate.button}
+                  </button>
+                  {selectionImages.missing > 0 && (
+                    <button
+                      title={m.image.loadAllHint}
+                      disabled={!!selectionImages.progress}
+                      onClick={() => {
+                        close()
+                        void selectionImages.load()
+                      }}
+                    >
+                      <Glyph name="image" /> {m.image.loadAll(selectionImages.missing)}
+                    </button>
+                  )}
+                  <hr />
+                  <button
+                    className="danger"
+                    disabled={!!bulk}
+                    onClick={() => {
+                      close()
+                      void bulkDelete()
+                    }}
+                  >
+                    <Glyph name="trash" /> {m.common.delete}
+                  </button>
+                </>
+              )}
+            </Menu>
           )}
+          <button
+            className="btn sm ghost icon-only"
+            aria-label={m.project.clearSelection}
+            title={m.project.clearSelection}
+            onClick={() => setSelection(new Set())}
+          >
+            <Glyph name="close" />
+          </button>
         </div>
       )}
     </>

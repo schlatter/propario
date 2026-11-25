@@ -1587,6 +1587,11 @@ textarea.cell-editor {
   border-color: color-mix(in srgb, var(--bg) 45%, transparent);
   color: var(--bg);
 }
+/* Its ⋯ menu is an ordinary menu, not part of the dark bar. */
+.compare-bar .menu-list {
+  color: var(--ink);
+  font-weight: normal;
+}
 .compare-bar {
   flex-wrap: wrap;
   justify-content: center;

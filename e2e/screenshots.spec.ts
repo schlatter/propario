@@ -49,7 +49,7 @@ test('desktop', async ({ browser }) => {
   for (const name of ['Arvika', 'Kanto', 'Linea']) {
     await page.getByRole('checkbox', { name: new RegExp(`^Select for comparison: .*${name}$`) }).check()
   }
-  await page.getByRole('button', { name: /Compare 3/ }).click()
+  await page.getByRole('button', { name: 'Compare', exact: true }).click()
   await page.locator('.size-compare').waitFor()
   await shoot(page, 'side-by-side')
   await page.close()

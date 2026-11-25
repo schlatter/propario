@@ -231,7 +231,7 @@ export const en = {
     hideExcluded: 'Hide excluded',
     onlyEligible: 'Only eligible',
     columns: 'Columns',
-    compare: (n: number) => `Compare ${n}`,
+    compare: 'Compare',
     selectToCompare: 'Select products to compare them side by side',
     clearSelection: 'Clear selection',
     selected: (n: number) => `${n} selected`,

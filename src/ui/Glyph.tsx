@@ -38,6 +38,8 @@ const paths = {
   thumbDown: 'M5 9V2.5H2.5V9zM5 8.8l2.6 4.4c.6.9 1.9.5 1.9-.6V10h3c.9 0 1.5-.8 1.3-1.6l-1-4.6c-.2-.7-.8-1.3-1.5-1.3H5',
   neutral: 'M8 13.5A5.5 5.5 0 1 0 8 2.5a5.5 5.5 0 0 0 0 11zM5.5 8h5',
   euro: 'M11.5 4.3A4.4 4.4 0 1 0 11.5 11.7M3 7h6.5M3 9.2h6.5',
+  // Side by side: two product sheets whose rows line up.
+  compare: 'M2.5 3h4.5v10H2.5zM9 3h4.5v10H9zM4 6h1.5M4 9h1.5M10.5 6h1.5M10.5 9h1.5',
   duel: 'M2.5 4.5h4.5v7H2.5zM9 4.5h4.5v7H9zM8 2.5v11',
   swipe: 'M5.5 3.5h5v9h-5zM3.5 6L2 8l1.5 2M12.5 6L14 8l-1.5 2',
   // Not decided yet: a dashed ring around a question mark.

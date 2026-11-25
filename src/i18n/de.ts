@@ -233,7 +233,7 @@ export const de: Messages = {
     hideExcluded: 'Ausgeschlossene ausblenden',
     onlyEligible: 'Nur infrage kommende',
     columns: 'Spalten',
-    compare: (n) => `${n} vergleichen`,
+    compare: 'Vergleichen',
     selectToCompare: 'Produkte auswählen, um sie nebeneinander zu vergleichen',
     clearSelection: 'Auswahl aufheben',
     selected: (n) => `${n} ausgewählt`,

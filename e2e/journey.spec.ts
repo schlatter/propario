@@ -77,6 +77,14 @@ async function go(page: Page, name: string): Promise<void> {
   await page.getByRole('navigation', { name: 'Menu' }).getByRole('link', { name, exact: true }).click()
 }
 
+/** Deletes the selected products: the selection bar's ⋯ holds Delete, a dialog asks first. */
+async function deleteSelected(page: Page): Promise<void> {
+  const bar = page.getByRole('region', { name: 'Side by side' })
+  await bar.getByRole('button', { name: 'More', exact: true }).click()
+  await bar.getByRole('button', { name: 'Delete', exact: true }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Delete', exact: true }).click()
+}
+
 async function accessible(page: Page, name: string): Promise<void> {
   for (const scheme of ['light', 'dark'] as const) {
     await page.emulateMedia({ colorScheme: scheme })
@@ -247,7 +255,7 @@ test('a visitor sees what Propario does and tries the demo, which never talks to
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.getByRole('checkbox', { name: /^Select for comparison: .*Arvika$/ }).check()
   await page.getByRole('checkbox', { name: /^Select for comparison: .*Kanto$/ }).check()
-  await page.getByRole('button', { name: /Compare 2/ }).click()
+  await page.getByRole('button', { name: 'Compare', exact: true }).click()
   // Mira is out of the running (too wide), so it joins from here.
   await page.getByRole('button', { name: 'Product', exact: true }).click()
   await page
@@ -532,8 +540,7 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await expect(page.getByText(/moebel\.example: The shop refuses automated access.*Taken from the address instead/)).toBeVisible()
   await expect(page.getByRole('button', { name: 'Nordhaus Sideboard mit Led Beleuchtung in Landhaus Stil', exact: true })).toBeVisible()
   await page.getByRole('checkbox', { name: /Select for comparison: Nordhaus Sideboard/ }).check()
-  await page.getByRole('button', { name: 'Delete', exact: true }).click()
-  await page.getByRole('button', { name: 'Delete', exact: true }).last().click()
+  await deleteSelected(page)
   await page.getByRole('button', { name: 'Delete for good' }).click()
   await expect.poll(countRows).toBe(2)
 
@@ -549,8 +556,7 @@ test('Ada keeps a comparison with a product and its picture', async () => {
 
   // Selected products can be deleted – after asking twice.
   await page.getByRole('checkbox', { name: 'Select for comparison: shop.example' }).check()
-  await page.getByRole('button', { name: 'Delete', exact: true }).click()
-  await page.getByRole('button', { name: 'Delete', exact: true }).last().click()
+  await deleteSelected(page)
   await expect(page.getByRole('heading', { name: 'Really delete?' })).toBeVisible()
   await page.getByRole('button', { name: 'Delete for good' }).click()
   await expect.poll(countRows).toBe(1)
@@ -725,6 +731,27 @@ test('Ada moves rows and decides by swiping', async () => {
     await expect(page.getByRole('button', { name, exact: true })).toBeVisible()
   await page.keyboard.press('Escape')
   await accessible(page, 'table on a phone')
+  // Selected, the bar shows symbols only: compare first, then ⋯ with the rest, closing last; all in one row.
+  const boxes = page.locator('table.grid tbody input[type=checkbox]')
+  await boxes.nth(0).check()
+  await boxes.nth(1).check()
+  const bar = page.getByRole('region', { name: 'Side by side' })
+  await expect(bar.getByText('2 selected')).toBeVisible()
+  const barButtons = [
+    bar.getByRole('button', { name: 'Compare', exact: true }),
+    bar.getByRole('button', { name: 'More', exact: true }),
+    bar.getByRole('button', { name: 'Clear selection' }),
+  ]
+  const barBoxes = await Promise.all(barButtons.map(async (b) => (await b.boundingBox())!))
+  expect(barBoxes.map((b) => b.x)).toEqual([...barBoxes.map((b) => b.x)].sort((a, b) => a - b))
+  expect(Math.max(...barBoxes.map((b) => b.y)) - Math.min(...barBoxes.map((b) => b.y))).toBeLessThan(4)
+  expect(barBoxes[0].width).toBeLessThan(50)
+  await barButtons[1].click()
+  for (const name of ['Update details', 'Delete']) await expect(bar.getByRole('button', { name, exact: true })).toBeInViewport()
+  await accessible(page, 'selection on a phone')
+  await page.keyboard.press('Escape')
+  await barButtons[2].click()
+  await expect(bar).toBeHidden()
 
   await page.getByRole('link', { name: 'Swipe' }).click()
   await expect(page.getByRole('heading', { name: 'Like it or not?' })).toBeVisible()
@@ -855,7 +882,7 @@ test('Ada moves rows and decides by swiping', async () => {
   await page.keyboard.press('Escape')
   await page.getByRole('checkbox', { name: 'Select for comparison: Arvika' }).check()
   await page.getByRole('checkbox', { name: 'Select for comparison: Borre' }).check()
-  await page.getByRole('button', { name: /Compare 2/ }).click()
+  await page.getByRole('button', { name: 'Compare', exact: true }).click()
   await expect(page.locator('.num-cell.best').getByText('€204')).toBeVisible()
   await expect(page.locator('.num-cell.worst').getByText('€300')).toBeVisible()
   await expect(page.getByText('+€96 to the best')).toBeVisible()
@@ -886,8 +913,7 @@ test('Ada moves rows and decides by swiping', async () => {
   await expect.poll(() => page.locator('table.grid tbody tr').count()).toBe(before)
   // Tidy up for the steps that follow.
   await page.getByRole('checkbox', { name: 'Select for comparison: shop.example' }).check()
-  await page.getByRole('button', { name: 'Delete', exact: true }).click()
-  await page.getByRole('button', { name: 'Delete', exact: true }).last().click()
+  await deleteSelected(page)
   await page.getByRole('button', { name: 'Delete for good' }).click()
 
   // One "Export" entry opens the formats.
@@ -1022,6 +1048,16 @@ test('Ada moves rows and decides by swiping', async () => {
 
   // The start page points at what is new.
   await page.goto('/')
+  // On a phone a comparison's ⋯ shows all its actions, Delete too (the card does not cut it off).
+  const wide = page.viewportSize()!
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page
+    .getByRole('button', { name: /^Actions: / })
+    .first()
+    .click()
+  await expect(page.getByRole('button', { name: 'Delete', exact: true })).toBeInViewport({ ratio: 1 })
+  await page.keyboard.press('Escape')
+  await page.setViewportSize(wide)
   await page
     .getByRole('link', { name: /\d+ new/ })
     .first()

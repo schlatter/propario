@@ -212,7 +212,8 @@ function ProjectCard({ project, items, hits, onEdit }: { project: Project; items
         </div>
       </div>
       <div className="card-menu">
-        <Menu label={`${m.common.actions}: ${project.name}`} trigger={<Glyph name="more" />}>
+        {/* Floating: the card clips what leaves it (its picture has round corners). */}
+        <Menu label={`${m.common.actions}: ${project.name}`} trigger={<Glyph name="more" />} floating>
           {(close) => (
             <>
               <button onClick={() => navigate(`/p/${project.id}`)}>{m.common.open}</button>
