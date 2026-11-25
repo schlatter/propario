@@ -28,8 +28,13 @@
 </p>
 
 <p align="center">
-Forget endless lists and a thousand open tabs. Whatever the purchase – sideboard, laptop, bike and more: Propario lays out the facts nicely and helps you reach a better decision, faster.
+Forget endless lists and a thousand open tabs. You gather the candidates and sort out what does not fit; the others just swipe – yes or no – and a few duels settle the rest: a decision you all stand behind. For anything you compare before buying – a sideboard, a laptop, a used bike – and no AI needed.
 </p>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/phones-dark.png">
+  <img src="docs/images/phones-light.png" alt="Propario on a phone: the comparison with every product checked against the requirements, swiping – like it or not – and a duel between two sideboards.">
+</picture>
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/table-dark.png">
@@ -110,6 +115,14 @@ backups and updates, read [Self-hosting](docs/self-hosting.md).
 
 ## Questions
 
+<details>
+  <summary>Is it only for furniture?</summary>
+  <p>No – for anything you compare before buying: a laptop, a bike, a pram, a used car. Furniture is where Propario was tried first, and where sizes to scale, 3D and the room view help most.</p>
+</details>
+<details>
+  <summary>Is it a search engine or a shop?</summary>
+  <p>Neither. Propario helps you decide between products you have found – in any shop, on Kleinanzeigen or eBay. “Find and ask” opens the usual searches for you; Propario sells nothing, shows no advertising and has no affiliate links.</p>
+</details>
 <details>
   <summary>Is there a hosted version I can sign up for?</summary>
   <p>No. Propario is meant to run on your own server, for a household or a group of friends. If someone you know runs an instance, ask them for an invitation.</p>

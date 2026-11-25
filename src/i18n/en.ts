@@ -472,7 +472,7 @@ export const en = {
   },
   overview: {
     title: 'Compare faster, decide better.',
-    lead: 'Forget endless lists and a thousand open tabs. Whatever the purchase – sideboard, laptop, bike and more: Propario lays out the facts nicely and helps you reach a better decision, faster.',
+    lead: 'Forget endless lists and a thousand open tabs. You gather the candidates and sort out what does not fit; the others just swipe – yes or no – and a few duels settle the rest: a decision you all stand behind. For anything you compare before buying – a sideboard, a laptop, a used bike – and no AI needed.',
     tryDemo: 'Try the demo',
     stepsLabel: 'How you decide',
     s1Title: 'One link is enough',

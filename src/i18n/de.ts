@@ -476,7 +476,7 @@ export const de: Messages = {
   },
   overview: {
     title: 'Schneller vergleichen, besser entscheiden.',
-    lead: 'Vergiss endlose Listen und tausend offene Tabs. Egal welche Anschaffung: Sideboard, Laptop, Fahrrad etc. Propario bereitet die Daten für euch schön auf und hilft, schneller eine bessere Entscheidung zu treffen.',
+    lead: 'Vergiss endlose Listen und tausend offene Tabs. Du sammelst die Kandidaten und sortierst aus, was nicht passt; die anderen swipen nur – ja oder nein –, und ein paar Duelle klären den Rest: eine Entscheidung, hinter der ihr alle steht. Für alles, was du vor dem Kauf vergleichst – Sideboard, Laptop, gebrauchtes Fahrrad – und ganz ohne KI.',
     tryDemo: 'Demo ausprobieren',
     stepsLabel: 'So entscheidet ihr',
     s1Title: 'Ein Link genügt',

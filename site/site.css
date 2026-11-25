@@ -90,7 +90,8 @@ a {
 }
 a:focus-visible,
 summary:focus-visible,
-pre:focus-visible {
+pre:focus-visible,
+.phones:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 3px;
   border-radius: 6px;
@@ -303,6 +304,27 @@ section > h2 {
 @media (max-width: 420px) {
   .buttons {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Three phones – the comparison, swiping, a duel – drawn on the page's own background. */
+.phones img {
+  display: block;
+  width: 100%;
+  max-width: 1100px;
+  height: auto;
+  margin: 0 auto;
+}
+/* On a phone the picture stays large enough to read, in a row to swipe through. */
+@media (max-width: 640px) {
+  .phones {
+    overflow-x: auto;
+    margin-inline: -16px;
+    scrollbar-width: none;
+  }
+  .phones img {
+    width: 760px;
+    max-width: none;
   }
 }
 
