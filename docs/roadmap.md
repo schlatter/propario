@@ -7,8 +7,6 @@ one in [AGENTS.md](../AGENTS.md): Propario works without it, and AI only propose
 
 ## Now
 
-- Fix the phone picture of the product details, which shows an enlarged picture on top
-  ([#11](https://github.com/schlatter/propario/issues/11)).
 - **Say at first sight what Propario is** – on the start page, the demo, the README and the
   website: it works without AI, it is for any bigger purchase (not only furniture), and it is a
   help to decide, not a search engine. Tell it as a story – one person narrows the choice, the

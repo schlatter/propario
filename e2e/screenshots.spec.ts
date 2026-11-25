@@ -1,5 +1,5 @@
 import { mkdirSync } from 'node:fs'
-import { test, type Page } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 /**
  * The pictures in README.md, docs/ and the website: the built-in demo (invented products only),
@@ -58,10 +58,11 @@ test('desktop', async ({ browser }) => {
 test('phone', async ({ browser }) => {
   const page = await browser.newPage({ viewport: phone, deviceScaleFactor: 2, locale: 'en-GB', hasTouch: true, isMobile: true })
   await demo(page, /Living-room sideboard/)
-  await page.getByRole('button', { name: 'Arvika', exact: true }).click()
+  // A tap, as on a phone: a mouse click would leave the pointer over the picture in the details,
+  // and the hover preview would show it enlarged on top (#11).
+  await page.getByRole('button', { name: 'Arvika', exact: true }).tap()
   await page.locator('dialog.drawer').waitFor()
-  // Opened by a tap, not the keyboard: the picture must not show enlarged.
-  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
+  await expect(page.locator('.thumb-preview')).toHaveCount(0)
   await shoot(page, 'phone-details')
   await page.locator('dialog.drawer').getByRole('button', { name: 'Close', exact: true }).click()
 
