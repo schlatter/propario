@@ -1,6 +1,5 @@
-import { mkdirSync } from 'node:fs'
+import { mkdirSync, readFileSync } from 'node:fs'
 import { expect, test, type Browser, type Page } from '@playwright/test'
-import { en } from '../src/i18n/en'
 
 /**
  * The pictures in README.md, docs/ and the website: the built-in demo (invented products only),
@@ -67,67 +66,49 @@ test('phone', async ({ browser }) => {
   await shoot(page, 'phone-details')
   await page.locator('dialog.drawer').getByRole('button', { name: 'Close', exact: true }).click()
 
-  // What Propario is at a glance: the comparison, swiping, a duel – three phones side by side.
-  const screens = { light: [] as string[], dark: [] as string[] }
-  const grab = async () => {
-    for (const scheme of ['light', 'dark'] as const) {
-      await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' })
-      await page.waitForTimeout(300)
-      const png = await page.screenshot({ animations: 'disabled', caret: 'hide', clip: { x: 0, y: 0, ...phone } })
-      screens[scheme].push(png.toString('base64'))
-    }
-    await page.emulateMedia({ colorScheme: 'light' })
-  }
-  // All six sideboards, not only the eligible ones.
-  await page.getByRole('button', { name: /^Filter/ }).tap()
-  await page.getByRole('button', { name: 'Only eligible' }).tap()
-  await page.getByRole('button', { name: /^Filter/ }).tap()
-  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
-  await grab()
+  // A product being swiped to the right, held mid-gesture: laid over the table in the README's
+  // first picture, and over the browser window on the website.
   await page.getByRole('link', { name: 'Swipe' }).click()
   await page.getByRole('heading', { name: 'Like it or not?' }).waitFor()
-  await grab()
-  await page.goBack()
-  await page.getByRole('link', { name: 'Duel' }).click()
-  await page.getByText('Which is better?').waitFor()
-  // The two candidates and the choice, below the sizes to scale.
-  await page.evaluate(() => window.scrollBy(0, 560))
-  await grab()
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  // Room on the right, so the card that moves there stays in the picture.
+  await page.addStyleTag({ content: '.swipe-card { margin-right: 52px; }' })
+  const card = (await page.locator('.swipe-card').boundingBox())!
+  await page.mouse.move(card.x + card.width / 2, card.y + card.height / 3)
+  await page.mouse.down()
+  await page.mouse.move(card.x + card.width / 2 + 46, card.y + card.height / 3, { steps: 6 })
+  const top = (await page.locator('.swipe-page .crumb').boundingBox())!.y - 12
+  const bottom = (await page.locator('.swipe-actions').boundingBox())!
+  const clip = { x: 0, y: top, width: phone.width, height: bottom.y + bottom.height + 16 - top }
+  for (const scheme of ['light', 'dark'] as const) {
+    await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' })
+    await page.waitForTimeout(300)
+    await page.screenshot({ path: `${dir}/swipe-${scheme}.png`, caret: 'hide', clip })
+  }
+  await page.mouse.up()
   await page.close()
-  await phones(browser, screens)
+  await hero(browser)
 })
 
-/** The three phone screens in one picture, captioned with the start page's step titles. */
-async function phones(browser: Browser, screens: Record<'light' | 'dark', string[]>) {
-  const o = en.overview
-  const captions = [o.s2Title, o.s4Title, o.s5Title]
-  // The app's page, for its fonts and colour tokens; its content is replaced by the picture.
-  const page = await browser.newPage({ viewport: { width: 1100, height: 900 }, deviceScaleFactor: 2, locale: 'en-GB' })
+/** The README's first picture: the table as it is, the swipe screen on top of its right side. */
+async function hero(browser: Browser) {
+  const page = await browser.newPage({ viewport: { width: 1440, height: 600 }, locale: 'en-GB' })
   await page.goto('/')
   for (const scheme of ['light', 'dark'] as const) {
+    const png = (name: string) => `data:image/png;base64,${readFileSync(`${dir}/${name}-${scheme}.png`).toString('base64')}`
     await page.emulateMedia({ colorScheme: scheme })
     await page.evaluate(
-      ({ shots, captions }) => {
-        const figures = shots
-          .map(
-            (src, i) => `
-          <figure style="margin:0;width:300px;transform:translateY(${i === 1 ? 0 : 28}px)">
-            <div style="padding:9px;border-radius:40px;background:#1b2324;box-shadow:0 0 0 1px var(--line-strong),0 24px 48px -20px rgb(0 0 0 / .35)">
-              <img src="data:image/png;base64,${src}" alt="" style="display:block;width:100%;border-radius:31px">
-            </div>
-            <figcaption style="display:flex;gap:10px;align-items:center;justify-content:center;margin-top:20px;font:650 19px var(--font-display);color:var(--ink)">
-              <span style="display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--brand);color:var(--brand-ink);font:700 14px var(--font-ui)">${i + 1}</span>${captions[i]}
-            </figcaption>
-          </figure>`,
-          )
-          .join('')
-        document.body.innerHTML = `<div id="phones" style="display:flex;gap:48px;justify-content:center;align-items:flex-start;padding:40px 48px 72px;background:var(--bg)">${figures}</div>`
+      ({ table, swipe }) => {
+        document.body.innerHTML = `
+          <div id="hero" style="position:relative;width:1440px;height:600px;overflow:hidden;background:var(--bg)">
+            <img src="${table}" alt="" style="display:block;width:1440px;height:600px">
+            <img src="${swipe}" alt="" style="position:absolute;right:72px;top:50%;transform:translateY(-50%);width:262px;border-radius:18px;border:1px solid var(--line-strong);box-shadow:0 28px 56px -16px rgb(0 0 0 / .4)">
+          </div>`
       },
-      { shots: screens[scheme], captions },
+      { table: png('table'), swipe: png('swipe') },
     )
-    await page.evaluate(() => document.fonts.ready)
-    await page.waitForTimeout(200)
-    await page.locator('#phones').screenshot({ path: `${dir}/phones-${scheme}.png` })
+    await page.evaluate(() => Promise.all([...document.images].map((i) => i.decode())))
+    await page.locator('#hero').screenshot({ path: `${dir}/hero-${scheme}.png` })
   }
   await page.close()
 }

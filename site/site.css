@@ -90,8 +90,7 @@ a {
 }
 a:focus-visible,
 summary:focus-visible,
-pre:focus-visible,
-.phones:focus-visible {
+pre:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 3px;
   border-radius: 6px;
@@ -307,29 +306,9 @@ section > h2 {
   }
 }
 
-/* Three phones – the comparison, swiping, a duel – drawn on the page's own background. */
-.phones img {
-  display: block;
-  width: 100%;
-  max-width: 1100px;
-  height: auto;
-  margin: 0 auto;
-}
-/* On a phone the picture stays large enough to read, in a row to swipe through. */
-@media (max-width: 640px) {
-  .phones {
-    overflow-x: auto;
-    margin-inline: -16px;
-    scrollbar-width: none;
-  }
-  .phones img {
-    width: 760px;
-    max-width: none;
-  }
-}
-
-/* The app in a browser window, on a petrol band. */
+/* The app in a browser window, on a petrol band; a phone screen being swiped lies over it. */
 .showcase {
+  position: relative;
   padding: clamp(16px, 3vw, 32px);
   border-radius: 20px;
   background: var(--brand-soft);
@@ -624,4 +603,15 @@ section > h2 {
 .why td.yes {
   color: var(--brand-text);
   font-weight: 700;
+}
+
+.showcase-swipe img {
+  position: absolute;
+  right: clamp(24px, 6vw, 72px);
+  bottom: clamp(-48px, -3vw, -16px);
+  width: clamp(92px, 21vw, 262px);
+  height: auto;
+  border: 1px solid var(--line-strong);
+  border-radius: 18px;
+  box-shadow: 0 28px 56px -16px rgb(0 0 0 / 0.4);
 }

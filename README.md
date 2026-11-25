@@ -32,13 +32,8 @@ Forget endless spreadsheets and a thousand open tabs. You do the research and pi
 </p>
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/phones-dark.png">
-  <img src="docs/images/phones-light.png" alt="Propario on a phone: the comparison with every product checked against the requirements, swiping through the candidates, and a duel between two sideboards.">
-</picture>
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/table-dark.png">
-  <img src="docs/images/table-light.png" alt="A comparison of six sideboards in Propario: pictures, prices against the budget, requirements met and not met, fit and everyone's verdicts.">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/hero-dark.png">
+  <img src="docs/images/hero-light.png" alt="A comparison of six sideboards in Propario: prices against the budget, requirements met and not met, and everyone's verdicts. On top, a phone screen where one of them is being swiped to the right.">
 </picture>
 
 ## How it works
