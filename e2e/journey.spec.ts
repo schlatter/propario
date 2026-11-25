@@ -752,7 +752,7 @@ test('Ada moves rows and decides by swiping', async () => {
   // Exporting the selection: a file with just those two products.
   await bar.getByRole('button', { name: 'Export', exact: true }).click()
   const exported = page.waitForEvent('download')
-  await bar.getByRole('button', { name: /JSON/ }).click()
+  await bar.getByRole('button', { name: '.json' }).click()
   const backup = JSON.parse((await import('node:fs')).readFileSync(await (await exported).path(), 'utf8'))
   expect(backup.products).toHaveLength(2)
   await barButtons[2].click()
@@ -908,6 +908,14 @@ test('Ada moves rows and decides by swiping', async () => {
     main: document.querySelector('main')!.getBoundingClientRect().bottom + scrollY,
   }))
   expect(ends.page).toBeLessThanOrEqual(Math.ceil(ends.main) + 1)
+  // Scrolled to the end, the table's box fills the screen below the top bar: no empty space under it.
+  await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight))
+  const box = await page.evaluate(() => {
+    const r = document.querySelector('.compare-wrap')!.getBoundingClientRect()
+    return { top: r.top, gap: innerHeight - r.bottom, bar: document.querySelector('.topbar')!.getBoundingClientRect().bottom }
+  })
+  expect(box.gap).toBeLessThanOrEqual(24)
+  expect(box.top).toBeGreaterThanOrEqual(box.bar)
   await page.setViewportSize(tall)
   await page.goBack()
 
@@ -934,8 +942,11 @@ test('Ada moves rows and decides by swiping', async () => {
   // One "Export" entry opens the formats.
   await page.getByRole('button', { name: 'More', exact: true }).first().click()
   await page.getByRole('button', { name: 'Export', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Export as Excel' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Export as JSON' })).toBeVisible()
+  // One short row of formats, each named by its extension.
+  const formats = page.getByRole('group', { name: 'Export' }).getByRole('button')
+  await expect(formats).toHaveText(['.xlsx', '.ods', '.csv', '.json'])
+  await expect(page.getByRole('button', { name: '.csv' })).toHaveAccessibleDescription('Products as a table (.csv)')
+  await accessible(page, 'export formats')
   await page.keyboard.press('Escape')
 
   // "Find and ask", bottom right. Without AI: the shops' search for the comparison's name.

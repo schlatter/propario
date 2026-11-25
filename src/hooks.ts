@@ -10,19 +10,25 @@ export function useSettings(): Settings {
   return useLiveQuery(() => getSettings(), [], DEFAULT_SETTINGS)
 }
 
-/** `only`: just these products (exporting a selection). */
-export async function exportProjectJson(projectId: string, only?: ReadonlySet<string>) {
-  const data = await exportProject(projectId, undefined, only)
-  if (!data) return
-  downloadJson(data, `propario-${safeFileName(data.projects[0].name)}-${fileStamp()}.json`)
-}
+export type ExportFormat = 'xlsx' | 'ods' | 'csv' | 'json'
+export const EXPORT_FORMATS: ExportFormat[] = ['xlsx', 'ods', 'csv', 'json']
 
-export async function exportProjectExcel(projectId: string, m: Messages, only?: ReadonlySet<string>) {
+/**
+ * Downloads a comparison as a file. Spreadsheets (xlsx, ods) hold the products, the requirements
+ * and the notes; csv only the products' table; json all of it, to import into Propario again.
+ * `only`: just these products (exporting a selection).
+ */
+export async function exportComparison(projectId: string, format: ExportFormat, m: Messages, only?: ReadonlySet<string>) {
+  if (format === 'json') {
+    const data = await exportProject(projectId, undefined, only)
+    if (data) downloadJson(data, `propario-${safeFileName(data.projects[0].name)}-${fileStamp()}.json`)
+    return
+  }
   const all = await loadBundle(projectId)
   if (!all) return
   const b = only ? onlyProducts(all, only) : all
   const { bundleToWorkbook, workbookToBlob } = await import('./export/xlsx')
-  downloadBlob(workbookToBlob(bundleToWorkbook(b, m)), `${safeFileName(b.project.name)}-${fileStamp()}.xlsx`)
+  downloadBlob(workbookToBlob(bundleToWorkbook(b, m), format), `${safeFileName(b.project.name)}-${fileStamp()}.${format}`)
 }
 
 export { db }

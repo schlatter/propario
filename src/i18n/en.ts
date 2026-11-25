@@ -42,8 +42,13 @@ export const en = {
     moveDown: 'Move down',
     confirm: 'Confirm',
     export: 'Export',
-    exportJson: 'Export as JSON',
-    exportExcel: 'Export as Excel',
+    /** The export formats' names; each names its extension, the visible label. */
+    formats: {
+      xlsx: 'Excel (.xlsx)',
+      ods: 'LibreOffice (.ods)',
+      csv: 'Products as a table (.csv)',
+      json: 'Everything, to import into Propario (.json)',
+    },
     copySuffix: 'copy',
     loading: 'Loading…',
     notFound: 'This comparison no longer exists.',

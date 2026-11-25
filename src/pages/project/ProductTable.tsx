@@ -1,6 +1,6 @@
 import { useLoadImages } from './useLoadImages'
 import { ExportChoice } from '../../ui/ExportChoice'
-import { exportProjectExcel, exportProjectJson } from '../../hooks'
+import { exportComparison } from '../../hooks'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { deleteProduct, reorder, setProductValue, updateProduct, updateProject } from '../../db/repo'
@@ -1012,13 +1012,7 @@ export function ProductTable({
                     <Glyph name="image" /> {m.image.loadAll(selectionImages.missing)}
                   </button>
                 )}
-                <ExportChoice
-                  close={close}
-                  choices={[
-                    { glyph: 'download', label: m.common.exportExcel, run: () => void exportProjectExcel(project.id, m, selection) },
-                    { glyph: 'download', label: m.common.exportJson, run: () => void exportProjectJson(project.id, selection) },
-                  ]}
-                />
+                <ExportChoice close={close} run={(f) => void exportComparison(project.id, f, m, selection)} />
                 {canEdit && (
                   <>
                     <hr />

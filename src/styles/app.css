@@ -949,8 +949,27 @@ svg.glyph {
 .menu-list > label:hover {
   background: var(--sunken);
 }
-.menu-list > button.sub {
-  padding-left: 24px;
+/* The export formats: one short row of extensions under "Export". */
+.export-formats {
+  display: flex;
+  gap: 4px;
+  padding: 2px 8px 6px 32px;
+}
+.export-formats button {
+  flex: 1;
+  min-height: 32px;
+  padding: 0 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.export-formats button:hover {
+  background: var(--sunken);
 }
 .menu-list > button[aria-expanded] .glyph:last-child {
   margin-left: auto;
@@ -1689,7 +1708,12 @@ table.matrix {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
-  max-height: calc(100vh - 200px);
+  /* Scrolled down to it, the box fills the screen below the top bar (52 px) with 16 px around it,
+     and the page ends there: no empty space to scroll into. */
+  max-height: calc(100dvh - 52px - 32px);
+}
+.compare-page {
+  padding-bottom: 16px;
 }
 table.compare {
   border-collapse: separate;

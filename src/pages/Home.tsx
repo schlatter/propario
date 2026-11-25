@@ -5,7 +5,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { db } from '../db/db'
 import { createProject, deleteProject, duplicateProject, updateProject, uniqueProjectName } from '../db/repo'
 import { PROJECT_STATUSES, type Product, type Project, type ProjectStatus } from '../db/types'
-import { exportProjectJson } from '../hooks'
+import { exportComparison } from '../hooks'
+import { ExportChoice } from '../ui/ExportChoice'
 import { useI18n } from '../i18n'
 import { useMe } from '../session'
 import { productImage } from '../images'
@@ -243,14 +244,7 @@ function ProjectCard({ project, items, hits, onEdit }: { project: Project; items
               >
                 <Glyph name="archive" /> {archived ? m.common.unarchive : m.common.archive}
               </button>
-              <button
-                onClick={() => {
-                  close()
-                  void exportProjectJson(project.id)
-                }}
-              >
-                <Glyph name="download" /> {m.common.exportJson}
-              </button>
+              <ExportChoice close={close} run={(f) => void exportComparison(project.id, f, m)} />
               <hr />
               <button
                 className="danger"

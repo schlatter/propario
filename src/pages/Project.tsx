@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { deleteProject, duplicateProject, uniqueProjectName, updateProject } from '../db/repo'
 import type { ProjectStatus } from '../db/types'
 import { productName } from '../domain/display'
-import { exportProjectExcel, exportProjectJson } from '../hooks'
+import { exportComparison } from '../hooks'
 import { useI18n } from '../i18n'
 import { useConfirm, useToast } from '../ui/Dialog'
 import { Glyph } from '../ui/Glyph'
@@ -149,13 +149,7 @@ export function ProjectPage() {
                 >
                   <Glyph name="edit" /> {m.project.editDetails}
                 </button>
-                <ExportChoice
-                  close={close}
-                  choices={[
-                    { glyph: 'download', label: m.common.exportExcel, run: () => void exportProjectExcel(project.id, m) },
-                    { glyph: 'download', label: m.common.exportJson, run: () => void exportProjectJson(project.id) },
-                  ]}
-                />
+                <ExportChoice close={close} run={(f) => void exportComparison(project.id, f, m)} />
                 {role !== 'viewer' && (images.missing > 0 || images.progress) && (
                   <button
                     title={m.image.loadAllHint}

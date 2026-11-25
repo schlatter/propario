@@ -323,7 +323,7 @@ export function ComparePage() {
   const isEmpty = (r: Row) => r.values.every((v) => !v.trim())
 
   return (
-    <main className="wide">
+    <main className="wide compare-page">
       <Link to={back} className="crumb">
         <Glyph name="chevronLeft" /> {data.project.name}
       </Link>

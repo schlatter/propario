@@ -10,15 +10,16 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
   more of the data fits; back at the left edge the names return.
 - Changed: the bar for selected products is shorter: “Compare” comes first and is a symbol on a
   phone, updating, loading pictures and deleting sit behind ⋯, and a cross clears the selection.
-- New: the selected products can be exported on their own, as Excel or JSON, from the selection
-  bar's ⋯.
+- New: the selected products can be exported on their own, from the selection bar's ⋯.
+- New: Export offers .xlsx, .ods (LibreOffice), .csv (the products as one table) and .json, as one
+  short row in the menu; a comparison's card on the start page has the same Export.
 - Changed: the duel's symbol is two crossed swords, comparing side by side has a balance.
 - Changed: spacing and text sizes follow one scale each (docs/brand.md), so screens line up; a few
   places got a little more room.
 - Changed: updating details from the shop page has its own symbol, an open circle; removing a
   person from the list in the settings says “Remove”, as it only takes the name out.
-- Fixed: below the side-by-side table the page went on with empty space when the table scrolled in
-  its box.
+- Fixed: below the side-by-side table the page went on with empty space. Scrolled down, the
+  table's box now fills the screen below the top bar and the page ends there.
 - Fixed: a duplicated or imported comparison lost its price reference, and its duel rankings
   pointed at the original's products.
 - Fixed: on the start page a comparison's ⋯ menu was cut off by its card, so Delete could not be
