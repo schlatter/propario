@@ -1,4 +1,4 @@
-import { mkdirSync } from 'node:fs'
+import { mkdirSync, readFileSync } from 'node:fs'
 import { expect, test, type Page } from '@playwright/test'
 
 /**
@@ -81,6 +81,54 @@ test('steps', async ({ browser }) => {
     for (let i = 0; i < (await steps.count()); i++) {
       await steps.nth(i).screenshot({ path: `${dir}/step-${i + 1}-${scheme}.png`, animations: 'disabled' })
     }
+  }
+  await page.close()
+})
+
+// The first picture of the README and the website: the table, and over it a lens like the logo's,
+// holding the start page's swipe (one product, three buttons). After "steps", whose picture it uses.
+test('hero', async ({ browser }) => {
+  const page = await browser.newPage({ viewport: { width: 1440, height: 600 }, deviceScaleFactor: 2, locale: 'en-GB' })
+  await demo(page, /Living-room sideboard/)
+  await page.addStyleTag({ content: '.find-ask { display: none !important; }' })
+  await page.getByRole('button', { name: 'Only eligible' }).click()
+  await page.mouse.move(0, 0)
+  for (const scheme of ['light', 'dark'] as const) {
+    await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' })
+    await page.waitForTimeout(300)
+    const table = (await page.screenshot({ animations: 'disabled', caret: 'hide' })).toString('base64')
+    const still = readFileSync(`${dir}/step-4-${scheme}.png`).toString('base64')
+    await page.evaluate(
+      async ({ table, still }) => {
+        const picture = new Image()
+        picture.src = `data:image/png;base64,${still}`
+        await picture.decode()
+        // The lens takes the still's own background, so its tile does not show.
+        const canvas = document.createElement('canvas')
+        canvas.width = picture.width
+        canvas.height = picture.height
+        const g = canvas.getContext('2d')!
+        g.drawImage(picture, 0, 0)
+        const [r, gr, bl] = g.getImageData(20, picture.height / 2, 1, 1).data
+        const [cx, cy, R, ring, w] = [930, 290, 200, 14, 34]
+        const size = 2 * R * 0.9
+        const height = size * (picture.height / picture.width)
+        const d = R * Math.SQRT1_2 // the handle starts under the ring, so the two touch
+        const hero = document.createElement('div')
+        hero.id = 'hero'
+        hero.style.cssText = 'position:fixed;inset:0;z-index:9999;overflow:hidden'
+        hero.innerHTML = `
+          <img src="data:image/png;base64,${table}" alt="" style="display:block;width:1440px;height:600px">
+          <div style="position:absolute;inset:0;background:color-mix(in srgb, var(--bg) 35%, transparent)"></div>
+          <div style="position:absolute;left:${cx + d}px;top:${cy + d - w / 2}px;width:184px;height:${w}px;border-radius:${w / 2}px;background:var(--accent);transform:rotate(45deg);transform-origin:0 50%;box-shadow:0 14px 26px -10px rgb(0 0 0 / .4)"></div>
+          <div style="position:absolute;left:${cx - R - ring}px;top:${cy - R - ring}px;width:${2 * R}px;height:${2 * R}px;border-radius:50%;border:${ring}px solid var(--brand);background:rgb(${r} ${gr} ${bl}) url(${picture.src}) no-repeat;background-size:${size}px ${height}px;background-position:${R - size / 2}px ${R - height * 0.48}px;box-shadow:0 26px 60px -14px rgb(0 0 0 / .45)"></div>`
+        document.body.append(hero)
+        await Promise.all([...hero.querySelectorAll('img')].map((i) => i.decode()))
+      },
+      { table, still },
+    )
+    await page.locator('#hero').screenshot({ path: `${dir}/hero-${scheme}.png`, animations: 'disabled' })
+    await page.evaluate(() => document.getElementById('hero')?.remove())
   }
   await page.close()
 })

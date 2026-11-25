@@ -100,6 +100,10 @@ Rules:
 ## Voice
 
 - Plain, short, friendly. Say what happens: "Add product", "3 added, 1 updated".
+- **Like a person writes, not like a generator.** Concrete over grand: a real purchase, a real
+  annoyance (the spreadsheet, the thousand tabs). Commas, colons and full stops, no dashes as
+  punctuation in what people read first (start page, README, website). They make a text look
+  machine-written. A dash stays where it means "none" in a table or a range like 10–15.
 - **Languages:** English is the source – of every text (`src/i18n/en.ts`), the docs and the code.
   German is the first translation (`src/i18n/de.ts`) and addresses people informally.
 - Name things as people know them: _comparison_, _product_, _requirement_ – not the code's
