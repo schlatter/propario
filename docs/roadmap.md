@@ -26,6 +26,8 @@ one in [AGENTS.md](../AGENTS.md): Propario works without it, and AI only propose
 
 ## Later
 
+- **Polish the app's texts**, in the voice of the start page: shorter, plainer, more like a
+  person talks ([docs/brand.md](brand.md), Voice).
 - **A short video in the README** – 10–15 seconds from a link to a decision: paste, swipe, duel,
   decide; what it should show best is still open.
 - **A local AI** (Ollama, LM Studio …) for the whole instance, its address set by whoever runs
