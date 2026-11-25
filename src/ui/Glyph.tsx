@@ -18,6 +18,7 @@ const paths = {
   download: 'M8 2.5v8M4.5 7L8 10.5 11.5 7M3 13.5h10',
   upload: 'M8 10.5v-8M4.5 6L8 2.5 11.5 6M3 13.5h10',
   check: 'M3 8.5l3.2 3L13 4.5',
+  circle: 'M8 13A5 5 0 1 0 8 3a5 5 0 0 0 0 10z',
   cross: 'M4.5 4.5l7 7M11.5 4.5l-7 7',
   archive: 'M2.5 3.5h11v3h-11zM3.5 6.5v6h9v-6M6.5 9h3',
   edit: 'M10.5 3l2.5 2.5L6 12.5H3.5V10z',

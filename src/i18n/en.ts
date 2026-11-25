@@ -349,6 +349,7 @@ export const en = {
   },
   priceRef: {
     reference: 'price reference',
+    short: 'Ref.',
     vs: (signed: string) => `${signed} to reference`,
     set: 'Use as price reference',
     unset: 'Price reference – remove',

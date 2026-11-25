@@ -597,6 +597,13 @@ svg.glyph {
   background: var(--fail-soft);
   color: var(--fail);
 }
+/* Only the symbol, in the table: a round mark the size of a touch-friendly dot. */
+.pill.icon {
+  justify-content: center;
+  width: 28px;
+  height: 24px;
+  padding: 0;
+}
 .pill.pass {
   background: var(--pass-soft);
   color: var(--pass);
@@ -3253,6 +3260,11 @@ main.project-page {
   height: 10px;
   opacity: 0.7;
 }
+.candidate-trigger .pill.icon svg {
+  width: 14px;
+  height: 14px;
+  opacity: 1;
+}
 .menu-list.candidate-menu {
   min-width: 150px;
 }
@@ -3348,7 +3360,7 @@ main.project-page {
     text-align: left;
   }
   .grid col[data-col='candidate'] {
-    width: 96px !important;
+    width: 56px !important;
   }
   /* The table runs from edge to edge: the page's margins are room for data. */
   .project-page .table-wrap {

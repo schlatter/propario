@@ -15,7 +15,7 @@ import { useI18n, type Formatters } from '../../i18n'
 import type { Messages } from '../../i18n/en'
 import { applyProductPage, productImage, readProductPage } from '../../images'
 import { useConfirm, useToast } from '../../ui/Dialog'
-import { Glyph } from '../../ui/Glyph'
+import { Glyph, type GlyphName } from '../../ui/Glyph'
 import { CheckMark, RequirementBars, Stars } from '../../ui/Marks'
 import { Menu } from '../../ui/Menu'
 import { Thumb } from '../../ui/Thumb'
@@ -41,6 +41,8 @@ interface Col {
 
 /** Colour of the selection: open grey, favourite green, excluded red. */
 const PILL: Record<Status, string> = { open: '', checked: 'checked', excluded: 'excl' }
+/** The selection as a symbol in the table; its name is in the menu, the tooltip and the accessible name. */
+const STATUS_GLYPH: Record<Status, GlyphName> = { open: 'circle', checked: 'check', excluded: 'cross' }
 
 /** Quick filters on when the address names none: only products still in the running. */
 const DEFAULT_CHIPS = 'eligible'
@@ -170,7 +172,7 @@ export function ProductTable({
       {
         id: 'rank',
         label: m.duel.place,
-        width: 72,
+        width: 64,
         align: 'right',
         optional: true,
         has: (p) => placeOf.has(p.id),
@@ -180,7 +182,7 @@ export function ProductTable({
       {
         id: 'candidate',
         label: m.field.candidate,
-        width: 128,
+        width: 80,
         sort: (p) => ({ checked: 0, open: 1, excluded: 2 })[statusOf(p)],
         render: (p) => (
           <Menu
@@ -189,9 +191,8 @@ export function ProductTable({
             className="cell candidate-trigger"
             listClassName="candidate-menu"
             trigger={
-              <span className={`pill ${PILL[statusOf(p)]}`}>
-                {m.candidate[statusOf(p)]}
-                <Glyph name="down" />
+              <span className={`pill icon ${PILL[statusOf(p)]}`}>
+                <Glyph name={STATUS_GLYPH[statusOf(p)]} />
               </span>
             }
           >
@@ -206,7 +207,9 @@ export function ProductTable({
                     if (c !== statusOf(p)) void updateProduct(p, statusPatch(p, c))
                   }}
                 >
-                  <span className={`pill ${PILL[c]}`}>{m.candidate[c]}</span>
+                  <span className={`pill ${PILL[c]}`}>
+                    <Glyph name={STATUS_GLYPH[c]} /> {m.candidate[c]}
+                  </span>
                 </button>
               ))
             }
@@ -216,7 +219,7 @@ export function ProductTable({
       {
         id: 'price',
         label: m.field.price,
-        width: 120,
+        width: 108,
         align: 'right',
         sort: (p) => p.price,
         render: (p) => {
@@ -974,17 +977,18 @@ export function ProductTable({
 
 /**
  * The note under a price (against the reference product, the budget or the cheapest) and its tone.
- * Against the budget it is short: the difference with the column's rule mark, "−€500.01*"; the
- * sentence is its tooltip and what a screen reader says.
+ * It is short: against the budget the difference with the column's rule mark ("−€500.01*"), against
+ * the price reference the difference alone ("+€70"), the reference itself "Ref.". The sentence is
+ * its tooltip and what a screen reader says.
  */
 function priceNote(hint: PriceHint, m: Messages, fmt: Formatters): { text: string; short?: string; tone: '' | 'best' | 'over' | 'ref' } | null {
   if (!hint) return null
   const signed = (d: number) => (d > 0 ? `+${fmt.money(d)}` : d < 0 ? `−${fmt.money(-d)}` : '±0')
   switch (hint.kind) {
     case 'reference':
-      return { text: m.priceRef.reference, tone: 'ref' }
+      return { text: `${m.priceRef.short} (${m.priceRef.reference})`, short: m.priceRef.short, tone: 'ref' }
     case 'vsReference':
-      return { text: m.priceRef.vs(signed(hint.diff)), tone: hint.diff < 0 ? 'best' : hint.diff > 0 ? 'over' : '' }
+      return { text: m.priceRef.vs(signed(hint.diff)), short: signed(hint.diff), tone: hint.diff < 0 ? 'best' : hint.diff > 0 ? 'over' : '' }
     case 'underBudget':
       return { text: m.budget.under(fmt.money(hint.diff)), short: `${signed(-hint.diff)}*`, tone: 'best' }
     case 'atBudget':

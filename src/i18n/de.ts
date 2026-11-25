@@ -352,6 +352,7 @@ export const de: Messages = {
   },
   priceRef: {
     reference: 'Preisreferenz',
+    short: 'Ref.',
     vs: (signed) => `${signed} zur Referenz`,
     set: 'Als Preisreferenz verwenden',
     unset: 'Preisreferenz – aufheben',
