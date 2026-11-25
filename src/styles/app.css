@@ -1682,6 +1682,9 @@ table.matrix {
 
 /* ---------- compare ---------- */
 .compare-wrap {
+  /* Holds what is positioned inside (the screen-reader texts): without it they hang below the
+     box and stretch the page with empty space. */
+  position: relative;
   overflow: auto;
   border: 1px solid var(--line);
   border-radius: var(--radius);

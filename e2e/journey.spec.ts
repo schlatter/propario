@@ -747,9 +747,14 @@ test('Ada moves rows and decides by swiping', async () => {
   expect(Math.max(...barBoxes.map((b) => b.y)) - Math.min(...barBoxes.map((b) => b.y))).toBeLessThan(4)
   expect(barBoxes[0].width).toBeLessThan(50)
   await barButtons[1].click()
-  for (const name of ['Update details', 'Delete']) await expect(bar.getByRole('button', { name, exact: true })).toBeInViewport()
+  for (const name of ['Update details', 'Export', 'Delete']) await expect(bar.getByRole('button', { name, exact: true })).toBeInViewport()
   await accessible(page, 'selection on a phone')
-  await page.keyboard.press('Escape')
+  // Exporting the selection: a file with just those two products.
+  await bar.getByRole('button', { name: 'Export', exact: true }).click()
+  const exported = page.waitForEvent('download')
+  await bar.getByRole('button', { name: /JSON/ }).click()
+  const backup = JSON.parse((await import('node:fs')).readFileSync(await (await exported).path(), 'utf8'))
+  expect(backup.products).toHaveLength(2)
   await barButtons[2].click()
   await expect(bar).toBeHidden()
 
@@ -894,6 +899,16 @@ test('Ada moves rows and decides by swiping', async () => {
     .first()
     .click()
   await expect(page.locator('table.compare thead th[scope=col]')).toHaveCount(3)
+  // The page ends where its content ends: nothing inside the scrolling table stretches it (a low
+  // window, so the table scrolls in its box).
+  const tall = page.viewportSize()!
+  await page.setViewportSize({ width: tall.width, height: 420 })
+  const ends = await page.evaluate(() => ({
+    page: document.documentElement.scrollHeight,
+    main: document.querySelector('main')!.getBoundingClientRect().bottom + scrollY,
+  }))
+  expect(ends.page).toBeLessThanOrEqual(Math.ceil(ends.main) + 1)
+  await page.setViewportSize(tall)
   await page.goBack()
 
   // "Share → Propario" from another app: the link lands in the chosen comparison, once.

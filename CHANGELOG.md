@@ -10,6 +10,13 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
   more of the data fits; back at the left edge the names return.
 - Changed: the bar for selected products is shorter: “Compare” comes first and is a symbol on a
   phone, updating, loading pictures and deleting sit behind ⋯, and a cross clears the selection.
+- New: the selected products can be exported on their own, as Excel or JSON, from the selection
+  bar's ⋯.
+- Changed: the duel's symbol is two crossed swords, comparing side by side has a balance.
+- Fixed: below the side-by-side table the page went on with empty space when the table scrolled in
+  its box.
+- Fixed: a duplicated or imported comparison lost its price reference, and its duel rankings
+  pointed at the original's products.
 - Fixed: on the start page a comparison's ⋯ menu was cut off by its card, so Delete could not be
   reached. Menus that open from a card or a bar now always fit the screen.
 

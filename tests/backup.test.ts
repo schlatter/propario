@@ -89,12 +89,44 @@ describe('backup', () => {
     expect(b.products[0].checks).toEqual({ [b.requirements[0].id]: 'pass' })
   })
 
+  it('exports a selection: only those products, no decision or reference pointing elsewhere, and it imports', async () => {
+    const { project, product } = await seed()
+    const other = await addProduct(project.id, { brand: 'Fjell', model: 'Kanto', price: 549 })
+    const third = await addProduct(project.id, { brand: 'Studio Verde', model: 'Linea', price: 779 })
+    await db.projects.update(project.id, { priceReference: other.id })
+
+    const file = (await exportProject(project.id, undefined, new Set([other.id, third.id])))!
+    expect(file.products.map((p) => p.model)).toEqual(['Kanto', 'Linea'])
+    expect(file.projects[0].decisionProductId).toBeNull()
+    expect(file.projects[0].priceReference).toBe(other.id)
+    expect(file.properties).toHaveLength(1)
+    expect(file.requirements).toHaveLength(1)
+
+    const kept = (await exportProject(project.id, undefined, new Set([product.id])))!
+    expect(kept.projects[0].decisionProductId).toBe(product.id)
+    expect(kept.projects[0].priceReference).toBe('')
+
+    const parsed = parseBackup(JSON.stringify(file))
+    if (!parsed.ok) throw new Error('parse failed')
+    await restoreMerge(parsed.file)
+    const copy = (await db.projects.toArray()).find((p) => p.name === 'Küchenschrank (2)')!
+    const b = (await loadBundle(copy.id))!
+    expect(b.products.map((p) => p.model)).toEqual(['Kanto', 'Linea'])
+    expect(b.project.priceReference).toBe(b.products.find((p) => p.model === 'Kanto')!.id)
+    expect(b.project.decisionProductId).toBeNull()
+  })
+
   it('duplicates a project without sharing ids', async () => {
-    const { project } = await seed()
+    const { project, product } = await seed()
+    const [who, gone] = [newId(), newId()]
+    await db.projects.update(project.id, { priceReference: product.id, rankings: { [who]: { order: [product.id, gone], settled: 1, next: 1 } } })
     const id = (await duplicateProject(project.id, 'Kopie'))!
     const [a, b] = await Promise.all([loadBundle(project.id), loadBundle(id)])
     expect(b!.products[0].id).not.toBe(a!.products[0].id)
     expect(b!.products).toHaveLength(1)
+    // The price reference and the duel rankings point at the copy's own product.
+    expect(b!.project.priceReference).toBe(b!.products[0].id)
+    expect(b!.project.rankings).toEqual({ [who]: { order: [b!.products[0].id, gone], settled: 1, next: 1 } })
   })
 
   it('keeps offers, outside ratings and purchase dates through the server and a backup', async () => {

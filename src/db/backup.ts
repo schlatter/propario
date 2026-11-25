@@ -1,7 +1,7 @@
 import Dexie from 'dexie'
 import { AppDB, db, getSettings, LEGACY_DB_NAME, nowIso, saveSettings } from './db'
 import { normalizeProduct, normalizeProject } from './factories'
-import { deleteProject, insertBundle, loadBundle, remapBundle, uniqueProjectName, type ProjectBundle } from './repo'
+import { deleteProject, insertBundle, loadBundle, onlyProducts, remapBundle, uniqueProjectName, type ProjectBundle } from './repo'
 import { SCHEMA_VERSION, type BackupFile } from './types'
 import { inlineImages } from '../images'
 import { rolesOf } from '../sync'
@@ -32,9 +32,11 @@ export async function exportAll(database: AppDB = db): Promise<BackupFile> {
   }
 }
 
-export async function exportProject(projectId: string, database: AppDB = db): Promise<BackupFile | null> {
-  const b = await loadBundle(projectId, database)
-  if (!b) return null
+/** A comparison as a file to import again; `only` limits it to those products (a selection). */
+export async function exportProject(projectId: string, database: AppDB = db, only?: ReadonlySet<string>): Promise<BackupFile | null> {
+  const all = await loadBundle(projectId, database)
+  if (!all) return null
+  const b = only ? onlyProducts(all, only) : all
   return {
     app: 'propario',
     kind: 'project',

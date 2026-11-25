@@ -1,4 +1,6 @@
 import { useLoadImages } from './useLoadImages'
+import { ExportChoice } from '../../ui/ExportChoice'
+import { exportProjectExcel, exportProjectJson } from '../../hooks'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { deleteProduct, reorder, setProductValue, updateProduct, updateProject } from '../../db/repo'
@@ -983,10 +985,10 @@ export function ProductTable({
           >
             <Glyph name="compare" /> <span className="hide-narrow">{m.project.compare}</span>
           </button>
-          {canEdit && (
-            <Menu label={m.common.more} trigger={<Glyph name="more" />} className="btn sm outline icon-only" floating>
-              {(close) => (
-                <>
+          <Menu label={m.common.more} trigger={<Glyph name="more" />} className="btn sm outline icon-only" floating>
+            {(close) => (
+              <>
+                {canEdit && (
                   <button
                     disabled={!!bulk}
                     title={m.pageUpdate.hint}
@@ -997,33 +999,44 @@ export function ProductTable({
                   >
                     <Glyph name="download" /> {m.pageUpdate.button}
                   </button>
-                  {selectionImages.missing > 0 && (
-                    <button
-                      title={m.image.loadAllHint}
-                      disabled={!!selectionImages.progress}
-                      onClick={() => {
-                        close()
-                        void selectionImages.load()
-                      }}
-                    >
-                      <Glyph name="image" /> {m.image.loadAll(selectionImages.missing)}
-                    </button>
-                  )}
-                  <hr />
+                )}
+                {canEdit && selectionImages.missing > 0 && (
                   <button
-                    className="danger"
-                    disabled={!!bulk}
+                    title={m.image.loadAllHint}
+                    disabled={!!selectionImages.progress}
                     onClick={() => {
                       close()
-                      void bulkDelete()
+                      void selectionImages.load()
                     }}
                   >
-                    <Glyph name="trash" /> {m.common.delete}
+                    <Glyph name="image" /> {m.image.loadAll(selectionImages.missing)}
                   </button>
-                </>
-              )}
-            </Menu>
-          )}
+                )}
+                <ExportChoice
+                  close={close}
+                  choices={[
+                    { glyph: 'download', label: m.common.exportExcel, run: () => void exportProjectExcel(project.id, m, selection) },
+                    { glyph: 'download', label: m.common.exportJson, run: () => void exportProjectJson(project.id, selection) },
+                  ]}
+                />
+                {canEdit && (
+                  <>
+                    <hr />
+                    <button
+                      className="danger"
+                      disabled={!!bulk}
+                      onClick={() => {
+                        close()
+                        void bulkDelete()
+                      }}
+                    >
+                      <Glyph name="trash" /> {m.common.delete}
+                    </button>
+                  </>
+                )}
+              </>
+            )}
+          </Menu>
           <button
             className="btn sm ghost icon-only"
             aria-label={m.project.clearSelection}
