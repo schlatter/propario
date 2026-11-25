@@ -6,6 +6,16 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Unreleased
 
+- Changed: on a phone the products table leaves more room for the data – a narrower product
+  column with a smaller picture and the name in two lines at most, the table from edge to edge,
+  and filter field, filter and columns in one row.
+- Changed: in a comparison the stage is a coloured dot before its name – select it to change the
+  stage; “+ Product” sits next to the filter field (on a phone just “+”). The row above the tabs
+  is gone.
+- Changed: the filter button shows a funnel instead of a magnifier; “Columns” is a button with its
+  symbol only; “Load images” moved into the ⋯ menu of the comparison.
+- Fixed: a long product name no longer made the product column – and the others – wider.
+
 ## 0.19.0 — 2026-11-24
 
 - Added: “Find and ask”, the button with the Propario sign bottom right in every comparison, to

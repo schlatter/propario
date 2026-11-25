@@ -9,6 +9,11 @@ one in [AGENTS.md](../AGENTS.md): Propario works without it, and AI only propose
 
 - Fix the phone picture of the product details, which shows an enlarged picture on top
   ([#11](https://github.com/schlatter/propario/issues/11)).
+- **Say at first sight what Propario is** – on the start page, the demo, the README and the
+  website: it works without AI, it is for any bigger purchase (not only furniture), and it is a
+  help to decide, not a search engine. Tell it as a story – one person narrows the choice, the
+  other swipes, a duel, a decision – and show the highlights (swipe, duel, room view) in a set of
+  phone pictures side by side, not only the table.
 
 ## Next
 
@@ -24,8 +29,7 @@ one in [AGENTS.md](../AGENTS.md): Propario works without it, and AI only propose
 ## Later
 
 - **A short video in the README** – 10–15 seconds from a link to a decision: paste, swipe, duel,
-  decide – and **a row of phone pictures** (swipe, duel, the room view) with one line each; after
-  [#11](https://github.com/schlatter/propario/issues/11).
+  decide; what it should show best is still open.
 - **A local AI** (Ollama, LM Studio …) for the whole instance, its address set by whoever runs
   it – not typed in by people, so the server cannot be pointed elsewhere.
 - **Propario as a connector in ChatGPT or Claude** (MCP), so a chat subscription can work with a
