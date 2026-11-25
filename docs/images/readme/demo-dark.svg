@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 147 30" width="147" height="30" role="img" aria-label="Try the demo – right in your browser">
-  <title>Try the demo – right in your browser</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 147 30" width="147" height="30" role="img" aria-label="Try the demo, right in your browser">
+  <title>Try the demo, right in your browser</title>
   <rect x="0.5" y="0.5" width="146" height="29" rx="14.5" fill="#5cbcc126" stroke="#5cbcc1" stroke-opacity="0.45"/><path d="M14 10v10l8.5-5z" fill="#5cbcc1" stroke="#5cbcc1" stroke-width="1.5" stroke-linejoin="round"/><text x="32" y="19.5" font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#5cbcc1" text-anchor="start" textLength="97" lengthAdjust="spacingAndGlyphs">Try the demo</text>
 </svg>

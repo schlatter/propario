@@ -20,7 +20,7 @@
 </p>
 
 <p align="center">
-  <a href="https://schlatter.github.io/propario/demo/"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/demo-dark.svg"><img src="docs/images/readme/demo-light.svg" height="30" alt="Try the demo – right in your browser" align="absmiddle"></picture></a>&ensp;
+  <a href="https://schlatter.github.io/propario/demo/"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/demo-dark.svg"><img src="docs/images/readme/demo-light.svg" height="30" alt="Try the demo, right in your browser" align="absmiddle"></picture></a>&ensp;
   <a href="https://schlatter.github.io/propario/">Website</a> ·
   <a href="docs/user-guide.md">User guide</a> ·
   <a href="docs/self-hosting.md">Self‑hosting</a> ·
@@ -28,12 +28,12 @@
 </p>
 
 <p align="center">
-Forget endless lists and a thousand open tabs. You gather the candidates and sort out what does not fit; the others just swipe – yes or no – and a few duels settle the rest: a decision you all stand behind. For anything you compare before buying – a sideboard, a laptop, a used bike – and no AI needed.
+Forget endless spreadsheets and a thousand open tabs. You do the research and pick the candidates, the others just swipe left or right, and a few duels settle the rest. In the end you have a decision you all stand behind. It works for anything you compare before buying, from a sideboard to a laptop or a used bike, and AI is completely optional.
 </p>
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/phones-dark.png">
-  <img src="docs/images/phones-light.png" alt="Propario on a phone: the comparison with every product checked against the requirements, swiping – like it or not – and a duel between two sideboards.">
+  <img src="docs/images/phones-light.png" alt="Propario on a phone: the comparison with every product checked against the requirements, swiping through the candidates, and a duel between two sideboards.">
 </picture>
 
 <picture>
@@ -52,22 +52,14 @@ Forget endless lists and a thousand open tabs. You gather the candidates and sor
 
 ## What it does
 
-- **One link is enough.** Paste a shop link: Propario takes the picture, price and dimensions
-  straight from the shop – or bring your table from Excel or your AI.
-- **Define your requirements.** Set what it must be, what you wish for and a budget: every
-  product is checked against them – green met, red not met.
-- **Side by side, not all over the place.** The candidates side by side: best values shown,
-  differences highlighted – and their sizes to scale, in 3D too.
-- **Sort out quickly.** Swipe: thumb up or down, each person on their own. What nobody likes is
-  sorted out – without a long discussion.
+- **One link is enough.** Paste a shop link and Propario takes the picture, price and dimensions straight from the shop. Or bring your table from Excel or your AI.
+- **Define your requirements.** Set what it must be, what you wish for and a budget. Every product is checked against them: green is met, red is not.
+- **Side by side, not all over the place.** The candidates side by side, with the best values shown and the differences highlighted. Their sizes are to scale, in 3D too.
+- **Sort out quickly.** Swipe: thumb up or down, each person on their own. What nobody likes is sorted out, without a long discussion.
 - **Settle it in duels.** Which is better? Propario puts them side by side and asks until your
   ranking stands. On a phone, AR puts them right into your room.
-- **Decide together.** Your rankings become one joint ranking – its first place can become your
-  decision. Then the purchase, returns and warranty in view.
-- **Find more – with your AI, if you like.** “Find and ask” searches shops, price comparisons,
-  Kleinanzeigen and mydealz for more products – or hands the comparison to the AI you already
-  use; any subscription will do. What it suggests comes back as products – you see every change
-  first.
+- **Decide together.** Your rankings become one joint ranking, and its first place can become your decision. After that, the purchase, returns and warranty stay in view.
+- **Find more, with your AI if you like.** “Find and ask” searches shops, price comparisons, Kleinanzeigen and mydealz for more products, or hands the comparison to the AI you already use. Any subscription will do. What it suggests comes back as products, and you see every change first.
 
 Also: offers from several shops and ratings from tests and reviews on one scale; a table that
 works like a spreadsheet, with filters and queries; Excel, CSV and Markdown import and export;
@@ -76,18 +68,18 @@ dark; backups of everything you can see, pictures included.
 
 ## Why Propario?
 
-|                                                    |  Spreadsheet  | Bookmarks and open tabs | Propario |
-| -------------------------------------------------- | :-----------: | :---------------------: | :------: |
-| Picture, price and dimensions from a shop link     |    by hand    |            –            |    ✓     |
-| Every product checked against your requirements    | with formulas |            –            |    ✓     |
-| Sizes to scale – side by side, in 3D, in your room |       –       |            –            |    ✓     |
-| Everyone’s verdict, one joint ranking              |    by hand    |            –            |    ✓     |
-| Finding more products, with or without AI          |       –       |         by hand         |    ✓     |
-| Your data on your own server, encrypted            |    depends    |            –            |    ✓     |
+|                                                   |  Spreadsheet  | Bookmarks and open tabs | Propario |
+| ------------------------------------------------- | :-----------: | :---------------------: | :------: |
+| Picture, price and dimensions from a shop link    |    by hand    |            –            |    ✓     |
+| Every product checked against your requirements   | with formulas |            –            |    ✓     |
+| Sizes to scale: side by side, in 3D, in your room |       –       |            –            |    ✓     |
+| Everyone’s verdict, one joint ranking             |    by hand    |            –            |    ✓     |
+| Finding more products, with or without AI         |       –       |         by hand         |    ✓     |
+| Your data on your own server, encrypted           |    depends    |            –            |    ✓     |
 
 ## Private, safe, yours
 
-- Runs on your own server – your data stays with you
+- Runs on your own server, so your data stays with you
 - Passkeys instead of passwords
 - Stored encrypted, shared only on purpose
 - No tracking, no advertising, no affiliate links
@@ -99,7 +91,7 @@ and shops that refuse automated access are respected.
 ## Try it
 
 **In your browser:** the [demo](https://schlatter.github.io/propario/demo/) runs three invented
-comparisons right in the page – nothing is saved, nothing is sent anywhere.
+comparisons right in the page. Nothing is saved and nothing is sent anywhere.
 
 **On your own computer**, with Docker:
 
@@ -117,11 +109,11 @@ backups and updates, read [Self-hosting](docs/self-hosting.md).
 
 <details>
   <summary>Is it only for furniture?</summary>
-  <p>No – for anything you compare before buying: a laptop, a bike, a pram, a used car. Furniture is where Propario was tried first, and where sizes to scale, 3D and the room view help most.</p>
+  <p>No, it works for anything you compare before buying: a laptop, a bike, a pram or a used car. Furniture is where Propario was tested first, and where sizes to scale, 3D and the room view help the most.</p>
 </details>
 <details>
-  <summary>Is it a search engine or a shop?</summary>
-  <p>Neither. Propario helps you decide between products you have found – in any shop, on Kleinanzeigen or eBay. “Find and ask” opens the usual searches for you; Propario sells nothing, shows no advertising and has no affiliate links.</p>
+  <summary>Does it compare products or also find them?</summary>
+  <p>Comparing and deciding is the focus. “Find and ask” helps you find more products in shops, price comparisons, on Kleinanzeigen and eBay, or with your own AI, and what you find goes straight into your comparison. Propario shows no advertising and has no affiliate links, so nobody earns money from your choice.</p>
 </details>
 <details>
   <summary>Is there a hosted version I can sign up for?</summary>
@@ -129,7 +121,7 @@ backups and updates, read [Self-hosting](docs/self-hosting.md).
 </details>
 <details>
   <summary>What do I need to run it?</summary>
-  <p>Docker on a small server or a computer at home. To use it beyond <code>localhost</code>, a hostname with HTTPS – passkeys require it. It works well behind a VPN, without any public exposure.</p>
+  <p>Docker on a small server or a computer at home. To use it beyond <code>localhost</code>, a hostname with HTTPS, because passkeys require it. It works well behind a VPN, without any public exposure.</p>
 </details>
 <details>
   <summary>Which shops does it work with?</summary>
@@ -137,11 +129,11 @@ backups and updates, read [Self-hosting](docs/self-hosting.md).
 </details>
 <details>
   <summary>Does it need AI?</summary>
-  <p>No. Everything works without it. If you like, “Find and ask” hands a comparison to the AI you already use, and its answer comes back only after you have seen every change.</p>
+  <p>No, AI is completely optional and everything works without it. If you like, “Find and ask” hands a comparison to the AI you already use, and its answer comes back only after you have seen every change.</p>
 </details>
 <details>
   <summary>Can I use my ChatGPT Plus or Claude Pro subscription?</summary>
-  <p>Yes, by copying: “Find and ask” copies the comparison for your chat and takes its answer back. Asking from within Propario needs an API key with credit from the provider – a chat subscription does not include one.</p>
+  <p>Yes, by copying: “Find and ask” copies the comparison for your chat and takes its answer back. Asking from within Propario needs an API key with credit from the provider, and a chat subscription does not include one.</p>
 </details>
 <details>
   <summary>Can I bring my existing spreadsheets?</summary>
@@ -172,10 +164,10 @@ grows from real use. Versions follow [Semantic Versioning](https://semver.org); 
 Ideas, questions and feedback are welcome in
 [Discussions](https://github.com/schlatter/propario/discussions), bugs in
 [Issues](https://github.com/schlatter/propario/issues). Before writing code, read
-[CONTRIBUTING.md](CONTRIBUTING.md) – Propario is small on purpose. Report vulnerabilities
+[CONTRIBUTING.md](CONTRIBUTING.md), because Propario is small on purpose. Report vulnerabilities
 privately, as described in [SECURITY.md](SECURITY.md).
 
 ## License
 
-[AGPL-3.0-or-later](LICENSE). Use it, change it, run it for others – and if you run a modified
+[AGPL-3.0-or-later](LICENSE). Use it, change it, run it for others. If you run a modified
 version as a service, its users are entitled to its source.

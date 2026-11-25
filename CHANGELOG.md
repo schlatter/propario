@@ -6,9 +6,9 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Unreleased
 
-- Changed: the start page says at first sight what Propario is – a help to decide, for anything
-  you compare before buying, with no AI needed – and tells it as a story: you gather the
-  candidates, the others swipe, a few duels settle the rest.
+- Changed: the start page says at first sight what Propario is: a help to compare and decide, for
+  anything you compare before buying, with AI completely optional. It tells it as a story: you do
+  the research, the others swipe, a few duels settle the rest.
 
 - Changed: on a phone the products table leaves more room for the data – a narrower product
   column with a smaller picture and the name in two lines at most, the table from edge to edge,

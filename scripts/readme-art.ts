@@ -115,7 +115,7 @@ function demoPill(t: Theme) {
   return svg(
     w,
     30,
-    'Try the demo – right in your browser',
+    'Try the demo, right in your browser',
     `<rect x="0.5" y="0.5" width="${w - 1}" height="29" rx="14.5" fill="${t.tile}" stroke="${t.petrol}" stroke-opacity="0.45"/>` +
       `<path d="M14 10v10l8.5-5z" fill="${t.petrol}" stroke="${t.petrol}" stroke-width="1.5" stroke-linejoin="round"/>` +
       text(label, 32, 19.5, 14, 600, t.petrol),
