@@ -9,6 +9,9 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
 - Changed: the server checks at start that `DATA_KEY` opens the stored data. A different or
   missing key stops it with a message saying what to do, instead of starting and then refusing
   every change and picture.
+- Changed: development stores data encrypted as production does. `npm run dev` makes a key on its
+  first start and keeps it in `.dev-data-key`; unencrypted only with `DATA_KEY=off`, which
+  production refuses.
 
 - Changed: against a price reference the note under a price is short too: “Ref.” on the reference
   itself and the difference alone on the others, like “+€70”; the sentence is its tooltip.

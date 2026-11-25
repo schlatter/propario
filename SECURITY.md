@@ -53,7 +53,9 @@ happens.** Every change is measured against this list; `npm run verify` checks m
 - In transit: HTTPS only; `ORIGIN` must be https except for localhost. HSTS is sent on https.
 - At rest: every comparison record, picture and personal setting is encrypted with AES-256-GCM
   (`server/crypto.ts`), bound to its row by associated data. The key `DATA_KEY` lives outside the
-  data directory; the server refuses to start in production without it. A copied database or
+  data directory; the server refuses to start in production without it, and with a key that does
+  not open the stored data. `npm run dev` encrypts too, with its own key in `.dev-data-key`;
+  unencrypted storage is an explicit development option (`DATA_KEY=off`). A copied database or
   backup reveals only ids, roles and timestamps.
 - Secrets are never stored in clear: session tokens, invitation tokens and recovery keys are
   SHA-256 hashes; passkeys are public keys.

@@ -46,6 +46,11 @@ function api(): Plugin {
     apply: 'serve',
     async configureServer(server) {
       if (process.env.VITEST) return
+      // Encrypted as in production, unless DATA_KEY=off says otherwise (server/env.ts).
+      const { devDataKey } = await import('./server/env.ts')
+      const dev = devDataKey(process.env.DATA_KEY, '.dev-data-key')
+      if (dev.key) process.env.DATA_KEY = dev.key
+      else delete process.env.DATA_KEY
       const [{ createApp }, { openDatabase }, { loadConfig }, { keyProblem }] = await Promise.all([
         import('./server/app.ts'),
         import('./server/db.ts'),
@@ -61,6 +66,7 @@ function api(): Plugin {
         process.exit(1)
       }
       const app = createApp(db, config)
+      server.httpServer?.once('listening', () => setTimeout(() => console.log(`\n  ${dev.note}`), 50))
       server.middlewares.use((req, res, next) => app.handle(req, res, next))
       server.httpServer?.once('listening', () => {
         const link = app.setupLink()

@@ -76,7 +76,9 @@ export function keyProblem(db: DB, dataDir: string, production: boolean): string
       ? `DATA_KEY does not match the data in ${dataDir}: it was encrypted with another key, so nothing in it can be read or changed.`
       : `The data in ${dataDir} is encrypted, but DATA_KEY is not set.`
     const fix = 'Start again with the DATA_KEY the data was written with. A new key, e.g. from openssl rand, only suits an empty data folder.'
-    const dev = production ? '' : ` For development no key is needed: start without DATA_KEY, and move ${dataDir} aside to begin with an empty one.`
+    const dev = production
+      ? ''
+      : ` For development: npm run dev without DATA_KEY uses the key in .dev-data-key, DATA_KEY=off stores unencrypted, and moving ${dataDir} aside begins with an empty one.`
     return `${what} ${fix}${dev}`
   }
 }

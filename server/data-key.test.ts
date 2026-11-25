@@ -1,7 +1,11 @@
 // @vitest-environment node
+import { mkdtempSync, readFileSync, statSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { openDatabase } from './db.ts'
-import { useKey } from './crypto.ts'
+import { parseKey, useKey } from './crypto.ts'
+import { devDataKey, loadConfig } from './env.ts'
 import { applyChanges, keyProblem } from './store.ts'
 import { createUser } from './users.ts'
 import { makeProject } from '../src/db/factories.ts'
@@ -49,6 +53,29 @@ describe('the server checks DATA_KEY against the stored data at start', () => {
     useKey(null)
     const problem = keyProblem(db, './data', false)
     expect(problem).toMatch(/is encrypted, but DATA_KEY is not set/)
-    expect(problem).toMatch(/For development no key is needed/)
+    expect(problem).toMatch(/npm run dev without DATA_KEY uses the key in \.dev-data-key/)
+  })
+})
+
+describe('npm run dev encrypts by default', () => {
+  it('makes a key once, keeps it for you alone, and uses it on every start', () => {
+    const file = join(mkdtempSync(join(tmpdir(), 'propario-key-')), '.dev-data-key')
+    const first = devDataKey(undefined, file)
+    expect(parseKey(first.key!)).toHaveLength(32)
+    expect(statSync(file).mode & 0o777).toBe(0o600)
+    expect(first.note).toMatch(/new key/)
+    expect(devDataKey(undefined, file).key).toBe(first.key)
+    expect(readFileSync(file, 'utf8').trim()).toBe(first.key)
+  })
+
+  it('takes DATA_KEY when it is set, and stores unencrypted only with DATA_KEY=off', () => {
+    const file = join(mkdtempSync(join(tmpdir(), 'propario-key-')), '.dev-data-key')
+    expect(devDataKey(KEY, file).key).toBe(KEY)
+    expect(devDataKey('off', file).key).toBeNull()
+    expect(() => readFileSync(file)).toThrow()
+  })
+
+  it('production refuses DATA_KEY=off', () => {
+    expect(() => loadConfig({ NODE_ENV: 'production', ORIGIN: 'https://p.example.org', DATA_KEY: 'off' })).toThrow('development only')
   })
 })
