@@ -14,6 +14,7 @@ import { QuickAdd } from './QuickAdd'
 import { TakeAnswer } from './TakeAnswer'
 import { InfoTip } from '../../ui/InfoTip'
 import type { ProjectData } from './useProjectData'
+import { AI_CHATS, copyForChat, readChat, saveChat, type Chat } from './ai-chat'
 
 /**
  * Finding more products and asking about them, always at hand: a button bottom right that opens
@@ -23,31 +24,6 @@ import type { ProjectData } from './useProjectData'
  * Settings (server/ai.ts), sent from here when asked. Either way a table in the answer comes back
  * only through "Add or update products", where every change is seen first.
  */
-/** Where people chat with their AI; opened in a new tab after copying, nothing is sent along. */
-const AI_CHATS = [
-  { name: 'ChatGPT', href: 'https://chatgpt.com/' },
-  { name: 'Claude', href: 'https://claude.ai/new' },
-] as const
-type Chat = (typeof AI_CHATS)[number]['name'] | ''
-
-/** Which chat opens after copying: a convenience of this device, so in its browser storage. */
-const CHAT_KEY = 'propario.chat'
-function readChat(): Chat {
-  try {
-    const v = localStorage.getItem(CHAT_KEY) ?? ''
-    return AI_CHATS.some((c) => c.name === v) ? (v as Chat) : ''
-  } catch {
-    return ''
-  }
-}
-function saveChat(chat: Chat) {
-  try {
-    localStorage.setItem(CHAT_KEY, chat)
-  } catch {
-    // Without storage the choice lasts until the page is left.
-  }
-}
-
 export function FindAndAsk({ data, canEdit, onOpen }: { data: ProjectData; canEdit: boolean; onOpen: (id: string) => void }) {
   const { m, fmt } = useI18n()
   const toast = useToast()
@@ -106,17 +82,7 @@ export function FindAndAsk({ data, canEdit, onOpen }: { data: ProjectData; canEd
     if (answer) answerRef.current?.scrollIntoView({ block: 'nearest' })
   }, [answer])
 
-  // Copied first (the clipboard wants this page in focus), then the chosen chat opens – still
-  // within the click, so the browser lets it.
-  const copy = (request: string) =>
-    navigator.clipboard
-      .writeText(comparisonForAi(data, m, fmt, request))
-      .then(() => {
-        const to = AI_CHATS.find((c) => c.name === chat)
-        toast(to ? m.ai.copiedOpen(to.name) : m.ai.copied)
-        if (to) window.open(to.href, '_blank', 'noopener,noreferrer')
-      })
-      .catch(() => toast(m.ai.failed))
+  const copy = (request: string) => copyForChat(comparisonForAi(data, m, fmt, request), chat, m, toast)
 
   const send = async (request: string, search: boolean) => {
     setAsking(true)

@@ -20,15 +20,16 @@ export function TakeAnswer({ data, text, canEdit, pasted }: { data: ProjectData;
   const toast = useToast()
   const navigate = useNavigate()
   const id = useId()
-  const { rows, prose } = splitAnswer(text)
+  const { rows, requirements, prose } = splitAnswer(text)
+  const tables = rows + requirements
   const links = answerLinks(prose, data.products)
   /** Links the person unticked. */
   const [skip, setSkip] = useState<Set<string>>(new Set())
   const [busy, setBusy] = useState(false)
   /** How many links were just added (they then count as known and leave the list). */
   const [added, setAdded] = useState(0)
-  if (!canEdit) return rows > 0 ? <p className="muted small">{m.ai.answerTable(rows)}</p> : null
-  if (!rows && !links.length)
+  if (!canEdit) return tables > 0 ? <p className="muted small">{m.ai.answerTable(rows, requirements)}</p> : null
+  if (!tables && !links.length)
     return added ? (
       <p className="small" role="status">
         {m.ai.linksAdded(added)}
@@ -53,9 +54,9 @@ export function TakeAnswer({ data, text, canEdit, pasted }: { data: ProjectData;
 
   return (
     <div className="take-answer">
-      {rows > 0 && (
+      {tables > 0 && (
         <>
-          <p className="muted small">{m.ai.answerTable(rows)}</p>
+          <p className="muted small">{m.ai.answerTable(rows, requirements)}</p>
           <button type="button" className="btn primary" onClick={() => navigate(`/p/${data.project.id}/merge`, { state: { text, read: true } })}>
             <Glyph name="upload" /> {m.ai.readAnswer}
           </button>

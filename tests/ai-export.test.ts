@@ -58,8 +58,8 @@ describe('copy for my AI', () => {
 describe('an answer from one’s own AI', () => {
   it('shows the prose without emphasis marks or the table, and counts the table’s products', () => {
     const answer = 'Take **Arvika**.\n\nTwo more:\n\n| Link | Model |\n| --- | --- |\n| https://a.example | Dora |\n| https://b.example | Edda |\n\nGood luck!'
-    expect(splitAnswer(answer)).toEqual({ prose: 'Take Arvika.\n\nTwo more:\n\nGood luck!', rows: 2 })
-    expect(splitAnswer('Arvika fits best.')).toEqual({ prose: 'Arvika fits best.', rows: 0 })
+    expect(splitAnswer(answer)).toEqual({ prose: 'Take Arvika.\n\nTwo more:\n\nGood luck!', rows: 2, requirements: 0 })
+    expect(splitAnswer('Arvika fits best.')).toEqual({ prose: 'Arvika fits best.', rows: 0, requirements: 0 })
   })
 })
 

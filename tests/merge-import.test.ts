@@ -120,7 +120,7 @@ describe('applying a merge', () => {
       [a],
       [w, depth],
     )!
-    await mergeProducts(
+    const added = await mergeProducts(
       project.id,
       plan.newFields,
       plan.items.filter((i) => i.kind === 'new').map((i) => i.incoming),
@@ -134,5 +134,7 @@ describe('applying a merge', () => {
     expect(all[0]).toMatchObject({ price: 459, values: { [w.id]: 95, [depth.id]: 38, [material.id]: 'Eiche' } })
     expect(all[0].priceDate).not.toBe('')
     expect(all[1]).toMatchObject({ projectId: project.id, foundBy: 'Ada', price: 799, values: { [w.id]: 100, [material.id]: 'Buche' } })
+    // The added products come back as saved, so their pages can be read next.
+    expect(added.map((p) => [p.id, p.model])).toEqual([[all[1].id, 'Cleo']])
   })
 })

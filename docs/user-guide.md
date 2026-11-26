@@ -48,6 +48,12 @@ show archived ones.
   number field and an automatic check; width, height, depth and weight are offered with one click.
   The card stays while you work in it; _Done_ or ✕ closes it, on this device. Opened again with a
   candidate and a requirement or budget, it does not come back.
+- **Optional with AI** (in the first step, once a few sentences are there): _Copy the request_
+  hands your name, text, budget and links to the AI you use, asking for requirements with a rule
+  Propario can check, up to five candidates with links and values, and what it still needs to
+  know. Paste its answer into the field that then opens, then _Take its table_: requirements and
+  products appear in _Add or update products_, where you tick what to keep. With your AI
+  connected in Settings, _Ask_ sends the request from here instead, and only when you click it.
 - **Stage:** each comparison moves from _Researching_ to _Comparing_, _Decided_ and _Purchased_.
   In a comparison the stage is the coloured dot before its name; select it to change the stage.
 - **⋯ menu:** edit _Name & category_, _Duplicate_, _Archive_, _Export_ (.xlsx, .ods, .csv or .json),
@@ -170,7 +176,9 @@ fit are kept as text. Details: [Excel and table import](excel-import.md).
 
 **Into an existing comparison:** **⋯ → Add or update products**, then paste a table or choose a
 file. A row with the same link, GTIN or name updates that product; the others are added; empty
-cells change nothing. You see every change before it is saved.
+cells change nothing. A table with _Priority_ and _Requirement_ columns adds requirements; its
+_Rule_ (such as `Load capacity (kg) >= 2`) becomes an automatic check, with a number field where
+the comparison has none. You see every change before it is saved.
 
 **Find and ask** – the button with the Propario sign bottom right in a comparison, with two tabs, _Search_ and _Ask AI_:
 

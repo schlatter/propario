@@ -5901,7 +5901,14 @@ dialog.model3d-modal {
   margin: 0;
   padding: 0;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 24px;
+}
+/* A long product name on a link button wraps instead of widening the card. */
+.start-links .btn {
+  white-space: normal;
+  text-align: left;
+  max-width: 100%;
 }
 .start-steps > li {
   display: grid;
@@ -5989,6 +5996,68 @@ dialog.model3d-modal {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+/* The start with one's own AI: a quiet box inside the first step. */
+.start-ai {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 12px 16px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+}
+.start-ai h4,
+.start-ai p {
+  margin: 0;
+}
+.start-ai h4 {
+  font-size: 14px;
+  font-weight: 600;
+}
+.start-ai .field > span {
+  font-size: 12px;
+  line-height: normal;
+}
+.start-chat {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.start-chat .select {
+  width: auto;
+}
+/* A step's question and its input or ⓘ on one line, wrapping on a phone. The ⓘ's text hangs
+   from this line (positioned), so it shows right above the question. */
+.start-inline,
+.start-ai .start-links {
+  position: relative;
+}
+.start-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.start-inline .start-more {
+  margin-left: auto;
+}
+.start-field {
+  display: grid;
+  gap: 4px;
+}
+.start-body .start-label {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ink);
+}
+.start-label .info-tip {
+  vertical-align: middle;
+  margin-left: 4px;
+}
 .start-name .input {
+  flex: 1 1 200px;
   max-width: 360px;
+}
+.start-ai .start-links h4 {
+  margin-right: 4px;
 }

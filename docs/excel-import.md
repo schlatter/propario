@@ -40,6 +40,13 @@ tests use synthetic workbooks with the same layouts.
 
 Every decision above is visible and changeable in the import wizard before anything is saved.
 
+**Pasted into an existing comparison** (_Add or update products_, also an AI's answer to the start
+request): the first product table updates and adds products as above; the first requirement table
+(`Priority | Requirement | Rule | Description`, German headers too) adds the requirements the
+comparison does not have in the same words. A rule names a field with its unit in brackets, a
+comparison and a number; it checks the field of that name, or a new number field, and `Price`
+checks the price. Without a rule, a limit and a number in the requirement's words do the same.
+
 ## Known limits
 
 - Cells that Excel stored as dates by mistake (e.g. `5.4` typed into a date-formatted cell) arrive

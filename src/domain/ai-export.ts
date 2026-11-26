@@ -17,6 +17,7 @@ import { linkKey, withoutTracking } from './links.ts'
 import { displayName, exclusionText, formatValue } from './display.ts'
 import { evaluate, OP_SYMBOL, type Summary } from './requirements.ts'
 import { reviewSummary } from './reviews.ts'
+import { reqTargetFor } from '../import/synonyms.ts'
 
 interface Input {
   project: Project
@@ -85,6 +86,39 @@ export function comparisonForAi(d: Input, m: Messages, fmt: Formatters, request 
   return lines.join('\n') + '\n'
 }
 
+/**
+ * The start of a comparison for one's own AI: what the person wrote (name, goal, budget, and
+ * any requirements and product links already there) with the request to propose requirements,
+ * candidates and open questions – answered in two tables Propario reads back: requirements with
+ * a rule it can check (src/import/merge.ts `planRequirements`), and products with their links
+ * and the values those rules look at (`planMerge`).
+ */
+export function startForAi(d: Pick<Input, 'project' | 'products' | 'rules' | 'propMap'>, m: Messages, fmt: Formatters): string {
+  const p = d.project
+  const lines: string[] = [`# ${p.name}${p.category ? ` (${p.category})` : ''}`, '', m.ai.startPrompt, '']
+  if (p.description.trim()) lines.push(`## ${m.project.descriptionLabel}`, '', p.description.trim(), '')
+  if (p.budget != null) lines.push(`- ${m.budget.label}: ≤ ${fmt.money(p.budget)}`)
+  if (p.budgetMin != null) lines.push(`- ${m.budget.label}: ≥ ${fmt.money(p.budgetMin)}`)
+  if (p.budget != null || p.budgetMin != null) lines.push('')
+  if (d.rules.length) {
+    lines.push(`## ${m.product.requirements}`)
+    for (const r of d.rules) lines.push(`- [${m.priority[r.priority]}] ${r.label}`)
+    lines.push('')
+  }
+  const known = d.products.filter((x) => x.url || displayName(x, m))
+  if (known.length) {
+    lines.push(`## ${m.ai.products(known.length)}`)
+    for (const x of known) lines.push(`- ${displayName(x, m)}${x.url ? `: ${x.url}` : ''}`)
+    lines.push('')
+  }
+  const row = (cells: string[]) => `| ${cells.join(' | ')} |`
+  const sep = (n: number) => `|${' --- |'.repeat(n)}`
+  const reqHead = [m.field.priority, m.field.requirement, m.field.rule, m.field.description]
+  const productHead = [m.field.url, m.field.brand, m.field.model, m.field.price, '…']
+  lines.push(`## ${m.ai.startFormatTitle}`, '', m.ai.startFormat, '', row(reqHead), sep(reqHead.length), '', row(productHead), sep(productHead.length), '')
+  return lines.join('\n')
+}
+
 /** Cells as Markdown keeps them: no pipes, no line breaks. */
 const mdCell = (s: string) =>
   s
@@ -126,21 +160,32 @@ export function productTable(d: Pick<Input, 'products' | 'properties'>, m: Messa
 
 /**
  * An AI's answer as the panel shows it: the prose to read – without Markdown's emphasis marks and
- * without its table – and how many product rows the table has. The table itself is read only by
- * "Add or update products".
+ * without its tables – and how many product rows and requirement rows its tables have (a table
+ * with a priority column holds requirements). The tables themselves are read only by "Add or
+ * update products".
  */
-export function splitAnswer(text: string): { prose: string; rows: number } {
+export function splitAnswer(text: string): { prose: string; rows: number; requirements: number } {
   const lines = text.split('\n')
-  const table = lines.filter((l) => l.trim().startsWith('|'))
+  const isRow = (l: string) => l.trim().startsWith('|')
   const prose = lines
-    .filter((l) => !l.trim().startsWith('|'))
+    .filter((l) => !isRow(l))
     .join('\n')
     .replace(/\*\*(.+?)\*\*/g, '$1')
     .replace(/\n{3,}/g, '\n\n')
     .trim()
-  // Header and the |---| line are no products.
-  const rows = table.filter((l) => !/^\|[\s:|-]+\|$/.test(l.trim())).length - 1
-  return { prose, rows: Math.max(0, rows) }
+  let rows = 0
+  let requirements = 0
+  // Each run of table lines is one table: its first line the header, |---| lines no data.
+  for (let i = 0; i < lines.length; i++) {
+    if (!isRow(lines[i]) || (i > 0 && isRow(lines[i - 1]))) continue
+    let end = i
+    while (end + 1 < lines.length && isRow(lines[end + 1])) end++
+    const header = lines[i].split('|').map((c) => c.trim())
+    const data = lines.slice(i + 1, end + 1).filter((l) => !/^\|[\s:|-]+\|$/.test(l.trim())).length
+    if (header.some((c) => reqTargetFor(c) === 'priority')) requirements += data
+    else rows += data
+  }
+  return { prose, rows, requirements }
 }
 
 const MAX_LINKS = 20

@@ -1,17 +1,21 @@
 /**
- * Products from a table into this comparison: paste an AI's answer, rows copied from Excel, CSV
- * or Markdown, or choose a file. The plan (src/import/merge.ts) shows what is new and what
- * changes; only what stays ticked is saved.
+ * Products and requirements from a table into this comparison: paste an AI's answer, rows copied
+ * from Excel, CSV or Markdown, or choose a file. The plan (src/import/merge.ts) shows what is new
+ * and what changes; only what stays ticked is saved. Requirements come after the products, so
+ * their checks find the fields the products brought.
  */
 import { statusOf } from '../domain/verdict'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { mergeProducts } from '../db/repo'
+import { addRequirementsWithRules, mergeProducts } from '../db/repo'
+import { loadProductImage } from '../images'
 import type { Product } from '../db/types'
 import { formatValue, productName } from '../domain/display'
 import { useI18n } from '../i18n'
-import { planMerge, type MergeChange, type MergePlan } from '../import/merge'
+import { OP_SYMBOL } from '../domain/requirements'
+import type { DraftRequirement, Grid } from '../import/excel'
+import { planMerge, planRequirements, type MergeChange, type MergePlan } from '../import/merge'
 import { readTableFile, TABLE_FILES } from '../import/read-file'
 import { textToGrids } from '../import/table-text'
 import type { FieldTarget } from '../import/synonyms'
@@ -34,19 +38,25 @@ export function MergePage() {
   const [text, setText] = useState(() => String(arrived?.text ?? ''))
   const readOnArrival = useRef(arrived?.read === true)
   const [plan, setPlan] = useState<MergePlan | null>(null)
+  /** Requirements the table brings (an AI's answer to the start request has them). */
+  const [reqs, setReqs] = useState<DraftRequirement[]>([])
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   /** Items (by index) and new fields (by key) the person unticked. */
   const [skip, setSkip] = useState<Set<number>>(new Set())
   const [skipFields, setSkipFields] = useState<Set<string>>(new Set())
+  const [skipReqs, setSkipReqs] = useState<Set<number>>(new Set())
   const [over, setOver] = useState(false)
 
   useEffect(() => {
     if (!data || !readOnArrival.current) return
     readOnArrival.current = false
-    const next = planMerge(textToGrids(text), data.products, data.properties)
+    const grids = textToGrids(text)
+    const next = planMerge(grids, data.products, data.properties)
+    const found = planRequirements(grids, data.requirements)
     setPlan(next)
-    setError(next ? '' : m.merge.noTable)
+    setReqs(found)
+    setError(next || found.length ? '' : m.merge.noTable)
   }, [data, text, m])
 
   if (data === undefined) return <main aria-busy="true" />
@@ -58,19 +68,24 @@ export function MergePage() {
     )
   const back = `/p/${data.project.id}`
 
-  const show = (next: MergePlan | null) => {
+  const show = (grids: Grid[]) => {
+    const next = planMerge(grids, data.products, data.properties)
+    const found = planRequirements(grids, data.requirements)
     setSkip(new Set())
     setSkipFields(new Set())
+    setSkipReqs(new Set())
     setPlan(next)
-    setError(next ? '' : m.merge.noTable)
+    setReqs(found)
+    setError(next || found.length ? '' : m.merge.noTable)
   }
-  const readText = () => show(planMerge(textToGrids(text), data.products, data.properties))
+  const readText = () => show(textToGrids(text))
   const readFile = async (file: File) => {
     setBusy(true)
     try {
-      show(planMerge(Object.values(await readTableFile(file)), data.products, data.properties))
+      show(Object.values(await readTableFile(file)))
     } catch {
       setPlan(null)
+      setReqs([])
       setError(m.merge.noTable)
     } finally {
       setBusy(false)
@@ -108,12 +123,23 @@ export function MergePage() {
   const used = new Set([...adds.flatMap((p) => Object.keys(p.values)), ...updates.flatMap((u) => Object.keys(u.patch.values ?? {}))])
   const fields = (plan?.newFields ?? []).filter((f) => !skipFields.has(f.key) && used.has(f.key))
   const count = (kind: 'new' | 'update' | 'same') => plan?.items.filter((x) => x.kind === kind).length ?? 0
+  const takenReqs = reqs.filter((_, i) => !skipReqs.has(i))
+  const shown = !!plan || reqs.length > 0
+  const ruleText = (r: DraftRequirement) =>
+    r.condition ? `${r.condition.propertyName ?? m.field.price} ${OP_SYMBOL[r.condition.op]} ${r.condition.value}`.trim() : ''
 
   const apply = async () => {
     setBusy(true)
     try {
-      await mergeProducts(data.project.id, fields, adds, updates)
-      toast(m.merge.done(adds.length, updates.length))
+      const added = adds.length || updates.length ? await mergeProducts(data.project.id, fields, adds, updates) : []
+      if (takenReqs.length) await addRequirementsWithRules(data.project.id, takenReqs)
+      // Each new product's page is read once, as for a pasted link: picture and the values still
+      // empty come from the shop; what the table said stays. One after the other, in the background.
+      const withPage = added.filter((p) => p.url)
+      void (async () => {
+        for (const p of withPage) await loadProductImage(p).catch(() => undefined)
+      })()
+      toast(`${m.merge.done(adds.length, updates.length, takenReqs.length)}${withPage.length ? ` ${m.merge.reading}` : ''}`)
       // Back to the table as it was left, with its filters; a direct visit goes to the comparison.
       if (location.key !== 'default') navigate(-1)
       else navigate(back)
@@ -138,7 +164,7 @@ export function MergePage() {
       </div>
       {role === 'viewer' ? (
         <p className="notice info">{m.share.readOnly}</p>
-      ) : !plan ? (
+      ) : !shown ? (
         <div
           className={`stack merge-input${over ? ' over' : ''}`}
           onDragOver={(e) => {
@@ -191,63 +217,94 @@ export function MergePage() {
         </div>
       ) : (
         <div className="stack">
-          <p role="status">{m.merge.summary(count('new'), count('update'), count('same'))}</p>
-          <section className="panel stack" aria-labelledby="merge-columns">
-            <h2 id="merge-columns">{m.merge.columns}</h2>
-            <ul className="merge-columns">
-              {plan.columns.map((c, i) => (
-                <li key={i}>
-                  <b>{c.header}</b> →{' '}
-                  {c.kind === 'builtin' ? (
-                    m.importer.target_[c.target as Exclude<FieldTarget, 'property'>]
-                  ) : c.kind === 'field' ? (
-                    fieldName(c.target)
-                  ) : c.kind === 'new' ? (
+          {plan && <p role="status">{m.merge.summary(count('new'), count('update'), count('same'))}</p>}
+          {reqs.length > 0 && (
+            <section className="panel stack" aria-labelledby="merge-reqs">
+              <h2 id="merge-reqs">{m.merge.requirements(reqs.length)}</h2>
+              <ul className="merge-items">
+                {reqs.map((r, i) => (
+                  <li key={i} className="merge-item new">
                     <label className="check">
-                      <input type="checkbox" checked={!skipFields.has(c.target)} onChange={() => toggle(skipFields, c.target, setSkipFields)} />{' '}
-                      {m.merge.createField(fieldName(c.target))}
+                      <input type="checkbox" checked={!skipReqs.has(i)} onChange={() => toggle(skipReqs, i, setSkipReqs)} />
+                      <span className="prio" data-p={r.priority}>
+                        {m.priority[r.priority]}
+                      </span>
+                      <b>{r.label}</b>
+                      {ruleText(r) && <span className="muted">{ruleText(r)}</span>}
                     </label>
-                  ) : (
-                    <span className="muted">{m.merge.unused}</span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </section>
-          <ul className="merge-items" aria-label={m.merge.items}>
-            {plan.items.map((item, i) =>
-              item.kind === 'same' ? null : (
-                <li key={i} className={`merge-item ${item.kind}`}>
-                  <label className="check">
-                    <input type="checkbox" checked={!skip.has(i)} onChange={() => toggle(skip, i, setSkip)} />
-                    <span className={`pill ${item.kind === 'new' ? 'pass' : 'upd'}`}>{item.kind === 'new' ? m.merge.isNew : m.merge.isUpdate}</span>
-                    <b>{productName(item.existing ?? item.incoming, m.product.unnamed)}</b>
-                    {item.kind === 'new' && item.incoming.price !== null && <span className="muted">{fmt.money(item.incoming.price)}</span>}
-                  </label>
-                  {item.kind === 'update' && (
-                    <ul className="merge-changes">
-                      {item.changes
-                        .filter((c) => !(c.field && skipFields.has(c.field)))
-                        .map((c, j) => (
-                          <li key={j}>
-                            <span className="muted">{label(c)}:</span> <s>{show1(c, c.from)}</s> → <span>{show1(c, c.to)}</span>
-                          </li>
-                        ))}
-                    </ul>
-                  )}
-                </li>
-              ),
-            )}
-          </ul>
-          {count('same') > 0 && <p className="muted small">{m.merge.unchanged(count('same'))}</p>}
+                    {r.description && <p className="muted small merge-changes">{r.description}</p>}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+          {plan && (
+            <>
+              <section className="panel stack" aria-labelledby="merge-columns">
+                <h2 id="merge-columns">{m.merge.columns}</h2>
+                <ul className="merge-columns">
+                  {plan.columns.map((c, i) => (
+                    <li key={i}>
+                      <b>{c.header}</b> →{' '}
+                      {c.kind === 'builtin' ? (
+                        m.importer.target_[c.target as Exclude<FieldTarget, 'property'>]
+                      ) : c.kind === 'field' ? (
+                        fieldName(c.target)
+                      ) : c.kind === 'new' ? (
+                        <label className="check">
+                          <input type="checkbox" checked={!skipFields.has(c.target)} onChange={() => toggle(skipFields, c.target, setSkipFields)} />{' '}
+                          {m.merge.createField(fieldName(c.target))}
+                        </label>
+                      ) : (
+                        <span className="muted">{m.merge.unused}</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+              <ul className="merge-items" aria-label={m.merge.items}>
+                {plan.items.map((item, i) =>
+                  item.kind === 'same' ? null : (
+                    <li key={i} className={`merge-item ${item.kind}`}>
+                      <label className="check">
+                        <input type="checkbox" checked={!skip.has(i)} onChange={() => toggle(skip, i, setSkip)} />
+                        <span className={`pill ${item.kind === 'new' ? 'pass' : 'upd'}`}>{item.kind === 'new' ? m.merge.isNew : m.merge.isUpdate}</span>
+                        <b>{productName(item.existing ?? item.incoming, m.product.unnamed)}</b>
+                        {item.kind === 'new' && item.incoming.price !== null && <span className="muted">{fmt.money(item.incoming.price)}</span>}
+                      </label>
+                      {item.kind === 'update' && (
+                        <ul className="merge-changes">
+                          {item.changes
+                            .filter((c) => !(c.field && skipFields.has(c.field)))
+                            .map((c, j) => (
+                              <li key={j}>
+                                <span className="muted">{label(c)}:</span> <s>{show1(c, c.from)}</s> → <span>{show1(c, c.to)}</span>
+                              </li>
+                            ))}
+                        </ul>
+                      )}
+                    </li>
+                  ),
+                )}
+              </ul>
+              {count('same') > 0 && <p className="muted small">{m.merge.unchanged(count('same'))}</p>}
+            </>
+          )}
           <div className="sticky-actions">
-            <button type="button" className="btn primary" disabled={busy || !(adds.length + updates.length)} onClick={apply}>
-              {m.merge.apply(adds.length, updates.length)}
+            <button type="button" className="btn primary" disabled={busy || !(adds.length + updates.length + takenReqs.length)} onClick={apply}>
+              {m.merge.apply(adds.length, updates.length, takenReqs.length)}
             </button>
-            <button type="button" className="btn ghost" onClick={() => setPlan(null)}>
+            <button
+              type="button"
+              className="btn ghost"
+              onClick={() => {
+                setPlan(null)
+                setReqs([])
+              }}
+            >
               {m.merge.another}
             </button>
-            {!(count('new') + count('update')) && <span className="muted">{m.merge.nothing}</span>}
+            {!(count('new') + count('update') + reqs.length) && <span className="muted">{m.merge.nothing}</span>}
           </div>
         </div>
       )}

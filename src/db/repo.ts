@@ -5,12 +5,14 @@
  */
 import { db, newId, nowIso, type AppDB } from './db'
 import { makeProduct, makeProject, makeProperty, makeRequirement } from './factories'
-import type { Offer, Product, Project, PropertyDef, Requirement, Review, Vote } from './types'
+import type { Condition, Offer, Priority, Product, Project, PropertyDef, Requirement, Review, Vote } from './types'
 import { sanitize, type Change } from '../shared/records.ts'
 import { commit, setLocalRole } from '../sync'
 import { rehostImages } from '../images'
 import { todayIso } from '../domain/values'
 import { priceFromOffers } from '../domain/offers'
+import { planRule } from '../domain/start'
+import type { DraftCondition } from '../import/excel'
 import { DIMENSION_UNIT, planFacts } from '../domain/page-import'
 import { activeMessages } from '../i18n/active'
 import type { ProductFacts } from '../shared/product-facts.ts'
@@ -159,13 +161,14 @@ export async function addProduct(projectId: string, data: Partial<Product> = {})
 /**
  * Applies a table merge (src/import/merge.ts) in one go: creates the new fields, adds the new
  * products and patches the updated ones. Values keyed by a new field's key go to that field.
+ * Returns the added products as saved.
  */
 export async function mergeProducts(
   projectId: string,
   fields: { key: string; name: string; type: PropertyDef['type']; unit: string; options: string[] }[],
   adds: Product[],
   updates: { product: Product; patch: Partial<Product> }[],
-) {
+): Promise<Product[]> {
   const me = (await db.meta.get('me'))?.value as { name?: string } | undefined
   let fieldOrder = await nextOrder('properties', projectId)
   let order = await nextOrder('products', projectId)
@@ -174,19 +177,19 @@ export async function mergeProducts(
   const remap = (values: Product['values'] | undefined) =>
     Object.fromEntries(Object.entries(values ?? {}).flatMap(([k, v]) => (k.startsWith('new:') ? (ids.has(k) ? [[ids.get(k)!, v]] : []) : [[k, v]])))
   const today = todayIso()
+  const added = adds.map((p) => {
+    const { id: _id, projectId: _p, createdAt: _c, updatedAt: _u, order: _o, ...rest } = p
+    return makeProduct(projectId, {
+      ...rest,
+      foundBy: rest.foundBy || me?.name || '',
+      priceDate: rest.price !== null ? today : '',
+      values: remap(p.values),
+      order: order++,
+    })
+  })
   await commit([
     ...created.map(([, record]) => ({ op: 'create', kind: 'properties', record }) as Change),
-    ...adds.map((p) => {
-      const { id: _id, projectId: _p, createdAt: _c, updatedAt: _u, order: _o, ...rest } = p
-      const record = makeProduct(projectId, {
-        ...rest,
-        foundBy: rest.foundBy || me?.name || '',
-        priceDate: rest.price !== null ? today : '',
-        values: remap(p.values),
-        order: order++,
-      })
-      return { op: 'create', kind: 'products', record } as Change
-    }),
+    ...added.map((record) => ({ op: 'create', kind: 'products', record }) as Change),
     ...updates.map(({ product, patch: fields }) => {
       const next: Partial<Product> = { ...fields }
       if ('values' in next) next.values = remap(next.values)
@@ -194,6 +197,7 @@ export async function mergeProducts(
       return patch('products', product, next)
     }),
   ])
+  return added
 }
 
 export async function updateProduct(product: Product, fields: Partial<Product>) {
@@ -322,6 +326,29 @@ export async function addRequirement(projectId: string, data: Partial<Requiremen
   const req = makeRequirement(projectId, { ...data, order: await nextOrder('requirements', projectId) })
   await commit([{ op: 'create', kind: 'requirements', record: req }])
   return req
+}
+
+/**
+ * Requirements as typed or read from a table, each with its automatic check where its rule or
+ * words give one (src/domain/start.ts `planRule`): a number field it needs and the comparison
+ * lacks is added first. One after the other, so a field added for one is found by the next.
+ */
+export async function addRequirementsWithRules(
+  projectId: string,
+  drafts: { label: string; priority: Priority; description?: string; category?: string; condition?: DraftCondition | null; unit?: string }[],
+): Promise<void> {
+  for (const d of drafts) {
+    const properties = await db.properties.where('projectId').equals(projectId).toArray()
+    const rule = planRule(d.label, d.condition ?? null, properties, d.unit)
+    let condition: Condition | null = null
+    if (rule) {
+      const t = rule.target
+      const propertyId =
+        t.kind === 'field' ? t.id : t.kind === 'newField' ? (await addProperty(projectId, { name: t.name, type: 'number', unit: t.unit })).id : null
+      condition = { target: propertyId ? { kind: 'property', propertyId } : { kind: 'price' }, op: rule.op, value: rule.value }
+    }
+    await addRequirement(projectId, { label: d.label, priority: d.priority, description: d.description ?? '', category: d.category ?? '', condition })
+  }
 }
 
 export async function updateRequirement(req: Requirement, fields: Partial<Requirement>) {
