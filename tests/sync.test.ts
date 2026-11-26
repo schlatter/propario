@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { AppDB, useCache } from '../src/db/db'
 import { makeProduct, makeProject } from '../src/db/factories'
-import { applyLocal, commit, onSaving, useTransport, type SyncResult } from '../src/sync'
+import { applyLocal, commit, onSaving, pull, useTransport, type SyncResult } from '../src/sync'
 
 /** A server that answers when the test says so – like a phone whose connection is waking up. */
 function slowServer() {
@@ -56,6 +56,31 @@ describe('saving changes', () => {
     expect((await cache.products.get(product.id))?.price).toBe(499)
     expect(await cache.products.get(added.id)).toBeUndefined()
     expect((await cache.projects.get(project.id))?.updatedAt).toBe(changedAt)
+  })
+})
+
+describe('a pull that crosses a change', () => {
+  it('keeps a new comparison the server did not know yet when the pull started', async () => {
+    const cache = new AppDB(`test-sync-${Math.random()}`)
+    useCache(cache)
+    let answerPull: ((r: SyncResult) => void) | undefined
+    let answerPush: (() => void) | undefined
+    useTransport({
+      push: () => new Promise<void>((resolve) => (answerPush = resolve)),
+      pull: () => new Promise<SyncResult>((resolve) => (answerPull = resolve)),
+    })
+    // The pull is on its way with the server's state from before …
+    const pulling = pull()
+    await expect.poll(() => !!answerPull).toBe(true)
+    // … when a new comparison is made here and sent.
+    const project = makeProject({ name: 'New comparison' })
+    const saved = commit([{ op: 'create', kind: 'projects', record: project }])
+    await expect.poll(async () => !!(await cache.projects.get(project.id))).toBe(true)
+    answerPull!({ seq: 1, full: false, projects: [], records: [], deleted: [] } as unknown as SyncResult)
+    await pulling
+    expect(await cache.projects.get(project.id)).toBeDefined()
+    answerPush!()
+    await saved
   })
 })
 

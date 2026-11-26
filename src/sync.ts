@@ -128,12 +128,14 @@ export async function commit(changes: Change[]): Promise<void> {
   // Deleting a whole comparison waits for the server: it is rare and cannot be put back here.
   if (changes.some((c) => c.op === 'delete' && c.kind === 'projects')) {
     await transport.push(changes)
+    localWrites++
     await applyLocal(changes, database)
     schedulePull(300)
     return
   }
   const started = performance.now()
   const before = await snapshot(changes, database)
+  localWrites++
   await applyLocal(changes, database)
   setSaving(1)
   // A save that takes this long tells, in the server log, that the connection is the problem.
@@ -154,6 +156,12 @@ export async function commit(changes: Change[]): Promise<void> {
 }
 
 let pulling: Promise<void> | null = null
+/**
+ * Counts changes made here. A pull that was on its way while one was made carries the server's
+ * state from before it: applied, it would take back what was just shown (a comparison made a
+ * moment ago would vanish until the next pull). Such an answer is dropped and asked again.
+ */
+let localWrites = 0
 
 export function pull(): Promise<void> {
   pulling ??= doPull().finally(() => {
@@ -165,7 +173,13 @@ export function pull(): Promise<void> {
 async function doPull() {
   const database = db
   const since = ((await database.meta.get('seq'))?.value as number | undefined) ?? 0
+  const writes = localWrites
   const r = await transport.pull(since)
+  if (writes !== localWrites) {
+    debugLog('sync', 'answer dropped: changed here meanwhile')
+    schedulePull(300)
+    return
+  }
   if (r.full || r.records.length || r.deleted.length)
     debugLog('sync', `${r.full ? 'full' : 'changes'}: ${r.records.length} records, ${r.deleted.length} removed, seq ${r.seq}`)
   if (database !== db) return // signed out or switched account meanwhile
