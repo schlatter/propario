@@ -11,6 +11,23 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.23.0',
+    notes: {
+      en: [
+        'A new comparison starts with its name and your own words instead of an empty table.',
+        'Optional with AI: let it propose requirements and up to ten candidates, check everything first.',
+        'Requirements like “Width at most 60 cm” are checked for you; common ones take one click.',
+        'Products taken from a table fetch their picture and details from the shop page.',
+      ],
+      de: [
+        'Ein neuer Vergleich startet mit Name und deinen eigenen Worten statt mit einer leeren Tabelle.',
+        'Optional mit KI: Anforderungen und bis zu zehn Kandidaten vorschlagen lassen, alles vorher prüfen.',
+        'Anforderungen wie „Breite max. 60 cm“ prüft Propario selbst; häufige gibt es mit einem Klick.',
+        'Aus einer Tabelle übernommene Produkte holen Bild und Details von ihrer Shopseite.',
+      ],
+    },
+  },
+  {
     version: '0.22.0',
     notes: {
       en: [
