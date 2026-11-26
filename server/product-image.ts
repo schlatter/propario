@@ -250,6 +250,7 @@ export function extractImageCandidates(html: string, pageUrl: string): string[] 
   const og: string[] = []
   const twitter: string[] = []
   const ld: string[] = []
+  const hires: string[] = []
   const other: string[] = []
   for (const m of html.matchAll(/<(meta|link)\b[^>]*>/gi)) {
     const a = attrs(m[0])
@@ -269,9 +270,13 @@ export function extractImageCandidates(html: string, pageUrl: string): string[] 
       /* broken JSON-LD is common; ignore */
     }
   }
+  // Amazon's pages state no Open Graph or JSON-LD picture: the main one in full size is
+  // `data-old-hires` on the product image, the gallery `"hiRes":"…"` in the page's own script.
+  for (const m of html.matchAll(/\bdata-old-hires\s*=\s*["'](https?:[^"']+)["']/gi)) hires.push(m[1])
+  for (const m of html.matchAll(/"hiRes"\s*:\s*"(https?:[^"]+)"/g)) hires.push(m[1].replace(/\\\//g, '/'))
   const seen = new Set<string>()
   const result: string[] = []
-  for (const raw of [...og, ...ld, ...twitter, ...other]) {
+  for (const raw of [...og, ...ld, ...hires, ...twitter, ...other]) {
     let abs: URL
     try {
       abs = new URL(decodeEntities(raw.trim()), pageUrl)
@@ -480,6 +485,12 @@ export function extractProductFacts(html: string): ProductFacts {
   raw.mpn ??= meta.mpn
   if (raw.price === undefined && (meta.pricecurrency ?? meta['product:price:currency'] ?? '').toUpperCase() === 'EUR')
     raw.price = meta.price ?? meta['product:price:amount']
+  // Amazon: the price of the buy box, in the data the page keeps for it (euros only).
+  const buybox = html.match(/"desktop_buybox_group_1"\s*:\s*\[\s*\{[^{}]*?"priceAmount"\s*:\s*(\d+(?:\.\d+)?)\s*,\s*"currencySymbol"\s*:\s*"€"/)
+  if (raw.price === undefined && buybox) raw.price = Number(buybox[1])
+  // Amazon: the title shown above the product (its pages have no og:title).
+  const shownTitle = html.match(/<span\b[^>]*\bid=["']productTitle["'][^>]*>([\s\S]{1,1000}?)<\/span>/i)
+  if (shownTitle) raw.name ??= decodeEntities(stripTags(shownTitle[1])).replace(/\s+/g, ' ').trim() || undefined
   // The page title before a generic itemprop "name" (often a breadcrumb step such as "Startseite"),
   // without the shop's name appended ("Regal Arvika | Shop GmbH").
   raw.name ??= stripSiteName(meta['og:title'] ?? meta.name ?? '', meta['og:site_name'])
@@ -491,7 +502,13 @@ export function extractProductFacts(html: string): ProductFacts {
   const crumbs: string[] = raw.crumbs ?? []
   const own = String(raw.name ?? '').toLowerCase()
   raw.category ??= meta.category ?? meta['product:category'] ?? [...crumbs].reverse().find((c) => c.toLowerCase() !== own && !own.startsWith(c.toLowerCase()))
-  raw.specs = [...(raw.specs ?? []), ...tableSpecs(html), ...proseDimensions(`${stripTags(String(raw.description ?? ''))} ${productText(html)}`)]
+  const table = tableSpecs(html)
+  // A data sheet that names the brand or the GTIN ("Marke", "Global Trade Identification
+  // Number", as Amazon's does) fills them when nothing better stated them.
+  const sheet = (re: RegExp) => table.find((t) => re.test(t.name))?.value
+  raw.brand ??= sheet(/^(marke|brand)$/i) ?? sheet(/^(hersteller|manufacturer)$/i)
+  raw.gtin ??= sheet(/^(ean|gtin|ean[- ]?code|global trade identification number)$/i)?.split(/[\s,;]+/)[0]
+  raw.specs = [...(raw.specs ?? []), ...table, ...proseDimensions(`${stripTags(String(raw.description ?? ''))} ${productText(html)}`)]
   return cleanFacts(raw)
 }
 

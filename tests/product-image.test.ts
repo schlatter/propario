@@ -7,6 +7,22 @@ import { checkUrl, encodeFacts, extractImageCandidates, extractProductFacts, fet
 // 1×1 PNG
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64')
 
+/**
+ * A page built like Amazon's (invented product): no Open Graph, no JSON-LD. Title, buy-box price,
+ * the main picture's full size and the gallery sit in Amazon's own markup and script; brand and
+ * GTIN in the data sheet. A cheaper offer of another product must not become the price.
+ */
+const amazonLike = (img: string) => `<html><head><title>Gripa Flex 3 : Amazon.de: Elektronik &amp; Foto</title></head><body>
+  <span id="productTitle" class="a-size-large product-title-word-break">   Gripa Flex 3 Stativ, 30 cm, Schwarz   </span>
+  <a id="bylineInfo" href="/stores/Gripa">Besuche den Gripa-Store</a>
+  <div class="a-section aok-hidden twister-plus-buying-options-price-data">{"desktop_buybox_group_1":[{"displayPrice":"63,00 €","priceAmount":63.00,"currencySymbol":"€","integerValue":"63"}]}</div>
+  <div id="similar">{"priceAmount":9.99,"currencySymbol":"€"}</div>
+  <img alt="Gripa Flex 3" src="${img}-small.jpg" data-old-hires="${img}" id="landingImage">
+  <script>P.when('A').register("ImageBlockATF", function(A){ var data = {'colorImages': { 'initial': [{"hiRes":"${img.replace(/\//g, '\\/')}"},{"hiRes":"https:\\/\\/images.shop.example\\/I\\/side._AC_SL1500_.jpg"}]}}; });</script>
+  <table id="productDetails"><tr><th>Marke</th><td>Gripa</td></tr><tr><th>Maximale Höhe</th><td>30 Zentimeter</td></tr>
+  <tr><th>Global Trade Identification Number</th><td>04006381333931</td></tr></table>
+</body></html>`
+
 describe('extractImageCandidates', () => {
   it('prefers og:image, resolves relative URLs and decodes entities', () => {
     const html = `<head>
@@ -29,6 +45,13 @@ describe('extractImageCandidates', () => {
         {"@type":["Product"],"name":"Schrank","image":[{"@type":"ImageObject","url":"https://img.example/a.webp"},"https://img.example/b.jpg","https://img.example/logo.svg"]}
       ]}</script>`
     expect(extractImageCandidates(html, 'https://shop.example/')).toEqual(['https://img.example/a.webp', 'https://img.example/b.jpg'])
+  })
+
+  it('reads the full-size picture and the gallery of a page built like Amazon’s', () => {
+    expect(extractImageCandidates(amazonLike('https://images.shop.example/I/main._AC_SL1500_.jpg'), 'https://www.amazon.de/dp/X1')).toEqual([
+      'https://images.shop.example/I/main._AC_SL1500_.jpg',
+      'https://images.shop.example/I/side._AC_SL1500_.jpg',
+    ])
   })
 
   it('returns nothing for pages without image hints', () => {
@@ -149,6 +172,12 @@ describe('extractProductFacts', () => {
     expect(JSON.parse(Buffer.from(encoded, 'base64url').toString())).toEqual({ name: 'Arvika', specs: [{ name: 'Breite', value: '60' }] })
   })
 
+  it('reads title, buy-box price, brand and GTIN of a page built like Amazon’s', () => {
+    const f = extractProductFacts(amazonLike('https://images.shop.example/I/main.jpg'))
+    expect(f).toMatchObject({ name: 'Gripa Flex 3 Stativ, 30 cm, Schwarz', price: 63, brand: 'Gripa', gtin: '04006381333931' })
+    expect(f.specs).toContainEqual({ name: 'Maximale Höhe', value: '30 Zentimeter', table: true })
+  })
+
   it('finds nothing on pages without product data', () => {
     expect(extractProductFacts('<html><body>Hallo</body></html>')).toEqual({})
   })
@@ -178,6 +207,9 @@ describe('fetchProductImage against a local test shop', () => {
         res.end(
           '<html><head><meta property="og:image" content="/missing.jpg"><meta property="og:image" content="/img.png"><meta itemprop="gtin13" content="4006381333931"></head></html>',
         )
+      } else if (req.url === '/amazon-like') {
+        res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' })
+        res.end(amazonLike(`${base}/img.png`))
       } else if (req.url === '/moved') {
         res.writeHead(301, { location: '/product' })
         res.end()
@@ -218,6 +250,11 @@ describe('fetchProductImage against a local test shop', () => {
   })
   it('keeps the facts of a page that has no picture', async () => {
     await expect(fetchProductImage(`${base}/facts-only`, { allowPrivate: true })).rejects.toMatchObject({ code: 'no-image', facts: { name: 'Arvika' } })
+  })
+  it('fetches the picture of a page built like Amazon’s, with its price', async () => {
+    const got = await fetchProductImage(`${base}/amazon-like`, { allowPrivate: true })
+    expect(got.source).toBe(`${base}/img.png`)
+    expect(got.facts).toMatchObject({ name: 'Gripa Flex 3 Stativ, 30 cm, Schwarz', price: 63, brand: 'Gripa' })
   })
   it('passes direct image URLs through', async () => {
     expect((await fetchProductImage(`${base}/img.png`, { allowPrivate: true })).source).toBe(`${base}/img.png`)

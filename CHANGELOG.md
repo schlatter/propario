@@ -6,6 +6,10 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Unreleased
 
+- New: Amazon links bring their picture (full size, with the gallery), the price, the product's
+  name, its brand and GTIN. All of it is on the one product page Propario reads; nothing more is
+  fetched.
+
 ## 0.23.0 — 2026-11-26
 
 - Fixed: a change made while Propario was checking the server for news could be taken back for a
