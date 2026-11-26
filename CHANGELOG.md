@@ -6,6 +6,19 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Unreleased
 
+- New: start with your AI. In a new comparison's first step, “Copy the request” hands what you
+  wrote to the AI you use, or your connected AI is asked from there. Its answer brings
+  requirements with checkable rules, up to ten candidates with links and values, and open
+  questions; you see and tick everything in “Add or update products” before it is saved.
+- New: “Add or update products” also reads a requirement table (priority, requirement, rule) and
+  adds its requirements with automatic checks, adding number fields where needed.
+- New: after “Add or update products”, Propario reads the page of each added product once, as
+  for a pasted link: pictures and values still empty come from the shop, what the table said
+  stays.
+- Changed: links taken from a pasted table lose their tracking parameters (`utm_source=…`) and
+  name their shop as the retailer; a rule asking for an exact number is kept as a requirement
+  checked by hand.
+- Fixed: a pasted table with a single row now recognises its numbers as numbers.
 - Changed: “New comparison” opens the comparison at once, without a dialog; its start card asks
   for the name first. Left without anything in it, by closing the card or going back, the new
   comparison is removed again.

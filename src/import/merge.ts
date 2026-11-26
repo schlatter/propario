@@ -13,11 +13,12 @@
  *   replaced; the link of a product stays its identity and is only filled when empty.
  */
 import { makeProduct } from '../db/factories'
-import type { Product, PropertyDef, PropertyType, PropertyValue } from '../db/types'
+import type { Product, PropertyDef, PropertyType, PropertyValue, Requirement } from '../db/types'
 import { productName } from '../domain/display'
-import { sameLink } from '../domain/links'
+import { sameLink, withoutTracking } from '../domain/links'
+import { hostOf } from '../domain/values'
 import { convert, meaning } from '../domain/page-import'
-import { analyzeSheet, productRows, rowToProduct, type ColumnMapping, type Grid } from './excel'
+import { analyzeSheet, productRows, rowToProduct, type ColumnMapping, type DraftRequirement, type Grid } from './excel'
 import { norm, splitUnit } from './normalize'
 
 export interface MergeColumn {
@@ -101,6 +102,35 @@ export function planMerge(grids: Grid[], products: Product[], properties: Proper
   return null
 }
 
+/**
+ * The requirements of the first requirement table in `grids` (columns such as Priority,
+ * Requirement, Rule, Details, as an AI answers the start request), without those the comparison
+ * already has in the same words. Their checks are resolved when they are added.
+ */
+export function planRequirements(grids: Grid[], existing: Pick<Requirement, 'label'>[]): DraftRequirement[] {
+  const have = new Set(existing.map((r) => norm(r.label)))
+  for (const grid of grids) {
+    const draft = analyzeSheet('import', grid, { people: [] })
+    if (draft.kind !== 'requirements') continue
+    const seen = new Set<string>()
+    return (
+      draft.requirements
+        .filter((r) => {
+          const key = norm(r.label)
+          if (!key || have.has(key) || seen.has(key)) return false
+          seen.add(key)
+          return true
+        })
+        // "Packed length (cm) = 3": a number that must be met exactly is almost always a slip (an AI
+        // mixing up rows); such a requirement is kept, checked by hand.
+        .map((r) =>
+          r.condition && typeof r.condition.value === 'number' && (r.condition.op === 'eq' || r.condition.op === 'neq') ? { ...r, condition: null } : r,
+        )
+    )
+  }
+  return []
+}
+
 function plan(grid: Grid, mapped: ColumnMapping[], draft: ReturnType<typeof analyzeSheet>, products: Product[], properties: PropertyDef[]): MergePlan {
   const byName = (name: string) => properties.find((p) => norm(p.name) === norm(name))
   const byMeaning = (name: string) => properties.find((p) => meaning(p.name) === meaning(name))
@@ -146,6 +176,11 @@ function plan(grid: Grid, mapped: ColumnMapping[], draft: ReturnType<typeof anal
     for (const [id, u] of units) {
       const v = incoming.values[id]
       if (typeof v === 'number') incoming.values[id] = convert(v, u.from, u.to) ?? v
+    }
+    // A link as Propario keeps it (utm_source=chatgpt.com … dropped), its shop as the retailer.
+    if (incoming.url) {
+      incoming.url = withoutTracking(incoming.url)
+      if (!incoming.retailer) incoming.retailer = hostOf(incoming.url)
     }
     const existing = match(incoming, products, taken)
     if (!existing) {

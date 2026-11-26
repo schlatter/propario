@@ -224,15 +224,21 @@ export const de: Messages = {
   firstSteps: {
     title: 'Los geht’s',
     close: 'Start schließen',
+    name: 'Name des Vergleichs',
     goal: 'Was suchst du, und wofür?',
     goalHint:
       'In deinen Worten, so wie du es einer Freundin erzählen würdest: wofür es ist, was du jetzt hast und was dich daran stört. Links zu Produkten, die dir gefallen oder die du nicht willst, helfen.',
     goalPlaceholder:
       'z. B. Ein leichtes Stativ für den Urlaub, das immer in den Tagesrucksack passt. Unseres bleibt zu Hause, weil es zu sperrig ist: https://…',
+    aiTitle: 'Optional mit KI',
+    aiHint: 'Deine KI schlägt aus deinem Text Anforderungen und Kandidaten vor; du siehst alles, bevor es übernommen wird.',
+    aiNeedsGoal: 'Sobald oben ein paar Sätze stehen, schlägt deine KI Anforderungen und Kandidaten vor.',
+    aiCopy: 'Anfrage kopieren',
+    aiAsk: (provider) => `${provider} fragen`,
+    aiAnswer: 'Antwort deiner KI',
     links: 'Links in deinem Text',
     addLink: (host) => `Als Produkt aufnehmen: ${host}`,
     budgetTitle: 'Wie viel darf es kosten?',
-    budgetHint: 'Ein Produkt darüber kommt nicht in Frage. Lass es leer, wenn der Preis keine Rolle spielt.',
     budget: 'Höchstens (€)',
     criteria: 'Was muss es können?',
     criteriaHint: 'Was ein Produkt ausschließt. Mit Grenze und Zahl, etwa „Breite max. 60 cm“, prüft Propario es für dich.',
@@ -457,6 +463,11 @@ export const de: Messages = {
     withAiDirect: (provider) => `Schickt den Vergleich mit deiner Bitte an ${provider} – wenn du fragst, und nur dann.`,
     suggest: 'Neue Produkte finden',
     findNew: 'Neue Produkte finden',
+    startPrompt:
+      'Hilf uns beim Start dieses Kaufs. Aus dem, was wir unten geschrieben haben: Nenne die Anforderungen, auf die es ankommt, Muss-Kriterien zuerst, jeweils mit einer messbaren Grenze, wo es eine gibt. Schlag bis zu 10 Produkte vor, die sie erfüllen: echte Modelle, die man jetzt kaufen kann, jeweils mit dem Link zur Produktseite (such im Web, wenn du kannst, erfinde nie einen Link) und den Werten, die deine Regeln prüfen. Sag danach kurz, was du noch von uns wissen müsstest.',
+    startFormatTitle: 'Antwortformat',
+    startFormat:
+      'Antworte mit diesen zwei Tabellen in genau diesem Format, damit wir sie in unseren Vergleich einfügen können. Priorität ist eins von Muss, Wichtig, Wunsch, Bonus, Ausschluss. Regel ist ein Feld mit Einheit in Klammern, dann <= (höchstens) oder >= (mindestens), nie =, und eine Zahl in dieser Einheit, etwa „Packmaß (cm) <= 35“; für eine Preisgrenze schreib „Preis <= 100“; lass sie leer, wenn es sich nicht messen lässt. Die Beschreibung erklärt nur ihre eigene Zeile. Prüf jede Regel an deinen Vorschlägen: Eine Muss-Regel, die keiner erfüllt, ist zu streng, also lockere sie oder mach sie zu Wichtig. In der Produkttabelle kommen die Felder der Regeln als weitere Spalten dazu, mit denselben Namen und Einheiten, Zahlen ohne Einheit, unbekannte Werte leer. Text vor oder nach den Tabellen ist willkommen.',
     suggestPrompt:
       'Schlag uns bis zu 5 weitere Produkte vor, die zu unseren Anforderungen und zum Budget passen und noch nicht in unserer Liste sind – echte Modelle, die man jetzt kaufen kann. Such im Web, wenn du kannst, und gib zu jedem Produkt den Link zur Produktseite an – erfinde nie einen Link. Sag kurz, warum jedes passt; gib nur Werte an, bei denen du dir sicher bist.',
     question: 'Deine Frage',
@@ -464,7 +475,8 @@ export const de: Messages = {
     ask: 'Frage stellen',
     asking: 'Deine KI antwortet – das kann eine Minute dauern.',
     answer: 'Antwort',
-    answerTable: (n) => `Ihre Antwort enthält eine Tabelle mit ${n} ${n === 1 ? 'Produkt' : 'Produkten'}.`,
+    answerTable: (products, reqs) =>
+      `Ihre Antwort hat ${[products && `${products} ${products === 1 ? 'Produkt' : 'Produkte'}`, reqs && `${reqs} ${reqs === 1 ? 'Anforderung' : 'Anforderungen'}`].filter(Boolean).join(' und ')} in Tabellen.`,
     problem: {
       key: 'Dein Anbieter hat den API-Schlüssel nicht angenommen – vielleicht wurde er gelöscht. Prüf ihn unter Einstellungen → Deine KI.',
       model: 'Dein Anbieter bietet dieses Modell für deinen Schlüssel nicht an. Wähl unter Einstellungen → Deine KI ein anderes.',
@@ -592,7 +604,8 @@ export const de: Messages = {
     placeholder: '| Link | Marke | Modell | Preis | Breite (cm) |\n|---|---|---|---|---|\n| https://… | … | … | … | … |',
     read: 'Tabelle lesen',
     chooseFile: 'Datei wählen',
-    noTable: 'Keine Produkttabelle gefunden. Sie braucht eine Kopfzeile mit mindestens zwei bekannten Spalten, etwa Modell und Preis.',
+    noTable:
+      'Keine Produkt- oder Anforderungstabelle gefunden. Sie braucht eine Kopfzeile mit mindestens zwei bekannten Spalten, etwa Modell und Preis oder Priorität und Anforderung.',
     summary: (added, updated, same) => `${added} neu, ${updated} mit Änderungen, ${same} unverändert.`,
     columns: 'Spalten',
     unused: 'nicht verwendet',
@@ -602,10 +615,14 @@ export const de: Messages = {
     isUpdate: 'Änderungen',
     empty: 'leer',
     unchanged: (n) => `${n} ${n === 1 ? 'Produkt ist' : 'Produkte sind'} unverändert.`,
-    apply: (added, updated) => `${added} hinzufügen, ${updated} aktualisieren`,
+    apply: (added, updated, reqs = 0) =>
+      `${added} hinzufügen, ${updated} aktualisieren${reqs ? `, ${reqs} ${reqs === 1 ? 'Anforderung' : 'Anforderungen'}` : ''}`,
+    requirements: (n) => `Anforderungen (${n})`,
     another: 'Andere Tabelle',
     nothing: 'Nichts zu ändern – die Tabelle stimmt mit dem Vergleich überein.',
-    done: (added, updated) => `${added} hinzugefügt, ${updated} aktualisiert.`,
+    reading: 'Bilder und Details kommen von den Shopseiten.',
+    done: (added, updated, reqs = 0) =>
+      `${added} hinzugefügt, ${updated} aktualisiert${reqs ? `, ${reqs} ${reqs === 1 ? 'Anforderung' : 'Anforderungen'}` : ''}.`,
   },
   gallery: {
     position: (n, total) => `${n}/${total}`,

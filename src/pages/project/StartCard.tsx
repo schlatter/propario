@@ -1,15 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
-import { addProperty, addRequirement, deleteProject, loadBundle, updateProject } from '../../db/repo'
+import { addRequirementsWithRules, deleteProject, loadBundle, updateProject } from '../../db/repo'
 import { PRIORITIES, type Priority } from '../../db/types'
 import { linksIn, sameLink } from '../../domain/links'
-import { ruleFromText, startNeeded, startSteps, untouched } from '../../domain/start'
+import { startNeeded, startSteps, untouched } from '../../domain/start'
 import { factsFromUrl } from '../../domain/url-facts'
 import { hostOf, normalizeUrl, parseNumber } from '../../domain/values'
 import { useI18n } from '../../i18n'
 import { useToast } from '../../ui/Dialog'
 import { Glyph } from '../../ui/Glyph'
+import { InfoTip } from '../../ui/InfoTip'
 import { CommitInput, CommitTextarea } from '../../ui/inputs'
 import { addFromLink, QuickAdd } from './QuickAdd'
+import { StartWithAi } from './StartWithAi'
 import type { ProjectData } from './useProjectData'
 
 /** Closed start cards, per comparison: a convenience of this device, so in its browser storage. */
@@ -95,7 +97,7 @@ export function StartCard({
 }) {
   const { m } = useI18n()
   const toast = useToast()
-  const { project, products, requirements, properties } = data
+  const { project, products, requirements } = data
   const steps = startSteps(project, products, requirements)
   const links = linksIn(project.description).filter((url) => !products.some((p) => sameLink(p.url, url)))
   const [label, setLabel] = useState('')
@@ -110,17 +112,9 @@ export function StartCard({
     const text = label.trim()
     if (!text) return
     // Cleared at once, so what is typed next while this one is saved is kept.
-    const rule = ruleFromText(text, unit)
     setLabel('')
     setUnit('')
-    let condition = null
-    if (rule) {
-      const field =
-        properties.find((p) => p.type === 'number' && p.name.toLowerCase() === rule.name.toLowerCase()) ??
-        (await addProperty(project.id, { name: rule.name, type: 'number', unit: rule.unit }))
-      condition = { target: { kind: 'property' as const, propertyId: field.id }, op: rule.op, value: rule.value }
-    }
-    await addRequirement(project.id, { label: text, priority, condition })
+    await addRequirementsWithRules(project.id, [{ label: text, priority, unit }])
   }
 
   const mark = (n: number, done: boolean) => (
@@ -148,8 +142,8 @@ export function StartCard({
         <li>
           {mark(1, steps.goal)}
           <div className="start-body">
-            <label className="field start-name">
-              <span>{m.field.name}</span>
+            <label className="start-inline start-name">
+              <span className="start-label">{m.firstSteps.name}</span>
               <CommitInput
                 className="input"
                 value={project.name}
@@ -159,20 +153,23 @@ export function StartCard({
                 onCommit={(v) => v.trim() && updateProject(project.id, { name: v.trim() })}
               />
             </label>
-            <label className="field">
-              <span>{m.firstSteps.goal}</span>
+            {/* The ⓘ beside the question, not in its label: writing should not keep the hint open. */}
+            <div className="start-field">
+              <div className="start-inline">
+                <label htmlFor="start-goal" className="start-label">
+                  {m.firstSteps.goal}
+                </label>
+                <InfoTip text={m.firstSteps.goalHint} />
+              </div>
               <CommitTextarea
+                id="start-goal"
                 className="textarea"
-                rows={4}
+                rows={3}
                 value={project.description}
                 placeholder={m.firstSteps.goalPlaceholder}
-                aria-describedby="start-goal-hint"
                 onCommit={(v) => updateProject(project.id, { description: v })}
               />
-            </label>
-            <p id="start-goal-hint" className="small muted">
-              {m.firstSteps.goalHint}
-            </p>
+            </div>
             {links.length > 0 && (
               <div className="start-links">
                 <span className="small muted">{m.firstSteps.links}</span>
@@ -183,32 +180,39 @@ export function StartCard({
                 ))}
               </div>
             )}
+            <StartWithAi data={data} />
           </div>
         </li>
         <li>
           {mark(2, steps.budget)}
           <div className="start-body">
-            <h3>{m.firstSteps.budgetTitle}</h3>
-            <p className="small muted">{m.firstSteps.budgetHint}</p>
-            <label className="start-budget">
-              <span>{m.firstSteps.budget}</span>
-              <CommitInput
-                className="input num"
-                inputMode="decimal"
-                value={project.budget != null ? String(project.budget) : ''}
-                onCommit={(v) => {
-                  const n = parseNumber(v)
-                  void updateProject(project.id, { budget: n !== null && n >= 0 ? n : null })
-                }}
-              />
-            </label>
+            <div className="start-inline">
+              <h3>{m.firstSteps.budgetTitle}</h3>
+              <label className="start-budget">
+                <span className="muted">{m.firstSteps.budget}</span>
+                <CommitInput
+                  className="input num"
+                  inputMode="decimal"
+                  value={project.budget != null ? String(project.budget) : ''}
+                  onCommit={(v) => {
+                    const n = parseNumber(v)
+                    void updateProject(project.id, { budget: n !== null && n >= 0 ? n : null })
+                  }}
+                />
+              </label>
+            </div>
           </div>
         </li>
         <li>
           {mark(3, requirements.length > 0)}
           <div className="start-body">
-            <h3>{m.firstSteps.criteria}</h3>
-            <p className="small muted">{m.firstSteps.criteriaHint}</p>
+            <div className="start-inline">
+              <h3>{m.firstSteps.criteria}</h3>
+              <InfoTip text={m.firstSteps.criteriaHint} />
+              <button type="button" className="btn ghost sm start-more" onClick={onRequirements}>
+                {m.firstSteps.allRequirements}
+              </button>
+            </div>
             {requirements.length > 0 && (
               <ul className="start-reqs">
                 {requirements.map((r) => (
@@ -273,18 +277,15 @@ export function StartCard({
                 {m.requirements.add}
               </button>
             </form>
-            <div>
-              <button type="button" className="btn ghost sm" onClick={onRequirements}>
-                {m.firstSteps.allRequirements}
-              </button>
-            </div>
           </div>
         </li>
         <li>
           {mark(4, steps.product)}
           <div className="start-body">
-            <h3>{m.firstSteps.product}</h3>
-            <p className="small muted">{m.firstSteps.productHint}</p>
+            <div className="start-inline">
+              <h3>{m.firstSteps.product}</h3>
+              <InfoTip text={m.firstSteps.productHint} />
+            </div>
             <QuickAdd data={data} onOpen={onOpen} inline />
           </div>
         </li>

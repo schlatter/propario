@@ -3,8 +3,9 @@
  * its name and what one is looking for, a budget, requirements and a first candidate. The start card
  * (src/pages/project/StartCard.tsx) shows them until it is closed or, on opening, all are done.
  */
-import type { Product, Project, Requirement } from '../db/types'
-import { fieldFromRequirement } from '../import/normalize'
+import type { ConditionOp, Product, Project, PropertyDef, Requirement } from '../db/types'
+import type { DraftCondition } from '../import/excel'
+import { fieldFromRequirement, norm, splitUnit } from '../import/normalize'
 
 export interface StartSteps {
   /** The goal is written down. */
@@ -57,4 +58,42 @@ export function untouched(project: Project, firstName: string, products: Product
     !requirements.length &&
     !properties.length
   )
+}
+
+/** Where a requirement's automatic check looks: the price, a field of the comparison, or a number field still to add. */
+export type RuleTarget = { kind: 'price' } | { kind: 'field'; id: string } | { kind: 'newField'; name: string; unit: string }
+export interface PlannedRule {
+  target: RuleTarget
+  op: ConditionOp
+  value: number | string
+}
+
+const PRICE = /^(preis|price|budget|kosten|cost|gesamtpreis|max preis)$/
+
+/**
+ * The automatic check for a requirement, from its rule ("Traglast (kg) >= 2", as an AI or the
+ * Excel export writes it) or, without one, from its words ("Breite max. 60 cm"). A field of the
+ * comparison is used when its name (with or without unit) matches; a number limit without such a
+ * field asks for a new number field. Null: checked by hand. `unit` is the suggestion's unit for
+ * a number typed without one.
+ */
+export function planRule(label: string, condition: DraftCondition | null, properties: PropertyDef[], unit = ''): PlannedRule | null {
+  const find = (name: string) => {
+    const n = norm(name)
+    return properties.find((p) => norm(p.name) === n || norm(`${p.name} (${p.unit})`) === n || norm(`${p.name} ${p.unit}`) === n)
+  }
+  if (condition) {
+    if (condition.propertyName === null || PRICE.test(norm(condition.propertyName.replace(/\([^)]*\)/g, ''))))
+      return { target: { kind: 'price' }, op: condition.op, value: condition.value }
+    const prop = find(condition.propertyName)
+    if (prop) return { target: { kind: 'field', id: prop.id }, op: condition.op, value: condition.value }
+    if (typeof condition.value !== 'number') return null
+    const split = splitUnit(condition.propertyName)
+    return { target: { kind: 'newField', name: split.name || condition.propertyName, unit: split.unit }, op: condition.op, value: condition.value }
+  }
+  const rule = ruleFromText(label, unit)
+  if (!rule) return null
+  if (PRICE.test(norm(rule.name))) return { target: { kind: 'price' }, op: rule.op, value: rule.value }
+  const prop = properties.find((p) => p.type === 'number' && norm(p.name) === norm(rule.name))
+  return { target: prop ? { kind: 'field', id: prop.id } : { kind: 'newField', name: rule.name, unit: rule.unit }, op: rule.op, value: rule.value }
 }

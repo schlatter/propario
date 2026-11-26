@@ -224,14 +224,20 @@ export const en = {
   firstSteps: {
     title: 'Get started',
     close: 'Close the start',
+    name: 'Comparison name',
     goal: 'What are you looking for, and why?',
     goalHint:
       'In your own words, as you would tell a friend: what it is for, what you have now and what bothers you about it. Links to products you like or do not want are welcome.',
     goalPlaceholder: 'e.g. A light tripod for our holidays that always fits in the day bag. Ours stays at home because it is too bulky: https://…',
+    aiTitle: 'Optional with AI',
+    aiHint: 'Your AI proposes requirements and candidates from what you wrote; you see everything before it is taken.',
+    aiNeedsGoal: 'Once a few sentences are written above, your AI proposes requirements and candidates.',
+    aiCopy: 'Copy the request',
+    aiAsk: (provider: string) => `Ask ${provider}`,
+    aiAnswer: 'Your AI’s answer',
     links: 'Links in your text',
     addLink: (host: string) => `Add as product: ${host}`,
     budgetTitle: 'How much may it cost?',
-    budgetHint: 'A product above it is not eligible. Leave it empty if the price does not matter.',
     budget: 'At most (€)',
     criteria: 'What must it be?',
     criteriaHint: 'What rules a product out. With a limit and a number, such as “Width at most 60 cm”, Propario checks it for you.',
@@ -455,6 +461,11 @@ export const en = {
     withAiDirect: (provider: string) => `Sends the comparison with your request to ${provider} – when you ask, and only then.`,
     suggest: 'Find new products',
     findNew: 'Find new products',
+    startPrompt:
+      'Help us get started with this purchase. From what we wrote below: list the requirements that matter, must criteria first, each with a measurable limit where there is one. Suggest up to 10 products that meet them: real models that can be bought now, each with the link to its product page (search the web if you can, never invent a link) and the values your rules check. Then say briefly what you would still need to know from us.',
+    startFormatTitle: 'Answer format',
+    startFormat:
+      'Answer with these two tables in exactly this format, so we can paste them into our comparison. Priority is one of Must, Important, Wish, Bonus, Exclusion. Rule is a field with its unit in brackets, then <= (at most) or >= (at least), never =, and a number in that unit, such as “Packed length (cm) <= 35”; for a price limit write “Price <= 100”; leave it empty when it cannot be measured. The description explains its own row only. Check every rule against your suggestions: a must rule that none of them meets is too strict, so loosen it or make it important. In the products table, add the fields of the rules as further columns with the same names and units, numbers without units, unknown values empty. Prose before or after the tables is welcome.',
     suggestPrompt:
       'Suggest up to 5 more products that fit our requirements and budget and are not in our list yet – real models that can be bought now. Search the web if you can, and give the link to each product’s page – never invent a link. Say briefly why each one fits; give only values you are sure of.',
     question: 'Your question',
@@ -462,7 +473,8 @@ export const en = {
     ask: 'Ask question',
     asking: 'Your AI is answering – this can take a minute.',
     answer: 'Answer',
-    answerTable: (n: number) => `Its answer has a table with ${n} ${n === 1 ? 'product' : 'products'}.`,
+    answerTable: (products: number, reqs: number) =>
+      `Its answer has ${[products && `${products} ${products === 1 ? 'product' : 'products'}`, reqs && `${reqs} ${reqs === 1 ? 'requirement' : 'requirements'}`].filter(Boolean).join(' and ')} in tables.`,
     problem: {
       key: 'Your provider did not accept the API key – it may have been deleted. Check it under Settings → Your AI.',
       model: 'Your provider does not offer this model to your key. Choose another under Settings → Your AI.',
@@ -588,7 +600,8 @@ export const en = {
     placeholder: '| Link | Brand | Model | Price | Width (cm) |\n|---|---|---|---|---|\n| https://… | … | … | … | … |',
     read: 'Read table',
     chooseFile: 'Choose file',
-    noTable: 'No product table found. It needs a header row with at least two known columns, such as model and price.',
+    noTable:
+      'No product or requirement table found. It needs a header row with at least two known columns, such as model and price, or priority and requirement.',
     summary: (added: number, updated: number, same: number) => `${added} new, ${updated} with changes, ${same} unchanged.`,
     columns: 'Columns',
     unused: 'not used',
@@ -598,10 +611,14 @@ export const en = {
     isUpdate: 'Changes',
     empty: 'empty',
     unchanged: (n: number) => `${n} ${n === 1 ? 'product is' : 'products are'} unchanged.`,
-    apply: (added: number, updated: number) => `Add ${added}, update ${updated}`,
+    apply: (added: number, updated: number, reqs = 0) =>
+      `Add ${added}, update ${updated}${reqs ? `, ${reqs} ${reqs === 1 ? 'requirement' : 'requirements'}` : ''}`,
+    requirements: (n: number) => `Requirements (${n})`,
     another: 'Other table',
     nothing: 'Nothing to change – the table matches the comparison.',
-    done: (added: number, updated: number) => `${added} added, ${updated} updated.`,
+    reading: 'Pictures and details come from the shop pages.',
+    done: (added: number, updated: number, reqs = 0) =>
+      `${added} added, ${updated} updated${reqs ? `, ${reqs} ${reqs === 1 ? 'requirement' : 'requirements'}` : ''}.`,
   },
   gallery: {
     position: (n: number, total: number) => `${n}/${total}`,

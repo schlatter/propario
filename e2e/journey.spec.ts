@@ -325,7 +325,7 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   // A new comparison opens at once; its start card asks for the name first.
   await page.getByRole('button', { name: 'New comparison' }).first().click()
   const start = page.getByRole('region', { name: 'Get started' })
-  const name = start.getByLabel('Name', { exact: true })
+  const name = start.getByLabel('Comparison name')
   await expect(name).toBeFocused()
   await expect(name).toHaveValue('New comparison')
   await page.keyboard.type('Travel tripod')
@@ -346,10 +346,10 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await start.getByLabel('At most (€)').press('Enter')
   // A common criterion fills in its words; with a number it becomes a field with an automatic check.
   await start.getByRole('button', { name: 'Weight at most … kg' }).click()
-  await expect(start.getByLabel('Requirement')).toBeFocused()
+  await expect(start.getByLabel('Requirement', { exact: true })).toBeFocused()
   await page.keyboard.type('1')
   await start.getByRole('button', { name: 'Add requirement' }).click()
-  await start.getByLabel('Requirement').fill('Load at least 2 kg')
+  await start.getByLabel('Requirement', { exact: true }).fill('Load at least 2 kg')
   await start.getByRole('button', { name: 'Add requirement' }).click()
   // The card stays while one works in it, and says when all is there.
   await expect(start.getByText('Load at least 2 kg')).toBeVisible()
@@ -361,6 +361,76 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await expect(page.getByRole('combobox', { name: 'Field: Weight at most 1' })).toHaveValue(/.+/)
   await expect(page.getByLabel('Value: Weight at most 1')).toHaveValue('1')
   await expect(page.getByLabel('Value: Load at least 2 kg')).toHaveValue('2')
+  await page.getByRole('button', { name: 'More', exact: true }).click()
+  await page.locator('.menu-list').getByRole('button', { name: 'Delete' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click()
+  await expect(page.getByRole('heading', { name: 'No comparisons yet' })).toBeVisible()
+
+  // With one's own AI, not connected: the request is copied, the answer pasted back, and its two
+  // tables, requirements with rules and products with their values, go through the preview.
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write'])
+  await page.getByRole('button', { name: 'New comparison' }).first().click()
+  await expect(start.getByLabel('Comparison name')).toBeFocused()
+  await page.keyboard.type('Tripod with AI')
+  const ai = start.getByRole('region', { name: 'Optional with AI' })
+  await expect(ai.getByRole('button', { name: 'Copy the request' })).toBeDisabled()
+  await start.getByLabel('What are you looking for, and why?').fill('A light tripod for travelling that carries a camera.')
+  await start.getByLabel('What are you looking for, and why?').blur()
+  // Writing keeps the hint closed, and the answer field waits until the request is copied.
+  await start.getByLabel('What are you looking for, and why?').focus()
+  await expect(start.locator('.tip-text').first()).toBeHidden()
+  // … but pointing at its ⓘ shows it, right where one looks.
+  const goalTip = start.locator('button.info-tip').first()
+  await goalTip.hover()
+  await expect(goalTip.locator('.tip-text')).toBeVisible()
+  await expect(goalTip.locator('.tip-text')).toBeInViewport()
+  await start.getByLabel('At most (€)').click()
+  await expect(ai.getByLabel('Your AI’s answer')).toHaveCount(0)
+  await ai.getByLabel('Open in').selectOption('')
+  await ai.getByRole('button', { name: 'Copy the request' }).click()
+  const request = await page.evaluate(() => navigator.clipboard.readText())
+  expect(request).toContain('# Tripod with AI')
+  expect(request).toContain('A light tripod for travelling that carries a camera.')
+  expect(request).toContain('| Priority | Requirement | Rule | Description |')
+  await ai
+    .getByLabel('Your AI’s answer')
+    .fill(
+      [
+        'A good start.',
+        '',
+        '| Priority | Requirement | Rule | Description |',
+        '| --- | --- | --- | --- |',
+        '| Must | Carries at least 2 kg | Load capacity (kg) >= 2 | camera and lens |',
+        '| Important | Short when packed | Packed length (cm) <= 35 | |',
+        '',
+        '| Link | Brand | Model | Price | Load capacity (kg) | Packed length (cm) |',
+        '| --- | --- | --- | --- | --- | --- |',
+        '| https://shop.example/grip-3 | Gripa | Flex 3 | 63 | 3 | 30.5 |',
+        '| https://shop.example/octo-2 | Octo | Two | 26 | 2 | 31 |',
+        '',
+        'Which lens do you use most?',
+      ].join('\n'),
+    )
+  await expect(ai.getByText('Its answer has 2 products and 2 requirements in tables.')).toBeVisible()
+  await ai.getByRole('button', { name: 'Take its table' }).click()
+  await expect(page.getByRole('heading', { name: 'Requirements (2)' })).toBeVisible()
+  await expect(page.getByText('Load capacity (kg) ≥ 2')).toBeVisible()
+  await accessible(page, 'preview with requirements')
+  // Taking it reads each new product's page once, as for a pasted link.
+  const pages: string[] = []
+  const onPage = (r: { url(): string }) => {
+    if (r.url().includes('/api/product-image?')) pages.push(decodeURIComponent(r.url()))
+  }
+  page.on('request', onPage)
+  await page.getByRole('button', { name: 'Add 2, update 0, 2 requirements' }).click()
+  await expect.poll(() => pages.filter((u) => /grip-3|octo-2/.test(u)).length).toBe(2)
+  page.off('request', onPage)
+  await expect(page.getByRole('tab', { name: /Requirements/ })).toContainText('2')
+  await expect(page.getByRole('tab', { name: /Products/ })).toContainText('2')
+  await expect(page.getByRole('tab', { name: /Fields/ })).toContainText('2')
+  await page.getByRole('tab', { name: /Requirements/ }).click()
+  await expect(page.getByLabel('Value: Carries at least 2 kg')).toHaveValue('2')
+  await expect(page.getByLabel('Value: Short when packed')).toHaveValue('35')
   await page.getByRole('button', { name: 'More', exact: true }).click()
   await page.locator('.menu-list').getByRole('button', { name: 'Delete' }).click()
   await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click()
@@ -379,7 +449,7 @@ test('Ada keeps a comparison with a product and its picture', async () => {
 
   // The card can be closed, and the empty table takes its place.
   await page.getByRole('button', { name: 'New comparison' }).first().click()
-  await expect(page.getByRole('region', { name: 'Get started' }).getByLabel('Name', { exact: true })).toBeFocused()
+  await expect(page.getByRole('region', { name: 'Get started' }).getByLabel('Comparison name')).toBeFocused()
   await page.keyboard.type('Kitchen cabinet')
   await page.keyboard.press('Enter')
   await expect(page.locator('input.title-input')).toHaveValue('Kitchen cabinet')

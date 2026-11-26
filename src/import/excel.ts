@@ -355,7 +355,8 @@ export function inferType(values: Cell[]): { type: PropertyType; unit: string; o
   const unitOf = (t: string) => t.replace(/^[-+~]?[\d\s.,']*/, '').trim()
   const isNum = (c: Cell, t: string) => typeof c.v === 'number' || (parseNumber(t) !== null && (!unitOf(t) || isUnit(unitOf(t))))
   const numeric = values.filter((c, i) => isNum(c, texts[i])).length
-  const singleIsNumber = n === 1 && typeof values[0].v === 'number'
+  // One value alone counts too, also as text ("3" in a pasted table with one row).
+  const singleIsNumber = n === 1 && isNum(values[0], texts[0])
   if (numeric >= 2 ? numeric / n >= 0.6 : singleIsNumber) {
     const suffixes = new Set(texts.filter((t, i) => typeof values[i].v === 'string' && isUnit(unitOf(t))).map(unitOf))
     return { type: 'number', unit: suffixes.size === 1 ? [...suffixes][0] : '', options: [] }

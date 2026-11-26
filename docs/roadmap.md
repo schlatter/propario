@@ -37,6 +37,12 @@ one in [AGENTS.md](../AGENTS.md): Propario works without it, and AI only propose
 
 ## Later
 
+- **Colours and other variants of one product:** today each colour is its own product with all
+  its data copied. Better: one product with a variant picker above its picture, each variant
+  with its own pictures, colour, price and link where they differ, and everything else shared.
+  Open: whether a variant can be judged, excluded or chosen on its own (one colour fits the room,
+  the other does not), or whether that needs real copies after all; and how the table, swipe
+  and duel show a product with variants.
 - **What you bought, as a small inventory:** every decided comparison already holds the product,
   its price, shop, date and return deadline, the links and the pictures. Two ways to use that,
   to be weighed when the time comes: a view of everything bought (warranty and return dates,
