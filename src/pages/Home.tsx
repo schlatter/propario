@@ -26,8 +26,15 @@ export function HomePage() {
   const [category, setCategory] = useState('')
   const [status, setStatus] = useState<ProjectStatus | ''>('')
   const [filtersOpen, setFiltersOpen] = useState(false)
-  const [dialog, setDialog] = useState<{ project: Project | null } | null>(null)
+  /** The comparison whose name and category are being edited. */
+  const [editing, setEditing] = useState<Project | null>(null)
   const navigate = useNavigate()
+  /** A new comparison opens at once; its start card asks for the name and what it is about. */
+  const startNew = async () => {
+    const created = await createProject({ name: await uniqueProjectName(m.home.newTitle) })
+    // Its first name goes along: left without anything in it, the comparison is removed again.
+    navigate(`/p/${created.id}`, { state: { firstName: created.name } })
+  }
 
   const byProject = useMemo(() => {
     const map = new Map<string, Product[]>()
@@ -64,7 +71,7 @@ export function HomePage() {
         <h1>{m.home.title}</h1>
         <span className="count">{projects.filter((p) => p.status !== 'archived').length}</span>
         <span className="spacer" />
-        <button className="btn primary" onClick={() => setDialog({ project: null })}>
+        <button className="btn primary" onClick={() => void startNew()}>
           <Glyph name="plus" /> {m.home.newComparison}
         </button>
       </div>
@@ -74,7 +81,7 @@ export function HomePage() {
           <h2>{m.home.emptyTitle}</h2>
           <p>{m.home.emptyText}</p>
           <div className="row" style={{ justifyContent: 'center', marginTop: 16 }}>
-            <button className="btn primary" onClick={() => setDialog({ project: null })}>
+            <button className="btn primary" onClick={() => void startNew()}>
               <Glyph name="plus" /> {m.home.newComparison}
             </button>
             <Link className="btn" to="/import">
@@ -134,20 +141,14 @@ export function HomePage() {
           ) : (
             <div className="cards">
               {visible.map(({ p, items, hits }) => (
-                <ProjectCard key={p.id} project={p} items={items} hits={hits} onEdit={() => setDialog({ project: p })} />
+                <ProjectCard key={p.id} project={p} items={items} hits={hits} onEdit={() => setEditing(p)} />
               ))}
             </div>
           )}
         </>
       )}
 
-      <ProjectDialog
-        open={!!dialog}
-        project={dialog?.project ?? null}
-        categories={categories}
-        onClose={() => setDialog(null)}
-        onCreated={(id) => navigate(`/p/${id}`)}
-      />
+      {editing && <ProjectDialog open project={editing} categories={categories} onClose={() => setEditing(null)} />}
     </main>
   )
 }
@@ -276,59 +277,29 @@ function ProjectCard({ project, items, hits, onEdit }: { project: Project; items
   )
 }
 
-export function ProjectDialog({
-  open,
-  project,
-  categories,
-  onClose,
-  onCreated,
-}: {
-  open: boolean
-  project: Project | null
-  categories: string[]
-  onClose: () => void
-  onCreated?: (id: string) => void
-}) {
+export function ProjectDialog({ open, project, categories, onClose }: { open: boolean; project: Project; categories: string[]; onClose: () => void }) {
   const { m } = useI18n()
   return (
     <Modal open={open} onClose={onClose} labelledBy="project-dialog-title">
-      <ProjectForm key={project?.id ?? 'new'} project={project} categories={categories} onClose={onClose} onCreated={onCreated} m={m} />
+      <ProjectForm key={project.id} project={project} categories={categories} onClose={onClose} m={m} />
     </Modal>
   )
 }
 
-function ProjectForm({
-  project,
-  categories,
-  onClose,
-  onCreated,
-  m,
-}: {
-  project: Project | null
-  categories: string[]
-  onClose: () => void
-  onCreated?: (id: string) => void
-  m: ReturnType<typeof useI18n>['m']
-}) {
-  const [name, setName] = useState(project?.name ?? '')
-  const [category, setCategory] = useState(project?.category ?? '')
+function ProjectForm({ project, categories, onClose, m }: { project: Project; categories: string[]; onClose: () => void; m: ReturnType<typeof useI18n>['m'] }) {
+  const [name, setName] = useState(project.name)
+  const [category, setCategory] = useState(project.category)
   return (
     <form
       className="dialog"
       onSubmit={async (e) => {
         e.preventDefault()
         if (!name.trim()) return
-        if (project) {
-          await updateProject(project.id, { name: name.trim(), category: category.trim() })
-          onClose()
-        } else {
-          const created = await createProject({ name: name.trim(), category: category.trim() })
-          onClose()
-          onCreated?.(created.id)
-        }
+        await updateProject(project.id, { name: name.trim(), category: category.trim() })
+        onClose()
       }}
     >
-      <h2 id="project-dialog-title">{project ? m.home.renameTitle : m.home.newTitle}</h2>
+      <h2 id="project-dialog-title">{m.home.renameTitle}</h2>
       <Field label={m.field.name}>
         <input className="input" autoFocus required value={name} placeholder={m.home.namePlaceholder} onChange={(e) => setName(e.target.value)} />
       </Field>
@@ -345,7 +316,7 @@ function ProjectForm({
           {m.common.cancel}
         </button>
         <button type="submit" className="btn primary">
-          {project ? m.common.save : m.home.create}
+          {m.common.save}
         </button>
       </div>
     </form>

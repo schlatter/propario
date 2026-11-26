@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { deleteProject, duplicateProject, uniqueProjectName, updateProject } from '../db/repo'
 import type { ProjectStatus } from '../db/types'
 import { productName } from '../domain/display'
@@ -19,6 +19,7 @@ import { RequirementsTab } from './project/RequirementsTab'
 import { useProjectData } from './project/useProjectData'
 import { useLoadImages } from './project/useLoadImages'
 import { FindAndAsk } from './project/FindAndAsk'
+import { StartCard, useDropIfUntouched, useStartCard } from './project/StartCard'
 import { ShareDialog } from './project/ShareDialog'
 import { ProjectDialog } from './Home'
 import { InTopbar } from '../ui/Topbar'
@@ -46,6 +47,11 @@ export function ProjectPage() {
   const [editing, setEditing] = useState(false)
   const role = useLiveQuery(async () => (await rolesOf())[id ?? ''], [id])
   const images = useLoadImages(data?.products ?? [])
+
+  const start = useStartCard(data, role !== 'viewer')
+  /** Set when this comparison was just made by "New comparison": its first name. */
+  const firstName = (useLocation().state as { firstName?: string } | null)?.firstName
+  const pristine = useDropIfUntouched(data, firstName)
 
   if (data === undefined) return <main aria-busy="true" />
   if (data === null)
@@ -264,7 +270,15 @@ export function ProjectPage() {
       )}
 
       <div role="tabpanel">
-        {tab === 'products' && (
+        {tab === 'products' && start.open && (
+          <StartCard
+            data={data}
+            onOpen={(pid) => setParam('product', pid)}
+            onClose={() => (pristine ? navigate('/') : start.close())}
+            onRequirements={() => setParam('tab', 'requirements')}
+          />
+        )}
+        {tab === 'products' && (products.length > 0 || !start.open) && (
           <ProductTable
             data={data}
             selection={selection}

@@ -37,7 +37,17 @@ A **comparison** is one purchase: the sideboard, the laptop, the bike. _Comparis
 and the ones shared with you; search across comparisons and products, filter by category, and
 show archived ones.
 
-- **New comparison:** a name and, if you like, a category.
+- **New comparison:** opens at once. Give it a name and say in your own words what you are
+  looking for and why, as you would tell a friend: what it is for, what you have now and what
+  bothers you about it, links included. The text becomes the comparison's goal (in _Notes_); the
+  category can be set next to the name at the top. Left without anything in it, by closing the
+  start card or going back, the new comparison is removed again.
+- **Get started:** a new comparison shows four steps instead of an empty table: name and goal (each
+  link in it can become a product with one click), a budget, what a product must be and a first
+  candidate. A requirement with a limit and a number, such as _Width at most 60 cm_, gets its
+  number field and an automatic check; width, height, depth and weight are offered with one click.
+  The card stays while you work in it; _Done_ or ✕ closes it, on this device. Opened again with a
+  candidate and a requirement or budget, it does not come back.
 - **Stage:** each comparison moves from _Researching_ to _Comparing_, _Decided_ and _Purchased_.
   In a comparison the stage is the coloured dot before its name; select it to change the stage.
 - **⋯ menu:** edit _Name & category_, _Duplicate_, _Archive_, _Export_ (.xlsx, .ods, .csv or .json),
