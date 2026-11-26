@@ -6,6 +6,15 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Unreleased
 
+- Changed: “New comparison” opens the comparison at once, without a dialog; its start card asks
+  for the name first. Left without anything in it, by closing the card or going back, the new
+  comparison is removed again.
+- New: instead of an empty table, a new comparison shows four steps: its name and what you are
+  looking for, in your own words (each link in it becomes a product with one click), a budget,
+  what a product must be and a first candidate. A requirement with a limit and a number, such as
+  “Width at most 60 cm”, gets its field and an automatic check; width, height, depth and weight
+  are offered with one click. The card stays while you work in it, until you close it.
+
 ## 0.22.0 — 2026-11-25
 
 - Changed: on a phone, scrolling the table sideways folds the product column to its pictures, so

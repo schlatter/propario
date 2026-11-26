@@ -322,10 +322,69 @@ test('a visitor sees what Propario does and tries the demo, which never talks to
 
 test('Ada keeps a comparison with a product and its picture', async () => {
   const { page } = ada
+  // A new comparison opens at once; its start card asks for the name first.
   await page.getByRole('button', { name: 'New comparison' }).first().click()
-  await page.getByLabel('Name').fill('Kitchen cabinet')
-  await page.getByRole('button', { name: 'Create' }).click()
-  await expect(page.getByLabel('Name')).toHaveValue('Kitchen cabinet')
+  const start = page.getByRole('region', { name: 'Get started' })
+  const name = start.getByLabel('Name', { exact: true })
+  await expect(name).toBeFocused()
+  await expect(name).toHaveValue('New comparison')
+  await page.keyboard.type('Travel tripod')
+  // Pasted from a chat: the link in Markdown, written twice, the second time with an escaped &.
+  const goal =
+    'A light tripod for travelling, always in the day bag. Ours is too bulky: [https://shop.example/tripod-big.html?a=1&b=2](https://shop.example/tripod-big.html?a=1\\&b=2)'
+  await start.getByLabel('What are you looking for, and why?').fill(goal)
+  await start.getByLabel('What are you looking for, and why?').blur()
+  await expect(page.locator('input.title-input')).toHaveValue('Travel tripod')
+
+  // Instead of an empty table, four steps: name and goal, a budget, requirements, a candidate.
+  await accessible(page, 'start card')
+  await expect(start.getByRole('button', { name: /Add as product/ })).toHaveCount(1)
+  await start.getByRole('button', { name: 'Add as product: shop.example' }).click()
+  await expect(start.getByRole('button', { name: /Add as product/ })).toHaveCount(0)
+  await expect(page.locator('table.grid tbody tr')).toHaveCount(1)
+  await start.getByLabel('At most (€)').fill('80')
+  await start.getByLabel('At most (€)').press('Enter')
+  // A common criterion fills in its words; with a number it becomes a field with an automatic check.
+  await start.getByRole('button', { name: 'Weight at most … kg' }).click()
+  await expect(start.getByLabel('Requirement')).toBeFocused()
+  await page.keyboard.type('1')
+  await start.getByRole('button', { name: 'Add requirement' }).click()
+  await start.getByLabel('Requirement').fill('Load at least 2 kg')
+  await start.getByRole('button', { name: 'Add requirement' }).click()
+  // The card stays while one works in it, and says when all is there.
+  await expect(start.getByText('Load at least 2 kg')).toBeVisible()
+  await expect(page.getByRole('tab', { name: /Requirements/ })).toContainText('2')
+  await expect(page.getByRole('tab', { name: /Fields/ })).toContainText('2')
+  await start.getByRole('button', { name: 'Done' }).click()
+  await expect(start).toBeHidden()
+  await page.getByRole('tab', { name: /Requirements/ }).click()
+  await expect(page.getByRole('combobox', { name: 'Field: Weight at most 1' })).toHaveValue(/.+/)
+  await expect(page.getByLabel('Value: Weight at most 1')).toHaveValue('1')
+  await expect(page.getByLabel('Value: Load at least 2 kg')).toHaveValue('2')
+  await page.getByRole('button', { name: 'More', exact: true }).click()
+  await page.locator('.menu-list').getByRole('button', { name: 'Delete' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click()
+  await expect(page.getByRole('heading', { name: 'No comparisons yet' })).toBeVisible()
+
+  // A new comparison left without anything in it leaves nothing behind: closed or gone back from.
+  await page.getByRole('button', { name: 'New comparison' }).first().click()
+  await page.getByRole('button', { name: 'Close the start' }).click()
+  await expect(page.getByRole('heading', { name: 'No comparisons yet' })).toBeVisible()
+  await page.getByRole('button', { name: 'New comparison' }).first().click()
+  await expect(page.getByRole('region', { name: 'Get started' })).toBeVisible()
+  await page.goBack()
+  await expect(page.getByRole('heading', { name: 'No comparisons yet' })).toBeVisible()
+  await page.reload()
+  await expect(page.getByRole('heading', { name: 'No comparisons yet' })).toBeVisible()
+
+  // The card can be closed, and the empty table takes its place.
+  await page.getByRole('button', { name: 'New comparison' }).first().click()
+  await expect(page.getByRole('region', { name: 'Get started' }).getByLabel('Name', { exact: true })).toBeFocused()
+  await page.keyboard.type('Kitchen cabinet')
+  await page.keyboard.press('Enter')
+  await expect(page.locator('input.title-input')).toHaveValue('Kitchen cabinet')
+  await page.getByRole('button', { name: 'Close the start' }).click()
+  await expect(page.getByRole('region', { name: 'Get started' })).toHaveCount(0)
 
   await page.getByPlaceholder(/shop link/).fill('Arvika')
   await page.keyboard.press('Enter')

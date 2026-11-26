@@ -7,10 +7,25 @@ one in [AGENTS.md](../AGENTS.md): Propario works without it, and AI only propose
 
 ## Now
 
-Nothing at the moment; the next pick comes from _Next_.
+- **One link, everything there:** the shop-page reader for the shops people use most, starting
+  with Amazon and eBay, then the untested ones from `scripts/check-shop-pages.ts`. Amazon's pages
+  carry neither Open Graph nor JSON-LD, but picture (`landingImage`) and price are in the page:
+  read them there, one request per link, as for any shop. Where a page holds too little, a
+  documented interface or a maintained open-source reader of shop pages may help, as long as it
+  needs no affiliate account and adds no service to run. Each shop gets a test with a saved page
+  of invented content. Open question, to be decided first: whether reading more than the one
+  page behind a link helps (a spec or variant page of the same product) and is lawful; if so,
+  the rule in AGENTS.md is changed on purpose. What stays: Propario's own name, no disguised
+  client, no way around a bot wall; a shop that refuses gets its "copy the picture" hint.
 
 ## Next
 
+- **What you have now, as a yardstick:** a product can be marked as the one to be replaced (the
+  bulky tripod, the old sideboard). It stands in the comparison for orientation, with its values
+  and picture, but it is no candidate: no verdict, no duel, no fit, never the decision. Side by
+  side and in the size comparison it is the line the candidates are measured against (lighter,
+  smaller, cheaper than ours). The start card offers it for each link in the goal: _add as
+  product_ or _this is what we have_. Optional, as everything at the start.
 - **Test the path with a connected AI end to end** – asking, the answer, ticking its links,
   taking its table – with the server's answers faked in the browser, so it costs no tokens. The
   provider side is already tested with a stand-in (`server/ai.test.ts`).
@@ -22,6 +37,14 @@ Nothing at the moment; the next pick comes from _Next_.
 
 ## Later
 
+- **What you bought, as a small inventory:** every decided comparison already holds the product,
+  its price, shop, date and return deadline, the links and the pictures. Two ways to use that,
+  to be weighed when the time comes: a view of everything bought (warranty and return dates,
+  receipts, what replaced what), or an export in a format that existing self-hosted inventory
+  tools read, so Propario stays a tool for deciding. Check first what they import (Homebox,
+  Snipe-IT, Grocy and similar) and prefer their format over a new one.
+- **Units in the profile:** metric or inches and pounds, chosen once per person; fields, checks,
+  the size comparison and the shop-page reader convert to it.
 - **Polish the app's texts**, in the voice of the start page: shorter, plainer, more like a
   person talks ([docs/brand.md](brand.md), Voice).
 - **A compact card view on phones**: small product cards one below the other, far smaller than

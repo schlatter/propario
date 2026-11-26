@@ -5870,3 +5870,125 @@ dialog.model3d-modal {
 .find-ask-panel .max-price input {
   min-height: 44px;
 }
+
+/* ---------- start card: three steps instead of an empty table ---------- */
+.start-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px 24px 24px;
+  margin: 0 auto 16px;
+  max-width: 860px;
+}
+.start-finish {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+.start-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.start-head h2 {
+  font-family: var(--font-display);
+  font-size: 20px;
+}
+.start-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 24px;
+}
+.start-steps > li {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 12px;
+}
+.start-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 14px;
+}
+.start-mark.done {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--brand-ink);
+}
+.start-body {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.start-body h3,
+.start-body .field > span {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 32px;
+}
+.start-body .quick-add {
+  margin-bottom: 0;
+  flex-wrap: wrap;
+}
+.start-body .quick-add input {
+  flex: 1 1 160px;
+}
+.start-links,
+.start-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.start-row {
+  justify-content: space-between;
+}
+.start-budget {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.start-budget .input {
+  width: 120px;
+}
+.start-reqs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+  font-size: 14px;
+}
+@media (max-width: 600px) {
+  .start-card {
+    padding: 16px;
+  }
+  .start-steps > li {
+    gap: 8px;
+  }
+}
+/* New comparison: name and category side by side under the goal. */
+.dialog-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+@media (max-width: 600px) {
+  .dialog-pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.start-name .input {
+  max-width: 360px;
+}

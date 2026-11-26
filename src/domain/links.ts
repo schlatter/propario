@@ -39,3 +39,22 @@ export function sharedLink(shared: { url?: string | null; text?: string | null; 
   }
   return null
 }
+
+/**
+ * Every http(s) link in a free text, once each (the same page twice counts once), in the order
+ * written. Markdown's escapes (`\&`, `\_`) are read as the character; brackets and quotes end a
+ * link, so `[url](url)` gives the link itself; a full stop or comma after it is not part of it.
+ */
+export function linksIn(text: string): string[] {
+  const seen = new Set<string>()
+  const links: string[] = []
+  const plain = text.replace(/\\([&_=?#~*-])/g, '$1')
+  for (const raw of plain.match(/https?:\/\/[^\s<>"'()[\]\\]+/gi) ?? []) {
+    const url = raw.replace(/[.,;:!?]+$/, '')
+    const key = linkKey(url)
+    if (seen.has(key)) continue
+    seen.add(key)
+    links.push(url)
+  }
+  return links
+}
