@@ -18,7 +18,7 @@ const amazonLike = (img: string) => `<html><head><title>Gripa Flex 3 : Amazon.de
   <div class="a-section aok-hidden twister-plus-buying-options-price-data">{"desktop_buybox_group_1":[{"displayPrice":"63,00 €","priceAmount":63.00,"currencySymbol":"€","integerValue":"63"}]}</div>
   <div id="similar">{"priceAmount":9.99,"currencySymbol":"€"}</div>
   <img alt="Gripa Flex 3" src="${img}-small.jpg" data-old-hires="${img}" id="landingImage">
-  <script>P.when('A').register("ImageBlockATF", function(A){ var data = {'colorImages': { 'initial': [{"hiRes":"${img.replace(/\//g, '\\/')}"},{"hiRes":"https:\\/\\/images.shop.example\\/I\\/side._AC_SL1500_.jpg"}]}}; });</script>
+  <script>P.when('A').register("ImageBlockATF", function(A){ var data = {'colorImages': { 'initial': [{"hiRes":"${img.replace(/[\\/]/g, '\\$&')}"},{"hiRes":"https:\\/\\/images.shop.example\\/I\\/side._AC_SL1500_.jpg"}]}}; });</script>
   <table id="productDetails"><tr><th>Marke</th><td>Gripa</td></tr><tr><th>Maximale Höhe</th><td>30 Zentimeter</td></tr>
   <tr><th>Global Trade Identification Number</th><td>04006381333931</td></tr></table>
 </body></html>`
