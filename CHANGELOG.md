@@ -6,6 +6,8 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Unreleased
 
+## 0.23.0 — 2026-11-26
+
 - New: start with your AI. In a new comparison's first step, “Copy the request” hands what you
   wrote to the AI you use, or your connected AI is asked from there. Its answer brings
   requirements with checkable rules, up to ten candidates with links and values, and open
