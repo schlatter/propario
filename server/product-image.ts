@@ -209,6 +209,15 @@ function statusError(status: number): ImageFetchError {
   return new ImageFetchError('failed', 502)
 }
 
+/**
+ * A bot check instead of the page: Amazon answers addresses of data centres with a captcha page
+ * (status 200, a few kB), others with a challenge. Asked only when nothing of a product was found,
+ * so a real product page with a captcha in its newsletter form is never taken for one.
+ */
+export function isChallengePage(html: string): boolean {
+  return /validatecaptcha|captcha|challenge-platform|cf-chl-|cf_chl_/i.test(html)
+}
+
 const ENTITIES: Record<string, string> = { amp: '&', quot: '"', apos: "'", lt: '<', gt: '>', nbsp: ' ' }
 function decodeEntities(s: string): string {
   return s.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (all: string, e: string) => {
@@ -602,7 +611,10 @@ export async function fetchProductPage(url: string, opts: FetchOptions = {}): Pr
   })
   if (page.status >= 400) throw statusError(page.status)
   if (!page.type.includes('html')) throw new ImageFetchError('no-image', 422)
-  return decodeHtml(page.body, page.type)
+  const html = decodeHtml(page.body, page.type)
+  if (isChallengePage(html) && !extractImageCandidates(html, page.url).length && !Object.keys(extractProductFacts(html)).length)
+    throw new ImageFetchError('blocked', 422)
+  return html
 }
 
 /** The main image of a product page (or a direct image URL). */
@@ -635,6 +647,8 @@ export async function fetchProductImage(
   const gallery = extractImageCandidates(html, page.url)
   const facts = { ...extractProductFacts(html), ...(gallery.length > 1 ? { images: gallery.slice(0, 10) } : {}) }
   const candidates = gallery.slice(0, 3)
+  // Nothing of a product, and a bot check: the shop refuses us, it is not a page without a picture.
+  if (!candidates.length && !Object.keys(facts).length && isChallengePage(html)) throw new ImageFetchError('blocked', 422)
   const noImage = () => Object.assign(new ImageFetchError('no-image', 422), { facts })
   if (!candidates.length) throw noImage()
   let lastError: ImageFetchError = noImage()

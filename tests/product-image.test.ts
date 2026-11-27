@@ -8,6 +8,7 @@ import {
   extractImageCandidates,
   extractProductFacts,
   fetchProductImage,
+  fetchProductPage,
   isForbiddenAddress,
   stripSiteName,
 } from '../server/product-image.ts'
@@ -281,6 +282,16 @@ describe('fetchProductImage against a local test shop', () => {
       } else if (req.url === '/amazon-like') {
         res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' })
         res.end(amazonLike(`${base}/img.png`))
+      } else if (req.url === '/captcha') {
+        // Built like Amazon's answer to a data centre: status 200, a small page, a captcha form.
+        res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' })
+        res.end(
+          '<html><head><title>Amazon.de</title></head><body><h4>Geben Sie die unten angezeigten Zeichen ein</h4><form method="get" action="/errors/validateCaptcha"><input id="captchacharacters" name="field-keywords"></form></body></html>',
+        )
+      } else if (req.url === '/newsletter') {
+        // A real product page that happens to use a captcha for its newsletter form.
+        res.writeHead(200, { 'content-type': 'text/html' })
+        res.end('<html><head><meta property="og:image" content="/img.png"></head><body><div class="g-recaptcha"></div></body></html>')
       } else if (req.url === '/moved') {
         res.writeHead(301, { location: '/product' })
         res.end()
@@ -334,6 +345,12 @@ describe('fetchProductImage against a local test shop', () => {
     await expect(fetchProductImage(`${base}/forbidden`, { allowPrivate: true })).rejects.toMatchObject({ code: 'blocked' })
     await expect(fetchProductImage(`${base}/nope`, { allowPrivate: true })).rejects.toMatchObject({ code: 'not-found' })
     await expect(fetchProductImage(`${base}/plain`, { allowPrivate: true })).rejects.toMatchObject({ code: 'no-image' })
+  })
+  it('reports a captcha page served with status 200 as blocked, not as a page without a picture', async () => {
+    await expect(fetchProductImage(`${base}/captcha`, { allowPrivate: true })).rejects.toMatchObject({ code: 'blocked' })
+    await expect(fetchProductPage(`${base}/captcha`, { allowPrivate: true })).rejects.toMatchObject({ code: 'blocked' })
+    // A product page with a captcha somewhere is still read.
+    expect((await fetchProductImage(`${base}/newsletter`, { allowPrivate: true })).source).toBe(`${base}/img.png`)
   })
   it('refuses local addresses by default', async () => {
     await expect(fetchProductImage(`http://127.0.0.1/product`)).rejects.toMatchObject({ code: 'forbidden-address' })
