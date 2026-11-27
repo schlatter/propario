@@ -10,6 +10,9 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
   and its full data sheet (dimensions, weight and more), not those of other colours or
   accessories on the same page.
 - Changed: product names no longer end in the shop's name, as in “… bei MediaMarkt kaufen”.
+- Fixed: a comparison made just as Propario checked the server for news could still vanish for a
+  moment, losing what was typed into it, when the check started while its save was on its way
+  (0.23.0 fixed only the other order).
 - New: in a product's offers, “Cashback (shop)” opens an overview of cashback portals
   (cashback-optimizer.de) to look up the product's shop. A plain link: nothing is fetched or sent
   along, no partner tag.
