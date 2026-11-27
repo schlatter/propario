@@ -267,9 +267,13 @@ test('a visitor sees what Propario does and tries the demo, which never talks to
   await expect(size.getByRole('heading', { name: 'Size comparison' })).toBeVisible()
   // On a wide screen the drawing and the table share one width, as wide as three columns need.
   await page.setViewportSize({ width: 1700, height: 800 })
-  const [sizeBox, tableBox] = await Promise.all([size.boundingBox(), page.locator('.compare-wrap').boundingBox()])
-  expect(Math.round(sizeBox!.width)).toBe(Math.round(tableBox!.width))
-  expect(tableBox!.width).toBeLessThanOrEqual(200 + 3 * 360 + 2)
+  // Measured once the layout has followed the new width, not in the frame of the resize.
+  const widths = async () => {
+    const [a, b] = await Promise.all([size.boundingBox(), page.locator('.compare-wrap').boundingBox()])
+    return [Math.round(a!.width), Math.round(b!.width)]
+  }
+  await expect.poll(async () => new Set(await widths()).size).toBe(1)
+  expect((await widths())[1]).toBeLessThanOrEqual(200 + 3 * 360 + 2)
   await page.setViewportSize({ width: 1280, height: 800 })
   await expect(size.locator('figcaption', { hasText: 'Mira' })).toContainText('Width 200 cm (too big), Height 78 cm')
   await expect(size.locator('figcaption', { hasText: 'Arvika' }).locator('.over')).toHaveCount(0)
@@ -601,8 +605,9 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await expect(page.locator('.pimg-slide')).toHaveCount(1)
   // A single picture is no scroll region, whatever widths the layout rounds to.
   await expect(page.locator('.pimg-track')).toHaveCSS('overflow-x', 'clip')
-  // Not even a script can scroll it: it is no scroll container at all.
-  expect(await page.locator('.pimg-track').evaluate((el) => ((el.scrollLeft = 8), el.scrollLeft))).toBe(0)
+  // Not even a script can scroll it: it is no scroll container at all (once the layout has
+  // followed the removal; in the same frame it may still hold the old picture's offset).
+  await expect.poll(() => page.locator('.pimg-track').evaluate((el) => ((el.scrollLeft = 8), el.scrollLeft))).toBe(0)
   await page.setViewportSize(size)
   await accessible(page, 'further pictures')
 
