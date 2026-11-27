@@ -6,6 +6,8 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Unreleased
 
+## 0.24.1 — 2026-11-27
+
 - Fixed: a shop that answers with a captcha page instead of the product (Amazon does so for
   servers in data centres) is now reported as refusing automated access, with the name from the
   address and the hint to copy the picture, instead of “no picture found”.
