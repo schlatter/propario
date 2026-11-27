@@ -7,16 +7,15 @@ one in [AGENTS.md](../AGENTS.md): Propario works without it, and AI only propose
 
 ## Now
 
-- **One link, everything there:** the shop-page reader for the shops people use most, starting
-  with Amazon and eBay, then the untested ones from `scripts/check-shop-pages.ts`. Amazon's pages
-  carry neither Open Graph nor JSON-LD, but picture (`landingImage`) and price are in the page:
-  read them there, one request per link, as for any shop. Where a page holds too little, a
-  documented interface or a maintained open-source reader of shop pages may help, as long as it
-  needs no affiliate account and adds no service to run. Each shop gets a test with a saved page
-  of invented content. Open question, to be decided first: whether reading more than the one
-  page behind a link helps (a spec or variant page of the same product) and is lawful; if so,
-  the rule in AGENTS.md is changed on purpose. What stays: Propario's own name, no disguised
-  client, no way around a bot wall; a shop that refuses gets its "copy the picture" hint.
+- **One link, everything there:** the shop-page reader for the shops people use most. Amazon is
+  done: picture, gallery, price, name, brand and GTIN from its own markup, all on the one
+  product page. Next eBay, then the untested ones from `scripts/check-shop-pages.ts`. Where a page
+  holds too little, a documented interface or a maintained open-source reader of shop pages may
+  help, as long as it needs no affiliate account and adds no service to run. Each shop gets a test
+  with a saved page of invented content. Open question, decided per shop: whether reading more
+  than the one page behind a link helps (a spec or variant page of the same product) and is
+  lawful; Amazon does not need it. What stays: Propario's own name, no disguised client, no way
+  around a bot wall; a shop that refuses gets its "copy the picture" hint.
 
 ## Next
 
