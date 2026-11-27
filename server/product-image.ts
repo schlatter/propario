@@ -242,7 +242,7 @@ function ldImages(node: any, out: string[], depth = 0): void {
       else if (img && typeof img === 'object' && (img.url || img.contentUrl)) out.push(String(img.url || img.contentUrl))
     }
   }
-  for (const key of ['@graph', 'mainEntity', 'itemListElement', 'item', 'offers']) if (node[key]) ldImages(node[key], out, depth + 1)
+  for (const key of ['@graph', 'mainEntity', 'itemListElement', 'item', 'offers', 'object']) if (node[key]) ldImages(node[key], out, depth + 1)
 }
 
 /** Candidate image URLs of an HTML page, best first, resolved against the page URL. */
@@ -330,6 +330,7 @@ function ldFacts(node: any, raw: Record<string, any>, depth = 0): void {
   }
   const type = ([] as unknown[]).concat(node['@type'] || []).map(String)
   if (type.some((t) => /product/i.test(t))) {
+    raw.sku ??= typeof node.sku === 'string' || typeof node.sku === 'number' ? String(node.sku) : undefined
     raw.gtin ??= GTIN_KEYS.map((k) => node[k]).find((v) => v !== undefined)
     raw.mpn ??= node.mpn
     for (const offer of ([] as any[]).concat(node.offers || [])) {
@@ -364,7 +365,46 @@ function ldFacts(node: any, raw: Record<string, any>, depth = 0): void {
       .map((x: any) => ldText(x?.name ?? x?.item?.name ?? ''))
       .filter(Boolean)
   }
-  for (const key of ['@graph', 'mainEntity', 'itemListElement', 'item', 'hasVariant']) if (node[key]) ldFacts(node[key], raw, depth + 1)
+  // A BuyAction's object is the product (MediaMarkt). Of a ProductGroup's variants only the one
+  // the group stands for (same SKU) counts; the other colours must not lend it theirs.
+  for (const key of ['@graph', 'mainEntity', 'itemListElement', 'item', 'object']) if (node[key]) ldFacts(node[key], raw, depth + 1)
+  if (node.hasVariant) {
+    const variants = ([] as any[]).concat(node.hasVariant)
+    const own = node.sku !== undefined ? variants.filter((v) => v && String(v.sku) === String(node.sku)) : []
+    ldFacts(own.length ? own : variants, raw, depth + 1)
+  }
+}
+
+/**
+ * The data sheet that MediaMarkt and Saturn keep in their page's preloaded state (Apollo cache):
+ * the feature groups of the product with this SKU, each feature a name, value and unit. The
+ * cache also holds accessories and recommendations, so only the features this product's groups
+ * point to are read.
+ */
+export function apolloFeatures(html: string, sku: string | undefined): { name: string; value: string; unit?: string }[] {
+  if (!sku) return []
+  const m = html.match(/<script>window\.__PRELOADED_STATE__\s*=\s*([\s\S]*?);?\s*<\/script>/)
+  if (!m) return []
+  let state: any
+  try {
+    state = JSON.parse(m[1].replace(/:undefined\b/g, ':null'))
+  } catch {
+    return []
+  }
+  const cache = state?.apolloState
+  const groups = cache?.[`GraphqlProductFeatureGroups:${sku}`]?.featureGroups
+  if (!Array.isArray(groups)) return []
+  const out: { name: string; value: string; unit?: string }[] = []
+  for (const group of groups) {
+    for (const ref of Array.isArray(group?.features) ? group.features : []) {
+      const f = typeof ref?.__ref === 'string' ? cache[ref.__ref] : ref
+      const name = typeof f?.name === 'string' ? f.name.trim() : ''
+      const value = typeof f?.value === 'string' || typeof f?.value === 'number' ? String(f.value).trim() : ''
+      if (!name || !value || out.some((o) => o.name === name)) continue
+      out.push({ name, value, ...(typeof f.unit === 'string' && f.unit ? { unit: f.unit } : {}) })
+    }
+  }
+  return out
 }
 
 /**
@@ -407,6 +447,13 @@ export function stripSiteName(title: string, site?: string): string {
   if (site) {
     const s = decodeEntities(site).trim().toLowerCase()
     for (const sep of [' | ', ' - ', ' – ', ' · ']) if (s && t.toLowerCase().endsWith(`${sep}${s}`)) t = t.slice(0, -(sep.length + s.length)).trim()
+  }
+  // "Galaxy A57 bei MediaMarkt kaufen": the shop named with "bei"/"at", with or without "kaufen".
+  if (site) {
+    const s = decodeEntities(site)
+      .trim()
+      .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    if (s) t = t.replace(new RegExp(`\\s+(bei|at|von)\\s+${s}(\\s+(kaufen|bestellen|shoppen))?$`, 'i'), '').trim()
   }
   // A pipe almost never belongs to a product name; what follows it is the shop.
   const pipe = t.indexOf(' | ')
@@ -508,7 +555,12 @@ export function extractProductFacts(html: string): ProductFacts {
   const sheet = (re: RegExp) => table.find((t) => re.test(t.name))?.value
   raw.brand ??= sheet(/^(marke|brand)$/i) ?? sheet(/^(hersteller|manufacturer)$/i)
   raw.gtin ??= sheet(/^(ean|gtin|ean[- ]?code|global trade identification number)$/i)?.split(/[\s,;]+/)[0]
-  raw.specs = [...(raw.specs ?? []), ...table, ...proseDimensions(`${stripTags(String(raw.description ?? ''))} ${productText(html)}`)]
+  raw.specs = [
+    ...(raw.specs ?? []),
+    ...apolloFeatures(html, raw.sku),
+    ...table,
+    ...proseDimensions(`${stripTags(String(raw.description ?? ''))} ${productText(html)}`),
+  ]
   return cleanFacts(raw)
 }
 

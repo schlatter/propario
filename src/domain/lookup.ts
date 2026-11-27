@@ -8,7 +8,7 @@ import type { Product } from '../db/types'
 import { isValidGtin } from '../shared/product-facts.ts'
 import { hostOf } from './values'
 
-export type LookupId = 'google' | 'geizhals' | 'idealo' | 'amazon' | 'ebay' | 'kleinanzeigen' | 'mydealz' | 'warentest' | 'trustpilot'
+export type LookupId = 'google' | 'geizhals' | 'idealo' | 'amazon' | 'ebay' | 'kleinanzeigen' | 'mydealz' | 'warentest' | 'trustpilot' | 'cashback'
 
 export interface LookupLink {
   id: LookupId
@@ -73,6 +73,11 @@ export function lookupLinks(p: Pick<Product, 'brand' | 'model' | 'gtin' | 'url'>
   const links = exact ? PRICES(exact) : []
   if (name) links.push({ id: 'warentest', href: `https://www.test.de/suche/?q=${q(name)}` })
   const shop = hostOf(p.url ?? '')
-  if (shop) links.push({ id: 'trustpilot', href: `https://de.trustpilot.com/review/${q(shop)}` })
+  if (shop) {
+    links.push({ id: 'trustpilot', href: `https://de.trustpilot.com/review/${q(shop)}` })
+    // Whether cashback portals pay for this shop. The overview has no address per shop (its
+    // filter runs in the page), so the link opens the overview; nothing goes along.
+    links.push({ id: 'cashback', href: 'https://cashback-optimizer.de/' })
+  }
   return links
 }

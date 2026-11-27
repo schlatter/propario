@@ -84,6 +84,26 @@ describe('a pull that crosses a change', () => {
   })
 })
 
+describe('a pull while a change is still on its way', () => {
+  it('keeps a new comparison whose save has not been answered when the pull starts', async () => {
+    const cache = new AppDB(`test-sync-${Math.random()}`)
+    useCache(cache)
+    let answerPush: (() => void) | undefined
+    useTransport({
+      push: () => new Promise<void>((resolve) => (answerPush = resolve)),
+      // The server answers at once, but without the comparison: its save is not through yet.
+      pull: async () => ({ seq: 1, full: false, projects: [], records: [], deleted: [] }) as unknown as SyncResult,
+    })
+    const project = makeProject({ name: 'New comparison' })
+    const saved = commit([{ op: 'create', kind: 'projects', record: project }])
+    await expect.poll(() => !!answerPush).toBe(true)
+    await pull()
+    expect(await cache.projects.get(project.id)).toBeDefined()
+    answerPush!()
+    await saved
+  })
+})
+
 describe('pictures from a backup', () => {
   it('are decoded without fetch(), which the app’s own CSP refuses for data: URLs', async () => {
     const { dataUrlToBlob } = await import('../src/images')

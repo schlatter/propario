@@ -56,7 +56,7 @@ export function LookupRow({ links, label }: { links: LookupLink[]; label: string
   )
 }
 
-const PRICE_SITES: LookupId[] = ['geizhals', 'idealo', 'amazon']
+const PRICE_SITES: LookupId[] = ['geizhals', 'idealo', 'amazon', 'cashback']
 const TEST_SITES: LookupId[] = ['warentest', 'trustpilot']
 
 export function OffersSection({ product: p, lookups = [] }: { product: Product; lookups?: LookupLink[] }) {

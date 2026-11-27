@@ -137,6 +137,9 @@ export async function commit(changes: Change[]): Promise<void> {
   const before = await snapshot(changes, database)
   localWrites++
   await applyLocal(changes, database)
+  // Counted only from here, so a failed local write cannot leave it raised for good; until here
+  // `localWrites` already marks any pull on its way.
+  unanswered++
   setSaving(1)
   // A save that takes this long tells, in the server log, that the connection is the problem.
   const slow = setTimeout(() => report('slow', `saving ${changes.length} change(s) for 15 s`), 15_000)
@@ -148,6 +151,7 @@ export async function commit(changes: Change[]): Promise<void> {
     if (database === db) await restore(before, database)
     throw e
   } finally {
+    unanswered--
     clearTimeout(slow)
     setSaving(-1)
   }
@@ -157,11 +161,13 @@ export async function commit(changes: Change[]): Promise<void> {
 
 let pulling: Promise<void> | null = null
 /**
- * Counts changes made here. A pull that was on its way while one was made carries the server's
+ * Counts changes made here, and those still waiting for the server's answer. A pull that was on
+ * its way while one was made, or that started before the server had one, carries the server's
  * state from before it: applied, it would take back what was just shown (a comparison made a
  * moment ago would vanish until the next pull). Such an answer is dropped and asked again.
  */
 let localWrites = 0
+let unanswered = 0
 
 export function pull(): Promise<void> {
   pulling ??= doPull().finally(() => {
@@ -174,8 +180,9 @@ async function doPull() {
   const database = db
   const since = ((await database.meta.get('seq'))?.value as number | undefined) ?? 0
   const writes = localWrites
+  const waiting = unanswered
   const r = await transport.pull(since)
-  if (writes !== localWrites) {
+  if (writes !== localWrites || waiting > 0) {
     debugLog('sync', 'answer dropped: changed here meanwhile')
     schedulePull(300)
     return
@@ -187,7 +194,11 @@ async function doPull() {
     const allowed = new Set(r.projects.map((p) => p.id))
     if (r.full) for (const kind of KINDS) await database[kind].clear()
     else {
-      for (const p of await database.projects.toArray()) if (!allowed.has(p.id)) await removeProjectLocally(database, p.id)
+      for (const p of await database.projects.toArray())
+        if (!allowed.has(p.id)) {
+          debugLog('sync', `comparison ${p.id.slice(0, 8)} no longer on the server: removed here`)
+          await removeProjectLocally(database, p.id)
+        }
       for (const d of r.deleted) await table(database, d.kind).delete(d.id)
     }
     for (const kind of KINDS) {
