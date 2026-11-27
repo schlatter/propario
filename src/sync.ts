@@ -194,7 +194,11 @@ async function doPull() {
     const allowed = new Set(r.projects.map((p) => p.id))
     if (r.full) for (const kind of KINDS) await database[kind].clear()
     else {
-      for (const p of await database.projects.toArray()) if (!allowed.has(p.id)) await removeProjectLocally(database, p.id)
+      for (const p of await database.projects.toArray())
+        if (!allowed.has(p.id)) {
+          debugLog('sync', `comparison ${p.id.slice(0, 8)} no longer on the server: removed here`)
+          await removeProjectLocally(database, p.id)
+        }
       for (const d of r.deleted) await table(database, d.kind).delete(d.id)
     }
     for (const kind of KINDS) {

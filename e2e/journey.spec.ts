@@ -100,6 +100,29 @@ let grace: { context: BrowserContext; page: Page }
 let recoveryKey = ''
 let inviteLink = ''
 
+/** TEMPORARY (CI diagnosis of a lost first keystroke): types into a field and reports whether it was replaced meanwhile. */
+async function probeType(page: Page, field: Locator, text: string, label: string) {
+  const navs: string[] = []
+  const onNav = (f: { url(): string }) => navs.push(f.url())
+  page.on('framenavigated', onNav)
+  await page.evaluate(() => localStorage.setItem('pv.debug', '1'))
+  await field.evaluate((el) => ((window as unknown as { __probe: Element }).__probe = el))
+  await page.keyboard.type(text)
+  const report = await page.evaluate(() => {
+    const el = (window as unknown as { __probe: HTMLInputElement }).__probe
+    const log = JSON.parse(localStorage.getItem('pv.debug.log') || '[]').slice(-15)
+    return {
+      connected: el.isConnected,
+      active: document.activeElement === el,
+      value: el.value,
+      activeValue: (document.activeElement as HTMLInputElement)?.value,
+      log,
+    }
+  })
+  page.off('framenavigated', onNav)
+  console.log(`PROBE ${label}`, JSON.stringify({ ...report, navs }))
+}
+
 test('Ada sets up the instance with a passkey', async ({ browser }) => {
   const context = await browser.newContext()
   const page = await context.newPage()
@@ -332,7 +355,7 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   const name = start.getByLabel('Comparison name')
   await expect(name).toBeFocused()
   await expect(name).toHaveValue('New comparison')
-  await page.keyboard.type('Travel tripod')
+  await probeType(page, start.getByLabel('Comparison name'), 'Travel tripod', 'travel')
   // Pasted from a chat: the link in Markdown, written twice, the second time with an escaped &.
   const goal =
     'A light tripod for travelling, always in the day bag. Ours is too bulky: [https://shop.example/tripod-big.html?a=1&b=2](https://shop.example/tripod-big.html?a=1\\&b=2)'
@@ -375,7 +398,7 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   await page.context().grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.getByRole('button', { name: 'New comparison' }).first().click()
   await expect(start.getByLabel('Comparison name')).toBeFocused()
-  await page.keyboard.type('Tripod with AI')
+  await probeType(page, start.getByLabel('Comparison name'), 'Tripod with AI', 'tripod')
   const ai = start.getByRole('region', { name: 'Optional with AI' })
   await expect(ai.getByRole('button', { name: 'Copy the request' })).toBeDisabled()
   await start.getByLabel('What are you looking for, and why?').fill('A light tripod for travelling that carries a camera.')
@@ -454,7 +477,7 @@ test('Ada keeps a comparison with a product and its picture', async () => {
   // The card can be closed, and the empty table takes its place.
   await page.getByRole('button', { name: 'New comparison' }).first().click()
   await expect(page.getByRole('region', { name: 'Get started' }).getByLabel('Comparison name')).toBeFocused()
-  await page.keyboard.type('Kitchen cabinet')
+  await probeType(page, page.getByRole('region', { name: 'Get started' }).getByLabel('Comparison name'), 'Kitchen cabinet', 'kitchen')
   await page.keyboard.press('Enter')
   await expect(page.locator('input.title-input')).toHaveValue('Kitchen cabinet')
   await page.getByRole('button', { name: 'Close the start' }).click()
