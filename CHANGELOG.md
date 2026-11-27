@@ -6,6 +6,8 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Unreleased
 
+## 0.24.0 — 2026-11-27
+
 - New: MediaMarkt and Saturn links bring the linked product's name, brand, price, GTIN, colour
   and its full data sheet (dimensions, weight and more), not those of other colours or
   accessories on the same page.

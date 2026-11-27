@@ -11,6 +11,23 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: '0.24.0',
+    notes: {
+      en: [
+        'Amazon links bring their picture, price, brand and GTIN.',
+        'MediaMarkt and Saturn: price, brand and the full data sheet of the linked variant.',
+        'Look up cashback for a product’s shop with one click.',
+        'A comparison made a moment ago no longer vanishes briefly while Propario syncs.',
+      ],
+      de: [
+        'Amazon-Links bringen Bild, Preis, Marke und GTIN mit.',
+        'MediaMarkt und Saturn: Preis, Marke und das ganze Datenblatt der verlinkten Variante.',
+        'Cashback für den Shop eines Produkts mit einem Klick nachsehen.',
+        'Ein gerade angelegter Vergleich verschwindet beim Abgleich nicht mehr kurz.',
+      ],
+    },
+  },
+  {
     version: '0.23.0',
     notes: {
       en: [
