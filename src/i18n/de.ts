@@ -689,6 +689,7 @@ export const de: Messages = {
     idealo: 'idealo',
     warentest: 'Stiftung Warentest',
     amazon: 'Amazon',
+    cashback: 'Cashback (Shop)',
     trustpilot: 'Trustpilot (Shop)',
     prices: 'Suchen:',
     tests: 'Suchen:',

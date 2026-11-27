@@ -685,6 +685,7 @@ export const en = {
     idealo: 'idealo',
     warentest: 'Stiftung Warentest',
     amazon: 'Amazon',
+    cashback: 'Cashback (shop)',
     trustpilot: 'Trustpilot (shop)',
     prices: 'Search:',
     tests: 'Search:',

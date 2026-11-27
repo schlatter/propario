@@ -91,6 +91,8 @@ seen – older than a week is marked), dimensions and every field, and the secti
   _Update pictures_ adds, removes or picks the main picture; _Set for 3D_ marks a picture as the
   front, side or a dimension drawing.
 - **Offers:** what different shops ask. The cheapest total including shipping becomes the price.
+  With a shop link, _Cashback (shop)_ opens an overview of cashback portals to look the shop up
+  there; nothing of the product goes along.
 - **Tests & reviews:** ratings from tests and reviews, converted to one scale; product and shop
   ratings are kept apart. Links to price comparisons use the GTIN when there is one.
 - **Decision & purchase:** _Final decision_, the purchase date, and the return and warranty

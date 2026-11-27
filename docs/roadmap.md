@@ -7,15 +7,15 @@ one in [AGENTS.md](../AGENTS.md): Propario works without it, and AI only propose
 
 ## Now
 
-- **One link, everything there:** the shop-page reader for the shops people use most. Amazon is
-  done: picture, gallery, price, name, brand and GTIN from its own markup, all on the one
-  product page. Next eBay, then the untested ones from `scripts/check-shop-pages.ts`. Where a page
-  holds too little, a documented interface or a maintained open-source reader of shop pages may
-  help, as long as it needs no affiliate account and adds no service to run. Each shop gets a test
-  with a saved page of invented content. Open question, decided per shop: whether reading more
-  than the one page behind a link helps (a spec or variant page of the same product) and is
-  lawful; Amazon does not need it. What stays: Propario's own name, no disguised client, no way
-  around a bot wall; a shop that refuses gets its "copy the picture" hint.
+- **One link, everything there:** the shop-page reader for the shops people use most. Done:
+  Amazon (its own markup), MediaMarkt and Saturn (JSON-LD of the linked variant and the data
+  sheet in the page's preloaded state), each from the one product page. eBay refuses
+  Propario's requests (403, also its start page): it gets the honest hint, the name from the
+  address and "copy the picture"; eBay's documented Browse API would need a developer account
+  per instance and stays an option if people ask for it. Next: the untested shops from
+  `scripts/check-shop-pages.ts`. Each shop gets a test with a saved page of invented content.
+  Reading more than the one page behind a link is decided per shop; none needed it so far.
+  What stays: Propario's own name, no disguised client, no way around a bot wall.
 
 ## Next
 

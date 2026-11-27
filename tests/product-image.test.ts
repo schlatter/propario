@@ -2,7 +2,15 @@
 import http from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { checkUrl, encodeFacts, extractImageCandidates, extractProductFacts, fetchProductImage, isForbiddenAddress } from '../server/product-image.ts'
+import {
+  checkUrl,
+  encodeFacts,
+  extractImageCandidates,
+  extractProductFacts,
+  fetchProductImage,
+  isForbiddenAddress,
+  stripSiteName,
+} from '../server/product-image.ts'
 
 // 1×1 PNG
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64')
@@ -22,6 +30,51 @@ const amazonLike = (img: string) => `<html><head><title>Gripa Flex 3 : Amazon.de
   <table id="productDetails"><tr><th>Marke</th><td>Gripa</td></tr><tr><th>Maximale Höhe</th><td>30 Zentimeter</td></tr>
   <tr><th>Global Trade Identification Number</th><td>04006381333931</td></tr></table>
 </body></html>`
+
+/**
+ * A page built like MediaMarkt's and Saturn's (invented product): JSON-LD as a BuyAction whose
+ * object is a ProductGroup standing for the linked colour, with the other colours as variants
+ * and add-on services at their own prices; the data sheet in the preloaded state, next to an
+ * accessory's features. Only the linked product's values may arrive.
+ */
+const mediaMarktLike = (img: string) => {
+  const ld = {
+    '@context': 'https://schema.org/',
+    '@type': 'BuyAction',
+    object: {
+      '@type': 'ProductGroup',
+      brand: { '@type': 'Brand', name: 'NORDFON' },
+      sku: '1000002',
+      gtin13: '4006381333931',
+      image: [img],
+      name: 'NORDFON Ten 128 GB Graphit',
+      offers: { '@type': 'Offer', priceCurrency: 'EUR', price: 299, addOn: [{ '@type': 'Offer', name: 'Displayschutz', priceCurrency: 'EUR', price: 19.99 }] },
+      hasVariant: [
+        {
+          '@type': 'Product',
+          sku: '1000001',
+          gtin13: '4012345678901',
+          name: 'NORDFON Ten 128 GB Sand',
+          color: 'Sand',
+          offers: { '@type': 'Offer', priceCurrency: 'EUR', price: 279 },
+        },
+        {
+          '@type': 'Product',
+          sku: '1000002',
+          gtin13: '4006381333931',
+          name: 'NORDFON Ten 128 GB Graphit',
+          color: 'Graphit',
+          offers: { '@type': 'Offer', priceCurrency: 'EUR', price: 299 },
+        },
+      ],
+    },
+  }
+  const state = `{"apolloState":{"GraphqlProductFeatureGroups:1000002":{"featureGroups":[{"featureGroupName":"Abmessungen","features":[{"__ref":"F:h"},{"__ref":"F:w"}]}]},"GraphqlProductFeatureGroups:2000009":{"featureGroups":[{"features":[{"__ref":"F:case"}]}]},"F:h":{"__typename":"GraphqlProductFeature","name":"Höhe","unit":"mm","value":"161.2"},"F:w":{"__typename":"GraphqlProductFeature","name":"Gewicht (laut Hersteller)","unit":null,"value":"182 g"},"F:case":{"__typename":"GraphqlProductFeature","name":"Höhe","unit":"mm","value":"170"}},"other":undefined}`
+  return `<html><head>
+  <meta property="og:title" content="Nordfon Ten bei MediaMarkt kaufen"><meta property="og:site_name" content="MediaMarkt">
+  <script type="application/ld+json">${JSON.stringify(ld)}</script>
+  </head><body><script>window.__PRELOADED_STATE__ = ${state}</script></body></html>`
+}
 
 describe('extractImageCandidates', () => {
   it('prefers og:image, resolves relative URLs and decodes entities', () => {
@@ -176,6 +229,24 @@ describe('extractProductFacts', () => {
     const f = extractProductFacts(amazonLike('https://images.shop.example/I/main.jpg'))
     expect(f).toMatchObject({ name: 'Gripa Flex 3 Stativ, 30 cm, Schwarz', price: 63, brand: 'Gripa', gtin: '04006381333931' })
     expect(f.specs).toContainEqual({ name: 'Maximale Höhe', value: '30 Zentimeter', table: true })
+  })
+
+  it('reads the linked colour of a page built like MediaMarkt’s, with its own data sheet only', () => {
+    const f = extractProductFacts(mediaMarktLike('https://images.shop.example/ten.png'))
+    expect(f).toMatchObject({ name: 'NORDFON Ten 128 GB Graphit', brand: 'NORDFON', price: 299, gtin: '4006381333931', color: 'Graphit' })
+    expect(f.specs).toEqual([
+      { name: 'Höhe', value: '161.2', unit: 'mm' },
+      { name: 'Gewicht (laut Hersteller)', value: '182 g' },
+    ])
+    expect(extractImageCandidates(mediaMarktLike('https://images.shop.example/ten.png'), 'https://www.mediamarkt.de/')).toEqual([
+      'https://images.shop.example/ten.png',
+    ])
+  })
+
+  it('takes the shop out of a title such as “… bei MediaMarkt kaufen”', () => {
+    expect(stripSiteName('Nordfon Ten bei MediaMarkt kaufen', 'MediaMarkt')).toBe('Nordfon Ten')
+    expect(stripSiteName('Nordfon Ten at Shop.example', 'Shop.example')).toBe('Nordfon Ten')
+    expect(stripSiteName('Regal bei Nacht', 'MediaMarkt')).toBe('Regal bei Nacht')
   })
 
   it('finds nothing on pages without product data', () => {

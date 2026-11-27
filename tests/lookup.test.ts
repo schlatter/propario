@@ -30,6 +30,8 @@ describe('lookup links', () => {
     expect(links.amazon).toBe('https://www.amazon.de/s?k=4006381333931')
     expect(links.warentest).toBe('https://www.test.de/suche/?q=Bosch%20Serie%206%20WAX32M40')
     expect(links.trustpilot).toBe('https://de.trustpilot.com/review/shop.example')
+    // Cashback for the shop: a plain link to the overview, nothing of the product goes along.
+    expect(links.cashback).toBe('https://cashback-optimizer.de/')
   })
 
   it('falls back to the name, encodes it, and offers nothing without a name', () => {
