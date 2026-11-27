@@ -6,6 +6,10 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Unreleased
 
+- Fixed: a shop that answers with a captcha page instead of the product (Amazon does so for
+  servers in data centres) is now reported as refusing automated access, with the name from the
+  address and the hint to copy the picture, instead of “no picture found”.
+
 ## 0.24.0 — 2026-11-27
 
 - New: MediaMarkt and Saturn links bring the linked product's name, brand, price, GTIN, colour

@@ -9,7 +9,9 @@ one in [AGENTS.md](../AGENTS.md): Propario works without it, and AI only propose
 
 - **One link, everything there:** the shop-page reader for the shops people use most. Done:
   Amazon (its own markup), MediaMarkt and Saturn (JSON-LD of the linked variant and the data
-  sheet in the page's preloaded state), each from the one product page. eBay refuses
+  sheet in the page's preloaded state), each from the one product page. Amazon shows a captcha
+  to many servers in data centres (seen on a hosted instance, not from a home connection): there
+  it gets the honest "refuses" hint; its product API needs an affiliate account and is no option. eBay refuses
   Propario's requests (403, also its start page): it gets the honest hint, the name from the
   address and "copy the picture"; eBay's documented Browse API would need a developer account
   per instance and stays an option if people ask for it. Next: the untested shops from
@@ -36,6 +38,12 @@ one in [AGENTS.md](../AGENTS.md): Propario works without it, and AI only propose
 
 ## Later
 
+- **Read the page where it is open:** where a shop refuses the server (Amazon's captcha for
+  data-centre addresses, eBay's 403), the person's own device has the page open anyway. Sharing
+  from the shop's app or browser to Propario already brings link and title; a next step could
+  bring the picture and price the device sees, sent by the person, never fetched behind their
+  back. First check what the share sheet of Android and iOS hands over, and what a browser
+  extension or bookmarklet would need without weakening the CSP.
 - **Colours and other variants of one product:** today each colour is its own product with all
   its data copied. Better: one product with a variant picker above its picture, each variant
   with its own pictures, colour, price and link where they differ, and everything else shared.
