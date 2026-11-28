@@ -6,6 +6,15 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Unreleased
 
+## 0.24.2 — 2026-11-28
+
+- Security: a malformed request address could stop the server for everyone; it is now answered
+  with an error and the server keeps running.
+- Security: a picture fetched from a shop page is passed on only as a known picture type that
+  Propario names itself, never with the type the shop sends.
+- Security: sign-in, recovery and the other small requests accept at most 256 kB; only synced
+  changes may be larger.
+
 ## 0.24.1 — 2026-11-27
 
 - Fixed: a shop that answers with a captcha page instead of the product (Amazon does so for

@@ -96,6 +96,39 @@ describe('requests', () => {
     expect(text).not.toMatch(/at \w+ \(|node_modules|sqlite/i)
   })
 
+  it('with a request target no URL parser accepts get 400, and the server keeps running', async () => {
+    // `//`, `//:99999` and `//[` start with "/", so Node accepts them, but `new URL` throws on them.
+    for (const target of ['//', '//:99999', '//[']) {
+      const status = await new Promise<number>((resolve, reject) => {
+        const req = http.request(base, { path: target }, (res) => {
+          res.resume()
+          resolve(res.statusCode ?? 0)
+        })
+        req.on('error', reject)
+        req.end()
+      })
+      expect(status, target).toBe(400)
+    }
+    expect((await api('/healthz')).status).toBe(200)
+  })
+
+  it('without a session or for small requests accept only small bodies; changes may be large', async () => {
+    // A recovery key is a few dozen bytes; 300 kB from anyone on the network is refused unread.
+    const big = 'x'.repeat(300 * 1024)
+    // The server stops reading at the limit and closes the connection, so the 413 may not arrive.
+    const refused = await post('/api/auth/recover', { key: big }).then(
+      (r) => r.status,
+      () => 'closed',
+    )
+    expect([413, 'closed']).toContain(refused)
+    const id = newId()
+    createUser(db, { id, name: 'Ada', isAdmin: true })
+    const cookie = `propario=${createSession(db, id)}`
+    // Read whole and checked: the answer is about the (empty) list, not about the size.
+    const changes = await post('/api/changes', { changes: [], note: big }, { cookie })
+    expect(await changes.json()).toMatchObject({ error: 'invalid', detail: expect.stringContaining('non-empty list') })
+  })
+
   it('only admins invite', async () => {
     const id = newId()
     createUser(db, { id, name: 'Grace', isAdmin: false })
