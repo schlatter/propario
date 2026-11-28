@@ -74,7 +74,11 @@ function readBody(req: IncomingMessage, limit: number): Promise<Buffer> {
   })
 }
 
-async function readJson(req: IncomingMessage, limit = 16 * 1024 * 1024): Promise<Record<string, unknown>> {
+/**
+ * A request body as JSON. Small by default: sign-in, recovery and settings carry a few kB, and
+ * anyone on the network can send them. Only routes that need more (synced changes) ask for it.
+ */
+async function readJson(req: IncomingMessage, limit = 256 * 1024): Promise<Record<string, unknown>> {
   if (!String(req.headers['content-type'] || '').startsWith('application/json')) throw new HttpError(415, 'json-only')
   try {
     const value = JSON.parse((await readBody(req, limit)).toString('utf8')) as unknown
@@ -398,7 +402,7 @@ export function createApp(db: DB, config: Config, version: string | null = null)
       return send(res, 200, { ...sync(db, me.id, Number(url.searchParams.get('since') || 0)), version })
     }
     if (path === '/api/changes' && method === 'POST') {
-      const body = await readJson(req)
+      const body = await readJson(req, 16 * 1024 * 1024)
       return send(res, 200, { seq: applyChanges(db, me.id, body.changes) })
     }
     const membersMatch = path.match(/^\/api\/projects\/([0-9a-f-]{36})\/members$/)
@@ -450,7 +454,15 @@ export function createApp(db: DB, config: Config, version: string | null = null)
   return {
     setupLink: () => (setupToken ? `${config.origin}/join?setup=${setupToken}` : null),
     handle(req, res, next) {
-      const url = new URL(req.url || '/', 'http://local')
+      let url: URL
+      try {
+        url = new URL(req.url || '/', 'http://local')
+      } catch {
+        // A target such as `//` passes Node's parser but no URL parser; outside route()'s catch
+        // the throw would stop the whole server.
+        securityHeaders(res, https, CSP)
+        return send(res, 400, { error: 'bad-request' })
+      }
       const path = url.pathname
       // Vite's development server injects an inline script for hot reloading; pages get the
       // strict policy in production only. The API always gets it.

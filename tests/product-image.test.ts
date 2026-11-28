@@ -298,6 +298,13 @@ describe('fetchProductImage against a local test shop', () => {
       } else if (req.url === '/img.png') {
         res.writeHead(200, { 'content-type': 'image/png' })
         res.end(PNG)
+      } else if (req.url === '/two-types') {
+        // Browsers take the last of several types: this would be HTML on Propario's origin.
+        res.writeHead(200, { 'content-type': 'image/png, text/html' })
+        res.end('<script>alert(1)</script>')
+      } else if (req.url === '/odd-case.jpg') {
+        res.writeHead(200, { 'content-type': 'IMAGE/JPG; charset=binary' })
+        res.end(PNG)
       } else if (req.url === '/forbidden') {
         res.writeHead(403)
         res.end()
@@ -317,6 +324,10 @@ describe('fetchProductImage against a local test shop', () => {
   })
   afterAll(() => new Promise<void>((r) => server.close(() => r())))
 
+  it('passes on only a known picture type, written by itself, never the shop’s header', async () => {
+    await expect(fetchProductImage(`${base}/two-types`, { allowPrivate: true })).rejects.toMatchObject({ code: 'no-image' })
+    expect((await fetchProductImage(`${base}/odd-case.jpg`, { allowPrivate: true })).contentType).toBe('image/jpeg')
+  })
   it('follows redirects, skips broken candidates and returns the image', async () => {
     const img = await fetchProductImage(`${base}/moved`, { allowPrivate: true })
     expect(img.contentType).toBe('image/png')

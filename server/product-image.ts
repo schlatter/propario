@@ -573,7 +573,19 @@ export function extractProductFacts(html: string): ProductFacts {
   return cleanFacts(raw)
 }
 
-const isImage = (type: string) => type.startsWith('image/') && !type.includes('svg')
+/**
+ * The picture types passed on, each written by us. The shop's header is never copied: browsers
+ * read `image/png, text/html` as HTML, which would run on Propario's own origin. SVG can hold script.
+ */
+const PICTURE_TYPES: Record<string, string> = {
+  'image/png': 'image/png',
+  'image/jpeg': 'image/jpeg',
+  'image/jpg': 'image/jpeg',
+  'image/webp': 'image/webp',
+  'image/gif': 'image/gif',
+  'image/avif': 'image/avif',
+}
+const pictureType = (header: string): string | undefined => PICTURE_TYPES[header.split(';')[0].trim().toLowerCase()]
 
 export interface FetchOptions {
   userAgent?: string
@@ -640,7 +652,8 @@ export async function fetchProductImage(
     throw e
   })
   if (page.status >= 400) throw statusError(page.status)
-  if (isImage(page.type)) return { body: page.body, contentType: page.type.split(';')[0], source: page.url, facts: {} }
+  const pageType = pictureType(page.type)
+  if (pageType) return { body: page.body, contentType: pageType, source: page.url, facts: {} }
   if (!page.type.includes('html')) throw new ImageFetchError('no-image', 422)
 
   const html = decodeHtml(page.body, page.type)
@@ -659,7 +672,8 @@ export async function fetchProductImage(
         lastError = statusError(img.status)
         continue
       }
-      if (isImage(img.type)) return { body: img.body, contentType: img.type.split(';')[0], source: img.url, facts }
+      const imgType = pictureType(img.type)
+      if (imgType) return { body: img.body, contentType: imgType, source: img.url, facts }
     } catch (e) {
       lastError = e instanceof ImageFetchError ? e : new ImageFetchError('failed', 502)
       if (lastError.code === 'timeout') break
