@@ -44,6 +44,9 @@ export function listUsers(db: DB): User[] {
 export function cleanName(name: unknown): string | null {
   if (typeof name !== 'string') return null
   const n = name.replace(/\s+/g, ' ').trim()
+  // Control characters (terminal escapes) and bidi overrides that make a name read as another;
+  // the zero-width joiner of emoji sequences stays.
+  if (/[\p{Cc}\u202a-\u202e\u2066-\u2069]/u.test(n)) return null
   return n.length >= 1 && n.length <= 60 ? n : null
 }
 
@@ -177,14 +180,22 @@ export function revokeInvite(db: DB, id: string): void {
 }
 
 export function inviteValid(db: DB, token: string, now = Date.now()): boolean {
-  const row = db.prepare('SELECT used_at, expires_at FROM invites WHERE hash = ?').get(hashToken(token)) as
-    { used_at: number | null; expires_at: number } | undefined
+  return inviteHashValid(db, hashToken(token), now)
+}
+
+/** As inviteValid, for the hash that a started registration keeps instead of the token. */
+export function inviteHashValid(db: DB, hash: string, now = Date.now()): boolean {
+  const row = db.prepare('SELECT used_at, expires_at FROM invites WHERE hash = ?').get(hash) as { used_at: number | null; expires_at: number } | undefined
   return !!row && row.used_at === null && row.expires_at > now
 }
 
 /** Marks the invitation as used; false if it was already used or expired (call inside the account's transaction). */
 export function consumeInvite(db: DB, token: string, now = Date.now()): boolean {
-  const r = db.prepare('UPDATE invites SET used_at = ? WHERE hash = ? AND used_at IS NULL AND expires_at > ?').run(now, hashToken(token), now)
+  return consumeInviteHash(db, hashToken(token), now)
+}
+
+export function consumeInviteHash(db: DB, hash: string, now = Date.now()): boolean {
+  const r = db.prepare('UPDATE invites SET used_at = ? WHERE hash = ? AND used_at IS NULL AND expires_at > ?').run(now, hash, now)
   return r.changes === 1
 }
 

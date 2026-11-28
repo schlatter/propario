@@ -35,4 +35,19 @@ describe('operator recovery key', () => {
   it('refuses unknown names and lists the accounts', () => {
     expect(() => run('Grace')).toThrow(/Accounts: "Ada"/)
   })
+
+  it('never prints control characters of a stored name to the terminal', () => {
+    // Stored before names were checked: an escape sequence that would write the clipboard.
+    const db = openDatabase(join(dir, 'propario.db'))
+    createUser(db, { id: '00000000-0000-4000-8000-0000000000b2', name: 'Eve\u001b]52;c;ZWNobyBoaQ==\u0007\u009b2J', isAdmin: false })
+    db.close()
+    let stderr = ''
+    try {
+      run('nobody')
+    } catch (e) {
+      stderr = String((e as { stderr: string }).stderr)
+    }
+    expect(stderr).toContain('Eve')
+    expect(stderr).not.toMatch(/[\u0000-\u0009\u000b-\u001f\u007f-\u009f]/) // line breaks of the message itself aside
+  })
 })

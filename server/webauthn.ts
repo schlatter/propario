@@ -10,15 +10,15 @@ import {
   type RegistrationResponseJSON,
 } from '@simplewebauthn/server'
 import { tx, type DB } from './db.ts'
-import { safeEqual } from './crypto.ts'
+import { hashToken, safeEqual } from './crypto.ts'
 import { newId } from '../src/shared/ids.ts'
 import {
-  consumeInvite,
+  consumeInviteHash,
   countUsers,
   createUser,
   getPasskey,
   insertPasskey,
-  inviteValid,
+  inviteHashValid,
   listPasskeys,
   saveChallenge,
   takeChallenge,
@@ -52,11 +52,21 @@ export interface Grant {
  * - Otherwise: only with an unused, unexpired invitation.
  */
 export function registrationGrant(db: DB, setupToken: string | null, grant: Grant): { allowed: boolean; isAdmin: boolean } {
+  return hashedGrantAllows(db, setupToken, hashGrant(grant))
+}
+
+/** A grant as a started registration keeps it: hashes only, so no copy of the database holds a usable token. */
+const hashGrant = (grant: Grant): Grant => ({
+  setup: typeof grant.setup === 'string' ? hashToken(grant.setup) : undefined,
+  invite: typeof grant.invite === 'string' ? hashToken(grant.invite) : undefined,
+})
+
+function hashedGrantAllows(db: DB, setupToken: string | null, hashed: Grant): { allowed: boolean; isAdmin: boolean } {
   if (countUsers(db) === 0) {
-    const allowed = !!setupToken && typeof grant.setup === 'string' && safeEqual(grant.setup, setupToken)
+    const allowed = !!setupToken && typeof hashed.setup === 'string' && safeEqual(hashed.setup, hashToken(setupToken))
     return { allowed, isAdmin: allowed }
   }
-  return { allowed: typeof grant.invite === 'string' && inviteValid(db, grant.invite), isAdmin: false }
+  return { allowed: typeof hashed.invite === 'string' && inviteHashValid(db, hashed.invite), isAdmin: false }
 }
 
 const SELECTION = { residentKey: 'required', userVerification: 'required' } as const
@@ -78,7 +88,7 @@ export async function beginRegistration(
     attestationType: 'none',
     authenticatorSelection: SELECTION,
   })
-  const challengeId = saveChallenge(db, 'register', options.challenge, { userId, name: input.name, grant: input.grant })
+  const challengeId = saveChallenge(db, 'register', options.challenge, { userId, name: input.name, grant: hashGrant(input.grant) })
   return { options, challengeId }
 }
 
@@ -104,9 +114,9 @@ export async function finishRegistration(
   // The grant is checked again inside the transaction: two people racing for the setup link
   // must not both become administrator, and an invitation works once.
   return tx(db, () => {
-    const { allowed, isAdmin } = registrationGrant(db, setupToken, grant)
+    const { allowed, isAdmin } = hashedGrantAllows(db, setupToken, grant)
     if (!allowed) return null
-    if (!isAdmin && !consumeInvite(db, grant.invite!)) return null
+    if (!isAdmin && !consumeInviteHash(db, grant.invite!)) return null
     if (getPasskey(db, credential.id)) return null
     const { recoveryKey } = createUser(db, { id: userId, name, isAdmin })
     insertPasskey(db, { id: credential.id, userId, publicKey: credential.publicKey, counter: credential.counter, transports: credential.transports ?? [] })

@@ -8,7 +8,18 @@ import { openDatabase, type DB } from './db.ts'
 import { loadConfig } from './env.ts'
 import { useKey } from './crypto.ts'
 import { resetRateLimits } from './ratelimit.ts'
-import { consumeInvite, createInvite, createSession, createUser, saveSettings, inviteValid, sessionUser, SESSION_IDLE_MS, useRecoveryKey } from './users.ts'
+import {
+  cleanName,
+  consumeInvite,
+  createInvite,
+  createSession,
+  createUser,
+  saveSettings,
+  inviteValid,
+  sessionUser,
+  SESSION_IDLE_MS,
+  useRecoveryKey,
+} from './users.ts'
 import { registrationGrant } from './webauthn.ts'
 import { newId } from '../src/shared/ids.ts'
 
@@ -161,6 +172,24 @@ describe('accounts', () => {
     expect(registrationGrant(db, null, { invite: token })).toEqual({ allowed: true, isAdmin: false })
   })
 
+  it('a started registration keeps only a hash of its invitation, never the token', async () => {
+    const ada = newId()
+    createUser(db, { id: ada, name: 'Ada', isAdmin: true })
+    const { token } = createInvite(db, ada, 'Grace')
+    expect((await post('/api/auth/register/begin', { name: 'Grace', invite: token })).status).toBe(200)
+    const rows = db.prepare('SELECT payload FROM challenges').all() as { payload: string }[]
+    expect(rows).toHaveLength(1)
+    expect(rows[0].payload).not.toContain(token)
+  })
+
+  it('names are text: no control characters or reversed writing, but emoji sequences', () => {
+    expect(cleanName('Eve\u001b]52;c;ZWNobyBoaQ==\u0007')).toBeNull()
+    expect(cleanName('Eve\u009b2J')).toBeNull()
+    expect(cleanName('Ada‮gpj.exe')).toBeNull()
+    expect(cleanName('  Grace\tHopper ')).toBe('Grace Hopper')
+    expect(cleanName('Familie 👩‍👩‍👧')).toBe('Familie 👩‍👩‍👧')
+  })
+
   it('invitations work once and expire after 14 days', () => {
     const ada = newId()
     createUser(db, { id: ada, name: 'Ada', isAdmin: true })
@@ -242,6 +271,36 @@ describe('resetting a browser', () => {
     expect(res.headers.get('location')).toBe('/reset.html?done=1')
     expect(res.headers.get('clear-site-data')).toBe('"cache", "storage"')
     expect(res.headers.get('clear-site-data')).not.toContain('cookies')
+  })
+
+  it('clears nothing when another site sends the browser there; the page asks first', async () => {
+    const res = await api('/api/reset-browser', { redirect: 'manual', headers: { 'sec-fetch-site': 'cross-site' } })
+    expect(res.status).toBe(303)
+    expect(res.headers.get('location')).toBe('/reset.html')
+    expect(res.headers.get('clear-site-data')).toBeNull()
+    for (const site of ['same-origin', 'none']) {
+      const own = await api('/api/reset-browser', { redirect: 'manual', headers: { 'sec-fetch-site': site } })
+      expect(own.headers.get('clear-site-data'), site).toBe('"cache", "storage"')
+    }
+  })
+})
+
+describe('signing out', () => {
+  it('also clears the browser cache, so no picture stays behind', async () => {
+    const ada = newId()
+    createUser(db, { id: ada, name: 'Ada', isAdmin: true })
+    for (const path of ['/api/auth/logout', '/api/me/sign-out-everywhere']) {
+      const res = await post(path, {}, { cookie: `propario=${createSession(db, ada)}` })
+      expect(res.status, path).toBe(200)
+      expect(res.headers.get('clear-site-data'), path).toBe('"cache"')
+    }
+    const gone = await api('/api/me', {
+      method: 'DELETE',
+      headers: { 'content-type': 'application/json', origin: base, cookie: `propario=${createSession(db, ada)}` },
+      body: JSON.stringify({ confirm: 'Ada' }),
+    })
+    expect(gone.status).toBe(200)
+    expect(gone.headers.get('clear-site-data')).toBe('"cache"')
   })
 })
 

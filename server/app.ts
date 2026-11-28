@@ -153,6 +153,8 @@ export function createApp(db: DB, config: Config, version: string | null = null)
     }
 
     const signIn = (userId: string) => ({ 'Set-Cookie': sessionCookie(users.createSession(db, userId)) })
+    // Signed out in this browser: the cookie goes, and so do cached pictures (they are kept for speed).
+    const signedOut = { 'Set-Cookie': sessionCookie(null), 'Clear-Site-Data': '"cache"' }
     const need = () => {
       if (!user) throw new HttpError(401, 'signed-out')
       return user
@@ -176,6 +178,12 @@ export function createApp(db: DB, config: Config, version: string | null = null)
     // stored data and service worker – also when its storage no longer answers to scripts. The
     // sign-in cookie stays, so the person is still signed in afterwards.
     if (path === '/api/reset-browser' && method === 'GET') {
+      // Only from this site or a typed address: another site must not wipe what this browser keeps.
+      const site = req.headers['sec-fetch-site']
+      if (site && site !== 'same-origin' && site !== 'none') {
+        res.writeHead(303, { Location: '/reset.html', 'Cache-Control': 'no-store' })
+        return void res.end()
+      }
       res.writeHead(303, { 'Clear-Site-Data': '"cache", "storage"', Location: '/reset.html?done=1', 'Cache-Control': 'no-store' })
       return void res.end()
     }
@@ -247,7 +255,7 @@ export function createApp(db: DB, config: Config, version: string | null = null)
     }
     if (path === '/api/auth/logout' && method === 'POST') {
       users.endSession(db, token)
-      return send(res, 200, { ok: true }, { 'Set-Cookie': sessionCookie(null) })
+      return send(res, 200, { ok: true }, signedOut)
     }
 
     // Everything below needs a session.
@@ -278,7 +286,7 @@ export function createApp(db: DB, config: Config, version: string | null = null)
       if (body.confirm !== me.name) throw new HttpError(400, 'confirm')
       users.deleteUser(db, me.id)
       users.audit('account-deleted', me.id)
-      return send(res, 200, { ok: true }, { 'Set-Cookie': sessionCookie(null) })
+      return send(res, 200, { ok: true }, signedOut)
     }
     if (path === '/api/me/recovery-key' && method === 'POST') {
       users.audit('recovery-key-renewed', me.id)
@@ -287,7 +295,7 @@ export function createApp(db: DB, config: Config, version: string | null = null)
     if (path === '/api/me/sign-out-everywhere' && method === 'POST') {
       users.endAllSessions(db, me.id)
       users.audit('signed-out-everywhere', me.id)
-      return send(res, 200, { ok: true }, { 'Set-Cookie': sessionCookie(null) })
+      return send(res, 200, { ok: true }, signedOut)
     }
     if (path === '/api/passkeys' && method === 'GET') return send(res, 200, users.listPasskeys(db, me.id))
     if (path === '/api/passkeys/begin' && method === 'POST') return send(res, 200, await webauthn.beginAddPasskey(db, rp, me))
