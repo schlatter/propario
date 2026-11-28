@@ -120,7 +120,7 @@ A technical baseline, not a certification. Known limits:
 
 - The encryption key sits on the same server as the data, as it must for the server to read it.
   It protects copies and backups, not a fully compromised server.
-- The browser keeps a cached copy of what the person may see (IndexedDB) for speed; signing out
-  deletes it. Anyone with access to an unlocked, signed-in device sees what that person sees.
+- The browser keeps a cached copy of what the person may see (IndexedDB, and pictures in its
+  cache) for speed; signing out deletes both. Anyone with access to an unlocked, signed-in device sees what that person sees.
 - Concurrent edits merge field by field; two people changing the same field at the same moment:
   the later one wins.

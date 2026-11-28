@@ -6,6 +6,16 @@ for fixes. See "Releases" in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Unreleased
 
+## 0.24.3 — 2026-11-28
+
+- Security: signing out, signing out everywhere and deleting the account also clear the browser's
+  cache, so no picture of a comparison stays behind on a shared device.
+- Security: “Reset this browser” clears only when it is opened from Propario itself or typed in;
+  sent there by another site, it shows the page and asks first.
+- Security: a started registration keeps only a hash of its invitation, never the link itself.
+- Security: names may no longer contain control characters or reversed-writing marks; the
+  operator's recovery-key command shows stored names escaped.
+
 ## 0.24.2 — 2026-11-28
 
 - Security: a malformed request address could stop the server for everyone; it is now answered

@@ -18,11 +18,13 @@ const config = loadConfig({ ...process.env, NODE_ENV: 'development', ORIGIN: pro
 const db = openDatabase(join(process.env.DATA_DIR || config.dataDir, 'propario.db'))
 const wanted = (process.argv[2] ?? '').trim().toLowerCase()
 const users = listUsers(db)
+/** A name as the terminal shows it: quoted, with every control character escaped (JSON leaves U+0080–U+009F). */
+const shown = (name: string) => JSON.stringify(name).replace(/[\u007f-\u009f]/g, (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`)
 const matches = users.filter((u) => u.name.toLowerCase() === wanted)
 
 if (matches.length !== 1) {
   console.error(
-    `Usage: npm run recovery-key -- "Display name"\nAccounts: ${users.map((u) => `"${u.name}"`).join(', ') || 'none'}` +
+    `Usage: npm run recovery-key -- "Display name"\nAccounts: ${users.map((u) => shown(u.name)).join(', ') || 'none'}` +
       (matches.length > 1 ? '\nThat name is not unique on this instance.' : ''),
   )
   process.exit(1)
@@ -31,4 +33,4 @@ if (matches.length !== 1) {
 const user = matches[0]
 const key = renewRecoveryKey(db, user.id)
 audit('recovery-key-by-operator', user.id)
-console.log(`New recovery key for "${user.name}":\n\n  ${key}\n\nThe old one no longer works. Hand it over in person, not by e-mail or chat.`)
+console.log(`New recovery key for ${shown(user.name)}:\n\n  ${key}\n\nThe old one no longer works. Hand it over in person, not by e-mail or chat.`)
