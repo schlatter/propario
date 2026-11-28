@@ -75,6 +75,6 @@ complete and verified – tried in a browser, outside services called for real a
 ships; what is finished at the same time ships together. Fixes for bugs and security ship at once
 as a patch. Docs, tests and refactoring alone are no release. A release raises `version` in `package.json`, dates its
 CHANGELOG entry, adds at most four lines per language to `src/releases.ts`, is merged as a pull
-request; `scripts/release-tag.sh` on the updated `main` then pushes its annotated tag, which
+request; `scripts/release-tag.sh` then updates `main`, pushes its annotated tag, which
 publishes image and release (`.github/workflows/release.yml`). See "Releases" in
 `CONTRIBUTING.md`. Commit only when asked.

@@ -158,11 +158,14 @@ for fixes. 1.0 is a deliberate decision, not a count.
   refactoring alone are no release; they travel with the next one.
 - **Making one:** in a pull request, raise `version` in `package.json`, turn _Unreleased_ into
   the dated entry (`## 0.x.y — YYYY-MM-DD`), and add at most four short lines per language to
-  `src/releases.ts` – people see them once after the update. Merge it, then publish it from an
-  up-to-date `main`: `scripts/release-tag.sh`. It checks that `main` is `origin/main`, that the
+  `src/releases.ts` – people see them once after the update. Merge it, then publish it with
+  `scripts/release-tag.sh`, from whichever branch you are on. It switches to `main` and brings it
+  up to `origin/main` (and stops on uncommitted changes or local commits), checks that the
   version has no tag yet and a dated CHANGELOG entry, shows the notes, asks, and pushes the
-  annotated tag `v0.x.y` (only maintainers may push version tags). An urgent fix may raise the
-  patch version in its own pull request: one merge, one command.
+  annotated tag `v0.x.y` (only maintainers may push version tags). With the GitHub CLI it waits
+  for the release run and prints the release's address. GitHub deletes a merged pull request's
+  branch; `git fetch --prune` drops it here. An urgent fix may raise the patch version in its own
+  pull request: one merge, one command.
 - **What the tag does:** `.github/workflows/release.yml` checks that tag, `package.json` and
   CHANGELOG agree (`scripts/release-notes.sh v0.x.y` shows the notes beforehand), pushes the
   image `ghcr.io/schlatter/propario:0.x.y` (and `latest`) and publishes the GitHub release with
